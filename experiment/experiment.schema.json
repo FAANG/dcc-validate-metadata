@@ -1,0 +1,9 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "A representation of a person, company, organization, or place",
+    "type": "object",
+    "properties": {
+	"PRIMARY_ID": {"type": "string", "pattern": "^ERX","minLength": 4}
+    },
+    "required": ["PRIMARY_ID"]
+}
