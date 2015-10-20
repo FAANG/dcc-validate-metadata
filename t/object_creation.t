@@ -12,6 +12,9 @@ my $data_dir = "$Bin/data";
 
 use Bio::Metadata::Entity;
 use Bio::Metadata::Attribute;
+use Bio::Rules::RuleSet;
+
+
 
 my $sample = Bio::Metadata::Entity->new(
     id          => 'bob',
@@ -74,5 +77,58 @@ my $expected_organised_attr = {
 
 is_deeply( $actual_organised_attrs, $expected_organised_attr,
     'Organise entity attributes' );
+    
+    my $rule_set = Bio::Rules::RuleSet->new(
+        name        => 'ruleset_1',
+        description => 'a test ruleset',
+        rule_groups => [
+            {
+                name        => 'g1',
+                description => 'std',
+                rules       => [
+                    {
+                        name           => 'r1',
+                        type           => 'text',
+                        mandatory      => 'mandatory',
+                        allow_multiple => 0,
+                    },
+                    {
+                        name           => 'r2',
+                        type           => 'enum',
+                        mandatory      => 'mandatory',
+                        allow_multiple => 1,
+                    }
+                ],
+            }
+        ],
+    );
+
+    my $actual_rule_set_h   = $rule_set->to_hash();
+    my $expected_rule_set_h = {
+        name        => 'ruleset_1',
+        description => 'a test ruleset',
+        rule_groups => [
+            {
+                name        => 'g1',
+                description => 'std',
+                condition   => undef,
+                rules       => [
+                    {
+                        name           => 'r1',
+                        type           => 'text',
+                        mandatory      => 'mandatory',
+                        allow_multiple => 0,
+                    },
+                    {
+                        name           => 'r2',
+                        type           => 'enum',
+                        mandatory      => 'mandatory',
+                        allow_multiple => 1,
+                    }
+                ],
+            }
+        ],
+    };
+    is_deeply( $actual_rule_set_h, $expected_rule_set_h, 'Create ruleset' );
 
 done_testing();

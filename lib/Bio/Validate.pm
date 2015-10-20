@@ -38,7 +38,8 @@ Validate metadata aganist a schema and a checklist
 use Bio::Metadata::Attribute;
 use Bio::Metadata::Entity;
 
-
-use Bio::Validate::Types;
+use Bio::Rules::Rule;
+use Bio::Rules::RuleGroup;
+use Bio::Rules::RuleSet;
 
 1;

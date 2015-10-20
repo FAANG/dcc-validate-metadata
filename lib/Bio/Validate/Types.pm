@@ -19,6 +19,9 @@ use warnings;
 use Carp;
 use Moose::Util::TypeConstraints;
 
+enum 'Bio::Rules::Rule::TypeEnum',[qw(text number enum)];
+enum 'Bio::Rules::Rule::MandatoryEnum',[qw(mandatory recommended optional)];
+
 #attribute
 class_type 'Bio::Metadata::Attribute';
 
@@ -54,6 +57,40 @@ coerce 'Bio::Metadata::EntityArrayRef' => from 'ArrayRef[HashRef]' => via {
   },
   from 'HashRef' => via {
     [ Bio::Metadata::Entity->new($_) ];
+  };
+
+#rule
+class_type 'Bio::Rules::Rule';
+coerce 'Bio::Rules::Rule' => from 'HashRef' =>
+  via { Bio::Rules::Rule->new($_); };
+
+subtype 'Bio::Rules::RuleArrayRef' => as 'ArrayRef[Bio::Rules::Rule]';
+
+coerce 'Bio::Rules::RuleArrayRef' => from 'ArrayRef[HashRef]' => via {
+    [ map { Bio::Rules::Rule->new($_) } @$_ ];
+},
+  from 'Bio::Rules::Rule' => via {
+    [$_];
+  },
+  from 'HashRef' => via {
+    [ Bio::Rules::Rule->new($_) ];
+  };
+
+#rule group
+class_type 'Bio::Rules::RuleGroup';
+coerce 'Bio::Rules::RuleGroup' => from 'HashRef' =>
+  via { Bio::Rules::RuleGroup->new($_); };
+
+subtype 'Bio::Rules::RuleGroupArrayRef' => as 'ArrayRef[Bio::Rules::RuleGroup]';
+
+coerce 'Bio::Rules::RuleGroupArrayRef' => from 'ArrayRef[HashRef]' => via {
+    [ map { Bio::Rules::RuleGroup->new($_) } @$_ ];
+},
+  from 'Bio::Rules::RuleGroup' => via {
+    [$_];
+  },
+  from 'HashRef' => via {
+    [ Bio::Rules::RuleGroup->new($_) ];
   };
 
 1;
