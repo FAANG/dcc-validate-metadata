@@ -1,0 +1,4 @@
+package PetShop;
+use Moose;
+
+1;
