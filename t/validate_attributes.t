@@ -12,6 +12,7 @@ use Bio::Metadata::Attribute;
 use Bio::Metadata::Rules::Rule;
 use Bio::Metadata::Validate::TextAttributeValidator;
 use Bio::Metadata::Validate::NumberAttributeValidator;
+use Bio::Metadata::Validate::EnumAttributeValidator;
 
 my $text_attr = Bio::Metadata::Attribute->new( value => 'text', );
 my $num_attr  = Bio::Metadata::Attribute->new( value => 10, );
@@ -26,6 +27,7 @@ my %base_outcome_h = (
 
 text_rules();
 num_rules();
+enum_rules();
 
 sub text_rules {
     my $text_rule = Bio::Metadata::Rules::Rule->new( type => 'text', );
@@ -73,9 +75,35 @@ sub num_rules {
       $num_attr_validator->validate_attribute( $num_rule, $text_attr );
     is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
         "number rule rejects text" );
-
 }
 
-my $num_rule = Bio::Metadata::Rules::Rule->new( type => 'number' );
+sub enum_rules {
+    my $enum_rule = Bio::Metadata::Rules::Rule->new( type => 'enum', valid_values => ['text','horse'] );
+    my $enum_attr_validator =
+      Bio::Metadata::Validate::EnumAttributeValidator->new();
+
+    my %expected_t_outcome = (
+        %base_outcome_h,
+        message => undef,
+        outcome => 'pass',
+    );
+
+    my $t_outcome =
+      $enum_attr_validator->validate_attribute( $enum_rule, $text_attr );
+
+    is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
+        "enum rule passes expected value" );
+
+    my %expected_n_outcome = (
+        %base_outcome_h,
+        message    => 'value is not in list of valid values:text,horse',
+        outcome    => 'error',
+    );
+
+    my $n_outcome =
+      $enum_attr_validator->validate_attribute( $enum_rule, $num_attr );
+    is_deeply( $n_outcome->to_hash, \%expected_n_outcome,
+        "enum rule rejects unexpected value" );
+}
 
 done_testing();
