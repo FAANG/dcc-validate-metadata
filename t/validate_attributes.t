@@ -14,6 +14,7 @@ use Bio::Metadata::Validate::TextAttributeValidator;
 use Bio::Metadata::Validate::NumberAttributeValidator;
 use Bio::Metadata::Validate::EnumAttributeValidator;
 use Bio::Metadata::Validate::UnitAttributeValidator;
+use Bio::Metadata::Validate::RequirementValidator;
 
 my $text_attr = Bio::Metadata::Attribute->new( value => 'text', );
 my $num_attr = Bio::Metadata::Attribute->new( value => 10, units => 'kg' );
@@ -30,6 +31,8 @@ text_rules();
 num_rules();
 enum_rules();
 unit_rules();
+mandatory_rules();
+
 sub text_rules {
     my $text_rule = Bio::Metadata::Rules::Rule->new( type => 'text', );
     my $text_attr_validator =
@@ -115,7 +118,8 @@ sub unit_rules {
         type        => 'number',
         valid_units => ['kg']
     );
-    my $unit_attr_validator = Bio::Metadata::Validate::UnitAttributeValidator->new();
+    my $unit_attr_validator =
+      Bio::Metadata::Validate::UnitAttributeValidator->new();
 
     my %expected_n_outcome = (
         %base_outcome_h,
@@ -144,18 +148,124 @@ sub unit_rules {
       $unit_attr_validator->validate_attribute( $unit_rule, $num_attr );
     is_deeply( $n_outcome->to_hash, \%expected_n_outcome,
         "unit rule rejects unexpected units" );
-        
-        
-        my %expected_t_outcome = (
-            %base_outcome_h,
-            message => 'no units provided, should be one of these:picoseconds',
-            outcome => 'error',
-        );
 
-        my $t_outcome =
-          $unit_attr_validator->validate_attribute( $unit_rule, $text_attr );
-        is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
-            "unit rule rejects absent units" );    
+    my %expected_t_outcome = (
+        %base_outcome_h,
+        message => 'no units provided, should be one of these:picoseconds',
+        outcome => 'error',
+    );
+
+    my $t_outcome =
+      $unit_attr_validator->validate_attribute( $unit_rule, $text_attr );
+    is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
+        "unit rule rejects absent units" );
+}
+
+sub mandatory_rules {
+    my $validator = Bio::Metadata::Validate::RequirementValidator->new();
+
+    my $mandatory_rule =
+      Bio::Metadata::Rules::Rule->new( mandatory => 'mandatory' );
+    my $recommended_rule =
+      Bio::Metadata::Rules::Rule->new( mandatory => 'recommended' );
+    my $optional_rule =
+      Bio::Metadata::Rules::Rule->new( mandatory => 'optional' );
+
+    my $mandatory_multiple_rule = Bio::Metadata::Rules::Rule->new(
+        mandatory      => 'mandatory',
+        allow_multiple => 1
+    );
+
+    my $no_attr   = [];
+    my $one_attr  = [$text_attr];
+    my $many_attr = [ $text_attr, $text_attr ];
+
+    my %expected_error_outcome = (
+        %base_outcome_h,
+        message => 'mandatory attribute not present',
+        outcome => 'error',
+    );
+    my %expected_multiple_error_outcome = (
+        %base_outcome_h,
+        message => 'multiple entries for attribute present',
+        outcome => 'error',
+    );
+    my %expected_warning_outcome = (
+        %base_outcome_h,
+        message => 'recommended attribute not present',
+        outcome => 'warning',
+    );
+    my %expected_pass_outcome = (
+        %base_outcome_h,
+        message => undef,
+        outcome => 'pass',
+    );
+
+    #mandatory rule
+    is_deeply(
+        $validator->validate_requirements( $mandatory_rule, $no_attr )->to_hash,
+        \%expected_error_outcome,
+        'mand attr absent - fail'
+    );
+    is_deeply(
+        $validator->validate_requirements( $mandatory_rule, $one_attr )
+          ->to_hash,
+        \%expected_pass_outcome,
+        'mand attr present - pass'
+    );
+    is_deeply(
+        $validator->validate_requirements( $mandatory_rule, $many_attr )
+          ->to_hash,
+        \%expected_multiple_error_outcome,
+        'mand attr present multiple - fail'
+    );
+
+    # recommended rule
+    is_deeply(
+        $validator->validate_requirements( $recommended_rule, $no_attr )
+          ->to_hash,
+        \%expected_warning_outcome,
+        'recc attr absent - warn'
+    );
+    is_deeply(
+        $validator->validate_requirements( $recommended_rule, $one_attr )
+          ->to_hash,
+        \%expected_pass_outcome,
+        'recc attr present - pass'
+    );
+    is_deeply(
+        $validator->validate_requirements( $recommended_rule, $many_attr )
+          ->to_hash,
+        \%expected_multiple_error_outcome,
+        'recc attr present multiple - fail'
+    );
+
+    # optional rule
+    is_deeply(
+        $validator->validate_requirements( $optional_rule, $no_attr )->to_hash,
+        \%expected_pass_outcome,
+        'opt attr absent - pass'
+    );
+    is_deeply(
+        $validator->validate_requirements( $optional_rule, $one_attr )->to_hash,
+        \%expected_pass_outcome,
+        'opt attr present - pass'
+    );
+    is_deeply(
+        $validator->validate_requirements( $optional_rule, $many_attr )
+          ->to_hash,
+        \%expected_multiple_error_outcome,
+        'opt attr present multiple - fail'
+    );
+
+    #mandatory multiple
+    is_deeply(
+        $validator->validate_requirements( $mandatory_multiple_rule,
+            $many_attr )->to_hash,
+        \%expected_pass_outcome,
+        'multiple attr present - pass'
+    );
+
 }
 
 done_testing();
