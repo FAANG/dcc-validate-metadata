@@ -39,6 +39,20 @@ has 'valid_values' => (
     },
     default => sub { [] },
 );
+has 'valid_units' => (
+    traits  => ['Array'],
+    is      => 'rw',
+    isa     => 'ArrayRef[Str]',
+    handles => {
+        all_valid_units   => 'elements',
+        add_valid_units   => 'push',
+        count_valid_units => 'count',
+        get_valid_units   => 'get',
+        find_valid_unit   => 'first',
+        join_valid_units  => 'join',
+    },
+    default => sub { [] },
+);
 
 sub to_hash {
     my ($self) = @_;
