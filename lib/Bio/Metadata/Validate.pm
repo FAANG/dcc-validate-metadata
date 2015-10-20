@@ -11,7 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-package Bio::Validate;
+package Bio::Metadata::Validate;
 our $VERSION = '0.01';
 1;
 __END__
@@ -19,7 +19,7 @@ __END__
 
 =head1 NAME
 
-Bio::Validate
+Bio::Metadata::Validate
 
 =head1 VERSION
 
@@ -38,8 +38,8 @@ Validate metadata aganist a schema and a checklist
 use Bio::Metadata::Attribute;
 use Bio::Metadata::Entity;
 
-use Bio::Rules::Rule;
-use Bio::Rules::RuleGroup;
-use Bio::Rules::RuleSet;
+use Bio::Metadata::Rules::Rule;
+use Bio::Metadata::Rules::RuleGroup;
+use Bio::Metadata::Rules::RuleSet;
 
 1;

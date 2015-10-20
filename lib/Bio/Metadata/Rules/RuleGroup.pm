@@ -11,15 +11,15 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-package Bio::Rules::RuleGroup;
+package Bio::Metadata::Rules::RuleGroup;
 
 use strict;
 use warnings;
 
 use Moose;
 use namespace::autoclean;
-use Bio::Validate::Types;
-use Bio::Rules::Rule;
+use Bio::Metadata::Validate::Types;
+use Bio::Metadata::Rules::Rule;
 
 has 'name'        => ( is => 'rw', isa => 'Str', );
 has 'description' => ( is => 'rw', isa => 'Str' );
@@ -27,7 +27,7 @@ has 'condition'   => ( is => 'rw', isa => 'Str' );
 has 'rules'       => (
     traits  => ['Array'],
     is      => 'rw',
-    isa     => 'Bio::Rules::RuleArrayRef',
+    isa     => 'Bio::Metadata::Rules::RuleArrayRef',
     handles => {
         all_rules   => 'elements',
         add_rule    => 'push',

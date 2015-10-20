@@ -12,17 +12,17 @@
    limitations under the License.
 =cut
 
-package Bio::Validate::Types;
+package Bio::Metadata::Validate::Types;
 
 use strict;
 use warnings;
 use Carp;
 use Moose::Util::TypeConstraints;
 
-enum 'Bio::Rules::Rule::TypeEnum',[qw(text number enum)];
-enum 'Bio::Rules::Rule::MandatoryEnum',[qw(mandatory recommended optional)];
+enum 'Bio::Metadata::Rules::Rule::TypeEnum',[qw(text number enum)];
+enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',[qw(mandatory recommended optional)];
 
-enum 'Bio::Validate::OutcomeEnum', [qw([pass error warning])];
+enum 'Bio::Metadata::Validate::OutcomeEnum', [qw([pass error warning])];
 
 #attribute
 class_type 'Bio::Metadata::Attribute';
@@ -62,37 +62,37 @@ coerce 'Bio::Metadata::EntityArrayRef' => from 'ArrayRef[HashRef]' => via {
   };
 
 #rule
-class_type 'Bio::Rules::Rule';
-coerce 'Bio::Rules::Rule' => from 'HashRef' =>
-  via { Bio::Rules::Rule->new($_); };
+class_type 'Bio::Metadata::Rules::Rule';
+coerce 'Bio::Metadata::Rules::Rule' => from 'HashRef' =>
+  via { Bio::Metadata::Rules::Rule->new($_); };
 
-subtype 'Bio::Rules::RuleArrayRef' => as 'ArrayRef[Bio::Rules::Rule]';
+subtype 'Bio::Metadata::Rules::RuleArrayRef' => as 'ArrayRef[Bio::Metadata::Rules::Rule]';
 
-coerce 'Bio::Rules::RuleArrayRef' => from 'ArrayRef[HashRef]' => via {
-    [ map { Bio::Rules::Rule->new($_) } @$_ ];
+coerce 'Bio::Metadata::Rules::RuleArrayRef' => from 'ArrayRef[HashRef]' => via {
+    [ map { Bio::Metadata::Rules::Rule->new($_) } @$_ ];
 },
-  from 'Bio::Rules::Rule' => via {
+  from 'Bio::Metadata::Rules::Rule' => via {
     [$_];
   },
   from 'HashRef' => via {
-    [ Bio::Rules::Rule->new($_) ];
+    [ Bio::Metadata::Rules::Rule->new($_) ];
   };
 
 #rule group
-class_type 'Bio::Rules::RuleGroup';
-coerce 'Bio::Rules::RuleGroup' => from 'HashRef' =>
-  via { Bio::Rules::RuleGroup->new($_); };
+class_type 'Bio::Metadata::Rules::RuleGroup';
+coerce 'Bio::Metadata::Rules::RuleGroup' => from 'HashRef' =>
+  via { Bio::Metadata::Rules::RuleGroup->new($_); };
 
-subtype 'Bio::Rules::RuleGroupArrayRef' => as 'ArrayRef[Bio::Rules::RuleGroup]';
+subtype 'Bio::Metadata::Rules::RuleGroupArrayRef' => as 'ArrayRef[Bio::Metadata::Rules::RuleGroup]';
 
-coerce 'Bio::Rules::RuleGroupArrayRef' => from 'ArrayRef[HashRef]' => via {
-    [ map { Bio::Rules::RuleGroup->new($_) } @$_ ];
+coerce 'Bio::Metadata::Rules::RuleGroupArrayRef' => from 'ArrayRef[HashRef]' => via {
+    [ map { Bio::Metadata::Rules::RuleGroup->new($_) } @$_ ];
 },
-  from 'Bio::Rules::RuleGroup' => via {
+  from 'Bio::Metadata::Rules::RuleGroup' => via {
     [$_];
   },
   from 'HashRef' => via {
-    [ Bio::Rules::RuleGroup->new($_) ];
+    [ Bio::Metadata::Rules::RuleGroup->new($_) ];
   };
 
 1;

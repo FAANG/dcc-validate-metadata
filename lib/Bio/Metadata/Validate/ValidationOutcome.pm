@@ -12,7 +12,7 @@
    limitations under the License.
 =cut
 
-package Bio::Validate::ValidationOutcome;
+package Bio::Metadata::Validate::ValidationOutcome;
 
 use strict;
 use warnings;
@@ -20,14 +20,14 @@ use warnings;
 use Moose;
 use namespace::autoclean;
 
-use Bio::Validate::Types;
+use Bio::Metadata::Validate::Types;
 use Bio::Metadata::Attribute;
 use Bio::Metadata::Entity;
 
-has 'rule'       => ( is => 'rw', isa => 'Bio::Rules::Rule' );
-has 'rule_group' => ( is => 'rw', isa => 'Bio::Rules::RuleGroup' );
+has 'rule'       => ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule' );
+has 'rule_group' => ( is => 'rw', isa => 'Bio::Metadata::Rules::RuleGroup' );
 
-has 'outcome' => ( is => 'rw', isa => 'Bio::Validate::OutcomeEnum' );
+has 'outcome' => ( is => 'rw', isa => 'Bio::Metadata::Validate::OutcomeEnum' );
 has 'message' => ( is => 'rw', isa => 'Str' );
 
 has 'entity' => ( is => 'rw', isa => 'Bio::Metadata::Entity' );

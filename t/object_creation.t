@@ -12,8 +12,8 @@ my $data_dir = "$Bin/data";
 
 use Bio::Metadata::Entity;
 use Bio::Metadata::Attribute;
-use Bio::Rules::RuleSet;
-use Bio::Validate::ValidationOutcome;
+use Bio::Metadata::Rules::RuleSet;
+use Bio::Metadata::Validate::ValidationOutcome;
 
 my $sample = Bio::Metadata::Entity->new(
     id          => 'bob',
@@ -77,7 +77,7 @@ my $expected_organised_attr = {
 is_deeply( $actual_organised_attrs, $expected_organised_attr,
     'Organise entity attributes' );
 
-my $rule_set = Bio::Rules::RuleSet->new(
+my $rule_set = Bio::Metadata::Rules::RuleSet->new(
     name        => 'ruleset_1',
     description => 'a test ruleset',
     rule_groups => [
@@ -129,7 +129,7 @@ my $expected_rule_set_h = {
 };
 is_deeply( $actual_rule_set_h, $expected_rule_set_h, 'Create ruleset' );
 
-my $vo = Bio::Validate::ValidationOutcome->new(
+my $vo = Bio::Metadata::Validate::ValidationOutcome->new(
     rule_group => $rule_set->get_rule_group(0),
     rule       => $rule_set->get_rule_group(0)->get_rule(0),
     outcome    => 'error',

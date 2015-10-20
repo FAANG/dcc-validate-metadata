@@ -11,41 +11,34 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-package Bio::Rules::RuleSet;
+package Bio::Metadata::Rules::Rule;
 
 use strict;
 use warnings;
 
 use Moose;
 use namespace::autoclean;
-use Bio::Validate::Types;
-use Bio::Rules::RuleGroup;
+use Bio::Metadata::Validate::Types;
 
-has 'name'        => ( is => 'rw', isa => 'Str' );
-has 'description' => ( is => 'rw', isa => 'Str' );
-has 'rule_groups' => (
-    traits  => ['Array'],
-    is      => 'rw',
-    isa     => 'Bio::Rules::RuleGroupArrayRef',
-    handles => {
-        all_rule_groups   => 'elements',
-        add_rule_group    => 'push',
-        count_rule_groups => 'count',
-        get_rule_group    => 'get',
-    },
-    default => sub { [] },
-    coerce  => 1,
-);
+has 'name' => ( is => 'rw', isa => 'Str', required => 1 );
+has 'type' =>
+  ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::TypeEnum', required => 1 );
+has 'mandatory' =>
+  ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::MandatoryEnum', required => 1 );
+has 'allow_multiple' =>
+  ( is => 'rw', isa => 'Bool', required => 1, default => sub { '' } );
+
+#has 'units' => ( is => 'rw', isa => 'Str' );
+#has 'uri'   => ( is => 'rw', isa => 'Str' );
 
 sub to_hash {
     my ($self) = @_;
 
-    my @rg = map { $_->to_hash } $self->all_rule_groups;
-
     return {
-        name        => $self->name,
-        description => $self->description,
-        rule_groups => \@rg,
+        name           => $self->name,
+        type           => $self->type,
+        mandatory      => $self->mandatory,
+        allow_multiple => $self->allow_multiple,
     };
 }
 1;
