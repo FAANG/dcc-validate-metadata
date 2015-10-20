@@ -5,7 +5,7 @@ use warnings;
 
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
-
+use Data::Dumper;
 use Test::More;
 
 my $data_dir = "$Bin/data";
@@ -13,8 +13,7 @@ my $data_dir = "$Bin/data";
 use Bio::Metadata::Entity;
 use Bio::Metadata::Attribute;
 use Bio::Rules::RuleSet;
-
-
+use Bio::Validate::ValidationOutcome;
 
 my $sample = Bio::Metadata::Entity->new(
     id          => 'bob',
@@ -77,58 +76,84 @@ my $expected_organised_attr = {
 
 is_deeply( $actual_organised_attrs, $expected_organised_attr,
     'Organise entity attributes' );
-    
-    my $rule_set = Bio::Rules::RuleSet->new(
-        name        => 'ruleset_1',
-        description => 'a test ruleset',
-        rule_groups => [
-            {
-                name        => 'g1',
-                description => 'std',
-                rules       => [
-                    {
-                        name           => 'r1',
-                        type           => 'text',
-                        mandatory      => 'mandatory',
-                        allow_multiple => 0,
-                    },
-                    {
-                        name           => 'r2',
-                        type           => 'enum',
-                        mandatory      => 'mandatory',
-                        allow_multiple => 1,
-                    }
-                ],
-            }
-        ],
-    );
 
-    my $actual_rule_set_h   = $rule_set->to_hash();
-    my $expected_rule_set_h = {
-        name        => 'ruleset_1',
-        description => 'a test ruleset',
-        rule_groups => [
-            {
-                name        => 'g1',
-                description => 'std',
-                condition   => undef,
-                rules       => [
-                    {
-                        name           => 'r1',
-                        type           => 'text',
-                        mandatory      => 'mandatory',
-                        allow_multiple => 0,
-                    },
-                    {
-                        name           => 'r2',
-                        type           => 'enum',
-                        mandatory      => 'mandatory',
-                        allow_multiple => 1,
-                    }
-                ],
-            }
-        ],
-    };
-    is_deeply( $actual_rule_set_h, $expected_rule_set_h, 'Create ruleset' );
+my $rule_set = Bio::Rules::RuleSet->new(
+    name        => 'ruleset_1',
+    description => 'a test ruleset',
+    rule_groups => [
+        {
+            name        => 'g1',
+            description => 'std',
+            rules       => [
+                {
+                    name           => 'r1',
+                    type           => 'text',
+                    mandatory      => 'mandatory',
+                    allow_multiple => 0,
+                },
+                {
+                    name           => 'r2',
+                    type           => 'enum',
+                    mandatory      => 'mandatory',
+                    allow_multiple => 1,
+                }
+            ],
+        }
+    ],
+);
 
+my $actual_rule_set_h     = $rule_set->to_hash();
+my $expected_rule_group_h = {
+    name        => 'g1',
+    description => 'std',
+    condition   => undef,
+    rules       => [
+        {
+            name           => 'r1',
+            type           => 'text',
+            mandatory      => 'mandatory',
+            allow_multiple => 0,
+        },
+        {
+            name           => 'r2',
+            type           => 'enum',
+            mandatory      => 'mandatory',
+            allow_multiple => 1,
+        }
+    ],
+};
+my $expected_rule_set_h = {
+    name        => 'ruleset_1',
+    description => 'a test ruleset',
+    rule_groups => [ $expected_rule_group_h, ],
+};
+is_deeply( $actual_rule_set_h, $expected_rule_set_h, 'Create ruleset' );
+
+my $vo = Bio::Validate::ValidationOutcome->new(
+    rule_group => $rule_set->get_rule_group(0),
+    rule       => $rule_set->get_rule_group(0)->get_rule(0),
+    outcome    => 'error',
+    entity     => $sample,
+    attributes => [ $sample->get_attribute(0) ],
+    message    => "c'est n'est pas un pipe",
+);
+
+my $actual_vo_h   = $vo->to_hash();
+my $expected_vo_h = {
+    rule_group_name => 'g1',
+    rule            => {
+        name           => 'r1',
+        type           => 'text',
+        mandatory      => 'mandatory',
+        allow_multiple => 0,
+    },
+    message     => "c'est n'est pas un pipe",
+    outcome     => 'error',
+    entity_id   => 'bob',
+    entity_type => 'sample',
+    attributes =>
+      [ { name => 'sex', value => 'female', units => undef, uri => undef }, ],
+};
+
+is_deeply( $actual_vo_h, $expected_vo_h, 'Create validation outcome' );
 done_testing();
