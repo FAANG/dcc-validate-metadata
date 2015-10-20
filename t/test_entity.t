@@ -11,6 +11,7 @@ use Test::More;
 my $data_dir = "$Bin/data";
 
 use Bio::Metadata::Entity;
+use Bio::Metadata::Attribute;
 
 my $sample = Bio::Metadata::Entity->new(
     id          => 'bob',
@@ -23,6 +24,7 @@ my $sample = Bio::Metadata::Entity->new(
             uri   => 'http://purl.obolibrary.org/obo/UBERON_0002385'
         },
         { name => 'weight', value => '0.05', units => 'kg' },
+        { name => 'weight', value => '50',   units => 'g' },
     ],
 );
 
@@ -39,8 +41,38 @@ my $expected_sh = {
             uri   => 'http://purl.obolibrary.org/obo/UBERON_0002385'
         },
         { name => 'weight', value => '0.05', units => 'kg', uri => undef },
+        { name => 'weight', value => '50',   units => 'g',  uri => undef },
+
     ]
 };
-is_deeply($actural_sh,$expected_sh,'Entity to hash');
+is_deeply( $actural_sh, $expected_sh, 'Entity to hash' );
+
+my $actual_organised_attrs  = $sample->organised_attr();
+my $expected_organised_attr = {
+    sex =>
+      [ Bio::Metadata::Attribute->new( name => 'sex', value => 'female' ), ],
+    tissue => [
+        Bio::Metadata::Attribute->new(
+            name  => 'tissue',
+            value => 'muscle',
+            uri   => 'http://purl.obolibrary.org/obo/UBERON_0002385'
+        ),
+    ],
+    weight => [
+        Bio::Metadata::Attribute->new(
+            name  => 'weight',
+            value => '0.05',
+            units => 'kg'
+        ),
+        Bio::Metadata::Attribute->new(
+            name  => 'weight',
+            value => '50',
+            units => 'g'
+        ),
+    ],
+};
+
+is_deeply( $actual_organised_attrs, $expected_organised_attr,
+    'Organise entity attributes' );
 
 done_testing();

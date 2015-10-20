@@ -52,4 +52,19 @@ sub to_hash {
     };
 }
 
+sub organised_attr {
+  my ($self) = @_;
+  
+  my %h;
+  
+  for my $a ($self->all_attributes){
+    next unless $a->name;
+    if (! exists $h{$a->name}){
+      $h{$a->name} = [];
+    }
+    push @{$h{$a->name}}, $a;
+  }
+  return \%h;
+}
+
 1;
