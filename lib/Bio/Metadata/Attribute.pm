@@ -18,7 +18,7 @@ use warnings;
 
 use Moose;
 use namespace::autoclean;
-use Bio::Metadata::Validate::Types;
+use Bio::Metadata::Types;
 
 has 'name'   => ( is => 'rw', isa => 'Str' );
 has 'value' => ( is => 'rw', isa => 'Str' );

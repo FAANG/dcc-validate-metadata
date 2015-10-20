@@ -20,7 +20,7 @@ use Moose;
 use namespace::autoclean;
 
 use Bio::Metadata::Attribute;
-use Bio::Metadata::Validate::Types;
+use Bio::Metadata::Types;
 
 
 

@@ -12,7 +12,7 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Validate::Types;
+package Bio::Metadata::Types;
 
 use strict;
 use warnings;
