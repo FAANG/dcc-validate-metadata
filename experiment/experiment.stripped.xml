@@ -1,6 +1,49 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
-<EXPERIMENT>
-  <CACA>
-    <PRIMARY_ID>ERX000</PRIMARY_ID>
-  </CACA>
+   <EXPERIMENT alias="ena-EXPERIMENT-BLUEPRINT-11-04-2014-09:38:35:978-3" center_name="BLUEPRINT" accession="ERX442231" broker_name="EGA">
+      <IDENTIFIERS>
+         <PRIMARY_ID>ERX442231</PRIMARY_ID>
+         <SUBMITTER_ID namespace="BLUEPRINT">ena-EXPERIMENT-BLUEPRINT-11-04-2014-09:38:35:978-3</SUBMITTER_ID>
+      </IDENTIFIERS>
+      <STUDY_REF accession="ERP001664" refname="Blueprint RNA-seq data (common cell types)" refcenter="BLUEPRINT">
+         <IDENTIFIERS>
+            <PRIMARY_ID>ERP001664</PRIMARY_ID>
+            <SUBMITTER_ID namespace="BLUEPRINT">Blueprint RNA-seq data (common cell types)</SUBMITTER_ID>
+         </IDENTIFIERS>
+      </STUDY_REF>
+       <DESIGN>
+         <DESIGN_DESCRIPTION/>
+         <SAMPLE_DESCRIPTOR accession="ERS433571" refname="S008Y411" refcenter="BLUEPRINT">
+            <IDENTIFIERS>
+               <PRIMARY_ID>ERS433571</PRIMARY_ID>
+               <SUBMITTER_ID namespace="BLUEPRINT">S008Y411</SUBMITTER_ID>
+            </IDENTIFIERS>
+         </SAMPLE_DESCRIPTOR>
+         <LIBRARY_DESCRIPTOR>
+            <LIBRARY_NAME>I_bc_pelib_2101</LIBRARY_NAME>
+            <LIBRARY_STRATEGY>RNA-Seq</LIBRARY_STRATEGY>
+            <LIBRARY_SOURCE>TRANSCRIPTOMIC</LIBRARY_SOURCE>
+            <LIBRARY_SELECTION>other</LIBRARY_SELECTION>
+            <LIBRARY_LAYOUT>
+               <PAIRED NOMINAL_LENGTH="280"/>
+            </LIBRARY_LAYOUT>
+         </LIBRARY_DESCRIPTOR>
+         <SPOT_DESCRIPTOR>
+            <SPOT_DECODE_SPEC>
+               <READ_SPEC>
+                  <READ_INDEX>0</READ_INDEX>
+                  <READ_LABEL>F1</READ_LABEL>
+                  <READ_CLASS>Application Read</READ_CLASS>
+                  <READ_TYPE>Forward</READ_TYPE>
+                  <BASE_COORD>1</BASE_COORD>
+               </READ_SPEC>
+               <READ_SPEC>
+                  <READ_INDEX>1</READ_INDEX>
+                  <READ_LABEL>R2</READ_LABEL>
+                  <READ_CLASS>Application Read</READ_CLASS>
+                  <READ_TYPE>Reverse</READ_TYPE>
+                  <RELATIVE_ORDER follows_read_index="0"/>
+               </READ_SPEC>
+            </SPOT_DECODE_SPEC>
+         </SPOT_DESCRIPTOR>
+      </DESIGN>
 </EXPERIMENT>

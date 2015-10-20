@@ -36,7 +36,6 @@
 	    "properties": {
 		"type": "object",
 		"SAMPLE_DESCRIPTOR": {
-		    "type":"object",
 		    "properties": {
 			"type": "object",
 			"IDENTIFIERS": {
@@ -51,21 +50,9 @@
 			}
 		    },
 		    "required": ["IDENTIFIERS"]
-		},
-		"LIBRARY_DESCRIPTOR": {
-		    "type": "object",
-		    "properties": {
-			"LIBRARY_NAME": {"type":"string"},
-			"LIBRARY_STRATEGY": {
-			    "type":"string",
-			    "enum": ["RNA-Seq"]
-			}
-		    },
-		    "required": ["LIBRARY_NAME","LIBRARY_STRATEGY"]
-		    
 		}
 	    },
-	    "required": ["SAMPLE_DESCRIPTOR","LIBRARY_DESCRIPTOR"]
+	    "required": ["SAMPLE_DESCRIPTOR"]
 	}
     },
     "required": ["IDENTIFIERS","STUDY_REF","DESIGN"]

@@ -7,7 +7,7 @@ binmode STDOUT, ":utf8";
 use utf8;
 
 my $xml_file='experiment.stripped.xml';
-my $schema_file='/Users/ernesto/scripts/metadata_work/experiments/experiment.schema.json';
+my $schema_file='experiment.schema.json';
 
 my $xml = new XML::Simple;
 my $data = $xml->XMLin($xml_file);
