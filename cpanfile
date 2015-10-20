@@ -3,7 +3,7 @@ requires 'MooseX::Params::Validate';
 requires 'JSON';
 requires 'JSON::XS';
 requires 'JSON::Validator';
-required 'Scalar::Util';
+requires 'Scalar::Util';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';
