@@ -20,13 +20,13 @@ use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
 
-has 'name' => ( is => 'rw', isa => 'Str', required => 1 );
+has 'name' => ( is => 'rw', isa => 'Str');
 has 'type' =>
-  ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::TypeEnum', required => 1 );
+  ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::TypeEnum');
 has 'mandatory' =>
-  ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::MandatoryEnum', required => 1 );
+  ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::MandatoryEnum');
 has 'allow_multiple' =>
-  ( is => 'rw', isa => 'Bool', required => 1, default => sub { '' } );
+  ( is => 'rw', isa => 'Bool', default => sub { '' } );
 
 #has 'units' => ( is => 'rw', isa => 'Str' );
 #has 'uri'   => ( is => 'rw', isa => 'Str' );

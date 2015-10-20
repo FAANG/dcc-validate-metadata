@@ -50,12 +50,12 @@ sub to_hash {
 
     my @a = map { $_->to_hash } $self->all_attributes;
     return {
-        rule            => $self->rule->to_hash,
-        rule_group_name => $self->rule_group->name,
         outcome         => $self->outcome,
         message         => $self->message,
-        entity_id       => $self->entity->id,
-        entity_type     => $self->entity->entity_type,
+        rule            => $self->rule ? $self->rule->to_hash : undef,
+        rule_group_name => $self->rule_group ? $self->rule_group->name : undef,
+        entity_id       => $self->entity ? $self->entity->id : undef,
+        entity_type     => $self->entity ? $self->entity->entity_type : undef,
         attributes      => \@a,
     };
 }

@@ -22,7 +22,10 @@ use Moose::Util::TypeConstraints;
 enum 'Bio::Metadata::Rules::Rule::TypeEnum',[qw(text number enum)];
 enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',[qw(mandatory recommended optional)];
 
-enum 'Bio::Metadata::Validate::OutcomeEnum', [qw([pass error warning])];
+enum 'Bio::Metadata::Validate::OutcomeEnum', [qw(pass error warning)];
+
+
+role_type 'Bio::Metadata::Validate::AttributeValidatorRole';
 
 #attribute
 class_type 'Bio::Metadata::Attribute';
