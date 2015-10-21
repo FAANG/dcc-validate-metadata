@@ -12,16 +12,17 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Validate::Validator;
+package Bio::Metadata::Validate::EntityValidator;
 
 use strict;
 use warnings;
 
+use Carp;
 use Moose;
 use namespace::autoclean;
 
 use Bio::Metadata::Types;
-use Bio::Metadata::Validate::ValidatioOutcome;
+use Bio::Metadata::Validate::ValidationOutcome;
 use Bio::Metadata::Entity;
 
 use MooseX::Params::Validate;
@@ -58,13 +59,24 @@ has 'type_validator' => (
             enum   => Bio::Metadata::Validate::EnumAttributeValidator->new(),
         };
     },
-
+);
+has 'outcome_for_unexpected_attributes' => (
+    is       => 'rw',
+    isa      => 'Bio::Metadata::Validate::OutcomeEnum',
+    required => 1,
+    default  => sub { 'warning' },
+);
+has 'message_for_unexpected_attributes' => (
+    is       => 'rw',
+    isa      => 'Str',
+    required => 1,
+    default  => sub { 'attribute not in rule set' },
 );
 
 sub check {
-    my ($self) = shift;
-    my ($entity) =
-      pos_validated_list( \@_, { isa => 'Bio::Metadata::Entity' }, );
+    my ( $self, $entity ) = @_;
+
+#    my ($entity) =      pos_validated_list( \@_, { isa => 'Bio::Metadata::Entity' } );
 
     my @all_outcomes;
 
@@ -73,33 +85,62 @@ sub check {
     my $unit_validator        = $self->unit_validator;
 
     for my $rule_group ( $self->rule_set->all_rule_groups ) {
-
-
         for my $rule ( $rule_group->all_rules ) {
             my @r_outcomes;
-            
-            my $type_validator = $self->get_type_validator($rule->type)
-            
+
+            my $type_validator = $self->get_type_validator( $rule->type );
+            croak( "No type validator for " . $rule->type )
+              if ( !$type_validator );
 
             my $attrs = $organised_attributes->{ $rule->name } // [];
+            delete $organised_attributes->{ $rule->name };
 
             push @r_outcomes,
               $requirement_validator->validate_requirements( $rule, $attrs );
-            
+
             for my $a (@$attrs) {
-                push @r_outcomes, $unit_validator->validate_attribute($rule,$a)
-                  if ( $rule->count_valid_units );
-                push @r_outcomes, $type_validator->validate_attribute($rule,$a);
+                if ( $rule->count_valid_units ) {
+                    push @r_outcomes,
+                      $unit_validator->validate_attribute( $rule, $a );
+                }
+                push @r_outcomes,
+                  $type_validator->validate_attribute( $rule, $a );
             }
-            
-            for my $o (@r_outcomes){
-              $o->rule($rule);
-              $o->rule_group($rule_group);
-              $o->entity($entity)
+
+            for my $o (@r_outcomes) {
+                $o->rule_group($rule_group);
+                $o->entity($entity);
             }
-            push @all_outcomes, @r_outcomes;
+            push @all_outcomes, grep { $_->outcome ne 'pass' } @r_outcomes;
         }
     }
 
-    return \@outcomes;
+    for my $unexpected_attributes ( values %$organised_attributes ) {
+        push @all_outcomes,
+          Bio::Metadata::Validate::ValidationOutcome->new(
+            attributes => $unexpected_attributes,
+            entity     => $entity,
+            outcome    => $self->outcome_for_unexpected_attributes,
+            message    => $self->message_for_unexpected_attributes,
+          );
+    }
+
+    my $outcome_overall = 'pass';
+    for my $o (@all_outcomes) {
+        if ( $o->outcome eq 'error' ) {
+            $outcome_overall = 'error';
+            last;
+        }
+        if ( $o->outcome eq 'warning' ) {
+            $outcome_overall = 'warning';
+        }
+    }
+
+    return pos_validated_list(
+        [ $outcome_overall, \@all_outcomes ],
+        { isa => 'Bio::Metadata::Validate::OutcomeEnum' },
+        { isa => 'Bio::Metadata::Validate::ValidationOutcomeArrayRef' }
+    );
 }
+
+1;

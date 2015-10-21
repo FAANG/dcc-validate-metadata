@@ -19,11 +19,11 @@ use warnings;
 use Carp;
 use Moose::Util::TypeConstraints;
 
-enum 'Bio::Metadata::Rules::Rule::TypeEnum',[qw(text number enum)];
-enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',[qw(mandatory recommended optional)];
+enum 'Bio::Metadata::Rules::Rule::TypeEnum', [qw(text number enum)];
+enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',
+  [qw(mandatory recommended optional)];
 
 enum 'Bio::Metadata::Validate::OutcomeEnum', [qw(pass error warning)];
-
 
 role_type 'Bio::Metadata::Validate::AttributeValidatorRole';
 
@@ -69,7 +69,8 @@ class_type 'Bio::Metadata::Rules::Rule';
 coerce 'Bio::Metadata::Rules::Rule' => from 'HashRef' =>
   via { Bio::Metadata::Rules::Rule->new($_); };
 
-subtype 'Bio::Metadata::Rules::RuleArrayRef' => as 'ArrayRef[Bio::Metadata::Rules::Rule]';
+subtype 'Bio::Metadata::Rules::RuleArrayRef' => as
+  'ArrayRef[Bio::Metadata::Rules::Rule]';
 
 coerce 'Bio::Metadata::Rules::RuleArrayRef' => from 'ArrayRef[HashRef]' => via {
     [ map { Bio::Metadata::Rules::Rule->new($_) } @$_ ];
@@ -86,16 +87,37 @@ class_type 'Bio::Metadata::Rules::RuleGroup';
 coerce 'Bio::Metadata::Rules::RuleGroup' => from 'HashRef' =>
   via { Bio::Metadata::Rules::RuleGroup->new($_); };
 
-subtype 'Bio::Metadata::Rules::RuleGroupArrayRef' => as 'ArrayRef[Bio::Metadata::Rules::RuleGroup]';
+subtype 'Bio::Metadata::Rules::RuleGroupArrayRef' => as
+  'ArrayRef[Bio::Metadata::Rules::RuleGroup]';
 
-coerce 'Bio::Metadata::Rules::RuleGroupArrayRef' => from 'ArrayRef[HashRef]' => via {
+coerce 'Bio::Metadata::Rules::RuleGroupArrayRef' => from 'ArrayRef[HashRef]' =>
+  via {
     [ map { Bio::Metadata::Rules::RuleGroup->new($_) } @$_ ];
-},
+  },
   from 'Bio::Metadata::Rules::RuleGroup' => via {
     [$_];
   },
   from 'HashRef' => via {
     [ Bio::Metadata::Rules::RuleGroup->new($_) ];
+  };
+
+#validation outcome
+class_type 'Bio::Metadata::Validate::ValidationOutcome';
+coerce 'Bio::Metadata::Validate::ValidationOutcome' => from 'HashRef' =>
+  via { Bio::Metadata::Validate::ValidationOutcome->new($_); };
+
+subtype 'Bio::Metadata::Validate::ValidationOutcomeArrayRef' => as
+  'ArrayRef[Bio::Metadata::Validate::ValidationOutcome]';
+
+coerce 'Bio::Metadata::Validate::ValidationOutcomeArrayRef' => from
+  'ArrayRef[HashRef]'                                       => via {
+    [ map { Bio::Metadata::Validate::ValidationOutcome->new($_) } @$_ ];
+  },
+  from 'Bio::Metadata::Validate::ValidationOutcome' => via {
+    [$_];
+  },
+  from 'HashRef' => via {
+    [ Bio::Metadata::Validate::ValidationOutcome->new($_) ];
   };
 
 1;

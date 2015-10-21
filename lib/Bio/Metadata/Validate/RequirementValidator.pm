@@ -20,7 +20,6 @@ use warnings;
 use Moose;
 use namespace::autoclean;
 
-use Bio::Metadata::Validate::ValidationOutcome;
 use MooseX::Params::Validate;
 
 sub validate_requirements {

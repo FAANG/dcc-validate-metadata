@@ -20,7 +20,6 @@ use warnings;
 use Moose;
 use namespace::autoclean;
 use Scalar::Util qw(looks_like_number);
-use Bio::Metadata::Validate::ValidationOutcome;
 
 with 'Bio::Metadata::Validate::AttributeValidatorRole';
 

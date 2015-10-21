@@ -16,6 +16,7 @@ package Bio::Metadata::Validate::AttributeValidatorRole;
 
 use Moose::Role;
 use MooseX::Params::Validate;
+use Bio::Metadata::Validate::ValidationOutcome;
 
 requires 'validate_attribute';
 
