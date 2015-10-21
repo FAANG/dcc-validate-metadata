@@ -1,0 +1,63 @@
+[
+    {
+        "attributes": [
+            {
+                "name": "crew_capacity", 
+                "units": "cabins", 
+                "value": 5
+            }, 
+            {
+                "name": "passenger_capacity", 
+                "units": "people", 
+                "value": 18
+            }, 
+            {
+                "name": "class", 
+                "value": "03-K64-Firefly"
+            }, 
+            {
+                "name": "role", 
+                "value": "transport"
+            }, 
+            {
+                "name": "cargo_capacity", 
+                "units": "kg", 
+                "value": 74797
+            }
+        ], 
+        "entity_type": "spacecraft", 
+        "id": "404-E-132-4FE274A"
+    }, 
+    {
+        "attributes": [
+            {
+                "name": "crew_capacity", 
+                "units": "people", 
+                "value": 50
+            }, 
+            {
+                "name": "passenger_capacity", 
+                "units": "people", 
+                "value": 18
+            }, 
+            {
+                "name": "class", 
+                "value": "Defiant"
+            }, 
+            {
+                "name": "role", 
+                "value": "warship"
+            }, 
+            {
+                "name": "weapon", 
+                "value": "photon torpedo"
+            }, 
+            {
+                "name": "weapon", 
+                "value": "phaser"
+            }
+        ], 
+        "entity_type": "spacecraft", 
+        "id": "NX-74205"
+    }
+]

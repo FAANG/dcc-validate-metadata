@@ -76,6 +76,22 @@ has 'message_for_unexpected_attributes' => (
     default  => sub { 'attribute not in rule set' },
 );
 
+
+sub check_all {
+  my ($self,$entities);
+  
+  my %outcome_status;
+  my %outcome_report;
+  
+  for my $e (@$entities){
+    my ($status, $outcomes) = $self->check($e);
+    $outcome_status{$e} = $status;
+    $outcome_report{$e} = $outcomes;
+  }
+  
+  return (\%outcome_status, \%outcome_report);
+}
+
 sub check {
     my ($self,$entity) = @_;
 

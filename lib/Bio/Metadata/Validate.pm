@@ -42,4 +42,14 @@ use Bio::Metadata::Rules::Rule;
 use Bio::Metadata::Rules::RuleGroup;
 use Bio::Metadata::Rules::RuleSet;
 
+use Bio::Metadata::Loader::RuleSetLoader;
+use Bio::Metadata::Validate::EntityValidator;
+use Bio::Metadata::Validate::EnumAttributeValidator;
+use Bio::Metadata::Validate::NumberAttributeValidator;
+use Bio::Metadata::Validate::RequirementValidator;
+use Bio::Metadata::Validate::TextAttributeValidator;
+use Bio::Metadata::Validate::UnitAttributeValidator;
+use Bio::Metadata::Validate::ValidationOutcome;
+
+
 1;
