@@ -29,7 +29,7 @@ requires 'hash_to_object';
 sub load {
     my ( $self, $file_path ) = @_;
 
-    my ( $json_text, $json_hash, $object );
+    my ( $json_text, $json_data, $o );
     try {
         open( my $fh, '<', $file_path );
         local $/ = undef;
@@ -41,21 +41,28 @@ sub load {
     };
 
     try {
-        $json_hash = decode_json($json_text);
+        $json_data = decode_json($json_text);
     }
     catch {
         croak "Could not convert contents of $file_path to JSON: $_";
     };
 
     try {
-        $object = $self->hash_to_object($json_hash);
+      if (ref $json_data eq 'HASH') {
+        $o = $self->hash_to_object($json_data);
+      }
+      elsif (ref $json_data eq 'ARRAY') {
+        $o = [];
+        push @$o, map {$self->hash_to_object($_)} @$json_data;
+      }
+        
     }
     catch {
         croak "Could not convert data structure to object: $_";
     };
 
 
-    return $object;
+    return $o;
 }
 
 1;
