@@ -64,4 +64,6 @@ sub to_hash {
         allow_multiple => $self->allow_multiple,
     };
 }
+
+__PACKAGE__->meta->make_immutable;
 1;

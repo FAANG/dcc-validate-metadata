@@ -40,5 +40,5 @@ sub validate_attribute {
   
   return $o;
 }
-
+__PACKAGE__->meta->make_immutable;
 1;

@@ -52,5 +52,5 @@ sub validate_requirements {
   
   return $o;
 }
-
+__PACKAGE__->meta->make_immutable;
 1;

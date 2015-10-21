@@ -48,4 +48,6 @@ sub to_hash {
         rule_groups => \@rg,
     };
 }
+
+__PACKAGE__->meta->make_immutable;
 1;

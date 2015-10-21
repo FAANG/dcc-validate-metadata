@@ -22,8 +22,6 @@ use namespace::autoclean;
 use Bio::Metadata::Attribute;
 use Bio::Metadata::Types;
 
-
-
 has 'id'          => ( is => 'rw', isa => 'Str' );
 has 'entity_type' => ( is => 'rw', isa => 'Str' );
 has 'attributes'  => (
@@ -66,5 +64,7 @@ sub organised_attr {
   }
   return \%h;
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;

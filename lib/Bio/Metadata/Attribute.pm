@@ -35,4 +35,5 @@ sub to_hash {
         uri   => $self->uri,
     };
 }
+__PACKAGE__->meta->make_immutable;
 1;

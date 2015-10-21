@@ -77,9 +77,7 @@ has 'message_for_unexpected_attributes' => (
 );
 
 sub check {
-    my ( $self, $entity ) = @_;
-
-#    my ($entity) =      pos_validated_list( \@_, { isa => 'Bio::Metadata::Entity' } );
+    my ($self,$entity) = @_;
 
     my @all_outcomes;
 
@@ -159,5 +157,7 @@ sub check {
         { isa => 'Bio::Metadata::Validate::ValidationOutcomeArrayRef' }
     );
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;
