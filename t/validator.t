@@ -124,7 +124,7 @@ my @expected_outcomes = (
     },
 );
 
-is( scalar(@actual_outcomes), 2, "got 2 validation outcomes" );
+is( scalar(@actual_outcomes), 2, "got expected number of validation outcomes" );
 is_deeply( \@actual_outcomes, \@expected_outcomes,
     'validation outcomes match expectation' );
 
