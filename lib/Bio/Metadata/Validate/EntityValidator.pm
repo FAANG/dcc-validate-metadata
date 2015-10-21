@@ -21,6 +21,9 @@ use Carp;
 use Moose;
 use namespace::autoclean;
 
+use Data::DPath 'dpath';
+use Data::Dumper;
+
 use Bio::Metadata::Types;
 use Bio::Metadata::Validate::ValidationOutcome;
 use Bio::Metadata::Entity;
@@ -84,10 +87,24 @@ sub check {
     my $requirement_validator = $self->requirement_validator;
     my $unit_validator        = $self->unit_validator;
 
-    for my $rule_group ( $self->rule_set->all_rule_groups ) {
+    my $entity_as_hash = $entity->to_hash;
+
+    
+  RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
+
+        if ( $rule_group->condition ) {
+
+            my $match_count = dpath($rule_group->condition)->match($entity_as_hash);
+
+            if ( !$match_count ) {
+                next RULE_GROUP;
+            }
+        }
+
+
         for my $rule ( $rule_group->all_rules ) {
             my @r_outcomes;
-
+            
             my $type_validator = $self->get_type_validator( $rule->type );
             croak( "No type validator for " . $rule->type )
               if ( !$type_validator );

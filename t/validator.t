@@ -26,7 +26,10 @@ my $entity = Bio::Metadata::Entity->new(
             value => '18',
             units => 'people',
         },
-        { name => 'class', value => '03-K64-Firefly' },
+        { name => 'class',          value => '03-K64-Firefly' },
+        { name => 'role',           value => 'transport' },
+        { name => 'cargo_capacity', value => 74797, units => 'kg' }
+
     ]
 );
 
@@ -52,6 +55,39 @@ my $rule_set = Bio::Metadata::Rules::RuleSet->new(
                     type      => 'text',
                     mandatory => 'mandatory',
                 },
+                {
+                  name => 'role',
+                  type => 'enum',
+                  mandatory => 'mandatory',
+                  valid_values => [qw(transport warship)],
+                }
+            ]
+        },
+        {
+            name => 'warships',
+            condition =>
+'/attributes/*/*[key eq "name" && value eq "role"]/../*[key eq "value" && value eq "warship"]',
+            rules => [
+                {
+                    name           => 'weapon',
+                    type           => 'text',
+                    mandatory      => 'mandatory',
+                    allow_multiple => 1,
+                }
+            ]
+        },
+        {
+            name => 'transports',
+            condition =>
+'/attributes/*/*[key eq "name" && value eq "role"]/../*[key eq "value" && value eq "transport"]',
+            rules => [
+                {
+                    name        => 'cargo_capacity',
+                    type        => 'number',
+                    mandatory   => 'mandatory',
+                    valid_units => ['kg'],
+
+                }
             ]
         }
     ]
@@ -86,14 +122,9 @@ my @expected_outcomes = (
         rule            => undef,
         attributes      => [ $entity->get_attribute(2)->to_hash ],
     },
-
 );
 
-is(
-    scalar(@actual_outcomes),
-    2,
-    "got 2 validation outcomes"
-);
+is( scalar(@actual_outcomes), 2, "got 2 validation outcomes" );
 is_deeply( \@actual_outcomes, \@expected_outcomes,
     'validation outcomes match expectation' );
 
