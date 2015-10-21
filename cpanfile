@@ -5,6 +5,8 @@ requires 'JSON::XS';
 requires 'JSON::Validator';
 requires 'Data::DPath';
 requires 'Scalar::Util';
+requires 'Try::Tiny';
+requires 'autodie';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';
