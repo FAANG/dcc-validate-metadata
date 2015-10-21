@@ -32,6 +32,7 @@ num_rules();
 enum_rules();
 unit_rules();
 mandatory_rules();
+done_testing();
 
 sub text_rules {
     my $text_rule = Bio::Metadata::Rules::Rule->new( type => 'text', );
@@ -40,8 +41,10 @@ sub text_rules {
 
     my %expected_t_outcome = (
         %base_outcome_h,
-        message => undef,
-        outcome => 'pass',
+        message    => undef,
+        outcome    => 'pass',
+        rule       => $text_rule->to_hash,
+        attributes => [ $text_attr->to_hash ]
     );
 
     my $t_outcome =
@@ -59,8 +62,10 @@ sub num_rules {
 
     my %expected_n_outcome = (
         %base_outcome_h,
-        message => undef,
-        outcome => 'pass',
+        message    => undef,
+        outcome    => 'pass',
+        rule       => $num_rule->to_hash,
+        attributes => [ $num_attr->to_hash ]
     );
 
     my $n_outcome =
@@ -71,8 +76,10 @@ sub num_rules {
 
     my %expected_t_outcome = (
         %base_outcome_h,
-        message => 'value is not a number',
-        outcome => 'error',
+        message    => 'value is not a number',
+        outcome    => 'error',
+        rule       => $num_rule->to_hash,
+        attributes => [ $text_attr->to_hash ]
     );
 
     my $t_outcome =
@@ -91,8 +98,10 @@ sub enum_rules {
 
     my %expected_t_outcome = (
         %base_outcome_h,
-        message => undef,
-        outcome => 'pass',
+        message    => undef,
+        outcome    => 'pass',
+        rule       => $enum_rule->to_hash,
+        attributes => [ $text_attr->to_hash ]
     );
 
     my $t_outcome =
@@ -103,8 +112,10 @@ sub enum_rules {
 
     my %expected_n_outcome = (
         %base_outcome_h,
-        message => 'value is not in list of valid values:text,horse',
-        outcome => 'error',
+        message    => 'value is not in list of valid values:text,horse',
+        outcome    => 'error',
+        rule       => $enum_rule->to_hash,
+        attributes => [ $num_attr->to_hash ]
     );
 
     my $n_outcome =
@@ -123,8 +134,10 @@ sub unit_rules {
 
     my %expected_n_outcome = (
         %base_outcome_h,
-        message => undef,
-        outcome => 'pass',
+        message    => undef,
+        outcome    => 'pass',
+        rule       => $unit_rule->to_hash,
+        attributes => [ $num_attr->to_hash ]
     );
 
     my $n_outcome =
@@ -140,8 +153,10 @@ sub unit_rules {
 
     my %expected_bn_outcome = (
         %base_outcome_h,
-        message => 'units are not in list of valid units:picoseconds',
-        outcome => 'error',
+        message    => 'units are not in list of valid units:picoseconds',
+        outcome    => 'error',
+        rule       => $unit_rule->to_hash,
+        attributes => [ $num_attr->to_hash ]
     );
 
     my $bn_outcome =
@@ -151,8 +166,10 @@ sub unit_rules {
 
     my %expected_t_outcome = (
         %base_outcome_h,
-        message => 'no units provided, should be one of these:picoseconds',
-        outcome => 'error',
+        message    => 'no units provided, should be one of these:picoseconds',
+        outcome    => 'error',
+        rule       => $unit_rule->to_hash,
+        attributes => [ $text_attr->to_hash ]
     );
 
     my $t_outcome =
@@ -203,69 +220,92 @@ sub mandatory_rules {
 
     #mandatory rule
     is_deeply(
-        $validator->validate_requirements( $mandatory_rule, $no_attr )->to_hash,
+        scrub_rule_attr(
+            $validator->validate_requirements( $mandatory_rule, $no_attr )
+        ),
         \%expected_error_outcome,
         'mand attr absent - fail'
     );
     is_deeply(
-        $validator->validate_requirements( $mandatory_rule, $one_attr )
-          ->to_hash,
+        scrub_rule_attr(
+            $validator->validate_requirements( $mandatory_rule, $one_attr )
+        ),
         \%expected_pass_outcome,
         'mand attr present - pass'
     );
     is_deeply(
-        $validator->validate_requirements( $mandatory_rule, $many_attr )
-          ->to_hash,
+        scrub_rule_attr(
+            $validator->validate_requirements( $mandatory_rule, $many_attr )
+
+        ),
         \%expected_multiple_error_outcome,
         'mand attr present multiple - fail'
     );
 
     # recommended rule
     is_deeply(
-        $validator->validate_requirements( $recommended_rule, $no_attr )
-          ->to_hash,
+        scrub_rule_attr(
+            $validator->validate_requirements( $recommended_rule, $no_attr )
+        ),
         \%expected_warning_outcome,
         'recc attr absent - warn'
     );
     is_deeply(
-        $validator->validate_requirements( $recommended_rule, $one_attr )
-          ->to_hash,
+        scrub_rule_attr(
+            $validator->validate_requirements( $recommended_rule, $one_attr )
+        ),
         \%expected_pass_outcome,
         'recc attr present - pass'
     );
     is_deeply(
-        $validator->validate_requirements( $recommended_rule, $many_attr )
-          ->to_hash,
+        scrub_rule_attr(
+            $validator->validate_requirements( $recommended_rule, $many_attr )
+        ),
         \%expected_multiple_error_outcome,
         'recc attr present multiple - fail'
     );
 
     # optional rule
     is_deeply(
-        $validator->validate_requirements( $optional_rule, $no_attr )->to_hash,
+        scrub_rule_attr(
+            $validator->validate_requirements( $optional_rule, $no_attr )
+        ),
         \%expected_pass_outcome,
         'opt attr absent - pass'
     );
     is_deeply(
-        $validator->validate_requirements( $optional_rule, $one_attr )->to_hash,
+        scrub_rule_attr(
+            $validator->validate_requirements( $optional_rule, $one_attr )
+        ),
         \%expected_pass_outcome,
         'opt attr present - pass'
     );
     is_deeply(
-        $validator->validate_requirements( $optional_rule, $many_attr )
-          ->to_hash,
+        scrub_rule_attr(
+            $validator->validate_requirements( $optional_rule, $many_attr )
+        ),
         \%expected_multiple_error_outcome,
         'opt attr present multiple - fail'
     );
 
     #mandatory multiple
     is_deeply(
-        $validator->validate_requirements( $mandatory_multiple_rule,
-            $many_attr )->to_hash,
+        scrub_rule_attr(
+            $validator->validate_requirements(
+                $mandatory_multiple_rule, $many_attr
+            )
+        ),
         \%expected_pass_outcome,
         'multiple attr present - pass'
     );
 
 }
 
-done_testing();
+sub scrub_rule_attr {
+    my ($o) = @_;
+    my $oh = $o->to_hash;
+    $oh->{rule}       = undef;
+    $oh->{attributes} = [];
+
+    return $oh;
+}

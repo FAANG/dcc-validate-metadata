@@ -19,15 +19,20 @@ use MooseX::Params::Validate;
 
 requires 'validate_attribute';
 
-before 'validate_attribute' => sub {
-    my ($self) = shift;
+around 'validate_attribute' => sub {
+    my $orig = shift;
+    my $self = shift;
     my ( $rule, $attribute ) = pos_validated_list(
         \@_,
         { isa => 'Bio::Metadata::Rules::Rule' },
         { isa => 'Bio::Metadata::Attribute' }
     );
+
+    my $o = Bio::Metadata::Validate::ValidationOutcome->new(
+        attributes => [$attribute],
+        rule       => $rule
+    );
+    return $self->$orig( $rule, $attribute, $o );
 };
-
-
 
 1;

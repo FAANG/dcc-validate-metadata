@@ -25,9 +25,7 @@ use Bio::Metadata::Validate::ValidationOutcome;
 with 'Bio::Metadata::Validate::AttributeValidatorRole';
 
 sub validate_attribute {
-  my ($self, $rule, $attribute) = @_;
-  
-  my $o = Bio::Metadata::Validate::ValidationOutcome->new();
+  my ( $self, $rule, $attribute, $o ) = @_;
 
   if (! $attribute->value) {
     $o->outcome('error');

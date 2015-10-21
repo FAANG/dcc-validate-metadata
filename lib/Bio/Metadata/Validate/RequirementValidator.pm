@@ -31,7 +31,7 @@ sub validate_requirements {
       { isa => 'Bio::Metadata::AttributeArrayRef' }
   );
   
-  my $o = Bio::Metadata::Validate::ValidationOutcome->new();
+  my $o = Bio::Metadata::Validate::ValidationOutcome->new(attributes => $attributes, rule => $rule);
 
   my $num_attrs =  scalar(@$attributes) ;
 
