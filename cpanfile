@@ -3,6 +3,7 @@ requires 'MooseX::Params::Validate';
 requires 'JSON';
 requires 'JSON::XS';
 requires 'JSON::Validator';
+requires 'Data::DPath';
 requires 'Scalar::Util';
 
 on 'build' => sub {
