@@ -15,6 +15,7 @@ use Bio::Metadata::Validate::NumberAttributeValidator;
 use Bio::Metadata::Validate::EnumAttributeValidator;
 use Bio::Metadata::Validate::UnitAttributeValidator;
 use Bio::Metadata::Validate::RequirementValidator;
+use Bio::Metadata::Validate::OntologyUriAttributeValidator;
 
 my $text_attr = Bio::Metadata::Attribute->new( value => 'text', );
 my $num_attr = Bio::Metadata::Attribute->new( value => 10, units => 'kg' );
@@ -32,6 +33,9 @@ num_rules();
 enum_rules();
 unit_rules();
 mandatory_rules();
+ontology_uri_rule();
+
+
 done_testing();
 
 sub text_rules {
@@ -176,6 +180,23 @@ sub unit_rules {
       $unit_attr_validator->validate_attribute( $unit_rule, $text_attr );
     is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
         "unit rule rejects absent units" );
+}
+
+sub ontology_uri_rule {
+  my $ols_rule = Bio::Metadata::Rules::Rule->new(
+      type        => 'ontology_uri',
+      valid_ancestor_uris => ['http://purl.obolibrary.org/obo/UBERON_0002530'],
+  );
+  
+  my $ols_attr = Bio::Metadata::Attribute->new( value => 'liver',uri => 'http://purl.obolibrary.org/obo/UBERON_0002107' );
+  
+  my $ols_attr_validator =
+    Bio::Metadata::Validate::OntologyUriAttributeValidator->new();
+  
+  
+  my $outcome = $ols_attr_validator->validate_attribute($ols_rule,$ols_attr);
+  
+  ok($outcome);#TODO
 }
 
 sub mandatory_rules {

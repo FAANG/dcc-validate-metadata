@@ -53,6 +53,20 @@ has 'valid_units' => (
     },
     default => sub { [] },
 );
+has 'valid_ancestor_uris' => (
+    traits  => ['Array'],
+    is      => 'rw',
+    isa     => 'ArrayRef[Str]',
+    handles => {
+        all_valid_ancestor_uris   => 'elements',
+        add_valid_ancestor_uri    => 'push',
+        count_valid_ancestor_uris => 'count',
+        get_valid_ancestor_uri    => 'get',
+        find_valid_ancestor_uri   => 'first',
+        join_valid_ancestor_uris  => 'join',
+    },
+    default => sub { [] },
+);
 
 sub to_hash {
     my ($self) = @_;

@@ -8,6 +8,8 @@ requires 'Scalar::Util';
 requires 'Try::Tiny';
 requires 'autodie';
 requires 'Excel::Writer::XLSX';
+requires 'Memoize';
+requires 'URI::Escape::XS';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';
