@@ -10,6 +10,7 @@ requires 'autodie';
 requires 'Excel::Writer::XLSX';
 requires 'Memoize';
 requires 'URI::Escape::XS';
+requires 'REST::Client';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';
