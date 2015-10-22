@@ -24,6 +24,8 @@ use JSON qw(decode_json);
 use Try::Tiny;
 use autodie;
 use Data::Dumper;
+use MooseX::Params::Validate;
+
 requires 'hash_to_object';
 
 sub load {

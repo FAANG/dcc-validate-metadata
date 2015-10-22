@@ -12,33 +12,26 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Validate::NumberAttributeValidator;
+package Bio::Metadata::Reporter::AttributeColumn;
 
 use strict;
 use warnings;
 
+use Carp;
 use Moose;
+use autodie;
 use namespace::autoclean;
-use Scalar::Util qw(looks_like_number);
 
-with 'Bio::Metadata::Validate::AttributeValidatorRole';
+has 'name' => ( is => 'rw', isa => 'Str', required => 1 );
+has [ 'use_units', 'use_uri', ] =>
+  ( is => 'rw', isa => 'Bool', required => 1, default => '' );
+has 'max_count' => (
+    is       => 'rw',
+    isa      => 'Int',
+    required => 1,
+    default  => 0,
+);
 
-sub validate_attribute {
-  my ( $self, $rule, $attribute, $o ) = @_;
-
-  if (!defined $attribute->value) {
-    $o->outcome('error');
-    $o->message('no value provided');
-  }
-  elsif (! looks_like_number($attribute->value) ){
-    $o->outcome('error');
-    $o->message('value is not a number');
-  }
-  else {
-    $o->outcome('pass');
-  }
-  
-  return $o;
-}
 __PACKAGE__->meta->make_immutable;
+
 1;

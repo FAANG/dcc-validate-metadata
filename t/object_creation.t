@@ -20,12 +20,12 @@ my $sample = Bio::Metadata::Entity->new(
     entity_type => 'sample',
     attributes  => [
         { name => 'sex', value => 'female' },
+        { name => 'weight', value => '0.05', units => 'kg' },
         {
             name  => 'tissue',
             value => 'muscle',
             uri   => 'http://purl.obolibrary.org/obo/UBERON_0002385'
         },
-        { name => 'weight', value => '0.05', units => 'kg' },
         { name => 'weight', value => '50',   units => 'g' },
     ],
 );
@@ -36,18 +36,21 @@ my $expected_sh = {
     entity_type => 'sample',
     attributes  => [
         { name => 'sex', value => 'female', units => undef, uri => undef },
+        { name => 'weight', value => '0.05', units => 'kg', uri => undef },
         {
             name  => 'tissue',
             value => 'muscle',
             units => undef,
             uri   => 'http://purl.obolibrary.org/obo/UBERON_0002385'
         },
-        { name => 'weight', value => '0.05', units => 'kg', uri => undef },
         { name => 'weight', value => '50',   units => 'g',  uri => undef },
 
     ]
 };
 is_deeply( $actural_sh, $expected_sh, 'Entity to hash' );
+
+is_deeply($sample->attr_names,[qw(sex weight tissue)],'attr_names reports unique names in order');
+
 
 my $actual_organised_attrs  = $sample->organised_attr();
 my $expected_organised_attr = {

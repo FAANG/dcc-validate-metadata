@@ -12,7 +12,7 @@
                 "value": 18
             }, 
             {
-                "name": "class", 
+                "name": "class_id", 
                 "value": "03-K64-Firefly"
             }, 
             {
@@ -38,7 +38,7 @@
             {
                 "name": "passenger_capacity", 
                 "units": "people", 
-                "value": 18
+                "value": "none"
             }, 
             {
                 "name": "class", 
@@ -59,5 +59,77 @@
         ], 
         "entity_type": "spacecraft", 
         "id": "NX-74205"
+    }, 
+    {
+        "attributes": [
+            {
+                "name": "crew_capacity", 
+                "units": "people", 
+                "value": 47
+            }, 
+            {
+                "name": "passenger_capacity", 
+                "units": "people", 
+                "value": 0
+            }, 
+            {
+                "name": "class", 
+                "value": "NSO-929 Corvette"
+            }, 
+            {
+                "name": "role", 
+                "value": "warship"
+            }, 
+            {
+                "name": "weapon", 
+                "value": "particle beam cannon"
+            }, 
+            {
+                "name": "weapon", 
+                "value": "missile launcher"
+            }
+        ], 
+        "entity_type": "spacecraft", 
+        "id": "CNV-301"
+    }, 
+    {
+        "attributes": [
+            {
+                "name": "crew_capacity", 
+                "units": "people", 
+                "value": 3000
+            }, 
+            {
+                "name": "passenger_capacity", 
+                "units": "people", 
+                "value": 0
+            }, 
+            {
+                "name": "class", 
+                "value": "Battlestar"
+            }, 
+            {
+                "name": "role", 
+                "value": "warship"
+            }, 
+            {
+                "name": "weapon", 
+                "value": "kinetic energy weapon"
+            }, 
+            {
+                "name": "weapon", 
+                "value": "missile launcher"
+            }, 
+            {
+                "name": "carrying_craft", 
+                "value": "raptor"
+            }, 
+            {
+                "name": "carrying_craft", 
+                "value": "viper"
+            }
+        ], 
+        "entity_type": "spacecraft", 
+        "id": "BS-75"
     }
 ]

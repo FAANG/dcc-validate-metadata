@@ -17,7 +17,7 @@
                 }, 
                 {
                     "mandatory": "mandatory", 
-                    "name": "class_id", 
+                    "name": "class", 
                     "type": "text"
                 }, 
                 {
@@ -27,6 +27,32 @@
                     "valid_values": [
                         "transport", 
                         "warship"
+                    ]
+                }
+            ]
+        }, 
+        {
+            "condition": "/attributes/*/*[key eq 'name' && value eq 'role']/../*[key eq 'value' && value eq 'warship']", 
+            "name": "warships", 
+            "rules": [
+                {
+                    "allow_multiple": 1, 
+                    "mandatory": "recommended", 
+                    "name": "weapon", 
+                    "type": "text"
+                }
+            ]
+        }, 
+        {
+            "condition": "/attributes/*/*[key eq 'name' && value eq 'role']/../*[key eq 'value' && value eq 'transport']", 
+            "name": "transports", 
+            "rules": [
+                {
+                    "mandatory": "mandatory", 
+                    "name": "cargo_capacity", 
+                    "type": "number", 
+                    "valid_units": [
+                        "kg"
                     ]
                 }
             ]

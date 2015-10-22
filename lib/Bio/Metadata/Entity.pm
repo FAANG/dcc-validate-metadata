@@ -65,6 +65,14 @@ sub organised_attr {
   return \%h;
 }
 
+sub attr_names {
+  my ($self) = @_;
+  
+  my %names_seen;
+  my @names = grep {!$names_seen{$_}++} map {$_->name} @{$self->attributes};
+  return \@names;  
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;

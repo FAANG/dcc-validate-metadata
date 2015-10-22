@@ -78,18 +78,39 @@ has 'message_for_unexpected_attributes' => (
 
 
 sub check_all {
-  my ($self,$entities);
+  my ($self,$entities) = @_;
   
-  my %outcome_status;
-  my %outcome_report;
+  my %entity_status;
+  my %entity_outcomes;
+  my %attribute_status;
+  my %attribute_outcomes;
+  
   
   for my $e (@$entities){
     my ($status, $outcomes) = $self->check($e);
-    $outcome_status{$e} = $status;
-    $outcome_report{$e} = $outcomes;
+    $entity_status{$e} = $status;
+    $entity_outcomes{$e} = $outcomes;
+    
+    for my $o (@$outcomes) {
+      for my $a ($o->all_attributes) {
+        if (! exists $attribute_outcomes{$a}){
+          $attribute_status{$a} = $o->outcome;
+          $attribute_outcomes{$a} = [];
+        }
+        push @{$attribute_outcomes{$a}}, $o;
+        
+        if ($o->outcome eq 'error' && $attribute_status{$a} ne 'error') {
+          $attribute_status{$a} = 'error';
+        }
+        if ($o->outcome eq 'warning' && $attribute_status{$a} eq 'pass'){
+          $attribute_status{$a} = 'warning';
+        }
+      }
+    }
+    
   }
   
-  return (\%outcome_status, \%outcome_report);
+  return (\%entity_status, \%entity_outcomes, \%attribute_status, \%attribute_outcomes);
 }
 
 sub check {
