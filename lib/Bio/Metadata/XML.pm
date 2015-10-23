@@ -40,7 +40,18 @@ sub set_id {
   my $id=$data->{'EXPERIMENT'}->{'accession'};
 
   $self->id($id);
-
 }
+
+#set 'entity_type' in parent class
+sub set_type {
+  my ($self,$data)=@_;
+
+  my $type=scalar(keys %{$data});
+
+  $self->entity_type($type);
+  print "hello\n";
+  
+}
+
 
 1;

@@ -10,4 +10,6 @@ my $data_hash=$XML->get_hash_from_file("/Users/ernesto/scripts/validate/experime
 
 $XML->set_id($data_hash);
 
+$XML->set_type($data_hash);
+
 print "hello\n";
