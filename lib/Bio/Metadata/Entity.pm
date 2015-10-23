@@ -26,20 +26,25 @@ use Bio::Metadata::Types;
 
 has 'id'          => ( is => 'rw', isa => 'Str' );
 has 'entity_type' => ( is => 'rw', isa => 'Str' );
+has 'links' => (
+		traits => ['Array'],
+		is => 'rw',
+		isa => 'Bio::Metadata::EntityArrayRef'
+		);
 has 'attributes'  => (
-    traits  => ['Array'],
-    is      => 'rw',
-    isa     => 'Bio::Metadata::AttributeArrayRef',
-    handles => {
-        all_attributes   => 'elements',
-        add_attribute    => 'push',
-        count_attributes => 'count',
-        get_attribute    => 'get',
-    },
-    default => sub { [] },
-    coerce => 1,
-);
-
+		      traits  => ['Array'],
+		      is      => 'rw',
+		      isa     => 'Bio::Metadata::AttributeArrayRef',
+		      handles => {
+				  all_attributes   => 'elements',
+				  add_attribute    => 'push',
+				  count_attributes => 'count',
+				  get_attribute    => 'get',
+				 },
+		      default => sub { [] },
+		      coerce => 1,
+		     );
+		
 sub to_hash {
     my ($self) = @_;
 

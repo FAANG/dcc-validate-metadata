@@ -46,11 +46,9 @@ sub set_id {
 sub set_type {
   my ($self,$data)=@_;
 
-  my $type=scalar(keys %{$data});
+  my $type=(keys %{$data})[0];
 
   $self->entity_type($type);
-  print "hello\n";
-  
 }
 
 
