@@ -12,7 +12,7 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Loader::LoaderRole;
+package Bio::Metadata::Loader::JSONLoaderRole;
 
 use strict;
 use warnings;
@@ -25,6 +25,7 @@ use Try::Tiny;
 use autodie;
 use Data::Dumper;
 use MooseX::Params::Validate;
+use Bio::Metadata::Types;
 
 requires 'hash_to_object';
 
@@ -50,19 +51,17 @@ sub load {
     };
 
     try {
-      if (ref $json_data eq 'HASH') {
-        $o = $self->hash_to_object($json_data);
-      }
-      elsif (ref $json_data eq 'ARRAY') {
-        $o = [];
-        push @$o, map {$self->hash_to_object($_)} @$json_data;
-      }
-        
+        if ( ref $json_data eq 'HASH' ) {
+            $o = $self->hash_to_object($json_data);
+        }
+        elsif ( ref $json_data eq 'ARRAY' ) {
+            $o = [ map { $self->hash_to_object($_) } @$json_data ];
+        }
+
     }
     catch {
         croak "Could not convert data structure to object: $_";
     };
-
 
     return $o;
 }

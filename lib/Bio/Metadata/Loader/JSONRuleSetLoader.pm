@@ -12,7 +12,7 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Loader::EntityLoader;
+package Bio::Metadata::Loader::JSONRuleSetLoader;
 
 use strict;
 use warnings;
@@ -20,14 +20,15 @@ use warnings;
 use Carp;
 use Moose;
 use namespace::autoclean;
-use Bio::Metadata::Entity;
+use Bio::Metadata::Rules::RuleSet;
+use Bio::Metadata::Types;
 
-with "Bio::Metadata::Loader::LoaderRole";
+with "Bio::Metadata::Loader::JSONLoaderRole";
 
 sub hash_to_object {
     my ( $self, $hash ) = @_;
 
-    my $o = Bio::Metadata::Entity->new($hash); 
+    my $o = Bio::Metadata::Rules::RuleSet->new($hash); 
 
     return $o;
 }

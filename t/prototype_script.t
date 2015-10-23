@@ -10,8 +10,8 @@ use JSON;
 use Test::More;
 use Test::Exception;
 use autodie;
-use Bio::Metadata::Loader::RuleSetLoader;
-use Bio::Metadata::Loader::EntityLoader;
+use Bio::Metadata::Loader::JSONRuleSetLoader;
+use Bio::Metadata::Loader::JSONEntityLoader;
 use Bio::Metadata::Validate::EntityValidator;
 use Bio::Metadata::Reporter::ExcelReporter;
 
@@ -19,11 +19,11 @@ my $data_dir = "$Bin/data";
 
 my $output = "test_out.xlsx";
 
-my $rule_set = Bio::Metadata::Loader::RuleSetLoader->new()
+my $rule_set = Bio::Metadata::Loader::JSONRuleSetLoader->new()
   ->load("$data_dir/test_good_rule_set.json");
 
 my $test_data =
-  Bio::Metadata::Loader::EntityLoader->new()->load("$data_dir/test_data.json");
+  Bio::Metadata::Loader::JSONEntityLoader->new()->load("$data_dir/test_data.json");
 
 my $validator =
   Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
