@@ -8,11 +8,11 @@ use lib "$Bin/../lib";
 use Data::Dumper;
 use Test::More;
 use Test::Exception;
-use Bio::Metadata::Loader::RuleSetLoader; 
+use Bio::Metadata::Loader::JSONRuleSetLoader; 
 
 my $data_dir = "$Bin/data";
 
-my $loader = Bio::Metadata::Loader::RuleSetLoader->new();
+my $loader = Bio::Metadata::Loader::JSONRuleSetLoader->new();
 
 test_good();
 test_bad();
