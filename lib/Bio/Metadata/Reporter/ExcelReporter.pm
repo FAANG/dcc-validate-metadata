@@ -102,7 +102,8 @@ sub report_uniq_usage {
 
     my $hformat = $self->get_format('header');
     my $wformat = $self->get_format('warning');
-    my $row     = 0;
+
+    my $row = 0;
 
     $sheet->write( $row, 0, "attribute", $hformat );
     $sheet->write( $row, 1, $key,        $hformat );
@@ -130,7 +131,6 @@ sub report_uniq_usage {
         for
           my $k ( sort { _mash_term($a) cmp _mash_term($b) } keys %$term_count )
         {
-
             $sheet->write( $row, 1, $k, );
 
             if ( $term_mash{ _mash_term($k) } > 1 ) {
@@ -145,7 +145,10 @@ sub report_uniq_usage {
         }
 
     }
-
+    
+    my $rborder_format = $self->get_format('rborder');
+    $sheet->set_column( 0,1, 15, $rborder_format );
+  
 }
 
 sub create_formats {
@@ -159,8 +162,7 @@ sub create_formats {
     $format{'error'}          = $workbook->add_format();
     $format{'header'}         = $workbook->add_format();
     $format{'rborder'}        = $workbook->add_format();
-    $format{'rborder_header'} = $workbook->add_format();
-
+    
     $format{'pass'}->set_bg_color( $self->pass_color );
     $format{'warning'}->set_bg_color( $self->warning_color );
     $format{'error'}->set_bg_color( $self->error_color );
@@ -169,10 +171,6 @@ sub create_formats {
     $format{'header'}->set_bottom();
 
     $format{'rborder'}->set_right();
-
-    $format{'rborder_header'}->set_bold();
-    $format{'rborder_header'}->set_bottom();
-    $format{'rborder_header'}->set_right();
 
     $self->_formats( \%format );
 }
