@@ -54,16 +54,15 @@ sub validate_attribute {
       return $o;
     };
     
-    my $is_valid_descendent = 0;
     my $label;
-    for my $ancestor_uri ($rule->all_valid_ancestor_uris) {
-      $self->is_descendent($attribute->uri,$ancestor_uri);
+    ANCESTOR: for my $ancestor_uri ($rule->all_valid_ancestor_uris) {
+      $label = $self->is_descendent($attribute->uri,$ancestor_uri);
       if ($label){
-        $is_valid_descendent = 1;
-        last;
+        last ANCESTOR;
       }
     }
-    if (!$is_valid_descendent){
+    
+    if (!$label){
       $o->outcome('error');
       $o->message('uri is not descendent of valid ancestor');
       return $o;

@@ -35,7 +35,6 @@ unit_rules();
 mandatory_rules();
 ontology_uri_rule();
 
-
 done_testing();
 
 sub text_rules {
@@ -183,20 +182,57 @@ sub unit_rules {
 }
 
 sub ontology_uri_rule {
-  my $ols_rule = Bio::Metadata::Rules::Rule->new(
-      type        => 'ontology_uri',
-      valid_ancestor_uris => ['http://purl.obolibrary.org/obo/UBERON_0002530'],
-  );
-  
-  my $ols_attr = Bio::Metadata::Attribute->new( value => 'liver',uri => 'http://purl.obolibrary.org/obo/UBERON_0002107' );
-  
-  my $ols_attr_validator =
-    Bio::Metadata::Validate::OntologyUriAttributeValidator->new();
-  
-  
-  my $outcome = $ols_attr_validator->validate_attribute($ols_rule,$ols_attr);
-  
-  ok($outcome);#TODO
+    my $ols_rule = Bio::Metadata::Rules::Rule->new(
+        type => 'ontology_uri',
+        valid_ancestor_uris =>
+          ['http://purl.obolibrary.org/obo/UBERON_0002530'],
+    );
+    my $ols_attr_validator =
+      Bio::Metadata::Validate::OntologyUriAttributeValidator->new();
+
+    #valid term
+    my $ols_attr = Bio::Metadata::Attribute->new(
+        value => 'liver',
+        uri   => 'http://purl.obolibrary.org/obo/UBERON_0002107'
+    );
+    my $outcome =
+      $ols_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    is( $outcome->outcome, 'pass', 'OLS passed valid term' );
+
+    #wrong ancestor
+    $ols_attr = Bio::Metadata::Attribute->new(
+        value => 'distal tarsal bone 4',
+        uri   => 'http://purl.obolibrary.org/obo/UBERON_0010737'
+    );
+    $outcome = $ols_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    is( $outcome->outcome, 'error', 'OLS errored term with wrong ancestor' );
+
+    #not a term URI
+    $ols_attr = Bio::Metadata::Attribute->new(
+        value => 'not a term',
+        uri   => 'http://www.bbc.co.uk/cbeebies'
+    );
+    $outcome = $ols_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    is( $outcome->outcome, 'error', 'OLS errored URI term that is not in OLS' );
+
+    #not URI
+    $ols_attr = Bio::Metadata::Attribute->new(
+        value => 'not a term',
+        uri   => 'not a term'
+    );
+    $outcome = $ols_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    is( $outcome->outcome, 'error', 'OLS errored for term that is not a URI' );
+
+    #warn for term/label mismatch
+    $ols_attr = Bio::Metadata::Attribute->new(
+        value => 'not a liver',
+        uri   => 'http://purl.obolibrary.org/obo/UBERON_0002107'
+    );
+    $outcome =
+      $ols_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    is( $outcome->outcome, 'warning',
+        'OLS warning for term with different label/value term' );
+
 }
 
 sub mandatory_rules {
