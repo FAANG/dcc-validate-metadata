@@ -32,6 +32,39 @@ has 'max_count' => (
     default  => 0,
 );
 
+has 'term_count' => (
+    traits   => ['Hash'],
+    is       => 'rw',
+    isa      => 'HashRef[HashRef[Int]]',
+    default  =>  sub{ { value => {}, uri => {}, units => {} } },
+    required => 1,
+);
+
+sub consume_attrs {
+    my ( $self, $attrs ) = @_;
+
+    if ( scalar(@$attrs) > $self->max_count ) {
+        $self->max_count( scalar(@$attrs) );
+    }
+
+    for my $a (@$attrs) {
+        $self->use_units(1) if ( $a->units );
+        $self->use_uri(1)   if ( $a->uri );
+
+        if ( defined $a->value ) {
+            $self->term_count()->{value}{ $a->value }++;
+        }
+        if ( $a->uri  ) {
+          
+            $self->term_count()->{uri}{ $a->uri }++;
+        }
+        if ( $a->units ) {
+            $self->term_count()->{units}{ $a->units }++;
+        }
+    }
+
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;

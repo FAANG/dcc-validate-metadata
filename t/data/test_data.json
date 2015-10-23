@@ -86,7 +86,7 @@
             }, 
             {
                 "name": "weapon", 
-                "value": "missile launcher"
+                "value": "Missile launcher"
             }
         ], 
         "entity_type": "spacecraft", 

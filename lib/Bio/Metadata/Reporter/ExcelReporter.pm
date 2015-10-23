@@ -55,12 +55,81 @@ sub report {
     $self->create_formats();
 
     my $attr_columns = $self->determine_attr_columns($entities);
+
+    #create entities report
     my $entity_sheet = $self->new_worksheet("entities");
 
     $self->write_header( $entity_sheet, $attr_columns );
     $self->write_entities( $entity_sheet, $attr_columns, $entities,
         $entity_status, $entity_outcomes, $attribute_status,
         $attribute_outcomes );
+
+    #create term usage reports
+    my $values_sheet = $self->new_worksheet("values");
+    $self->report_uniq_usage( $values_sheet, 'value', $attr_columns );
+    
+    my $units_sheet = $self->new_worksheet("units");
+    $self->report_uniq_usage( $units_sheet, 'units', $attr_columns );
+    
+    my $uris_sheet = $self->new_worksheet("uris");
+    $self->report_uniq_usage( $uris_sheet, 'uri', $attr_columns );
+
+}
+
+sub _mash_term {
+    my ($term) = @_;
+    my $mashed = lc($term);
+    $mashed =~ s/\W//g;    # remove anything that isn't a-z,1-0,_
+    return $mashed;
+}
+
+sub report_uniq_usage {
+    my ( $self, $sheet, $key, $attr_columns ) = @_;
+
+    my $hformat = $self->get_format('header');
+    my $wformat = $self->get_format('warning');
+    my $row     = 0;
+
+    $sheet->write( $row, 0, "attribute", $hformat );
+    $sheet->write( $row, 1, $key,        $hformat );
+    $sheet->write( $row, 2, "count",     $hformat );
+
+    $row++;
+
+    AC: for my $ac (@$attr_columns) {
+        my $term_count = $ac->term_count->{$key};
+        
+        if (! keys %$term_count) {
+          #attribute column doesn't have any terms of this type, don't report
+          next AC;
+        }
+        
+        $sheet->write( $row, 0, $ac->name );
+        
+        my %term_mash;
+        for my $k ( keys %$term_count ) {
+            my $mashed_term = _mash_term($k);
+            $term_mash{$mashed_term}++;
+        }
+
+        for
+          my $k ( sort { _mash_term($a) cmp _mash_term($b) } keys %$term_count )
+        {
+
+            $sheet->write( $row, 1, $k, );
+
+            if ( $term_mash{ _mash_term($k) } > 1 ) {
+                $sheet->write( $row, 1, $k, $wformat );
+            }
+            else {
+                $sheet->write( $row, 1, $k );
+            }
+            $sheet->write( $row, 2, $term_count->{$k} );
+
+            $row++;
+        }
+
+    }
 
 }
 
@@ -246,15 +315,7 @@ sub determine_attr_columns {
                 push @columns, $column{$name};
             }
             my $ac = $column{$name};
-
-            if ( scalar(@$attrs) > $ac->max_count ) {
-                $ac->max_count( scalar(@$attrs) );
-            }
-
-            for my $a (@$attrs) {
-                $ac->use_units(1) if ( $a->units );
-                $ac->use_uri(1)   if ( $a->uri );
-            }
+            $ac->consume_attrs($attrs);
         }
     }
 
