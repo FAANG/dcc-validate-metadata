@@ -1,7 +1,7 @@
 requires 'Moose';
 requires 'MooseX::Params::Validate';
 requires 'JSON';
-requires 'JSON::XS';
+recommends 'JSON::XS';
 requires 'JSON::Validator';
 requires 'Data::DPath';
 requires 'Scalar::Util';
@@ -10,6 +10,7 @@ requires 'autodie';
 requires 'Excel::Writer::XLSX';
 requires 'Memoize';
 requires 'URI::Escape::XS';
+requires 'namespace::autoclean';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';
