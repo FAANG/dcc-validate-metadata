@@ -64,13 +64,27 @@ sub report {
         $entity_status, $entity_outcomes, $attribute_status,
         $attribute_outcomes );
 
+    my $col            = 1;
+    my $rborder_format = $self->get_format('rborder');
+    $entity_sheet->set_column( 0, $col, 15, $rborder_format );
+
+    for my $ac (@$attr_columns) {
+        my $col_to_cover_per_attr = 1;
+        $col_to_cover_per_attr++ if ( $ac->use_units );
+        $col_to_cover_per_attr++ if ( $ac->use_uri );
+
+        $col = $col + ( $ac->max_count * $col_to_cover_per_attr );
+
+        $entity_sheet->set_column( $col, $col, undef, $rborder_format );
+    }
+
     #create term usage reports
     my $values_sheet = $self->new_worksheet("values");
     $self->report_uniq_usage( $values_sheet, 'value', $attr_columns );
-    
+
     my $units_sheet = $self->new_worksheet("units");
     $self->report_uniq_usage( $units_sheet, 'units', $attr_columns );
-    
+
     my $uris_sheet = $self->new_worksheet("uris");
     $self->report_uniq_usage( $uris_sheet, 'uri', $attr_columns );
 
@@ -96,16 +110,17 @@ sub report_uniq_usage {
 
     $row++;
 
-    AC: for my $ac (@$attr_columns) {
+  AC: for my $ac (@$attr_columns) {
         my $term_count = $ac->term_count->{$key};
-        
-        if (! keys %$term_count) {
-          #attribute column doesn't have any terms of this type, don't report
-          next AC;
+
+        if ( !keys %$term_count ) {
+
+            #attribute column doesn't have any terms of this type, don't report
+            next AC;
         }
-        
+
         $sheet->write( $row, 0, $ac->name );
-        
+
         my %term_mash;
         for my $k ( keys %$term_count ) {
             my $mashed_term = _mash_term($k);
@@ -139,16 +154,25 @@ sub create_formats {
     my $workbook = $self->_workbook;
 
     my %format;
-    $format{'pass'}    = $workbook->add_format();
-    $format{'warning'} = $workbook->add_format();
-    $format{'error'}   = $workbook->add_format();
-    $format{'header'}  = $workbook->add_format();
+    $format{'pass'}           = $workbook->add_format();
+    $format{'warning'}        = $workbook->add_format();
+    $format{'error'}          = $workbook->add_format();
+    $format{'header'}         = $workbook->add_format();
+    $format{'rborder'}        = $workbook->add_format();
+    $format{'rborder_header'} = $workbook->add_format();
 
     $format{'pass'}->set_bg_color( $self->pass_color );
     $format{'warning'}->set_bg_color( $self->warning_color );
     $format{'error'}->set_bg_color( $self->error_color );
 
     $format{'header'}->set_bold();
+    $format{'header'}->set_bottom();
+
+    $format{'rborder'}->set_right();
+
+    $format{'rborder_header'}->set_bold();
+    $format{'rborder_header'}->set_bottom();
+    $format{'rborder_header'}->set_right();
 
     $self->_formats( \%format );
 }
@@ -283,6 +307,7 @@ sub write_header {
         }
     }
 }
+
 
 sub create_workbook {
     my ($self) = @_;
