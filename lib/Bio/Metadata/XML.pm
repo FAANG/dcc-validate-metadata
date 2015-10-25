@@ -51,5 +51,33 @@ sub set_type {
   $self->entity_type($type);
 }
 
+#set 'links' in parent class
+sub set_links {
+   my ($self,$data)=@_;
+   
+   #study
+   my $study_id=$data->{'EXPERIMENT'}->{'STUDY_REF'}->{'accession'};
+   my $study = Bio::Metadata::Entity->new(
+					  id          => $study_id,
+					  entity_type => 'study');
+
+   my $sample_id=$data->{'EXPERIMENT'}->{'DESIGN'}->{'SAMPLE_DESCRIPTOR'}->{'accession'};
+   my $sample = Bio::Metadata::Entity->new(
+					  id          => $sample_id,
+					  entity_type => 'study');
+
+
+   $self->add_link($study);
+   $self->add_link($sample);   
+}
+
+#set 'attributes in parent class
+sub set_attributes {
+  my ($self,$data)=@_;
+
+  
+
+
+}
 
 1;
