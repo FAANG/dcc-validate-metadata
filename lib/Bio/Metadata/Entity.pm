@@ -53,17 +53,6 @@ has 'attributes'  => (
     coerce => 1,
     );
 
-#sub add_link {
-#  my ($self, @items) = @_;
-  
-#  for my $item (@items) {
-#    print "h\n";
-  #  $Item_TC->validate($item);
-#  }
-
-#  push @{ $self->queue }, @items;
-#  }
-
 sub to_hash {
     my ($self) = @_;
 

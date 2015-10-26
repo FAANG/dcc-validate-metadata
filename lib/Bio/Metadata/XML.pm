@@ -75,9 +75,17 @@ sub set_links {
 sub set_attributes {
   my ($self,$data)=@_;
 
-  
+  #arrayref of hashes
+  my $attrb_array=$data->{'EXPERIMENT'}->{'EXPERIMENT_ATTRIBUTES'}->{'EXPERIMENT_ATTRIBUTE'};
 
-
+  foreach my $attrb (@$attrb_array) {
+    my $o= Bio::Metadata::Attribute->new(
+					 name => $attrb->{'TAG'},
+					 value => $attrb->{'VALUE'}
+					);
+    $self->add_attribute($o);
+  }
+  print "h\n";
 }
 
 1;
