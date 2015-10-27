@@ -22,8 +22,6 @@ use namespace::autoclean;
 use Bio::Metadata::Attribute;
 use Bio::Metadata::Types;
 
-
-
 has 'id'          => ( is => 'rw', isa => 'Str' );
 has 'entity_type' => ( is => 'rw', isa => 'Str' );
 has 'links' => (
@@ -79,5 +77,7 @@ sub organised_attr {
   }
   return \%h;
 }
+
+sub TO_JSON { return { %{ shift() } }; }
 
 1;

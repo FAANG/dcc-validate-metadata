@@ -26,13 +26,15 @@ has 'units' => ( is => 'rw', isa => 'Str' );
 has 'uri'   => ( is => 'rw', isa => 'Str' );
 
 sub to_hash {
-    my ($self) = @_;
-
-    return {
-        name  => $self->name,
-        value => $self->value,
-        units => $self->units,
-        uri   => $self->uri,
-    };
+  my ($self) = @_;
+  
+  return {
+	  name  => $self->name,
+	  value => $self->value,
+	  units => $self->units,
+	  uri   => $self->uri,
+	 };
 }
+
+sub TO_JSON { return { %{ shift() } }; }
 1;
