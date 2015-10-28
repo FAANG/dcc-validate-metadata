@@ -1,4 +1,4 @@
-<?xml version = '1.0' encoding = 'UTF-8'?>
+<?xml version = '1.0' encoding = 'UTF-8'?><EXPERIMENT_SET>
    <EXPERIMENT alias="ena-EXPERIMENT-BLUEPRINT-11-04-2014-09:38:35:978-3" center_name="BLUEPRINT" accession="ERX442231" broker_name="EGA">
       <IDENTIFIERS>
          <PRIMARY_ID>ERX442231</PRIMARY_ID>
@@ -154,3 +154,4 @@ fromTruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
          </EXPERIMENT_ATTRIBUTE>
       </EXPERIMENT_ATTRIBUTES>
    </EXPERIMENT>
+</EXPERIMENT_SET>

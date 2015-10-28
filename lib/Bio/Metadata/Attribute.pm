@@ -26,14 +26,19 @@ has 'units' => ( is => 'rw', isa => 'Str' );
 has 'uri'   => ( is => 'rw', isa => 'Str' );
 
 sub to_hash {
-    my ($self) = @_;
-
-    return {
-        name  => $self->name,
-        value => $self->value,
-        units => $self->units,
-        uri   => $self->uri,
-    };
+  my ($self) = @_;
+  
+  return {
+	  name  => $self->name,
+	  value => $self->value,
+	  units => $self->units,
+	  uri   => $self->uri,
+	 };
 }
+<<<<<<< HEAD
 __PACKAGE__->meta->make_immutable;
+=======
+
+sub TO_JSON { return { %{ shift() } }; }
+>>>>>>> ernesto_20102015
 1;

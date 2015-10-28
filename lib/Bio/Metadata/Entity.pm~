@@ -22,6 +22,8 @@ use namespace::autoclean;
 use Bio::Metadata::Attribute;
 use Bio::Metadata::Types;
 
+
+
 has 'id'          => ( is => 'rw', isa => 'Str' );
 has 'entity_type' => ( is => 'rw', isa => 'Str' );
 has 'links' => (
@@ -51,6 +53,17 @@ has 'attributes'  => (
     coerce => 1,
     );
 
+#sub add_link {
+#  my ($self, @items) = @_;
+  
+#  for my $item (@items) {
+#    print "h\n";
+  #  $Item_TC->validate($item);
+#  }
+
+#  push @{ $self->queue }, @items;
+#  }
+
 sub to_hash {
     my ($self) = @_;
 
@@ -77,17 +90,5 @@ sub organised_attr {
   }
   return \%h;
 }
-
-sub attr_names {
-  my ($self) = @_;
-  
-  my %names_seen;
-  my @names = grep {!$names_seen{$_}++} map {$_->name} @{$self->attributes};
-  return \@names;  
-}
-
-sub TO_JSON { return { %{ shift() } }; }
-
-__PACKAGE__->meta->make_immutable;
 
 1;
