@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Bio::Metadata::Loader::XMLEntityLoader;
+use Bio::Metadata::ValidateSchema::EntityValidator;
 use JSON;
 
 my $loader = Bio::Metadata::Loader::XMLEntityLoader->new();

@@ -46,7 +46,7 @@ sub hash_to_object {
   my $sample_id=$hash->{'EXPERIMENT'}->{'DESIGN'}->{'SAMPLE_DESCRIPTOR'}->{'accession'};
   my $sample = Bio::Metadata::Entity->new(
 					  id          => $sample_id,
-					  entity_type => 'study');
+					  entity_type => 'sample');
 
 
   $o->add_link($study);
