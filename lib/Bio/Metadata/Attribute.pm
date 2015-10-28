@@ -35,10 +35,9 @@ sub to_hash {
 	  uri   => $self->uri,
 	 };
 }
-<<<<<<< HEAD
-__PACKAGE__->meta->make_immutable;
-=======
 
 sub TO_JSON { return { %{ shift() } }; }
->>>>>>> ernesto_20102015
+
+_PACKAGE__->meta->make_immutable;
+
 1;
