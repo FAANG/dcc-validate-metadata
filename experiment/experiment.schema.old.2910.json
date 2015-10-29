@@ -1,0 +1,38 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "A representation of a Blueprint Experiment XML",
+    "type": "object",
+    "properties": {
+	"id": {
+	    "type": "string",
+	    "pattern": "^ERX",
+	     "minLength": 4
+	},
+	"entity_type": {
+	    "type": "string",
+	    "enum": ["EXPERIMENT","SAMPLE","RUN","STUDY"]
+	    
+	},
+	"attributes" : {
+	    "type": "array",
+	    "minItems": 2,
+	    "uniqueItems": true,
+	    "items": [
+		{
+		    "type": "object",
+		    "properties": {
+			"name": {
+			    "type": "string"
+			    
+			},
+			"value":{
+			    "type": "string"
+			},
+			"required": ["name","value"]
+		    }
+		}
+	    ]
+	}
+    },
+    "required": ["id","entity_type","attributes"]
+}
