@@ -53,104 +53,17 @@
       </PLATFORM>
       <PROCESSING/>
       <EXPERIMENT_ATTRIBUTES>
-         <EXPERIMENT_ATTRIBUTE>
+	<EXPERIMENT_ATTRIBUTE>
             <TAG>ENA-SUBMISSION-TOOL</TAG>
             <VALUE>SRA-Webin</VALUE>
          </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
+        <EXPERIMENT_ATTRIBUTE>
             <TAG>EXPERIMENT_TYPE</TAG>
-            <VALUE>Ribo Minus RNA sequencing</VALUE>
+            <VALUE>Ribo Minus RA sequencing</VALUE>
          </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
+	  <EXPERIMENT_ATTRIBUTE>
             <TAG>EXTRACTION_PROTOCOL</TAG>
             <VALUE>TRIzol RNA Isolation for cells.</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>EXTRACTION_PROTOCOL_MRNA_ENRICHMENT</TAG>
-            <VALUE>Ribo Zero Gold Kit (Epicentre; RZG1224)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>EXTRACTION_PROTOCOL_FRAGMENTATION</TAG>
-            <VALUE>Chemical fragmentation as described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011).</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>MRNA_PREPARATION_INITIAL_MRNA_QNTY</TAG>
-            <VALUE>The Ribo Zero input is 0.2 µg of total RNA. The Ribo Zero Step is integrated in the library preparation protocol and has no separate amount measurement.</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>MRNA_PREPARATION_FRAGMENT_SIZE_RANGE</TAG>
-            <VALUE>Size range is between 120 bp and 210 bp</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>RNA_PREPARATION_5'_RNA_ADAPTER_SEQUENCE</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011).</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>RNA_PREPARATION_3'_RNA_ADAPTER_SEQUENCE</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>RNA_PREPARATION_REVERSE_TRANSCRIPTION_PRIMER_SEQUENCE</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>RNA_PREPARATION_5'_DEPHOSPHORYLATION</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>RNA_PREPARATION_5'_PHOSPHORYLATION</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>RNA_PREPARATION_3'_RNA ADAPTER_LIGATION_PROTOCOL</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>RNA_PREPARATION_5'_RNA_ADAPTER_LIGATION_PROTOCOL</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>RNA_PREPARATION_REVERSE_TRANSCRIPTION_PROTOCOL</TAG>
-            <VALUE>As described in Sultan et al. (BBRC, 2012)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>LIBRARY_GENERATION_PCR_TEMPLATE_CONC</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>LIBRARY_GENERATION_PCR_POLYMERASE_TYPE</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>LIBRARY_GENERATION_PCR_THERMOCYCLING_PROGRAM</TAG>
-            <VALUE>98°C for 30 seconds
-10 - 15 cycles (depending of qPCR Results) of:
-	98°C for 10 seconds
-	60°C for 30 seconds
-	72°C for 30 seconds
-72°C for 5 minutes 
-Hold at 10°C
-fromTruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>LIBRARY_GENERATION_PCR_NUMBER_CYCLES</TAG>
-            <VALUE>The cycles for PCR amplification are adjusted according to theqPCRQC results (in most cases between 10 and 15 cycles).</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>LIBRARY_GENERATION_PCR_F_PRIMER_</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>LIBRARY_GENERATION_PCR_R_PRIMER_SEQUENCE</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>LIBRARY_GENERATION_PCR_PRIMER_CONC</TAG>
-            <VALUE>As described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
-         </EXPERIMENT_ATTRIBUTE>
-         <EXPERIMENT_ATTRIBUTE>
-            <TAG>LIBRARY_GENERATION_PCR_PRODUCT_ISOLATION_PROTOCOL</TAG>
-            <VALUE>The amplificated library is purified with AMPure XP Beads as is described in TruSeq RNA Sample Preparation v2 Guide (Illumina, Aug. 2011)</VALUE>
          </EXPERIMENT_ATTRIBUTE>
       </EXPERIMENT_ATTRIBUTES>
    </EXPERIMENT>

@@ -43,6 +43,20 @@ sub validate {
 
   my $hash=$self->entity->to_hash();
 
+  #prepare attributes for validation
+  my @attrbs=@{$hash->{'attributes'}};
+  for (my $i=0;$i<scalar(@attrbs);$i++) {
+    my $oldhash=$attrbs[$i];
+    my %newhash=(
+		 $oldhash->{'name'} => $oldhash->{'value'}
+		);
+    $attrbs[$i]=\%newhash;
+		 
+  }
+
+  $hash->{'attributes'}=\@attrbs;
+  print Dumper($hash),"\n";
+  
   my $validator = JSON::Validator->new;
   $validator->schema($self->schema());
 
