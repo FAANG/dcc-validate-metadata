@@ -64,7 +64,11 @@ sub validate {
 
   if (@errors) {
     foreach my $e (@errors) {
-      print $e,"\n";
+      
+      #my $number=$1 if $e->path=~/\/attributes\/(\d+):/;
+      print ref($e->path),"adios\n";
+#      my $attr=$attrbs[$number-1];
+      print "hello\n"
     }
   }
 

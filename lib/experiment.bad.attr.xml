@@ -59,7 +59,7 @@
          </EXPERIMENT_ATTRIBUTE>
         <EXPERIMENT_ATTRIBUTE>
             <TAG>EXPERIMENT_TYPE</TAG>
-            <VALUE>Ribo Minus RA sequencing</VALUE>
+            <VALUE>Ribo Minus RNA sequencing</VALUE>
          </EXPERIMENT_ATTRIBUTE>
 	  <EXPERIMENT_ATTRIBUTE>
             <TAG>EXTRACTION_PROTOCOL</TAG>

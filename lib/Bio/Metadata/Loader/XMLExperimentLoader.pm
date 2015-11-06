@@ -12,7 +12,7 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Loader::XMLEntityLoader;
+package Bio::Metadata::Loader::XMLExperimentLoader;
 
 use strict;
 use warnings;
@@ -65,15 +65,6 @@ sub hash_to_object {
   }
 
   return $o;
-}
-
-#set 'id' in parent class
-sub set_id {
-  my ($self,$data)=@_;
-
-  my $id=$data->{'EXPERIMENT'}->{'accession'};
-
-  $self->id($id);
 }
 
 __PACKAGE__->meta->make_immutable;
