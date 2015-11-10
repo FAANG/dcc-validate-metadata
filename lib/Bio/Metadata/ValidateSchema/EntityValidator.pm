@@ -64,15 +64,15 @@ sub validate {
 
   if (@errors) {
     foreach my $e (@errors) {
-      
-      #my $number=$1 if $e->path=~/\/attributes\/(\d+):/;
-      print ref($e->path),"adios\n";
-#      my $attr=$attrbs[$number-1];
-      print "hello\n"
+      my $path=$e->path;
+      my $number=$1 if $path=~/\/attributes\/(\d+)/;
+      my $failed_attr=$attrbs[$number]; #get failed attribute
+      foreach my $a (keys %$failed_attr) {
+	print("[ERROR] Issue with $a attribute with value:",$failed_attr->{$a},"\n");
+	print $e->message,"\n";
+      }
     }
   }
-
-  print "hello\n";
 }
 
 
