@@ -8,7 +8,6 @@ before_install:
     - "cpanm -n Devel::Cover::Report::Coveralls"
     - "cpanm Module::Build::Pluggable Module::Build::Pluggable::CPANfile"
     - "cpanm JSON::XS"
-    - "cpanm XML::Simple"
 before_script:
       
 script:
