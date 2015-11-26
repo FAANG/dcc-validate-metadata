@@ -1,7 +1,7 @@
 requires 'Moose';
 requires 'MooseX::Params::Validate';
 requires 'JSON';
-recommends 'JSON::XS';
+requires 'JSON::XS';
 requires 'JSON::Validator';
 requires 'Data::DPath';
 requires 'Scalar::Util';

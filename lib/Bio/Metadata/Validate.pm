@@ -19,7 +19,7 @@ __END__
 
 =head1 NAME
 
-Bio::Metadata::Validate
+Bio::Metadata::Validate - a validation system for biological metadata
 
 =head1 VERSION
 
