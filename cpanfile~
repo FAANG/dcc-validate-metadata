@@ -12,8 +12,6 @@ requires 'Memoize';
 requires 'URI::Escape::XS';
 requires 'namespace::autoclean';
 requires 'REST::Client';
-requires 'JSON::XS';
-requires 'XML::Simple';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';

@@ -17,6 +17,7 @@ use strict;
 use warnings;
 
 use Moose;
+use JSON;
 use namespace::autoclean;
 
 use Bio::Metadata::Attribute;
@@ -55,11 +56,13 @@ sub to_hash {
     my ($self) = @_;
 
     my @attr = map { $_->to_hash } $self->all_attributes;
+    my @links = map { $_->to_hash } $self->all_links;
 
     return {
-        id          => $self->id,
-        entity_type => $self->entity_type,
-        attributes  => \@attr,
+	    id          => $self->id,
+	    entity_type => $self->entity_type,
+	    attributes  => \@attr,
+	    links => \@links,
     };
 }
 
@@ -87,6 +90,17 @@ sub attr_names {
 }
 
 sub TO_JSON { return { %{ shift() } }; }
+
+sub to_json_tmp {
+  my ($self)=@_;
+  
+  my $JSON = JSON->new->utf8;
+  $JSON->convert_blessed(1);
+
+  my $json_text = $JSON->pretty->encode($self);
+
+  return $json_text;
+}
 
 __PACKAGE__->meta->make_immutable;
 

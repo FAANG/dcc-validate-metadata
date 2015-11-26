@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <SAMPLE alias="S00TXX11">
+        <TITLE>S00TXX11</TITLE>
+        <SAMPLE_NAME>
+            <TAXON_ID>9606</TAXON_ID>
+            <SCIENTIFIC_NAME>Homo sapiens</SCIENTIFIC_NAME>
+            <COMMON_NAME>human</COMMON_NAME>
+            <ANONYMIZED_NAME>B270_7</ANONYMIZED_NAME>
+        </SAMPLE_NAME>
+        <DESCRIPTION>Dendritic cells samples from blood of healthy donor</DESCRIPTION>
+        <SAMPLE_ATTRIBUTES>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>subject_id</TAG>
+                <VALUE>B270_7</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>MOLECULE</TAG>
+                <VALUE>total RNA</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>DISEASE</TAG>
+                <VALUE>None</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>BIOMATERIAL_PROVIDER</TAG>
+                <VALUE>Sanquin_Nijmegen</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>BIOMATERIAL_TYPE</TAG>
+                <VALUE>Primary Cell</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>CELL_TYPE</TAG>
+                <VALUE>dendritic cell</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>TISSUE_TYPE</TAG>
+                <VALUE>venous blood</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>MARKERS</TAG>
+                <VALUE>CD14 positive</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>DONOR_ID</TAG>
+                <VALUE>B270_7</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>DONOR_AGE</TAG>
+                <VALUE>NA</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>DONOR_HEALTH_STATUS</TAG>
+                <VALUE>Healthy</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>DONOR_SEX</TAG>
+                <VALUE>Unknown</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>gender</TAG>
+                <VALUE>unknown</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>DONOR_ETHNICITY</TAG>
+                <VALUE>NA</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>PASSAGE_IF_EXPANDED</TAG>
+                <VALUE>NA</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>SAMPLE_ONTOLOGY_URI</TAG>
+                <VALUE>CL_0001056</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>DISEASE_ONTOLOGY_URI</TAG>
+                <VALUE>NA</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>TREATMENT</TAG>
+                <VALUE>NA</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
+                <TAG>phenotype</TAG>
+                <VALUE>CL_0001056;UBERON_0013756</VALUE>
+            </SAMPLE_ATTRIBUTE>
+        </SAMPLE_ATTRIBUTES>
+    </SAMPLE>
+ 

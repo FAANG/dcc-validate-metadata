@@ -42,18 +42,17 @@ sub load {
         croak "Failed to read from $file_path: $_";
     };
 
- #   try {
+  # try {
         if ( ref $xml_data eq 'HASH' ) {
             $o = $self->hash_to_object($xml_data);
         }
         elsif ( ref $xml_data eq 'ARRAY' ) {
             $o = [ map { $self->hash_to_object($_) } @$xml_data ];
         }
- #   }
+  #  }
   #  catch {
-   #     croak "Could not convert data structure to object: $_";
-   # };
-
+  #      croak "Could not convert data structure to object: $_";
+  #  };
     return $o;
 }
 

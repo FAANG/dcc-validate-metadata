@@ -27,7 +27,9 @@ my $sample = Bio::Metadata::Entity->new(
             uri   => 'http://purl.obolibrary.org/obo/UBERON_0002385'
         },
         { name => 'weight', value => '50',   units => 'g' },
-    ],
+   ],
+   links=>[]
+					
 );
 
 my $actural_sh  = $sample->to_hash();
@@ -43,9 +45,10 @@ my $expected_sh = {
             units => undef,
             uri   => 'http://purl.obolibrary.org/obo/UBERON_0002385'
         },
-        { name => 'weight', value => '50',   units => 'g',  uri => undef },
-
-    ]
+	{ name => 'weight', value => '50',   units => 'g',  uri => undef },
+     ],
+     links=>[]		   
+		   
 };
 is_deeply( $actural_sh, $expected_sh, 'Entity to hash' );
 
