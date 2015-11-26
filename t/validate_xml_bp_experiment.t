@@ -19,12 +19,14 @@ my $loader = Bio::Metadata::Loader::XMLExperimentLoader->new();
 
 my $o=$loader->load("$data_dir/BPexperiment_good.xml");
 
-
+isa_ok($o, "Bio::Metadata::Entity");
 
 my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
 								    'schema' => $schema_file,
 								    'entity' => $o
 								   );
+
+isa_ok($validator, "Bio::Metadata::ValidateSchema::EntityValidator");
 
 $validator->validate();
 
