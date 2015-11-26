@@ -10,6 +10,7 @@ use Data::Dumper;
 
 use Bio::Metadata::Loader::XMLExperimentLoader;
 use Bio::Metadata::ValidateSchema::EntityValidator;
+use Test::More;
 
 my $data_dir = "$Bin/data";
 my $schema_file="$Bin/../json_schemas/BlueprintExperiment.schema.json";
@@ -27,4 +28,5 @@ my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
 
 $validator->validate();
 
+done_testing();
 
