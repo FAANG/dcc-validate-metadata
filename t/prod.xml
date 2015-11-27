@@ -1,0 +1,19 @@
+<shelf>
+    <product>
+        <title>widget1</title>
+        <cost>0.10</cost>
+        <rating>B</rating>
+        <color>red</color>
+        <color>blue</color>
+        <color>green</color>
+    </product>
+
+    <product>
+        <title>widget2</title>
+        <cost>0.25</cost>
+        <rating>S</rating>
+        <color>pink</color>
+        <color>gray</color>
+        <color>orange</color>
+    </product>
+</shelf>

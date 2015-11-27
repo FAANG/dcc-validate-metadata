@@ -17,13 +17,13 @@ my $schema_file="$Bin/../json_schemas/BlueprintSample.schema.json";
 
 my $loader = Bio::Metadata::Loader::XMLSampleLoader->new();
 
-my $o=$loader->load("$data_dir/BPsample_good.xml");
+my $o=$loader->load("$data_dir/sample_set.xml");
 
-isa_ok($o, "Bio::Metadata::Entity");
+isa_ok($o, "ARRAY");
 
 my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
 								    'schema' => $schema_file,
-								    'entity' => $o
+								    'entityarray' => $o
 								   );
 
 isa_ok($validator, "Bio::Metadata::ValidateSchema::EntityValidator");

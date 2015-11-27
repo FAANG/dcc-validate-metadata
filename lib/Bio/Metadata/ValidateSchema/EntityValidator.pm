@@ -35,45 +35,67 @@ has 'schema' => (
 has 'entity' => (
 		 is => 'rw',
 		 isa => 'Bio::Metadata::Entity',
-		 required => 1
+		 required => 0
 		);
+has 'entityarray' => (
+		    traits => ['Array'],
+		    is => 'rw',
+		    isa => 'Bio::Metadata::EntityArrayRef',
+		    handles => {
+				all_entities   => 'elements',
+				add_entities    => 'push',
+				count_entities => 'count',
+				get_entity    => 'get',
+			       },
+		    default => sub { [] },
+		    coerce => 1,
+		    required => 1
+		    
+		   );
 
 sub validate {
   my ($self)=@_;
 
-  my $hash=$self->entity->to_hash();
-
-  #prepare attributes for validation
-  my @attrbs=@{$hash->{'attributes'}};
-  for (my $i=0;$i<scalar(@attrbs);$i++) {
-    my $oldhash=$attrbs[$i];
-    my %newhash=(
-		 $oldhash->{'name'} => $oldhash->{'value'}
-		);
-    $attrbs[$i]=\%newhash;
-		 
+  if ($self->count_entities>1) {
+    
+  } elsif ($self->count_entities==0) {
+    $self->add_entities($self->entity);
   }
 
-  $hash->{'attributes'}=\@attrbs;
-  print Dumper($hash),"\n";
+  foreach my $entity ($self->all_entities) {
+    print $entity->id,"\n";
+    my $hash=$entity->to_hash();
+
+    #prepare attributes for validation
+    my @attrbs=@{$hash->{'attributes'}};
+    for (my $i=0;$i<scalar(@attrbs);$i++) {
+      my $oldhash=$attrbs[$i];
+      my %newhash=(
+		   $oldhash->{'name'} => $oldhash->{'value'}
+		  );
+      $attrbs[$i]=\%newhash;
+		 
+    }
+
+    $hash->{'attributes'}=\@attrbs;
+    print Dumper($hash),"\n";
   
-  my $validator = JSON::Validator->new;
-  $validator->schema($self->schema());
+    my $validator = JSON::Validator->new;
+    $validator->schema($self->schema());
 
-  my @errors = $validator->validate($hash);
+    my @errors = $validator->validate($hash);
 
-  if (@errors) {
-    foreach my $e (@errors) {
-      my $path=$e->path;
-      my $number=$1 if $path=~/\/attributes\/(\d+)/;
-      my $failed_attr=$attrbs[$number]; #get failed attribute
-      foreach my $a (keys %$failed_attr) {
-	print("[ERROR] Issue with $a attribute with value:",$failed_attr->{$a},"\n");
-	print $e->message,"\n";
+    if (@errors) {
+      foreach my $e (@errors) {
+	my $path=$e->path;
+	my $number=$1 if $path=~/\/attributes\/(\d+)/;
+	my $failed_attr=$attrbs[$number]; #get failed attribute
+	foreach my $a (keys %$failed_attr) {
+	  print("[ERROR] Issue with $a attribute with value:",$failed_attr->{$a},"\n");
+	}
       }
     }
   }
 }
-
 
 1;

@@ -52,5 +52,32 @@ sub hash_to_object {
   return $o;
 }
 
+sub array_to_object {
+  my ( $self, $array ) = @_;
+
+  my @objects;
+  
+  foreach my $sample (@$array) {
+
+    my $o = Bio::Metadata::Entity->new();
+    #get id from XML
+    my $id=$sample->{'TITLE'};
+    $o->id($id);
+
+    my $attrb_array=$sample->{'SAMPLE_ATTRIBUTES'}->{'SAMPLE_ATTRIBUTE'};
+
+    foreach my $attrb (@$attrb_array) {
+      my $o_attrb= Bio::Metadata::Attribute->new(
+						 name => $attrb->{'TAG'},
+						 value => $attrb->{'VALUE'}
+						);
+      $o->add_attribute($o_attrb);
+    }
+    push @objects,$o;
+  }
+
+  return \@objects;
+}
+
 __PACKAGE__->meta->make_immutable;
 1;
