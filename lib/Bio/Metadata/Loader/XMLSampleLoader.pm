@@ -19,6 +19,7 @@ use warnings;
 
 use Carp;
 use Moose;
+use Data::Dumper;
 use namespace::autoclean;
 use Bio::Metadata::Entity;
 
@@ -53,7 +54,7 @@ sub hash_to_object {
 }
 
 sub array_to_object {
-  my ( $self, $array ) = @_;
+  my ( $self, $array, $type ) = @_;
 
   my @objects;
   
@@ -63,6 +64,10 @@ sub array_to_object {
     #get id from XML
     my $id=$sample->{'TITLE'};
     $o->id($id);
+
+    #set type
+    $o->entity_type($type);
+
 
     my $attrb_array=$sample->{'SAMPLE_ATTRIBUTES'}->{'SAMPLE_ATTRIBUTE'};
 

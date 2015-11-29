@@ -49,8 +49,9 @@ sub load {
             $o = $self->hash_to_object($xml_data);
         }
     elsif ( $root[0] =~ /(.*)_SET/ ) {
-      my $entities=$xml_data->{$root[0]}->{$1};
-      $o=$self->array_to_object($entities)
+      my $entity_type=$1;
+      my $entities=$xml_data->{$root[0]}->{$entity_type};
+      $o=$self->array_to_object($entities,$entity_type)
     }
   #  }
   #  catch {
