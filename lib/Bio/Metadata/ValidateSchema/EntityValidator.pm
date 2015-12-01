@@ -63,7 +63,6 @@ sub validate {
   }
 
   foreach my $entity ($self->all_entities) {
-    print $entity->id,"\n";
     my $hash=$entity->to_hash();
 
     #prepare attributes for validation
@@ -78,7 +77,6 @@ sub validate {
     }
 
     $hash->{'attributes'}=\@attrbs;
-    print Dumper($hash),"\n";
   
     my $validator = JSON::Validator->new;
     $validator->schema($self->schema());
@@ -91,7 +89,8 @@ sub validate {
 	my $number=$1 if $path=~/\/attributes\/(\d+)/;
 	my $failed_attr=$attrbs[$number]; #get failed attribute
 	foreach my $a (keys %$failed_attr) {
-	  print("[ERROR] Issue with $a attribute with value:",$failed_attr->{$a},"\n");
+	  print("[ERROR] in ",$entity->entity_type," entity with ID:",$entity->id,".Issue with $a attribute with value:",$failed_attr->{$a},"\n",$e->message,"\n");
+	  
 	}
       }
     }

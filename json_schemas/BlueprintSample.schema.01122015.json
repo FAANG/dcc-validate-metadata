@@ -98,7 +98,25 @@
 			    },
 			    "SAMPLE_ONTOLOGY_URI": {
 				"type": "string",
-				"pattern": "http://purl.obolibrary.org/obo/+"
+				"enum": ["http://purl.obolibrary.org/obo/CL_0002619","http://purl.obolibrary.org/obo/CL_0000890","http://purl.obolibrary.org/obo/CL_0000560",
+					 "http://purl.obolibrary.org/obo/CL_0001066","http://purl.obolibrary.org/obo/CL_0000788","http://purl.obolibrary.org/obo/CL_0002057",
+					 "http://purl.obolibrary.org/obo/CL_0002026","http://purl.obolibrary.org/obo/CL_0002102","http://purl.obolibrary.org/obo/CL_0000809",
+					 "http://purl.obolibrary.org/obo/CL_0000809","http://purl.obolibrary.org/obo/CL_0000624","http://purl.obolibrary.org/obo/CL_0000810",
+					 "http://purl.obolibrary.org/obo/CL_0000625","http://purl.obolibrary.org/obo/CL_0000811","http://purl.obolibrary.org/obo/CL_0000904",
+					 "http://purl.obolibrary.org/obo/CL_0000907","http://purl.obolibrary.org/obo/CL_0000972","http://purl.obolibrary.org/obo/CL_0001066",
+					 "http://purl.obolibrary.org/obo/CL_0000051","http://purl.obolibrary.org/obo/CL_0000049","http://purl.obolibrary.org/obo/CL_0000990",
+					 "http://purl.obolibrary.org/obo/CL_0000939","http://purl.obolibrary.org/obo/CL_0001056","http://purl.obolibrary.org/obo/CL_0000905",
+					 "http://purl.obolibrary.org/obo/CL_0000913","http://purl.obolibrary.org/obo/CL_0001062","http://purl.obolibrary.org/obo/CL_0002618",
+					 "http://purl.obolibrary.org/obo/CL_0002618","http://purl.obolibrary.org/obo/CL_0000765","http://purl.obolibrary.org/obo/CL_0000844",
+					 "http://purl.obolibrary.org/obo/CL_0000557","http://purl.obolibrary.org/obo/CL_0000837","http://purl.obolibrary.org/obo/CL_0000037",
+					 "http://purl.obolibrary.org/obo/CL_0000863","http://purl.obolibrary.org/obo/CL_0002015","http://purl.obolibrary.org/obo/CL_0000945",
+					 "http://purl.obolibrary.org/obo/CL_0000235","http://purl.obolibrary.org/obo/CL_0000041","http://purl.obolibrary.org/obo/CL_0000096",
+					 "http://purl.obolibrary.org/obo/CL_0000050","http://purl.obolibrary.org/obo/CL_0000787","http://purl.obolibrary.org/obo/CL_0002540",
+					 "http://purl.obolibrary.org/obo/CL_0000576","http://purl.obolibrary.org/obo/CL_0010004","http://purl.obolibrary.org/obo/CL_0000763",
+					 "http://purl.obolibrary.org/obo/CL_0000788","http://purl.obolibrary.org/obo/CL_0000786","http://purl.obolibrary.org/obo/CL_0000582",
+					 "http://purl.obolibrary.org/obo/CL_0000580","http://purl.obolibrary.org/obo/CL_0000092","http://purl.obolibrary.org/obo/CL_2000001",
+					 "http://purl.obolibrary.org/obo/CL_0000786","http://purl.obolibrary.org/obo/CL_0000815","http://purl.obolibrary.org/obo/CL_0011114",
+					 "http://purl.obolibrary.org/obo/CL_0000970"]
 			    },
 			    "DISEASE_ONTOLOGY_URI": {
 				"type": "string",
