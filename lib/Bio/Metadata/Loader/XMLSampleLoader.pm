@@ -31,7 +31,7 @@ sub hash_to_object {
   my $o = Bio::Metadata::Entity->new();
 
   #get id from XML
-  my $id=$hash->{'SAMPLE'}->{'TITLE'};
+  my $id=$hash->{'SAMPLE'}->{'alias'};
   $o->id($id);
 
   #get type from XML
@@ -62,21 +62,30 @@ sub array_to_object {
 
     my $o = Bio::Metadata::Entity->new();
     #get id from XML
-    my $id=$sample->{'TITLE'};
+    my $id=$sample->{'alias'};
     $o->id($id);
 
     #set type
     $o->entity_type($type);
 
-
     my $attrb_array=$sample->{'SAMPLE_ATTRIBUTES'}->{'SAMPLE_ATTRIBUTE'};
 
-    foreach my $attrb (@$attrb_array) {
+    if (ref $attrb_array eq 'HASH') {
       my $o_attrb= Bio::Metadata::Attribute->new(
-						 name => $attrb->{'TAG'},
-						 value => $attrb->{'VALUE'}
+						 name => $attrb_array->{'TAG'},
+						 value => $attrb_array->{'VALUE'}
 						);
       $o->add_attribute($o_attrb);
+    } elsif (ref $attrb_array eq 'ARRAY') {
+      foreach my $attrb (@$attrb_array) {
+	$attrb->{'TAG'}="NA" if ref $attrb->{'TAG'};
+	$attrb->{'VALUE'}="NA" if ref $attrb->{'VALUE'};
+	my $o_attrb= Bio::Metadata::Attribute->new(
+						   name => $attrb->{'TAG'},
+						   value => $attrb->{'VALUE'}
+						  );
+	$o->add_attribute($o_attrb);
+      }
     }
     push @objects,$o;
   }

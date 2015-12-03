@@ -86,11 +86,15 @@ sub validate {
     if (@errors) {
       foreach my $e (@errors) {
 	my $path=$e->path;
-	my $number=$1 if $path=~/\/attributes\/(\d+)/;
-	my $failed_attr=$attrbs[$number]; #get failed attribute
-	foreach my $a (keys %$failed_attr) {
-	  print("[ERROR] in ",$entity->entity_type," entity with ID:",$entity->id,".Issue with $a attribute with value:",$failed_attr->{$a},"\n",$e->message,"\n");
-	  
+	my $number;
+	$number=$1 if $path=~/\/attributes\/(\d+)/;
+	if (defined($number)) {
+	  my $failed_attr=$attrbs[$number]; #get failed attribute
+	  foreach my $a (keys %$failed_attr) {
+	    print("[WARNING] in ",$entity->entity_type," entity with ID:",$entity->id,".Issue with '",$a,"' attribute with value:",$failed_attr->{$a},".",$e->message,"\n");
+	  }
+	} else {
+	  print("[WARNING] in ",$entity->entity_type," entity with ID:",$entity->id,".Issue with property:",$e->path,".",$e->message,"\n");
 	}
       }
     }

@@ -35,27 +35,27 @@ sub load {
 
     my ( $xml_data, $o );
     
-#    try {
+    try {
       my $xml = new XML::Simple;
       $xml_data = $xml->XMLin($file_path,KeepRoot => 1);
-#    }
-    catch {
+    }
+      catch {
         croak "Failed to read from $file_path: $_";
     };
 
-     try {
-    my @root=keys(%$xml_data);
-        if ( $root[0] !~ /.*_SET/ ) {
-            $o = $self->hash_to_object($xml_data);
-        }
-    elsif ( $root[0] =~ /(.*)_SET/ ) {
-      my $entity_type=$1;
-      my $entities=$xml_data->{$root[0]}->{$entity_type};
-      $o=$self->array_to_object($entities,$entity_type)
-    }
-     } catch {
-        croak "Could not convert data structure to object: $_";
-     };
+    try {
+      my @root=keys(%$xml_data);
+      if ( $root[0] !~ /.*_SET/ ) {
+	$o = $self->hash_to_object($xml_data);
+      }
+      elsif ( $root[0] =~ /(.*)_SET/ ) {
+	my $entity_type=$1;
+	my $entities=$xml_data->{$root[0]}->{$entity_type};
+	$o=$self->array_to_object($entities,$entity_type)
+      }
+    } catch {
+      croak "Could not convert data structure to object: $_";
+    };
     return $o;
 }
 
