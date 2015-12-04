@@ -13,7 +13,7 @@ use Data::Dumper;
 use Test::More;
 
 my $data_dir = "$Bin/data";
-my $schema_file="$Bin/../json_schemas/BlueprintSample.schema.json";
+my $schema_file="$Bin/../json_schemas/BlueprintSample.schema.dev.json";
 
 my $loader = Bio::Metadata::Loader::XMLSampleLoader->new();
 
