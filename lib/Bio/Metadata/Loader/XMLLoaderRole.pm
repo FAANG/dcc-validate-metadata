@@ -43,7 +43,7 @@ sub load {
         croak "Failed to read from $file_path: $_";
     };
 
-    try {
+    #try {
       my @root=keys(%$xml_data);
       if ( $root[0] !~ /.*_SET/ ) {
 	$o = $self->hash_to_object($xml_data);
@@ -53,9 +53,9 @@ sub load {
 	my $entities=$xml_data->{$root[0]}->{$entity_type};
 	$o=$self->array_to_object($entities,$entity_type)
       }
-    } catch {
-      croak "Could not convert data structure to object: $_";
-    };
+  #  } catch {
+  #    croak "Could not convert data structure to object: $_";
+  #  };
     return $o;
 }
 

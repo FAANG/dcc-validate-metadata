@@ -48,7 +48,6 @@ sub hash_to_object {
 					  id          => $sample_id,
 					  entity_type => 'sample');
 
-
   $o->add_link($study);
   $o->add_link($sample);
 
@@ -65,6 +64,62 @@ sub hash_to_object {
   }
 
   return $o;
+}
+
+sub array_to_object {
+  my ( $self, $array, $type ) = @_;
+
+  my @objects;
+  
+  foreach my $experiment (@$array) {
+
+    my $o = Bio::Metadata::Entity->new();
+    #get id from XML
+    my $id=$experiment->{'accession'};
+    $o->id($id);
+
+    #set type
+    $o->entity_type($type);
+
+     #set 'links' in Entity.pm
+    my $study_id=$experiment->{'STUDY_REF'}->{'accession'};
+    my $study = Bio::Metadata::Entity->new(
+					   id          => $study_id,
+					   entity_type => 'study');
+
+    my $sample_id=$experiment->{'DESIGN'}->{'SAMPLE_DESCRIPTOR'}->{'accession'};
+    my $sample = Bio::Metadata::Entity->new(
+					    id          => $sample_id,
+					    entity_type => 'sample');
+
+    $o->add_link($study);
+    $o->add_link($sample);
+
+    my $attrb_array=$experiment->{'EXPERIMENT_ATTRIBUTES'}->{'EXPERIMENT_ATTRIBUTE'};
+    
+    if (ref $attrb_array eq 'HASH') {
+      my $o_attrb= Bio::Metadata::Attribute->new(
+						 name => $attrb_array->{'TAG'},
+						 value => $attrb_array->{'VALUE'}
+						);
+      $o->add_attribute($o_attrb);
+    } elsif (ref $attrb_array eq 'ARRAY') {
+      foreach my $attrb (@$attrb_array) {
+	$attrb->{'TAG'}="NA" if ref $attrb->{'TAG'};
+	$attrb->{'VALUE'}="NA" if ref $attrb->{'VALUE'};
+	my $o_attrb= Bio::Metadata::Attribute->new(
+						   name => $attrb->{'TAG'},
+						   value => $attrb->{'VALUE'}
+						  );
+	$o->add_attribute($o_attrb);
+      }
+    }
+    push @objects,$o;
+  }
+
+  return \@objects;
+  print "hello\n";
+  
 }
 
 __PACKAGE__->meta->make_immutable;
