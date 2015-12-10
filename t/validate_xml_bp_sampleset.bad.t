@@ -17,7 +17,7 @@ my $schema_file="$Bin/../json_schemas/BlueprintSample.schema.dev.json";
 
 my $loader = Bio::Metadata::Loader::XMLSampleLoader->new();
 
-my $o=$loader->load("/Users/ernesto/scripts/validate/t/data/BPsampleset_bad.xml");
+my $o=$loader->load("$data_dir/BPsampleset_bad.xml");
 
 isa_ok($o, "ARRAY");
 
