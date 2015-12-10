@@ -27,6 +27,10 @@ use Data::Dumper;
 use Bio::Metadata::Entity;
 use MooseX::Params::Validate;
 
+use Bio::Metadata::Attribute;
+use Bio::Metadata::ValidateSchema::ValidationOutcome;
+use Bio::Metadata::ValidateSchema::ValidationOutcomeSet;
+
 has 'schema' => (
 		 is => 'rw',
 		 isa => 'Str',
@@ -62,7 +66,14 @@ sub validate {
     $self->add_entities($self->entity);
   }
 
+  my $outcomeset= Bio::Metadata::ValidateSchema::ValidationOutcomeSet->new();
+  
   foreach my $entity ($self->all_entities) {
+
+    my $outcome= Bio::Metadata::ValidateSchema::ValidationOutcome->new();
+    $outcome->entity($entity);
+    $outcome->outcome('pass');
+      
     my $hash=$entity->to_hash();
 
     #prepare attributes for validation
@@ -81,24 +92,32 @@ sub validate {
     my $validator = JSON::Validator->new;
     $validator->schema($self->schema());
 
-    my @errors = $validator->validate($hash);
+    my @warnings = $validator->validate($hash);
 
-    if (@errors) {
-      foreach my $e (@errors) {
+    if (@warnings) {
+      
+      foreach my $e (@warnings) {
+	$outcome->outcome('warning');
+	my $w=Bio::Metadata::ValidateSchema::Warning->new();
+	$w->path($e->path);
 	my $path=$e->path;
-	my $number;
-	$number=$1 if $path=~/\/attributes\/(\d+)/;
+	my $number=$1 if $path=~/\/attributes\/(\d+)/;
+	my $message;
 	if (defined($number)) {
-	  my $failed_attr=$attrbs[$number]; #get failed attribute
-	  foreach my $a (keys %$failed_attr) {
-	    print("[WARNING] in ",$entity->entity_type," entity with ID:",$entity->id,".Issue with '",$a,"' attribute with value:",$failed_attr->{$a},".",$e->message,"\n");
-	  }
+	  my $failed_attr=$outcome->entity->get_attribute($number);
+	  $message="ATTRIBUTE-NAME:".$failed_attr->name.";VALUE:".$failed_attr->value."\t".$e->message;
 	} else {
-	  print("[WARNING] in ",$entity->entity_type," entity with ID:",$entity->id,".Issue with property:",$e->path,".",$e->message,"\n");
+	  my $property=$e->path;
+	  $property=~s/\///;
+	  $message="PROPERTY-NAME:".$property."\t".$e->message;
 	}
+	$w->message($message);
+	$outcome->add_warning($w);
       }
     }
+    $outcomeset->add_outcome($outcome);
   }
+  return $outcomeset;
 }
 
 1;

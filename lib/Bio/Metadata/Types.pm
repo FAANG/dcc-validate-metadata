@@ -121,4 +121,45 @@ coerce 'Bio::Metadata::Validate::ValidationOutcomeArrayRef' => from
     [ Bio::Metadata::Validate::ValidationOutcome->new($_) ];
   };
 
+#validationschema
+enum 'Bio::Metadata::ValidateSchema::OutcomeEnum', [qw(pass warning)];
+
+#validationschema outcome
+class_type 'Bio::Metadata::ValidateSchema::ValidationOutcome';
+coerce 'Bio::Metadata::ValidateSchema::ValidationOutcome' => from 'HashRef' =>
+  via { Bio::Metadata::ValidateSchema::ValidationOutcome->new($_); };
+
+subtype 'Bio::Metadata::ValidateSchema::ValidationOutcomeArrayRef' => as
+  'ArrayRef[Bio::Metadata::ValidateSchema::ValidationOutcome]';
+
+coerce 'Bio::Metadata::ValidateSchema::ValidationOutcomeArrayRef' => from
+  'ArrayRef[HashRef]'                                       => via {
+    [ map { Bio::Metadata::ValidateSchema::ValidationOutcome->new($_) } @$_ ];
+  },
+  from 'Bio::Metadata::ValidateSchema::ValidationOutcome' => via {
+    [$_];
+  },
+  from 'HashRef' => via {
+    [ Bio::Metadata::ValidateSchema::ValidationOutcome->new($_) ];
+  };
+
+
+#warning
+class_type 'Bio::Metadata::ValidateSchema::Warning';
+
+coerce 'Bio::Metadata::ValidateSchema::Warning' => from 'HashRef' =>
+  via { Bio::Metadata::Warning->new($_); };
+
+subtype 'Bio::Metadata::ValidateSchema::WarningArrayRef' => as 'ArrayRef[Bio::Metadata::ValidateSchema::Warning]';
+
+coerce 'Bio::Metadata::ValidateSchema::WarningArrayRef' => from 'ArrayRef[HashRef]' => via {
+    [ map { Bio::Metadata::Warning->new($_) } @$_ ];
+},
+  from 'Bio::Metadata::ValidateSchema::Warning' => via {
+    [$_];
+  },
+  from 'HashRef' => via {
+    [ Bio::Metadata::ValidateSchema::Warning->new($_) ];
+  };
+
 1;
