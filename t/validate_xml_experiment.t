@@ -13,17 +13,17 @@ use Bio::Metadata::ValidateSchema::EntityValidator;
 use Test::More;
 
 my $data_dir = "$Bin/data";
-my $schema_file="$Bin/../json_schemas/BlueprintExperiment.schema.dev.json";
+my $schema_file="$Bin/../json_schemas/Experiment.schema.json";
 
 my $loader = Bio::Metadata::Loader::XMLExperimentLoader->new();
 
-my $o=$loader->load("$data_dir/BPexperimentset_bad.xml");
+my $o=$loader->load("$data_dir/experiment_good.xml");
 
-isa_ok($o, "ARRAY");
+isa_ok($o, "Bio::Metadata::Entity");
 
 my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
 								    'schema' => $schema_file,
-								    'entityarray' => $o
+								    'entity' => $o
 								   );
 
 isa_ok($validator, "Bio::Metadata::ValidateSchema::EntityValidator");
