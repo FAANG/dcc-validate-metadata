@@ -34,6 +34,7 @@ use Bio::Metadata::Validate::UnitAttributeValidator;
 use Bio::Metadata::Validate::TextAttributeValidator;
 use Bio::Metadata::Validate::NumberAttributeValidator;
 use Bio::Metadata::Validate::EnumAttributeValidator;
+use Bio::Metadata::Validate::OntologyUriAttributeValidator;
 
 has 'rule_set' =>
   ( is => 'rw', isa => 'Bio::Metadata::Rules::RuleSet', required => 1 );
@@ -60,6 +61,7 @@ has 'type_validator' => (
             text   => Bio::Metadata::Validate::TextAttributeValidator->new(),
             number => Bio::Metadata::Validate::NumberAttributeValidator->new(),
             enum   => Bio::Metadata::Validate::EnumAttributeValidator->new(),
+			ontology_uri => Bio::Metadata::Validate::OntologyUriAttributeValidator->new()
         };
     },
 );

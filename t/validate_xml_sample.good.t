@@ -32,13 +32,11 @@ my $outcomeset=$validator->validate();
 
 isa_ok($outcomeset, "Bio::Metadata::ValidateSchema::ValidationOutcomeSet");
 
+my $outcome= $outcomeset->all_outcomes();
+
 foreach my $outcome ($outcomeset->all_outcomes) {
-  isa_ok($outcome, "Bio::Metadata::ValidateSchema::ValidationOutcome");
-  print $outcome->entity->id,"\t",$outcome->entity->entity_type,"\t",$outcome->outcome,"\n";
-  foreach my $warning ($outcome->all_warnings) {
-    isa_ok($warning, "Bio::Metadata::ValidateSchema::Warning");
-    print "\t",$warning->message,"\n";
-  }
+  is( $outcome->outcome, 'pass');
+  is( $outcome->entity->entity_type, 'SAMPLE');
 }
 
 done_testing();

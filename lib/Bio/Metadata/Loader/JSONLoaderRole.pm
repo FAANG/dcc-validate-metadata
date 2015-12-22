@@ -50,7 +50,7 @@ sub load {
         croak "Could not convert contents of $file_path to JSON: $_";
     };
 
-    try {
+  #  try {
         if ( ref $json_data eq 'HASH' ) {
             $o = $self->hash_to_object($json_data);
         }
@@ -58,10 +58,10 @@ sub load {
             $o = [ map { $self->hash_to_object($_) } @$json_data ];
         }
 
-    }
-    catch {
-        croak "Could not convert data structure to object: $_";
-    };
+  #  }
+  #  catch {
+  #      croak "Could not convert data structure to object: $_";
+  #  };
 
     return $o;
 }

@@ -34,10 +34,10 @@ isa_ok($outcomeset, "Bio::Metadata::ValidateSchema::ValidationOutcomeSet");
 
 foreach my $outcome ($outcomeset->all_outcomes) {
   isa_ok($outcome, "Bio::Metadata::ValidateSchema::ValidationOutcome");
-  print $outcome->entity->id,"\t",$outcome->entity->entity_type,"\t",$outcome->outcome,"\n";
+  is( $outcome->outcome, 'warning');
+  is( $outcome->entity->entity_type, 'SAMPLE');	
   foreach my $warning ($outcome->all_warnings) {
-    isa_ok($warning, "Bio::Metadata::ValidateSchema::Warning");
-    print "\t",$warning->message,"\n";
+	is ($warning->message, "ATTRIBUTE-NAME:MOLECULE;VALUE:RNA	oneOf failed: ([0] /MOLECULE: Not in enum list: total RNA, polyA RNA, cytoplasmic RNA, nuclear RNA, genomic DNA, protein, other.)")
   }
 }
 

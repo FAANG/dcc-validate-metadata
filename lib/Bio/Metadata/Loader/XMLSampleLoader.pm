@@ -22,8 +22,11 @@ use Moose;
 use Data::Dumper;
 use namespace::autoclean;
 use Bio::Metadata::Entity;
+use Bio::Metadata::Loader::JSONAttrLinkLoader;
 
 with "Bio::Metadata::Loader::XMLLoaderRole";
+
+has 'attr_links'  => ( is => 'rw', isa => 'Str' );
 
 sub hash_to_object {
   my ( $self, $hash ) = @_;
@@ -56,6 +59,9 @@ sub hash_to_object {
 sub array_to_object {
   my ( $self, $array, $type ) = @_;
 
+  #get AttrLinks that will be applied for Attributes in these entities
+  my $alinksO= Bio::Metadata::Loader::JSONAttrLinkLoader->new()->load($self->attr_links);
+
   my @objects;
   
   foreach my $sample (@$array) {
@@ -78,13 +84,13 @@ sub array_to_object {
       $o->add_attribute($o_attrb);
     } elsif (ref $attrb_array eq 'ARRAY') {
       foreach my $attrb (@$attrb_array) {
-	$attrb->{'TAG'}="NA" if ref $attrb->{'TAG'};
-	$attrb->{'VALUE'}="NA" if ref $attrb->{'VALUE'};
-	my $o_attrb= Bio::Metadata::Attribute->new(
-						   name => $attrb->{'TAG'},
-						   value => $attrb->{'VALUE'}
-						  );
-	$o->add_attribute($o_attrb);
+		  $attrb->{'TAG'}="NA" if ref $attrb->{'TAG'};
+		  $attrb->{'VALUE'}="NA" if ref $attrb->{'VALUE'};
+		  my $o_attrb= Bio::Metadata::Attribute->new(
+							   name => $attrb->{'TAG'},
+							   value => $attrb->{'VALUE'}
+							   	);
+		$o->add_attribute($o_attrb);
       }
     }
     push @objects,$o;
