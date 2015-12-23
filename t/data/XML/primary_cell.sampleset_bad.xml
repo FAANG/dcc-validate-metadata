@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SAMPLE_SET>
+  <SAMPLE alias="S01GX311" accession="ERS1020837" center_name="BLUEPRINT" broker_name="EGA" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <IDENTIFIERS>
+      <PRIMARY_ID>ERS1020837</PRIMARY_ID>
+      <SUBMITTER_ID namespace="BLUEPRINT">S01GX311</SUBMITTER_ID>
+    </IDENTIFIERS>
+    <TITLE>S01GX311</TITLE>
+    <SAMPLE_NAME>
+      <TAXON_ID>9606</TAXON_ID>
+      <SCIENTIFIC_NAME>Homo sapiens</SCIENTIFIC_NAME>
+      <COMMON_NAME>human</COMMON_NAME>
+      <ANONYMIZED_NAME>pt 302</ANONYMIZED_NAME>
+    </SAMPLE_NAME>
+    <DESCRIPTION>Myeloid cells from an APL patient</DESCRIPTION>
+    <SAMPLE_ATTRIBUTES>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>subject_id</TAG>
+        <VALUE>pt 302</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>MOLECULE</TAG>
+        <VALUE>total RNA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DISEASE</TAG>
+        <VALUE>Acute promyelocytic leukemia</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>BIOMATERIAL_PROVIDER</TAG>
+        <VALUE>Prof: Lucia Altucci  (SECONDA UNIVERSITA&apos; di NAPOLI- IT)</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>BIOMATERIAL_TYPE</TAG>
+        <VALUE>Primary Cell</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>CELL_TYPE</TAG>
+        <VALUE>Myeloid cell</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>TISSUE_TYPE</TAG>
+        <VALUE>Bone marrow</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>MARKERS</TAG>
+        <VALUE>&quot;90% CD34-, CD13+, CD33+, CD117+, CD9+, CD71+, HLA-DR-, MPOcy-&quot;</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_ID</TAG>
+        <VALUE>pt 302</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_AGE</TAG>
+        <VALUE>30-35</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_HEALTH_STATUS</TAG>
+        <VALUE>Leukemia</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_SEX</TAG>
+        <VALUE>Male</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>gender</TAG>
+        <VALUE>male</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_ETHNICITY</TAG>
+        <VALUE>indiana</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>PASSAGE_IF_EXPANDED</TAG>
+        <VALUE>NA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>SAMPLE_ONTOLOGY_URI</TAG>
+        <VALUE>http://purl.obolibrary.org/obo/CL_0000972</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DISEASE_ONTOLOGY_URI</TAG>
+        <VALUE>http://ncimeta.nci.nih.gov/ncimbrowser/ConceptReport.jsp?dictionary=NCI%20MetaThesaurus&amp;amp;amp;code=C0023487</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>TREATMENT</TAG>
+        <VALUE>ATRA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>phenotype</TAG>
+        <VALUE>CL_0000763;C0023487;UBERON_0002371</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>ENA-CHECKLIST</TAG>
+        <VALUE>ERC000026</VALUE>
+      </SAMPLE_ATTRIBUTE>
+    </SAMPLE_ATTRIBUTES>
+  </SAMPLE>
+  <SAMPLE alias="S01GW511" accession="ERS1020838" center_name="BLUEPRINT" broker_name="EGA" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <IDENTIFIERS>
+      <PRIMARY_ID>ERS1020838</PRIMARY_ID>
+      <SUBMITTER_ID namespace="BLUEPRINT">S01GW511</SUBMITTER_ID>
+    </IDENTIFIERS>
+    <TITLE>S01GW511</TITLE>
+    <SAMPLE_NAME>
+      <TAXON_ID>9606</TAXON_ID>
+      <SCIENTIFIC_NAME>Homo sapiens</SCIENTIFIC_NAME>
+      <COMMON_NAME>human</COMMON_NAME>
+      <ANONYMIZED_NAME>pt 302</ANONYMIZED_NAME>
+    </SAMPLE_NAME>
+    <DESCRIPTION>Myeloid cells from an APL patient</DESCRIPTION>
+    <SAMPLE_ATTRIBUTES>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>subject_id</TAG>
+        <VALUE>pt 302</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>MOLECULE</TAG>
+        <VALUE>total RNA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DISEASE</TAG>
+        <VALUE>Acute promyelocytic leukemia</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>BIOMATERIAL_PROVIDER</TAG>
+        <VALUE>Prof: Lucia Altucci  (SECONDA UNIVERSITA&apos; di NAPOLI- IT)</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>BIOMATERIAL_TYPE</TAG>
+        <VALUE>Primary Cell</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>CELL_TYPE</TAG>
+        <VALUE>Myeloid cel</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>TISSUE_TYPE</TAG>
+        <VALUE>Bone marrow</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>MARKERS</TAG>
+        <VALUE>&quot;90% CD34-, CD13+, CD33+, CD117+, CD9+, CD71+, HLA-DR-, MPOcy-&quot;</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_ID</TAG>
+        <VALUE>pt 302</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_AGE</TAG>
+        <VALUE>30-35</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_HEALTH_STATUS</TAG>
+        <VALUE>Leukemia</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_SEX</TAG>
+        <VALUE>Male</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>gender</TAG>
+        <VALUE>male</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_ETHNICITY</TAG>
+        <VALUE>indiana</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>PASSAGE_IF_EXPANDED</TAG>
+        <VALUE>NA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>SAMPLE_ONTOLOGY_URI</TAG>
+        <VALUE>http://purl.obolibrary.org/obo/CL_0000763</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DISEASE_ONTOLOGY_URI</TAG>
+        <VALUE>http://ncimeta.nci.nih.gov/ncimbrowser/ConceptReport.jsp?dictionary=NCI%20MetaThesaurus&amp;amp;amp;code=C0023487</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>TREATMENT</TAG>
+        <VALUE>CTR</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>phenotype</TAG>
+        <VALUE>CL_0000763;C0023487;UBERON_0002371</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>ENA-CHECKLIST</TAG>
+        <VALUE>ERC000026</VALUE>
+      </SAMPLE_ATTRIBUTE>
+    </SAMPLE_ATTRIBUTES>
+  </SAMPLE>
+</SAMPLE_SET>
+

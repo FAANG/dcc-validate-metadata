@@ -1,9 +1,9 @@
 {
 	"description": "Set of rules for the validation of sample entities", 
-	"name": "Sample validation", 
+	"name": "Sample validation for primary cell samples", 
 	"rule_groups": [
 		{
-			"name": "standard", 
+			"name": "Primary Cell", 
 			"rules": [
 				{
 					"mandatory": "mandatory", 
@@ -18,7 +18,8 @@
 					"type": "enum",
 					"valid_values": [
 						"http://purl.obolibrary.org/obo/CL_0000763", 
-						"http://purl.obolibrary.org/obo/CL_0000809"
+						"http://purl.obolibrary.org/obo/CL_0000809",
+						"http://purl.obolibrary.org/obo/CL_0001056"
 						]
 				}
 			]

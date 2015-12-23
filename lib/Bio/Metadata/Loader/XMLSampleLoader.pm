@@ -29,21 +29,17 @@ with "Bio::Metadata::Loader::XMLLoaderRole";
 has 'attr_links'  => ( is => 'rw', isa => 'Str' );
 
 sub hash_to_object {
-  my ( $self, $hash ) = @_;
+  my ( $self, $hash, $type ) = @_;
 
   my $o = Bio::Metadata::Entity->new();
-
-  #get id from XML
-  my $id=$hash->{'SAMPLE'}->{'alias'};
+  
+  my $id=$hash->{'alias'};
   $o->id($id);
-
-  #get type from XML
-  my $type=(keys %{$hash})[0];
   $o->entity_type($type);
 
   #set 'attributes' in Entity.pm
   #arrayref of hashes
-  my $attrb_array=$hash->{'SAMPLE'}->{'SAMPLE_ATTRIBUTES'}->{'SAMPLE_ATTRIBUTE'};
+  my $attrb_array=$hash->{'SAMPLE_ATTRIBUTES'}->{'SAMPLE_ATTRIBUTE'};
 
   foreach my $attrb (@$attrb_array) {
     my $o_attrb= Bio::Metadata::Attribute->new(
@@ -52,51 +48,19 @@ sub hash_to_object {
 					);
     $o->add_attribute($o_attrb);
   }
-
-  return $o;
-}
-
-sub array_to_object {
-  my ( $self, $array, $type ) = @_;
-
-  #get AttrLinks that will be applied for Attributes in these entities
-  my $alinksO= Bio::Metadata::Loader::JSONAttrLinkLoader->new()->load($self->attr_links);
-
-  my @objects;
   
-  foreach my $sample (@$array) {
-
-    my $o = Bio::Metadata::Entity->new();
-    #get id from XML
-    my $id=$sample->{'alias'};
-    $o->id($id);
-
-    #set type
-    $o->entity_type($type);
-
-    my $attrb_array=$sample->{'SAMPLE_ATTRIBUTES'}->{'SAMPLE_ATTRIBUTE'};
-
-    if (ref $attrb_array eq 'HASH') {
-      my $o_attrb= Bio::Metadata::Attribute->new(
-						 name => $attrb_array->{'TAG'},
-						 value => $attrb_array->{'VALUE'}
-						);
-      $o->add_attribute($o_attrb);
-    } elsif (ref $attrb_array eq 'ARRAY') {
-      foreach my $attrb (@$attrb_array) {
-		  $attrb->{'TAG'}="NA" if ref $attrb->{'TAG'};
-		  $attrb->{'VALUE'}="NA" if ref $attrb->{'VALUE'};
-		  my $o_attrb= Bio::Metadata::Attribute->new(
-							   name => $attrb->{'TAG'},
-							   value => $attrb->{'VALUE'}
-							   	);
-		$o->add_attribute($o_attrb);
-      }
-    }
-    push @objects,$o;
+  my $attr_links = Bio::Metadata::Loader::JSONAttrLinkLoader->new()->load($self->attr_links);
+  
+  my $attrs=$o->organised_attr;
+  foreach my $link (@$attr_links) {
+	  next if !exists $attrs->{$link->attr1}->[0] || !exists $attrs->{$link->attr2}->[0];
+	  my $attr1=$attrs->{$link->attr1}->[0];
+	  my $attr2=$attrs->{$link->attr2}->[0];
+	  my $prop2=$link->prop2;
+	  $attr1->$prop2($attr2->value);
   }
 
-  return \@objects;
+  return $o;
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -47,7 +47,17 @@
 				"enum": ["Cell Line","Primary Cell","Pooled Primary Cell","Primary Tissue"]
 			    },
 			    "CELL_TYPE": {
-				"type": "string"
+				"type": "string",
+				"enum": ["adult endothelial progenitor cell","alternatively activated macrophage","band form neutrophil","blast forming unit erythroid","naive B cell","CD14-positive, CD16-negative classical monocyte",
+					 "CD34-negative, CD41-positive, CD42-positive megakaryocyte cell","CD38-negative naive B cell","double-positive, alpha-beta thymocyte","CD4-positive, alpha-beta T cell",
+					 "CD4-positive, alpha-beta thymocyte","CD8-positive, alpha-beta T cell","CD8-positive, alpha-beta thymocyte","central memory CD4-positive, alpha-beta T cell","central memory CD8-positive, alpha-beta T cell",
+					 "class switched memory B cell","colony forming unit erythroid","common lymphoid progenitor","common myeloid progenitor","conventional dendritic cell","CD16-positive, CD56-dim natural killer cell","dendritic cell",
+					 "effector memory CD4-positive, alpha-beta T cell","effector memory CD8-positive, alpha-beta T cell","effector memory CD8-positive, alpha-beta T cell, terminally differentiated","endothelial cell of umbilical vein (proliferating)",
+					 "endothelial cell of umbilical vein (resting)","erythroblast","germinal center B cell","granulocyte monocyte progenitor cell","hematopoietic multipotent progenitor cell","hematopoietic stem cell","inflammatory macrophage",
+					 "late basophilic and polychromatophilic erythroblast","lymphocyte of B lineage","macrophage","mature eosinophil","mature neutrophil","megakaryocyte-erythroid progenitor cell","memory B cell","mesenchymal stem cell of the bone marrow",
+					 "monocyte","mononuclear cell of bone marrow","myeloid cell","naive B cell","Neoplastic plasma cell","neutrophilic metamyelocyte","neutrophilic myelocyte","osteoclast","peripheral blood mononuclear cell",
+					 "plasma cell","regulatory T cell","segmented neutrophil of bone marrow","T-cell acute lymphocytic leukemia","unswitched memory B cell"
+					]
 			    },
 			    "TISSUE_TYPE": {
 				"type": "string",

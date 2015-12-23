@@ -16,15 +16,13 @@ use Bio::Metadata::Reporter::ExcelReporter;
 
 my $data_dir = "$Bin/data";
 
-my $output = "test_out.sample.xlsx";
+my $output = "test_out.xlsx";
 
-my $rule_set = Bio::Metadata::Loader::JSONRuleSetLoader->new()->load("$data_dir/sampleont_rule_set.json");
+my $rule_set = Bio::Metadata::Loader::JSONRuleSetLoader->new()->load("$data_dir/RULES/sample_primarycell_rules.json");
   
-my $loader = Bio::Metadata::Loader::XMLSampleLoader->new(
-	"attr_links" => "$data_dir/attr_links.json"
-	);
+my $loader = Bio::Metadata::Loader::XMLSampleLoader->new("attr_links" => "$data_dir/attr_links.json");
 
-my $data=$loader->load("$data_dir/sampleset_good.xml");
+my $data=$loader->load("$data_dir/XML/primary_cell.sampleset_good.xml");
 
 my $validator = Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
@@ -40,6 +38,6 @@ $reporter->report(
     attribute_outcomes => $attribute_outcomes
 );
 
-
-print "h\n"; 
+ok(1);
+done_testing();
 

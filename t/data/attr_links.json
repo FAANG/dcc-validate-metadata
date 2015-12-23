@@ -6,7 +6,7 @@
 	"prop2" : "uri"
 	},
 	{
-	"attr1" : "CELL_caca",
+	"attr1" : "TISSUE_TYPE",
 	"attr2" : "SAMPLE_ONTOLOGY_URI",
 	"prop1" : "value",
 	"prop2" : "uri"

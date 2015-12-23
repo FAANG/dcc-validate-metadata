@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SAMPLE_SET>
+  <SAMPLE alias="S00GPR11" accession="ERS799690" center_name="BLUEPRINT" broker_name="EGA" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <IDENTIFIERS>
+      <PRIMARY_ID>ERS799690</PRIMARY_ID>
+      <SUBMITTER_ID namespace="BLUEPRINT">S00GPR11</SUBMITTER_ID>
+    </IDENTIFIERS>
+    <TITLE>S00GPR11</TITLE>
+    <SAMPLE_NAME>
+      <TAXON_ID>9606</TAXON_ID>
+      <SCIENTIFIC_NAME>Homo sapiens</SCIENTIFIC_NAME>
+      <COMMON_NAME>human</COMMON_NAME>
+      <ANONYMIZED_NAME>1532CLL</ANONYMIZED_NAME>
+    </SAMPLE_NAME>
+    <DESCRIPTION>Blood samples from Chronic lymphocytic leukemia patient</DESCRIPTION>
+    <SAMPLE_ATTRIBUTES>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>MOLECULE</TAG>
+        <VALUE>total RNA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DISEASE</TAG>
+        <VALUE>Chronic lymphocytic leukemia</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>BIOMATERIAL_PROVIDER</TAG>
+        <VALUE>&quot;Felipe Prosper in collaboration with Jose I. Martin-Subero, University of Navarra&quot;</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>BIOMATERIAL_TYPE</TAG>
+        <VALUE>Primary Tissue</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>TISSUE_TYPE</TAG>
+        <VALUE>venous blood</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>TISSUE_DEPOT</TAG>
+        <VALUE>NA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>COLLECTION_METHOD</TAG>
+        <VALUE>Venipuncture</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_ID</TAG>
+        <VALUE>1532</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_AGE</TAG>
+        <VALUE>NA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_HEALTH_STATUS</TAG>
+        <VALUE>Chronic lymphocytic leukemia</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_SEX</TAG>
+        <VALUE>Male</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_ETHNICITY</TAG>
+        <VALUE>NA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>SAMPLE_ONTOLOGY_URI</TAG>
+        <VALUE>http://purl.obolibrary.org/obo/UBERON_0013756</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DISEASE_ONTOLOGY_URI</TAG>
+        <VALUE>http://ncimeta.nci.nih.gov/ncimbrowser/ConceptReport.jsp?dictionary=NCI%20MetaThesaurus&amp;amp;code=C0023434</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>phenotype</TAG>
+        <VALUE>UBERON_0013756;C0023434</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>ENA-CHECKLIST</TAG>
+        <VALUE>ERC000026</VALUE>
+      </SAMPLE_ATTRIBUTE>
+    </SAMPLE_ATTRIBUTES>
+  </SAMPLE>
+  <SAMPLE alias="S0171TH1" accession="ERS886079" center_name="BLUEPRINT" broker_name="EGA" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <IDENTIFIERS>
+      <PRIMARY_ID>ERS886079</PRIMARY_ID>
+      <SUBMITTER_ID namespace="BLUEPRINT">S0171TH1</SUBMITTER_ID>
+    </IDENTIFIERS>
+    <TITLE>S0171TH1</TITLE>
+    <SAMPLE_NAME>
+      <TAXON_ID>9606</TAXON_ID>
+      <SCIENTIFIC_NAME>Homo sapiens</SCIENTIFIC_NAME>
+      <COMMON_NAME>human</COMMON_NAME>
+      <ANONYMIZED_NAME>DLBCL_GCB_2</ANONYMIZED_NAME>
+    </SAMPLE_NAME>
+    <DESCRIPTION>lymph nodes from a lymphoma patient</DESCRIPTION>
+    <SAMPLE_ATTRIBUTES>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>subject_id</TAG>
+        <VALUE>DLBCL_GCB_2</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>MOLECULE</TAG>
+        <VALUE>genomic DNA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DISEASE</TAG>
+        <VALUE>Germinal Center B-Cell-Like Diffuse Large B-Cell Lymphoma</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>BIOMATERIAL_PROVIDER</TAG>
+        <VALUE>ICGC_Siebert/Bergmann</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>BIOMATERIAL_TYPE</TAG>
+        <VALUE>Primary Tissue</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>TISSUE_TYPE</TAG>
+        <VALUE>lymph node</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>TISSUE_DEPOT</TAG>
+        <VALUE>NA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>COLLECTION_METHOD</TAG>
+        <VALUE>NA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_ID</TAG>
+        <VALUE>DLBCL_GCB_2</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_AGE</TAG>
+        <VALUE>55-60</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_HEALTH_STATUS</TAG>
+        <VALUE>Germinal Center B-Cell-Like Diffuse Large B-Cell Lymphoma</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_SEX</TAG>
+        <VALUE>Female</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>gender</TAG>
+        <VALUE>female</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DONOR_ETHNICITY</TAG>
+        <VALUE>NA</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>SAMPLE_ONTOLOGY_URI</TAG>
+        <VALUE>http://purl.obolibrary.org/obo/UBERON_0000029</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>DISEASE_ONTOLOGY_URI</TAG>
+        <VALUE>https://ncimeta.nci.nih.gov/ncimbrowser/ConceptReport.jsp?dictionary=NCI%20MetaThesaurus&amp;code=C1333295</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>phenotype</TAG>
+        <VALUE>C1333295;UBERON_0000029</VALUE>
+      </SAMPLE_ATTRIBUTE>
+      <SAMPLE_ATTRIBUTE>
+        <TAG>ENA-CHECKLIST</TAG>
+        <VALUE>ERC000026</VALUE>
+      </SAMPLE_ATTRIBUTE>
+    </SAMPLE_ATTRIBUTES>
+  </SAMPLE>
+</SAMPLE_SET>
+

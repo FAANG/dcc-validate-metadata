@@ -28,7 +28,6 @@ use MooseX::Params::Validate;
 use Bio::Metadata::Types;
 
 requires 'hash_to_object';
-requires 'array_to_object';
 
 sub load {
     my ( $self, $file_path ) = @_;
@@ -43,15 +42,17 @@ sub load {
         croak "Failed to read from $file_path: $_";
     };
 
-    #try {
+	my $entity_type;
+  #  try {
       my @root=keys(%$xml_data);
       if ( $root[0] !~ /.*_SET/ ) {
-	$o = $self->hash_to_object($xml_data);
+		  $entity_type=$root[0];
+		  $o = $self->hash_to_object($xml_data->{$root[0]},$entity_type);
       }
       elsif ( $root[0] =~ /(.*)_SET/ ) {
-	my $entity_type=$1;
-	my $entities=$xml_data->{$root[0]}->{$entity_type};
-	$o=$self->array_to_object($entities,$entity_type)
+		  $entity_type=$1;
+		  my $entities=$xml_data->{$root[0]}->{$entity_type};
+		  $o = [ map { $self->hash_to_object($_, $entity_type) } @$entities ];
       }
   #  } catch {
   #    croak "Could not convert data structure to object: $_";
