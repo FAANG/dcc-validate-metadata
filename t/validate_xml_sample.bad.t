@@ -17,7 +17,7 @@ my $schema_file="$Bin/../json_schemas/Sample.schema.dev.json";
 
 my $loader = Bio::Metadata::Loader::XMLSampleLoader->new();
 
-my $o=$loader->load("$data_dir/sample_bad.xml");
+my $o=$loader->load("$data_dir/XML/sample_bad.xml");
 
 isa_ok($o, "Bio::Metadata::Entity");
 

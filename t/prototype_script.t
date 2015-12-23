@@ -31,8 +31,8 @@ my $validator =
 my ( $entity_status, $entity_outcomes, $attribute_status, $attribute_outcomes )
   = $validator->check_all($test_data);
 
-my $reporter =
-  Bio::Metadata::Reporter::ExcelReporter->new( file_path => $output );
+my $reporter = Bio::Metadata::Reporter::ExcelReporter->new( file_path => $output );
+
 
 $reporter->report(
     entities           => $test_data,

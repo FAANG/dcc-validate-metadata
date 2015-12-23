@@ -49,17 +49,18 @@ sub hash_to_object {
     $o->add_attribute($o_attrb);
   }
   
-  my $attr_links = Bio::Metadata::Loader::JSONAttrLinkLoader->new()->load($self->attr_links);
+  if ($self->attr_links) {
+	  my $attr_links = Bio::Metadata::Loader::JSONAttrLinkLoader->new()->load($self->attr_links);
   
-  my $attrs=$o->organised_attr;
-  foreach my $link (@$attr_links) {
-	  next if !exists $attrs->{$link->attr1}->[0] || !exists $attrs->{$link->attr2}->[0];
-	  my $attr1=$attrs->{$link->attr1}->[0];
-	  my $attr2=$attrs->{$link->attr2}->[0];
-	  my $prop2=$link->prop2;
-	  $attr1->$prop2($attr2->value);
+  	my $attrs=$o->organised_attr;
+  	foreach my $link (@$attr_links) {
+		next if !exists $attrs->{$link->attr1}->[0] || !exists $attrs->{$link->attr2}->[0];
+	  	my $attr1=$attrs->{$link->attr1}->[0];
+	  	my $attr2=$attrs->{$link->attr2}->[0];
+	  	my $prop2=$link->prop2;
+		$attr1->$prop2($attr2->value);
+  	}
   }
-
   return $o;
 }
 
