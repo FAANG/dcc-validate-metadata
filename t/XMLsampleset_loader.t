@@ -13,7 +13,7 @@ my $data_dir = "$Bin/data";
 
 my $loader = Bio::Metadata::Loader::XMLSampleLoader->new();
 
-my $o=$loader->load("$data_dir/sampleset_good.xml");
+my $o=$loader->load("$data_dir/XML/sampleset_good.xml");
 
 isa_ok($o, "ARRAY");
 
