@@ -90,6 +90,17 @@ sub check_all {
   
   for my $e (@$entities){
     my ($status, $outcomes) = $self->check($e);
+	###
+	foreach my $o (@$outcomes) {
+		my $e=$o->entity;
+		my $a=$o->attributes;
+		foreach my $this_a (@$a) {
+			print $e->id," ",$this_a->name,"\t",$this_a->value,"\n";
+		}
+		print $o->message,"\n";
+		print $o->outcome,"\n";
+	}
+	###
     $entity_status{$e} = $status;
     $entity_outcomes{$e} = $outcomes;
     
