@@ -124,6 +124,7 @@ sub validate {
 sub validate_new {
 	 my ($self,$entity)=@_;
 	 
+	 my $org_attrbs=$entity->organised_attr;
   
      my $validator = JSON::Validator->new;
      $validator->schema($self->schema());
@@ -141,14 +142,19 @@ sub validate_new {
 	 
 	 if (@warnings) {
          foreach my $w (@warnings) {
-			$outcome_overall='warning';
+			 print $w->message,"\n";
+			 $outcome_overall='warning';
 			my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
 			$v_outcome->entity($entity);
 			$v_outcome->outcome('warning');
-		 	my $number=$1 if $w->path =~/\/attributes\/(\d+)/;
-			if (defined($number)) {
-			  my $failed_attr=$entity->get_attribute($number);
-			  $v_outcome->attributes($failed_attr);
+		 	my $attr_name =$1 if $w->path =~/\/attributes\/(\w+)/;
+			if (exists($org_attrbs->{$attr_name})) {
+				my $failed_attr=$org_attrbs->{$attr_name};
+				$v_outcome->attributes($failed_attr);
+		  	} else {
+		  		$v_outcome->outcome('error');
+				$outcome_overall='error';
+				last;
 		  	}
 			$v_outcome->message($w->message);
 			push @outcomes,$v_outcome;			 
@@ -199,15 +205,13 @@ sub prepare_attrs {
 	
 	my $old_attrbs=$entity->attributes;
 	
-	my @new_attrbs;
+	my %new_attrbs;
 	
 	foreach my $attr (@$old_attrbs) {
-        my %newhash=($attr->{'name'} => $attr->{'value'});
-		push @new_attrbs,\%newhash;
-				
+		$new_attrbs{$attr->{'name'}}= $attr->{'value'};				
 	}
-	return \@new_attrbs;
 	
+	return \%new_attrbs;
 }
 
 1;
