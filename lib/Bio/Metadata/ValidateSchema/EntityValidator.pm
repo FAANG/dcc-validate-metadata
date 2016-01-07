@@ -148,6 +148,7 @@ sub validate_new {
 			$v_outcome->entity($entity);
 			$v_outcome->outcome('warning');
 		 	my $attr_name =$1 if $w->path =~/\/attributes\/(\w+)/;
+			$v_outcome->message($w->message);
 			if (exists($org_attrbs->{$attr_name})) {
 				my $failed_attr=$org_attrbs->{$attr_name};
 				$v_outcome->attributes($failed_attr);
@@ -156,7 +157,6 @@ sub validate_new {
 				$outcome_overall='error';
 				last;
 		  	}
-			$v_outcome->message($w->message);
 			push @outcomes,$v_outcome;			 
 		 }
 	 }
