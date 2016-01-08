@@ -13,7 +13,7 @@ use Bio::Metadata::ValidateSchema::EntityValidator;
 use Test::More;
 
 my $data_dir = "$Bin/data";
-my $schema_file="$Bin/../json_schemas/Experiment.schema.json";
+my $schema_file="$Bin/../json_schemas/Experiment.schema.dev.json";
 
 my $loader = Bio::Metadata::Loader::XMLExperimentLoader->new();
 
@@ -28,7 +28,9 @@ my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
 
 isa_ok($validator, "Bio::Metadata::ValidateSchema::EntityValidator");
 
-$validator->validate();
+my ( $outcome_overall, $outcomes )=$validator->validate($o);
+
+is( $outcome_overall, 'pass', 'pass outcome expected' );
 
 done_testing();
 

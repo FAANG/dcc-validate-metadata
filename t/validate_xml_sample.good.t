@@ -11,9 +11,11 @@ use Bio::Metadata::ValidateSchema::EntityValidator;
 use JSON;
 use Data::Dumper;
 use Test::More;
+use Bio::Metadata::Reporter::ExcelReporter;
 
 my $data_dir = "$Bin/data";
 my $schema_file="$Bin/../json_schemas/Sample.schema.dev.json";
+my $output = "test_out.xlsx";
 
 my $loader = Bio::Metadata::Loader::XMLSampleLoader->new();
 
@@ -28,15 +30,8 @@ my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
 
 isa_ok($validator, "Bio::Metadata::ValidateSchema::EntityValidator");
 
-my $outcomeset=$validator->validate();
+my ( $outcome_overall, $outcomes )=$validator->validate($o);
 
-isa_ok($outcomeset, "Bio::Metadata::ValidateSchema::ValidationOutcomeSet");
-
-my $outcome= $outcomeset->all_outcomes();
-
-foreach my $outcome ($outcomeset->all_outcomes) {
-  is( $outcome->outcome, 'pass');
-  is( $outcome->entity->entity_type, 'SAMPLE');
-}
+is( $outcome_overall, 'pass', 'pass outcome expected' );
 
 done_testing();

@@ -28,8 +28,7 @@ use Bio::Metadata::Entity;
 use MooseX::Params::Validate;
 
 use Bio::Metadata::Attribute;
-use Bio::Metadata::ValidateSchema::ValidationOutcome;
-use Bio::Metadata::ValidateSchema::ValidationOutcomeSet;
+use Bio::Metadata::Rules::Rule;
 use Bio::Metadata::Validate::ValidationOutcome;
 
 has 'schema' => (
@@ -59,69 +58,6 @@ has 'entityarray' => (
 		   );
 
 sub validate {
-  my ($self)=@_;
-
-  if ($self->count_entities>1) {
-    
-  } elsif ($self->count_entities==0) {
-    $self->add_entities($self->entity);
-  }
-
-  my $outcomeset= Bio::Metadata::ValidateSchema::ValidationOutcomeSet->new();
-  
-  foreach my $entity ($self->all_entities) {
-
-    my $outcome= Bio::Metadata::ValidateSchema::ValidationOutcome->new();
-    $outcome->entity($entity);
-    $outcome->outcome('pass');
-      
-    my $hash=$entity->to_hash();
-
-    #prepare attributes for validation
-    my @attrbs=@{$hash->{'attributes'}};
-    for (my $i=0;$i<scalar(@attrbs);$i++) {
-      my $oldhash=$attrbs[$i];
-      my %newhash=(
-		   $oldhash->{'name'} => $oldhash->{'value'}
-		  );
-      $attrbs[$i]=\%newhash;
-		 
-    }
-
-    $hash->{'attributes'}=\@attrbs;
-  
-    my $validator = JSON::Validator->new;
-    $validator->schema($self->schema());
-
-    my @warnings = $validator->validate($hash);
-
-    if (@warnings) {
-      
-      foreach my $e (@warnings) {
-	$outcome->outcome('warning');
-	my $w=Bio::Metadata::ValidateSchema::Warning->new();
-	$w->path($e->path);
-	my $path=$e->path;
-	my $number=$1 if $path=~/\/attributes\/(\d+)/;
-	my $message;
-	if (defined($number)) {
-	  my $failed_attr=$outcome->entity->get_attribute($number);
-	  $message="ATTRIBUTE-NAME:".$failed_attr->name.";VALUE:".$failed_attr->value."\t".$e->message;
-	} else {
-	  my $property=$e->path;
-	  $property=~s/\///;
-	  $message="PROPERTY-NAME:".$property."\t".$e->message;
-	}
-	$w->message($message);
-	$outcome->add_warning($w);
-      }
-    }
-    $outcomeset->add_outcome($outcome);
-  }
-  return $outcomeset;
-}
-
-sub validate_new {
 	 my ($self,$entity)=@_;
 	 
 	 my $org_attrbs=$entity->organised_attr;
@@ -137,13 +73,14 @@ sub validate_new {
 	 
 	 my @warnings = $validator->validate($hash);
 	 
+	 print Dumper(@warnings);
+	 
 	 my @outcomes;
 	 my $outcome_overall='pass';
 	 
 	 if (@warnings) {
          foreach my $w (@warnings) {
-			 print $w->message,"\n";
-			 $outcome_overall='warning';
+			$outcome_overall='warning' unless $outcome_overall eq 'error' ;
 			my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
 			$v_outcome->entity($entity);
 			$v_outcome->outcome('warning');
@@ -154,11 +91,28 @@ sub validate_new {
 				$v_outcome->attributes($failed_attr);
 		  	} else {
 		  		$v_outcome->outcome('error');
+				my $rule= Bio::Metadata::Rules::Rule->new (
+					mandatory=> 'mandatory',
+					name=> $attr_name,
+					type=> 'text'
+				);
+				$v_outcome->rule($rule);
 				$outcome_overall='error';
-				last;
 		  	}
 			push @outcomes,$v_outcome;			 
 		 }
+	 } else {
+		my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
+		$v_outcome->entity($entity);
+		$v_outcome->outcome('pass');
+		my $rule= Bio::Metadata::Rules::Rule->new (
+			mandatory=> 'mandatory',
+			name=> 'schema',
+			type=> 'text'
+		);
+		$v_outcome->rule($rule);
+		$v_outcome->message('pass');
+		push @outcomes,$v_outcome;	 
 	 }
 	 
 	 return ($outcome_overall,\@outcomes);
@@ -174,7 +128,7 @@ sub validate_all {
   
   
     for my $e (@$entities){
-      my ($status, $outcomes) = $self->validate_new($e);
+      my ($status, $outcomes) = $self->validate($e);
   	
       $entity_status{$e} = $status;
       $entity_outcomes{$e} = $outcomes;

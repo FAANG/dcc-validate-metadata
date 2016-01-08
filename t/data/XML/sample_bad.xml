@@ -74,6 +74,10 @@
                 <VALUE>http://purl.obolibrary.org/obo/CL_0001056</VALUE>
             </SAMPLE_ATTRIBUTE>
             <SAMPLE_ATTRIBUTE>
+                <TAG>TISSUE_DEPOT</TAG>
+                <VALUE>NA</VALUE>
+            </SAMPLE_ATTRIBUTE>
+            <SAMPLE_ATTRIBUTE>
                 <TAG>DISEASE_ONTOLOGY_URI</TAG>
                 <VALUE>NA</VALUE>
             </SAMPLE_ATTRIBUTE>

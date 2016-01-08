@@ -11,6 +11,7 @@ use Bio::Metadata::ValidateSchema::EntityValidator;
 use JSON;
 use Data::Dumper;
 use Test::More;
+use Bio::Metadata::Reporter::ExcelReporter;
 
 my $data_dir = "$Bin/data";
 my $schema_file="$Bin/../json_schemas/Sample.schema.dev.json";
@@ -28,17 +29,8 @@ my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
 
 isa_ok($validator, "Bio::Metadata::ValidateSchema::EntityValidator");
 
-my $outcomeset=$validator->validate();
+my ( $outcome_overall, $outcomes )=$validator->validate($o);
 
-isa_ok($outcomeset, "Bio::Metadata::ValidateSchema::ValidationOutcomeSet");
-
-foreach my $outcome ($outcomeset->all_outcomes) {
-  isa_ok($outcome, "Bio::Metadata::ValidateSchema::ValidationOutcome");
-  is( $outcome->outcome, 'warning');
-  is( $outcome->entity->entity_type, 'SAMPLE');	
-  foreach my $warning ($outcome->all_warnings) {
-	is ($warning->message, "ATTRIBUTE-NAME:MOLECULE;VALUE:RNA	oneOf failed: ([0] /MOLECULE: Not in enum list: total RNA, polyA RNA, cytoplasmic RNA, nuclear RNA, genomic DNA, protein, other.)")
-  }
-}
+is( $outcome_overall, 'warning', 'warning outcome expected' );
 
 done_testing();

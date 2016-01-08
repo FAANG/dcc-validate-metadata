@@ -11,9 +11,12 @@ use Bio::Metadata::ValidateSchema::EntityValidator;
 use JSON;
 use Data::Dumper;
 use Test::More;
+use Bio::Metadata::Reporter::ExcelReporter;
 
 my $data_dir = "$Bin/data";
 my $schema_file="$Bin/../json_schemas/Sample.schema.dev.json";
+
+my $output = "test_out.sampleset.good.xlsx";
 
 my $loader = Bio::Metadata::Loader::XMLSampleLoader->new();
 
@@ -28,16 +31,16 @@ my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
 
 isa_ok($validator, "Bio::Metadata::ValidateSchema::EntityValidator");
 
-my $outcomeset=$validator->validate();
+my ( $entity_status, $entity_outcomes, $attribute_status, $attribute_outcomes )=$validator->validate_all($o);
 
-isa_ok($outcomeset, "Bio::Metadata::ValidateSchema::ValidationOutcomeSet");
+my $reporter = Bio::Metadata::Reporter::ExcelReporter->new( file_path => $output );
 
-foreach my $outcome ($outcomeset->all_outcomes) {
- # isa_ok($outcome, "Bio::Metadata::ValidateSchema::ValidationOutcome");
-  print $outcome->entity->id,"\t",$outcome->entity->entity_type,"\t",$outcome->outcome,"\n";
-  foreach my $warning ($outcome->all_warnings) {
-  #  isa_ok($warning, "Bio::Metadata::ValidateSchema::Warning");
-    print "\t",$warning->message,"\n";
-  }
-}
+$reporter->report(
+    entities           => $o,
+    entity_status      => $entity_status,
+    entity_outcomes    => $entity_outcomes,
+    attribute_status   => $attribute_status,
+    attribute_outcomes => $attribute_outcomes
+);
+
 done_testing();
