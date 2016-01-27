@@ -54,13 +54,22 @@ has 'entityarray' => (
 		    default => sub { [] },
 		    coerce => 1,
 		    required => 1
-		    
-		   );
+			);
+
+has 'selector' => (
+	is => 'rw',
+	isa => 'Str',
+	required => 0
+);
 
 sub validate {
 	 my ($self,$entity)=@_;
 	 
 	 my $org_attrbs=$entity->organised_attr;
+	 
+	 if ($self->selector) {
+		 die("[ERROR] attribute ",$self->selector," is not a valid 'selector' attribute") if !exists($org_attrbs->{$self->selector});
+	 }
   
      my $validator = JSON::Validator->new;
      $validator->schema($self->schema());
@@ -69,22 +78,22 @@ sub validate {
 	 
 	 my $attrbs=$self->prepare_attrs($entity);
 	 
-	 $hash->{'attributes'}=$attrbs;
-	 
+	 $hash->{'attributes'}=();
+	 $hash->{'attributes'}->{'SELECTOR'}=$attrbs;
+	 	 
 	 my @warnings = $validator->validate($hash);
-	 
-	 print Dumper(@warnings);
 	 
 	 my @outcomes;
 	 my $outcome_overall='pass';
 	 
 	 if (@warnings) {
-         foreach my $w (@warnings) {
+		 my $new_warnings=$self->prepare_warnings($warnings[0]);
+         foreach my $w (@$new_warnings) {
 			$outcome_overall='warning' unless $outcome_overall eq 'error' ;
 			my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
 			$v_outcome->entity($entity);
 			$v_outcome->outcome('warning');
-		 	my $attr_name =$1 if $w->path =~/\/attributes\/(\w+)/;
+		 	my $attr_name = $w->path;
 			$v_outcome->message($w->message);
 			if (exists($org_attrbs->{$attr_name})) {
 				my $failed_attr=$org_attrbs->{$attr_name};
@@ -167,5 +176,46 @@ sub prepare_attrs {
 	
 	return \%new_attrbs;
 }
+
+
+sub prepare_warnings {
+	my ($self,$w)=@_;
+	
+	my $not_branch;
+	my $selector=$self->selector;
+	
+	my @a=split/\[\d+\]/,$w->message;
+	
+	if ($self->selector) {
+		foreach my $a (@a) {
+			$a=~s/^\s\///;
+			if ($a=~/$selector\: Not in enum list\:/) {
+				$not_branch=$1 if $a=~/branch\:(\d+)\]/;
+				last;
+			}
+		}
+	}
+	
+	$not_branch="n.a." if !$not_branch;
+	
+	my @warnings;
+
+	foreach my $a (@a) {
+		next if $a=~/branch\:$not_branch\]/;
+		next if $a=~/oneOf failed\:\s\(/;
+		my $msg;
+		$a=~s/^\s\///;
+		$a=~s/\[\w+\sbranch\:\d+\][\s|\)]//;
+		my $name=$1 if $a=~/^(\w+)\:\s.+/;
+		die("[ERROR] Attribute was not found") if !$name;
+		$msg.="[ATTRIBUTE]:".$a;
+		push @warnings,&E($name,$msg);
+	}
+	
+	return \@warnings;
+	
+}
+
+sub E { bless {path => $_[0] || '/', message => $_[1]}, 'JSON::Validator::Error'; }
 
 1;
