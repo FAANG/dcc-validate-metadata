@@ -5,6 +5,7 @@ use warnings;
 
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
+use lib "/Users/ernesto/test_json/json-validator/lib";
 
 use Bio::Metadata::Loader::XMLSampleLoader;
 use Bio::Metadata::ValidateSchema::EntityValidator;
@@ -15,7 +16,6 @@ use Bio::Metadata::Reporter::ExcelReporter;
 
 my $data_dir = "$Bin/data";
 my $schema_file="$Bin/../json_schemas/Sample.schema.dev.json";
-my $output = "test_out.xlsx";
 
 my $loader = Bio::Metadata::Loader::XMLSampleLoader->new();
 
@@ -25,7 +25,8 @@ isa_ok($o, "Bio::Metadata::Entity");
 
 my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
 								    'schema' => $schema_file,
-								    'entity' => $o
+								    'entity' => $o,
+									'selector' => "BIOMATERIAL_TYPE"
 								   );
 
 isa_ok($validator, "Bio::Metadata::ValidateSchema::EntityValidator");

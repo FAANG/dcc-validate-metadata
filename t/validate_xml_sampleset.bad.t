@@ -5,6 +5,7 @@ use warnings;
 
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
+use lib "/Users/ernesto/test_json/json-validator/lib";
 
 use Bio::Metadata::Loader::XMLSampleLoader;
 use Bio::Metadata::ValidateSchema::EntityValidator;
@@ -26,7 +27,8 @@ isa_ok($o, "ARRAY");
 
 my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
 								    'schema' => $schema_file,
-								    'entityarray' => $o
+								    'entityarray' => $o,
+									'selector' => 'BIOMATERIAL_TYPE'
 								   );
 
 isa_ok($validator, "Bio::Metadata::ValidateSchema::EntityValidator");

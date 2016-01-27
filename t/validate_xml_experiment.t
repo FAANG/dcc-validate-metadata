@@ -5,7 +5,9 @@ use warnings;
 
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
+use lib "/Users/ernesto/test_json/json-validator/lib";
 use JSON;
+
 use Data::Dumper;
 
 use Bio::Metadata::Loader::XMLExperimentLoader;
