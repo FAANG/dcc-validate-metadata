@@ -43,7 +43,7 @@ sub load {
     };
 
 	my $entity_type;
-  #  try {
+    try {
       my @root=keys(%$xml_data);
       if ( $root[0] !~ /.*_SET/ ) {
 		  $entity_type=$root[0];
@@ -54,9 +54,9 @@ sub load {
 		  my $entities=$xml_data->{$root[0]}->{$entity_type};
 		  $o = [ map { $self->hash_to_object($_, $entity_type) } @$entities ];
       }
-  #  } catch {
-  #    croak "Could not convert data structure to object: $_";
-  #  };
+    } catch {
+      croak "Could not convert data structure to object: $_";
+    };
     return $o;
 }
 
