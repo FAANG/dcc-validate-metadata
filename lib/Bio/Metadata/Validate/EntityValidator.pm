@@ -61,7 +61,10 @@ has 'type_validator' => (
             text   => Bio::Metadata::Validate::TextAttributeValidator->new(),
             number => Bio::Metadata::Validate::NumberAttributeValidator->new(),
             enum   => Bio::Metadata::Validate::EnumAttributeValidator->new(),
-			ontology_uri => Bio::Metadata::Validate::OntologyUriAttributeValidator->new()
+            ontology_uri =>
+              Bio::Metadata::Validate::OntologyUriAttributeValidator->new(),
+            ontology_text =>
+              Bio::Metadata::Validate::OntologyTextAttributeValidator->new(),
         };
     },
 );
@@ -78,56 +81,61 @@ has 'message_for_unexpected_attributes' => (
     default  => sub { 'attribute not in rule set' },
 );
 
-
 sub check_all {
-  my ($self,$entities) = @_;
-  
-  my %entity_status;
-  my %entity_outcomes;
-  my %attribute_status;
-  my %attribute_outcomes;
-  
-  
-  for my $e (@$entities){
-    my ($status, $outcomes) = $self->check($e);
-	###
-	foreach my $o (@$outcomes) {
-		my $e=$o->entity;
-		my $a=$o->attributes;
-		foreach my $this_a (@$a) {
-			print $e->id," ",$this_a->name,"\t",$this_a->value,"\n";
-		}
-		print $o->message,"\n";
-		print $o->outcome,"\n";
-	}
-	###
-    $entity_status{$e} = $status;
-    $entity_outcomes{$e} = $outcomes;
-    
-    for my $o (@$outcomes) {
-      for my $a ($o->all_attributes) {
-        if (! exists $attribute_outcomes{$a}){
-          $attribute_status{$a} = $o->outcome;
-          $attribute_outcomes{$a} = [];
+    my ( $self, $entities ) = @_;
+
+    my %entity_status;
+    my %entity_outcomes;
+    my %attribute_status;
+    my %attribute_outcomes;
+
+    for my $e (@$entities) {
+        my ( $status, $outcomes ) = $self->check($e);
+        ###
+        foreach my $o (@$outcomes) {
+            my $e = $o->entity;
+            my $a = $o->attributes;
+            foreach my $this_a (@$a) {
+                print $e->id, " ", $this_a->name, "\t", $this_a->value, "\n";
+            }
+            print $o->message, "\n";
+            print $o->outcome, "\n";
         }
-        push @{$attribute_outcomes{$a}}, $o;
-        
-        if ($o->outcome eq 'error' && $attribute_status{$a} ne 'error') {
-          $attribute_status{$a} = 'error';
+        ###
+        $entity_status{$e}   = $status;
+        $entity_outcomes{$e} = $outcomes;
+
+        for my $o (@$outcomes) {
+            for my $a ( $o->all_attributes ) {
+                if ( !exists $attribute_outcomes{$a} ) {
+                    $attribute_status{$a}   = $o->outcome;
+                    $attribute_outcomes{$a} = [];
+                }
+                push @{ $attribute_outcomes{$a} }, $o;
+
+                if (   $o->outcome eq 'error'
+                    && $attribute_status{$a} ne 'error' )
+                {
+                    $attribute_status{$a} = 'error';
+                }
+                if (   $o->outcome eq 'warning'
+                    && $attribute_status{$a} eq 'pass' )
+                {
+                    $attribute_status{$a} = 'warning';
+                }
+            }
         }
-        if ($o->outcome eq 'warning' && $attribute_status{$a} eq 'pass'){
-          $attribute_status{$a} = 'warning';
-        }
-      }
+
     }
-    
-  }
-  
-  return (\%entity_status, \%entity_outcomes, \%attribute_status, \%attribute_outcomes);
+
+    return (
+        \%entity_status,    \%entity_outcomes,
+        \%attribute_status, \%attribute_outcomes
+    );
 }
 
 sub check {
-    my ($self,$entity) = @_;
+    my ( $self, $entity ) = @_;
 
     my @all_outcomes;
 
@@ -137,22 +145,21 @@ sub check {
 
     my $entity_as_hash = $entity->to_hash;
 
-    
   RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
 
         if ( $rule_group->condition ) {
 
-            my $match_count = dpath($rule_group->condition)->match($entity_as_hash);
+            my $match_count =
+              dpath( $rule_group->condition )->match($entity_as_hash);
 
             if ( !$match_count ) {
                 next RULE_GROUP;
             }
         }
 
-
         for my $rule ( $rule_group->all_rules ) {
             my @r_outcomes;
-            
+
             my $type_validator = $self->get_type_validator( $rule->type );
             croak( "No type validator for " . $rule->type )
               if ( !$type_validator );

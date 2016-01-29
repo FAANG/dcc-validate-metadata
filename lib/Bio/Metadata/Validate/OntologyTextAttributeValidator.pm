@@ -1,6 +1,6 @@
 
 =head1 LICENSE
-   Copyright 2015 EMBL - European Bioinformatics Institute
+   Copyright 2016 EMBL - European Bioinformatics Institute
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -12,7 +12,7 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Validate::OntologyUriAttributeValidator;
+package Bio::Metadata::Validate::OntologyTextAttributeValidator;
 
 use strict;
 use warnings;
@@ -22,7 +22,6 @@ use Moose;
 use namespace::autoclean;
 use Try::Tiny;
 
-use URI;
 use Bio::Metadata::Validate::Support::OlsLookup;
 
 with 'Bio::Metadata::Validate::AttributeValidatorRole';
@@ -36,26 +35,16 @@ has 'ols_lookup' => (
 sub validate_attribute {
     my ( $self, $rule, $attribute, $o ) = @_;
 
-    if ( !$attribute->value || !$attribute->uri ) {
+    if ( !$attribute->value ) {
         $o->outcome('error');
-        $o->message('value and uri required');
+        $o->message('value required');
         return $o;
     }
-
-    my $uri;
-    try {
-        $uri = URI->new( $attribute->uri );
-    }
-    catch {
-        $o->outcome('error');
-        $o->message('uri is not valid');
-        return $o;
-    };
 
     my $label;
-  ANCESTOR: for my $ancestor_uri ( $rule->all_valid_ancestor_uris ) {
+  ANCESTOR: for my $ancestor_uri ( $rule->all_valid_ancestor_uris ) {        
         $label =
-          $self->ols_lookup->is_descendent( $attribute->uri, 'iri', $ancestor_uri );
+          $self->ols_lookup->is_descendent( $attribute->value, 'label', $ancestor_uri );
         if ($label) {
             last ANCESTOR;
         }
@@ -63,14 +52,7 @@ sub validate_attribute {
 
     if ( !$label ) {
         $o->outcome('error');
-        $o->message('uri is not descendent of valid ancestor');
-        return $o;
-    }
-
-    if ( $label ne $attribute->value ) {
-        $o->outcome('warning');
-        $o->message(
-            'value does not precisely match ontology term label - ' . $label );
+        $o->message('value is not descendent of valid ancestor');
         return $o;
     }
 

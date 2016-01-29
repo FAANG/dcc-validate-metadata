@@ -20,20 +20,22 @@ use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
 
-has 'name'   => ( is => 'rw', isa => 'Str' );
+has 'name'  => ( is => 'rw', isa => 'Str' );
 has 'value' => ( is => 'rw', isa => 'Str' );
 has 'units' => ( is => 'rw', isa => 'Str' );
 has 'uri'   => ( is => 'rw', isa => 'Str' );
+has 'id'    => ( is => 'rw', isa => 'Str' );
 
 sub to_hash {
-  my ($self) = @_;
-  
-  return {
-	  name  => $self->name,
-	  value => $self->value,
-	  units => $self->units,
-	  uri   => $self->uri,
-	 };
+    my ($self) = @_;
+
+    return {
+        name  => $self->name,
+        value => $self->value,
+        units => $self->units,
+        uri   => $self->uri,
+        id    => $self->id
+    };
 }
 
 sub TO_JSON { return { %{ shift() } }; }

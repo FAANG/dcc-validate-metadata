@@ -21,6 +21,7 @@ use JSON;
 use Try::Tiny;
 use Memoize;
 use Carp;
+use List::Util qw(none);
 
 #cache all calls to the rest service
 memoize('is_descendent');
@@ -39,13 +40,30 @@ has 'rest_client' => (
 );
 
 sub is_descendent {
-    my ( $self, $uri, $ancestor_uri ) = @_;
+    my ( $self, $uri, $qfield, $ancestor_uri ) = @_;
+
+    my @valid_qfields =
+      qw(label synonym description short_form obo_id annotations logical_description iri);
+
+    if ( none { $_ eq $qfield } @valid_qfields ) {
+        croak(
+            " Invalid query field. Got $qfield but should be one of "
+              . join(', '),
+            @valid_qfields
+        );
+    }
 
     my $request_uri = join( '',
-        $self->base_url, '/search?q=', uri_escape($uri),
+        $self->base_url,
+        '/search?q=',
+        uri_escape($uri),
+        '&queryFields=',
+        uri_escape($qfield),
         '&exact=true&fieldList=label&groupField=true&childrenOf=',
         uri_escape($ancestor_uri) );
 
+    print STDERR $request_uri . $/;
+    
     my $response = $self->rest_client->GET($request_uri);
 
     if ( $response->responseCode != 200 ) {
