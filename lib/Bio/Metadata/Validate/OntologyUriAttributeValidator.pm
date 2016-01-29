@@ -51,6 +51,12 @@ sub validate_attribute {
         $o->message('uri is not valid');
         return $o;
     };
+    
+    if (! $uri->has_recognized_scheme){
+      $o->outcome('error');
+      $o->message('uri is not valid');
+      return $o;
+    }
 
     my $label;
   ANCESTOR: for my $ancestor_uri ( $rule->all_valid_ancestor_uris ) {

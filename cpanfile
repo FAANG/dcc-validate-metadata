@@ -14,6 +14,7 @@ requires 'namespace::autoclean';
 requires 'REST::Client';
 requires 'JSON::XS';
 requires 'XML::Simple';
+requires 'URI';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';

@@ -19,7 +19,7 @@ use warnings;
 use Carp;
 use Moose::Util::TypeConstraints;
 
-enum 'Bio::Metadata::Rules::Rule::TypeEnum', [qw(text number enum ontology_uri ontology_text ontology_id)];
+enum 'Bio::Metadata::Rules::Rule::TypeEnum', [qw(text number enum ontology_uri ontology_text ontology_id uri_value)];
 enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',
   [qw(mandatory recommended optional)];
 
@@ -164,5 +164,6 @@ coerce 'Bio::Metadata::ValidateSchema::WarningArrayRef' => from 'ArrayRef[HashRe
   
   
 class_type 'Bio::Metadata::Validate::Support::OlsLookup';  
+
 
 1;

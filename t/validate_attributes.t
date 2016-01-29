@@ -18,6 +18,7 @@ use Bio::Metadata::Validate::RequirementValidator;
 use Bio::Metadata::Validate::OntologyUriAttributeValidator;
 use Bio::Metadata::Validate::OntologyTextAttributeValidator;
 use Bio::Metadata::Validate::OntologyIdAttributeValidator;
+use Bio::Metadata::Validate::UriValueAttributeValidator;
 
 my $text_attr = Bio::Metadata::Attribute->new( value => 'text', );
 my $num_attr = Bio::Metadata::Attribute->new( value => 10, units => 'kg' );
@@ -30,14 +31,15 @@ my %base_outcome_h = (
     attributes      => [],
 );
 
-text_rules();
-num_rules();
-enum_rules();
-unit_rules();
-mandatory_rules();
-ontology_uri_rule();
-ontology_id_rule();
-ontology_text_rule();
+uri_rules();
+#text_rules();
+#num_rules();
+#enum_rules();
+#unit_rules();
+#mandatory_rules();
+#ontology_uri_rule();
+#ontology_id_rule();
+#ontology_text_rule();
 done_testing();
 
 sub text_rules {
@@ -192,7 +194,7 @@ sub ontology_id_rule {
     );
     my $ols_id_attr_validator =
       Bio::Metadata::Validate::OntologyIdAttributeValidator->new();
-    my ($ols_attr, $outcome);
+    my ( $ols_attr, $outcome );
 
     #valid term
     $ols_attr = Bio::Metadata::Attribute->new(
@@ -244,6 +246,50 @@ sub ontology_id_rule {
     is( $outcome->outcome, 'warning',
         'OLS warning for term with different label/value term' );
 
+}
+
+sub uri_rules {
+    my $uri_rule = Bio::Metadata::Rules::Rule->new( type => 'uri_value', );
+    my $uri_value_validator =
+      Bio::Metadata::Validate::UriValueAttributeValidator->new();
+      
+      my ($attr, $outcome);
+      
+      #valid url
+      $attr = Bio::Metadata::Attribute->new(
+          value => 'http://www.ebi.ac.uk'
+      );
+      $outcome = $uri_value_validator->validate_attribute($uri_rule,$attr);
+      is ($outcome->outcome,'pass','Valid url passed');
+
+      #valid mailto
+      $attr = Bio::Metadata::Attribute->new(
+          value => 'mailto:bob@example.org'
+      );
+      $outcome = $uri_value_validator->validate_attribute($uri_rule,$attr);
+      is ($outcome->outcome,'pass','Valid mailto passed');
+      
+      #vaild ftp
+      $attr = Bio::Metadata::Attribute->new(
+          value => 'ftp://ftp.ebi.ac.uk'
+      );
+      $outcome = $uri_value_validator->validate_attribute($uri_rule,$attr);
+      is ($outcome->outcome,'pass','Valid mailto passed');
+      
+      #not a uri
+      $attr = Bio::Metadata::Attribute->new(
+          value => 'not actually a URI in a way'
+      );
+      $outcome = $uri_value_validator->validate_attribute($uri_rule,$attr);
+      is ($outcome->outcome,'error','Invalid url failed');
+      
+      #unsupported uri type
+      $attr = Bio::Metadata::Attribute->new(
+          value => 'telnet://bob:password@example.org:9000'
+      );
+      $outcome = $uri_value_validator->validate_attribute($uri_rule,$attr);
+      is ($outcome->outcome,'error','Unsupported schema failed');
+            is ($outcome->message,'uri scheme is not supported. It is telnet but only http, https, ftp, mailto are accepted','Unsupported schema failed with correct message');
 }
 
 sub ontology_uri_rule {
