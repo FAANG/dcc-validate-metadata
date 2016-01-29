@@ -161,5 +161,8 @@ coerce 'Bio::Metadata::ValidateSchema::WarningArrayRef' => from 'ArrayRef[HashRe
   from 'HashRef' => via {
     [ Bio::Metadata::ValidateSchema::Warning->new($_) ];
   };
+  
+  
+class_type 'Bio::Metadata::Validate::Support::OlsLookup';  
 
 1;
