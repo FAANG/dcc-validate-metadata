@@ -35,6 +35,8 @@ use Bio::Metadata::Validate::TextAttributeValidator;
 use Bio::Metadata::Validate::NumberAttributeValidator;
 use Bio::Metadata::Validate::EnumAttributeValidator;
 use Bio::Metadata::Validate::OntologyUriAttributeValidator;
+use Bio::Metadata::Validate::OntologyTextAttributeValidator;
+use Bio::Metadata::Validate::OntologyIdAttributeValidator;
 
 has 'rule_set' =>
   ( is => 'rw', isa => 'Bio::Metadata::Rules::RuleSet', required => 1 );
