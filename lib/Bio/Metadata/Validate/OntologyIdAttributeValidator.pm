@@ -1,6 +1,6 @@
 
 =head1 LICENSE
-   Copyright 2015 EMBL - European Bioinformatics Institute
+   Copyright 2016 EMBL - European Bioinformatics Institute
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -12,7 +12,7 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Validate::OntologyUriAttributeValidator;
+package Bio::Metadata::Validate::OntologyIdAttributeValidator;
 
 use strict;
 use warnings;
@@ -36,26 +36,16 @@ has 'ols_lookup' => (
 sub validate_attribute {
     my ( $self, $rule, $attribute, $o ) = @_;
 
-    if ( !$attribute->value || !$attribute->uri ) {
+    if ( !$attribute->value || !$attribute->id ) {
         $o->outcome('error');
-        $o->message('value and uri required');
+        $o->message('value and ID required');
         return $o;
     }
-
-    my $uri;
-    try {
-        $uri = URI->new( $attribute->uri );
-    }
-    catch {
-        $o->outcome('error');
-        $o->message('uri is not valid');
-        return $o;
-    };
 
     my $label;
   ANCESTOR: for my $ancestor_uri ( $rule->all_valid_ancestor_uris ) {
         $label =
-          $self->ols_lookup->is_descendent( $attribute->uri, 'iri', $ancestor_uri, 'true' );
+          $self->ols_lookup->is_descendent( $attribute->id, ['short_form','obo_id'], $ancestor_uri, 'false' );
         if ($label) {
             last ANCESTOR;
         }

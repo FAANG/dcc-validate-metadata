@@ -40,30 +40,38 @@ has 'rest_client' => (
 );
 
 sub is_descendent {
-    my ( $self, $uri, $qfield, $ancestor_uri ) = @_;
+    my ( $self, $uri, $qfields, $ancestor_uri, $exact ) = @_;
 
-    my @valid_qfields =
-      qw(label synonym description short_form obo_id annotations logical_description iri);
-
-    if ( none { $_ eq $qfield } @valid_qfields ) {
-        croak(
-            " Invalid query field. Got $qfield but should be one of "
-              . join(', '),
-            @valid_qfields
-        );
+    if ( !ref $qfields ) {
+        $qfields = [$qfields];
     }
 
-    my $request_uri = join( '',
+    my @uri_elements = (
         $self->base_url,
         '/search?q=',
         uri_escape($uri),
-        '&queryFields=',
-        uri_escape($qfield),
-        '&exact=true&fieldList=label&groupField=true&childrenOf=',
-        uri_escape($ancestor_uri) );
+        '&exact=',
+        $exact,
+        '&fieldList=label&groupField=true&childrenOf=',
+        uri_escape($ancestor_uri)
+    );
+    my @valid_qfields =
+      qw(label synonym description short_form obo_id annotations logical_description iri);
 
-    print STDERR $request_uri . $/;
-    
+    for my $qf (@$qfields) {
+        if ( none { $_ eq $qf } @valid_qfields ) {
+            croak(
+                " Invalid query field. Got $qf but should be one of "
+                  . join(', '),
+                @valid_qfields
+            );
+        }
+
+        push @uri_elements, '&queryFields=', uri_escape($qf);
+    }
+
+    my $request_uri = join( '', @uri_elements );
+
     my $response = $self->rest_client->GET($request_uri);
 
     if ( $response->responseCode != 200 ) {

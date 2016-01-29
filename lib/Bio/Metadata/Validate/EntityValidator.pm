@@ -65,6 +65,8 @@ has 'type_validator' => (
               Bio::Metadata::Validate::OntologyUriAttributeValidator->new(),
             ontology_text =>
               Bio::Metadata::Validate::OntologyTextAttributeValidator->new(),
+            ontology_id =>
+              Bio::Metadata::Validate::OntologyIdAttributeValidator->new(),
         };
     },
 );

@@ -44,7 +44,7 @@ sub validate_attribute {
     my $label;
   ANCESTOR: for my $ancestor_uri ( $rule->all_valid_ancestor_uris ) {        
         $label =
-          $self->ols_lookup->is_descendent( $attribute->value, 'label', $ancestor_uri );
+          $self->ols_lookup->is_descendent( $attribute->value, 'label', $ancestor_uri, 'true' );
         if ($label) {
             last ANCESTOR;
         }

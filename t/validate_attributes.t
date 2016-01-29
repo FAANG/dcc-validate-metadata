@@ -16,7 +16,8 @@ use Bio::Metadata::Validate::EnumAttributeValidator;
 use Bio::Metadata::Validate::UnitAttributeValidator;
 use Bio::Metadata::Validate::RequirementValidator;
 use Bio::Metadata::Validate::OntologyUriAttributeValidator;
-use Bio::Metadata::Validate::OntologyTextAttributeValidator;;
+use Bio::Metadata::Validate::OntologyTextAttributeValidator;
+use Bio::Metadata::Validate::OntologyIdAttributeValidator;
 
 my $text_attr = Bio::Metadata::Attribute->new( value => 'text', );
 my $num_attr = Bio::Metadata::Attribute->new( value => 10, units => 'kg' );
@@ -35,6 +36,7 @@ enum_rules();
 unit_rules();
 mandatory_rules();
 ontology_uri_rule();
+ontology_id_rule();
 ontology_text_rule();
 done_testing();
 
@@ -182,6 +184,68 @@ sub unit_rules {
         "unit rule rejects absent units" );
 }
 
+sub ontology_id_rule {
+    my $ols_rule = Bio::Metadata::Rules::Rule->new(
+        type => 'ontology_uri',
+        valid_ancestor_uris =>
+          ['http://purl.obolibrary.org/obo/UBERON_0002530'],
+    );
+    my $ols_id_attr_validator =
+      Bio::Metadata::Validate::OntologyIdAttributeValidator->new();
+    my ($ols_attr, $outcome);
+
+    #valid term
+    $ols_attr = Bio::Metadata::Attribute->new(
+        value => 'liver',
+        id    => 'UBERON_0002107'
+    );
+    $outcome =
+      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    is( $outcome->outcome, 'pass', 'OLS passed valid term - _ separator' );
+
+    #valid term
+    $ols_attr = Bio::Metadata::Attribute->new(
+        value => 'liver',
+        id    => 'UBERON:0002107'
+    );
+    $outcome =
+      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    is( $outcome->outcome, 'pass', 'OLS passed valid term - : separator' );
+
+    #wrong ancestor
+    $ols_attr = Bio::Metadata::Attribute->new(
+        value => 'distal tarsal bone 4',
+        id    => 'UBERON_0010737'
+    );
+    $outcome =
+      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    is( $outcome->outcome, 'error', 'OLS errored term with wrong ancestor' );
+
+    #not a term ID
+    $ols_attr = Bio::Metadata::Attribute->new(
+        value => 'not a term',
+        id    => 'cbeebies'
+    );
+    $outcome =
+      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    is( $outcome->outcome, 'error', 'OLS errored URI term that is not in OLS' );
+
+    $outcome =
+      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    is( $outcome->outcome, 'error', 'OLS errored for term that is not a URI' );
+
+    #warn for term/label mismatch
+    $ols_attr = Bio::Metadata::Attribute->new(
+        value => 'not a liver',
+        id    => 'UBERON:0002107'
+    );
+    $outcome =
+      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    is( $outcome->outcome, 'warning',
+        'OLS warning for term with different label/value term' );
+
+}
+
 sub ontology_uri_rule {
     my $ols_rule = Bio::Metadata::Rules::Rule->new(
         type => 'ontology_uri',
@@ -205,7 +269,8 @@ sub ontology_uri_rule {
         value => 'distal tarsal bone 4',
         uri   => 'http://purl.obolibrary.org/obo/UBERON_0010737'
     );
-    $outcome = $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    $outcome =
+      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
     is( $outcome->outcome, 'error', 'OLS errored term with wrong ancestor' );
 
     #not a term URI
@@ -213,7 +278,8 @@ sub ontology_uri_rule {
         value => 'not a term',
         uri   => 'http://www.bbc.co.uk/cbeebies'
     );
-    $outcome = $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    $outcome =
+      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
     is( $outcome->outcome, 'error', 'OLS errored URI term that is not in OLS' );
 
     #not URI
@@ -221,7 +287,8 @@ sub ontology_uri_rule {
         value => 'not a term',
         uri   => 'not a term'
     );
-    $outcome = $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    $outcome =
+      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
     is( $outcome->outcome, 'error', 'OLS errored for term that is not a URI' );
 
     #warn for term/label mismatch
@@ -245,30 +312,26 @@ sub ontology_text_rule {
     my $ols_text_attr_validator =
       Bio::Metadata::Validate::OntologyTextAttributeValidator->new();
 
-      use Data::Dumper;
-
+    use Data::Dumper;
 
     #valid term
-    my $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'liver'
-    );
+    my $ols_attr = Bio::Metadata::Attribute->new( value => 'liver' );
     my $outcome =
       $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
 
     is( $outcome->outcome, 'pass', 'OLS passed valid term' );
 
     #wrong ancestor
-    $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'distal tarsal bone 4'
-    );
-    $outcome = $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    $ols_attr =
+      Bio::Metadata::Attribute->new( value => 'distal tarsal bone 4' );
+    $outcome =
+      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
     is( $outcome->outcome, 'error', 'OLS errored term with wrong ancestor' );
 
     #not a term
-    $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'not a term'
-    );
-    $outcome = $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+    $ols_attr = Bio::Metadata::Attribute->new( value => 'not a term' );
+    $outcome =
+      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
     is( $outcome->outcome, 'error', 'OLS errored term that is not in OLS' );
 
 }
