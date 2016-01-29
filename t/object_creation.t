@@ -19,17 +19,17 @@ my $sample = Bio::Metadata::Entity->new(
     id          => 'bob',
     entity_type => 'sample',
     attributes  => [
-        { name => 'sex', value => 'female' },
+        { name => 'sex',    value => 'female' },
         { name => 'weight', value => '0.05', units => 'kg' },
         {
             name  => 'tissue',
             value => 'muscle',
             uri   => 'http://purl.obolibrary.org/obo/UBERON_0002385'
         },
-        { name => 'weight', value => '50',   units => 'g' },
-   ],
-   links=>[]
-					
+        { name => 'weight', value => '50', units => 'g' },
+    ],
+    links => []
+
 );
 
 my $actural_sh  = $sample->to_hash();
@@ -37,23 +37,42 @@ my $expected_sh = {
     id          => 'bob',
     entity_type => 'sample',
     attributes  => [
-        { name => 'sex', value => 'female', units => undef, uri => undef },
-        { name => 'weight', value => '0.05', units => 'kg', uri => undef },
+        {
+            name  => 'sex',
+            value => 'female',
+            units => undef,
+            uri   => undef,
+            id    => undef
+        },
+        {
+            name  => 'weight',
+            value => '0.05',
+            units => 'kg',
+            uri   => undef,
+            id    => undef
+        },
         {
             name  => 'tissue',
             value => 'muscle',
             units => undef,
-            uri   => 'http://purl.obolibrary.org/obo/UBERON_0002385'
+            uri   => 'http://purl.obolibrary.org/obo/UBERON_0002385',
+            id    => undef
         },
-	{ name => 'weight', value => '50',   units => 'g',  uri => undef },
-     ],
-     links=>[]		   
-		   
+        {
+            name  => 'weight',
+            value => '50',
+            units => 'g',
+            uri   => undef,
+            id    => undef
+        },
+    ],
+    links => []
+
 };
 is_deeply( $actural_sh, $expected_sh, 'Entity to hash' );
 
-is_deeply($sample->attr_names,[qw(sex weight tissue)],'attr_names reports unique names in order');
-
+is_deeply( $sample->attr_names, [qw(sex weight tissue)],
+    'attr_names reports unique names in order' );
 
 my $actual_organised_attrs  = $sample->organised_attr();
 my $expected_organised_attr = {
@@ -157,8 +176,15 @@ my $expected_vo_h = {
     outcome     => 'error',
     entity_id   => 'bob',
     entity_type => 'sample',
-    attributes =>
-      [ { name => 'sex', value => 'female', units => undef, uri => undef }, ],
+    attributes  => [
+        {
+            name  => 'sex',
+            value => 'female',
+            units => undef,
+            uri   => undef,
+            id    => undef
+        },
+    ],
 };
 
 is_deeply( $actual_vo_h, $expected_vo_h, 'Create validation outcome' );
