@@ -32,14 +32,14 @@ my %base_outcome_h = (
 );
 
 uri_rules();
-#text_rules();
-#num_rules();
-#enum_rules();
-#unit_rules();
-#mandatory_rules();
-#ontology_uri_rule();
-#ontology_id_rule();
-#ontology_text_rule();
+text_rules();
+num_rules();
+enum_rules();
+unit_rules();
+mandatory_rules();
+ontology_uri_rule();
+ontology_id_rule();
+ontology_text_rule();
 done_testing();
 
 sub text_rules {
