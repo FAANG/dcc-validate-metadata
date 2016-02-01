@@ -38,32 +38,36 @@ my $expected_sh = {
     entity_type => 'sample',
     attributes  => [
         {
-            name  => 'sex',
-            value => 'female',
-            units => undef,
-            uri   => undef,
-            id    => undef
+            name                     => 'sex',
+            value                    => 'female',
+            units                    => undef,
+            uri                      => undef,
+            id                       => undef,
+            allow_further_validation => 1
         },
         {
-            name  => 'weight',
-            value => '0.05',
-            units => 'kg',
-            uri   => undef,
-            id    => undef
+            name                     => 'weight',
+            value                    => '0.05',
+            units                    => 'kg',
+            uri                      => undef,
+            id                       => undef,
+            allow_further_validation => 1
         },
         {
             name  => 'tissue',
             value => 'muscle',
             units => undef,
             uri   => 'http://purl.obolibrary.org/obo/UBERON_0002385',
-            id    => undef
+            id    => undef,
+            allow_further_validation => 1
         },
         {
-            name  => 'weight',
-            value => '50',
-            units => 'g',
-            uri   => undef,
-            id    => undef
+            name                     => 'weight',
+            value                    => '50',
+            units                    => 'g',
+            uri                      => undef,
+            id                       => undef,
+            allow_further_validation => 1
         },
     ],
     links => []
@@ -178,11 +182,12 @@ my $expected_vo_h = {
     entity_type => 'sample',
     attributes  => [
         {
-            name  => 'sex',
-            value => 'female',
-            units => undef,
-            uri   => undef,
-            id    => undef
+            name                     => 'sex',
+            value                    => 'female',
+            units                    => undef,
+            uri                      => undef,
+            id                       => undef,
+            allow_further_validation => 1
         },
     ],
 };
