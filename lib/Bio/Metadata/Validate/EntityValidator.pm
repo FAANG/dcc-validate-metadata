@@ -180,12 +180,14 @@ sub check {
               $requirement_validator->validate_requirements( $rule, $attrs );
 
             for my $a (@$attrs) {
-                if ( $rule->count_valid_units ) {
+                if ( $a->allow_further_validation ) {
+                    if ( $rule->count_valid_units ) {
+                        push @r_outcomes,
+                          $unit_validator->validate_attribute( $rule, $a );
+                    }
                     push @r_outcomes,
-                      $unit_validator->validate_attribute( $rule, $a );
+                      $type_validator->validate_attribute( $rule, $a );
                 }
-                push @r_outcomes,
-                  $type_validator->validate_attribute( $rule, $a );
             }
 
             for my $o (@r_outcomes) {

@@ -26,15 +26,26 @@ has 'units' => ( is => 'rw', isa => 'Str' );
 has 'uri'   => ( is => 'rw', isa => 'Str' );
 has 'id'    => ( is => 'rw', isa => 'Str' );
 
+has 'allow_further_validation' => (
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 1,
+    traits  => ['Bool'],
+    handles => {
+        block_further_validation => 'unset',
+    }
+);
+
 sub to_hash {
     my ($self) = @_;
 
     return {
-        name  => $self->name,
-        value => $self->value,
-        units => $self->units,
-        uri   => $self->uri,
-        id    => $self->id
+        name                     => $self->name,
+        value                    => $self->value,
+        units                    => $self->units,
+        uri                      => $self->uri,
+        id                       => $self->id,
+        allow_further_validation => $self->allow_further_validation
     };
 }
 
