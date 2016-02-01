@@ -42,7 +42,7 @@ $reporter->report(
     attribute_outcomes => $attribute_outcomes
 );
 
-unlink($output);
+#unlink($output);
 
 ok(1);
 done_testing();

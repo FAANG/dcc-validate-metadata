@@ -2,134 +2,161 @@
     {
         "attributes": [
             {
-                "name": "crew_capacity", 
-                "units": "cabins", 
+                "name": "crew_capacity",
+                "units": "cabins",
                 "value": 5
-            }, 
+            },
             {
-                "name": "passenger_capacity", 
-                "units": "people", 
+                "name": "passenger_capacity",
+                "units": "people",
                 "value": 18
-            }, 
+            },
             {
-                "name": "class_id", 
+                "name": "class_id",
                 "value": "03-K64-Firefly"
-            }, 
+            },
             {
-                "name": "role", 
+                "name": "role",
                 "value": "transport"
-            }, 
+            },
             {
-                "name": "cargo_capacity", 
-                "units": "kg", 
+                "name": "cargo_capacity",
+                "units": "kg",
                 "value": 74797
             }
-        ], 
-        "entity_type": "spacecraft", 
+        ],
+        "entity_type": "spacecraft",
         "id": "404-E-132-4FE274A"
-    }, 
+    },
     {
         "attributes": [
             {
-                "name": "crew_capacity", 
-                "units": "people", 
+                "name": "crew_capacity",
+                "units": "people",
                 "value": 50
-            }, 
+            },
             {
-                "name": "passenger_capacity", 
-                "units": "people", 
+                "name": "passenger_capacity",
+                "units": "people",
                 "value": "none"
-            }, 
+            },
             {
-                "name": "class", 
+                "name": "class",
                 "value": "Defiant"
-            }, 
+            },
             {
-                "name": "role", 
+                "name": "role",
                 "value": "warship"
-            }, 
+            },
             {
-                "name": "weapon", 
+                "name": "weapon",
                 "value": "photon torpedo"
-            }, 
+            },
             {
-                "name": "weapon", 
+                "name": "weapon",
                 "value": "phaser"
             }
-        ], 
-        "entity_type": "spacecraft", 
+        ],
+        "entity_type": "spacecraft",
         "id": "NX-74205"
-    }, 
+    },
     {
         "attributes": [
             {
-                "name": "crew_capacity", 
-                "units": "people", 
+                "name": "crew_capacity",
+                "units": "people",
                 "value": 47
-            }, 
+            },
             {
-                "name": "passenger_capacity", 
-                "units": "people", 
+                "name": "passenger_capacity",
+                "units": "people",
                 "value": 0
-            }, 
+            },
             {
-                "name": "class", 
+                "name": "class",
                 "value": "NSO-929 Corvette"
-            }, 
+            },
             {
-                "name": "role", 
+                "name": "role",
                 "value": "warship"
-            }, 
+            },
             {
-                "name": "weapon", 
+                "name": "weapon",
                 "value": "particle beam cannon"
-            }, 
+            },
             {
-                "name": "weapon", 
+                "name": "weapon",
                 "value": "Missile launcher"
             }
-        ], 
-        "entity_type": "spacecraft", 
+        ],
+        "entity_type": "spacecraft",
         "id": "CNV-301"
-    }, 
+    },
     {
         "attributes": [
             {
-                "name": "crew_capacity", 
-                "units": "people", 
+                "name": "crew_capacity",
+                "units": "people",
                 "value": 3000
-            }, 
+            },
             {
-                "name": "passenger_capacity", 
-                "units": "people", 
+                "name": "passenger_capacity",
+                "units": "people",
                 "value": 0
-            }, 
+            },
             {
-                "name": "class", 
+                "name": "class",
                 "value": "Battlestar"
-            }, 
+            },
             {
-                "name": "role", 
+                "name": "role",
                 "value": "warship"
-            }, 
+            },
             {
-                "name": "weapon", 
+                "name": "weapon",
                 "value": "kinetic energy weapon"
-            }, 
+            },
             {
-                "name": "weapon", 
+                "name": "weapon",
                 "value": "missile launcher"
-            }, 
+            },
             {
-                "name": "carrying_craft", 
+                "name": "carrying_craft",
                 "value": "raptor"
-            }, 
+            },
             {
-                "name": "carrying_craft", 
+                "name": "carrying_craft",
                 "value": "viper"
             }
-        ], 
-        "entity_type": "spacecraft", 
+        ],
+        "entity_type": "spacecraft",
         "id": "BS-75"
+    },
+    {
+        "attributes": [
+            {
+                "name": "crew_capacity",
+                "value": "not provided"
+            },
+            {
+                "name": "passenger_capacity",
+                "units": "people",
+                "value": "not provided"
+            },
+            {
+                "name": "class",
+                "value": "Deep space vehicle"
+            },
+            {
+                "name": "role",
+                "value": "restricted access"
+            },
+            {
+                "name": "weapon",
+                "value": "not collected"
+            }
+        ],
+        "entity_type": "spacecraft",
+        "id": "Liberator"
     }
 ]

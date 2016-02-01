@@ -68,7 +68,6 @@ has 'missing_value_outcome' => (
             },
         };
     },
-    handles => { 'get_missing_value_outcome' => 'get' },
 );
 
 sub validate_requirements {
@@ -103,11 +102,10 @@ sub check_missing_values {
             && $self->find_missing_values_term( sub { $a->value eq $_ } ) )
         {
             my $outcome_type =
-              $self->get_missing_value_outcome( $rule->mandatory )
-              ->{ $a->value };
+              $self->missing_value_outcome->{ $rule->mandatory }{ $a->value };
             $outcome->outcome($outcome_type);
             if ( $outcome_type ne 'pass' ) {
-                $outcome_type->message( 'attribute is ' . $rule->mandatory );
+                $outcome->message( 'attribute is ' . $rule->mandatory );
                 $a->block_further_validation;
             }
 
