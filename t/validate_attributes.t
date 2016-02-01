@@ -7,6 +7,7 @@ use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
 use Data::Dumper;
 use Test::More;
+use Test::Exception;
 
 use Bio::Metadata::Attribute;
 use Bio::Metadata::Rules::Rule;
@@ -19,6 +20,7 @@ use Bio::Metadata::Validate::OntologyUriAttributeValidator;
 use Bio::Metadata::Validate::OntologyTextAttributeValidator;
 use Bio::Metadata::Validate::OntologyIdAttributeValidator;
 use Bio::Metadata::Validate::UriValueAttributeValidator;
+use Bio::Metadata::Validate::DateAttributeValidator;
 
 my $text_attr = Bio::Metadata::Attribute->new( value => 'text', );
 my $num_attr = Bio::Metadata::Attribute->new( value => 10, units => 'kg' );
@@ -31,9 +33,11 @@ my %base_outcome_h = (
     attributes      => [],
 );
 
+
 uri_rules();
 text_rules();
 num_rules();
+date_rules();
 enum_rules();
 unit_rules();
 mandatory_rules();
@@ -41,6 +45,51 @@ ontology_uri_rule();
 ontology_id_rule();
 ontology_text_rule();
 done_testing();
+
+sub date_rules {
+    my $date_rule = Bio::Metadata::Rules::Rule->new( type => 'date', );
+    my $date_attr_validator =
+      Bio::Metadata::Validate::DateAttributeValidator->new();
+
+    my ( $attr, $o );
+
+    $attr = Bio::Metadata::Attribute->new(
+        value => '2016-02-01',
+        units => 'YYYY-MM-DD'
+    );
+
+    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+    is( $o->outcome, "pass", "valid date passed" );
+
+    $attr->value('2016-01-32');
+    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+    is( $o->outcome, "error", "subtly invalid date failed" );
+
+    $attr->value('this is not a date');
+    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+    is( $o->outcome, "error", "very invalid date failed" );
+    
+    $attr->value('2016-02-29');
+    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+    is( $o->outcome, "pass", "Feb 29 passes for leap year" );
+    
+    $attr->value('2015-02-29');
+    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+    is( $o->outcome, "error", "Feb 29 fails for non-leap year" );
+
+    $attr->units('MM-DD-YYYY');
+    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+    is( $o->outcome, "error",
+        "unacceptable date format in attributes is rejected" );
+
+    $date_rule->valid_units( ['MM-DD-YYYY'] );
+    throws_ok {
+        $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+    }
+    qr/Rule has units that aren't a supported date format/,
+      "Invalid format in rule dies with croak";
+
+}
 
 sub text_rules {
     my $text_rule = Bio::Metadata::Rules::Rule->new( type => 'text', );
@@ -252,44 +301,41 @@ sub uri_rules {
     my $uri_rule = Bio::Metadata::Rules::Rule->new( type => 'uri_value', );
     my $uri_value_validator =
       Bio::Metadata::Validate::UriValueAttributeValidator->new();
-      
-      my ($attr, $outcome);
-      
-      #valid url
-      $attr = Bio::Metadata::Attribute->new(
-          value => 'http://www.ebi.ac.uk'
-      );
-      $outcome = $uri_value_validator->validate_attribute($uri_rule,$attr);
-      is ($outcome->outcome,'pass','Valid url passed');
 
-      #valid mailto
-      $attr = Bio::Metadata::Attribute->new(
-          value => 'mailto:bob@example.org'
-      );
-      $outcome = $uri_value_validator->validate_attribute($uri_rule,$attr);
-      is ($outcome->outcome,'pass','Valid mailto passed');
-      
-      #vaild ftp
-      $attr = Bio::Metadata::Attribute->new(
-          value => 'ftp://ftp.ebi.ac.uk'
-      );
-      $outcome = $uri_value_validator->validate_attribute($uri_rule,$attr);
-      is ($outcome->outcome,'pass','Valid mailto passed');
-      
-      #not a uri
-      $attr = Bio::Metadata::Attribute->new(
-          value => 'not actually a URI in a way'
-      );
-      $outcome = $uri_value_validator->validate_attribute($uri_rule,$attr);
-      is ($outcome->outcome,'error','Invalid url failed');
-      
-      #unsupported uri type
-      $attr = Bio::Metadata::Attribute->new(
-          value => 'telnet://bob:password@example.org:9000'
-      );
-      $outcome = $uri_value_validator->validate_attribute($uri_rule,$attr);
-      is ($outcome->outcome,'error','Unsupported schema failed');
-            is ($outcome->message,'uri scheme is not supported. It is telnet but only http, https, ftp, mailto are accepted','Unsupported schema failed with correct message');
+    my ( $attr, $outcome );
+
+    #valid url
+    $attr = Bio::Metadata::Attribute->new( value => 'http://www.ebi.ac.uk' );
+    $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+    is( $outcome->outcome, 'pass', 'Valid url passed' );
+
+    #valid mailto
+    $attr = Bio::Metadata::Attribute->new( value => 'mailto:bob@example.org' );
+    $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+    is( $outcome->outcome, 'pass', 'Valid mailto passed' );
+
+    #vaild ftp
+    $attr = Bio::Metadata::Attribute->new( value => 'ftp://ftp.ebi.ac.uk' );
+    $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+    is( $outcome->outcome, 'pass', 'Valid mailto passed' );
+
+    #not a uri
+    $attr =
+      Bio::Metadata::Attribute->new( value => 'not actually a URI in a way' );
+    $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+    is( $outcome->outcome, 'error', 'Invalid url failed' );
+
+    #unsupported uri type
+    $attr =
+      Bio::Metadata::Attribute->new(
+        value => 'telnet://bob:password@example.org:9000' );
+    $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+    is( $outcome->outcome, 'error', 'Unsupported schema failed' );
+    is(
+        $outcome->message,
+'uri scheme is not supported. It is telnet but only http, https, ftp, mailto are accepted',
+        'Unsupported schema failed with correct message'
+    );
 }
 
 sub ontology_uri_rule {

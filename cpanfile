@@ -15,6 +15,7 @@ requires 'REST::Client';
 requires 'JSON::XS';
 requires 'XML::Simple';
 requires 'URI';
+requires 'DateTime::Format::ISO8601';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';
