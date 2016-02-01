@@ -317,7 +317,7 @@ sub uri_rules {
     #vaild ftp
     $attr = Bio::Metadata::Attribute->new( value => 'ftp://ftp.ebi.ac.uk' );
     $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
-    is( $outcome->outcome, 'pass', 'Valid mailto passed' );
+    is( $outcome->outcome, 'pass', 'Valid ftp passed' );
 
     #not a uri
     $attr =
