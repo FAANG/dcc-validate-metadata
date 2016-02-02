@@ -1,56 +1,63 @@
 {
-    "description": "a nerdy test checklist", 
-    "name": "spacecraft checklist", 
+    "description": "a nerdy test checklist",
+    "name": "spacecraft checklist",
     "rule_groups": [
         {
-            "name": "standard", 
+            "name": "standard",
             "rules": [
                 {
-                    "mandatory": "mandatory", 
-                    "name": "passenger_capacity", 
+                    "mandatory": "mandatory",
+                    "name": "passenger_capacity",
                     "type": "number"
-                }, 
+                },
                 {
-                    "mandatory": "mandatory", 
-                    "name": "crew_capacity", 
+                    "mandatory": "mandatory",
+                    "name": "crew_capacity",
                     "type": "number"
-                }, 
+                },
                 {
-                    "mandatory": "mandatory", 
-                    "name": "class", 
+                    "mandatory": "mandatory",
+                    "name": "class",
                     "type": "text"
-                }, 
+                },
                 {
-                    "mandatory": "mandatory", 
-                    "name": "role", 
-                    "type": "enum", 
+                    "mandatory": "mandatory",
+                    "name": "role",
+                    "type": "enum",
                     "valid_values": [
-                        "transport", 
+                        "transport",
                         "warship"
                     ]
                 }
             ]
-        }, 
+        },
         {
-            "condition": "/attributes/*/*[key eq 'name' && value eq 'role']/../*[key eq 'value' && value eq 'warship']", 
-            "name": "warships", 
+            "condition": {
+                "attribute_value_match": {
+                    "role": [
+                        "warship"
+                    ]
+                },
+                "dpath_condition": "/attributes/*/*[key eq 'name' && value eq 'role']/../*[key eq 'value' && value eq 'warship']"
+            },
+            "name": "warships",
             "rules": [
                 {
-                    "allow_multiple": 1, 
-                    "mandatory": "recommended", 
-                    "name": "weapon", 
+                    "allow_multiple": 1,
+                    "mandatory": "recommended",
+                    "name": "weapon",
                     "type": "text"
                 }
             ]
-        }, 
+        },
         {
-            "condition": "/attributes/*/*[key eq 'name' && value eq 'role']/../*[key eq 'value' && value eq 'transport']", 
-            "name": "transports", 
+            "condition": "/attributes/*/*[key eq 'name' && value eq 'role']/../*[key eq 'value' && value eq 'transport']",
+            "name": "transports",
             "rules": [
                 {
-                    "mandatory": "mandatory", 
-                    "name": "cargo_capacity", 
-                    "type": "number", 
+                    "mandatory": "mandatory",
+                    "name": "cargo_capacity",
+                    "type": "number",
                     "valid_units": [
                         "kg"
                     ]

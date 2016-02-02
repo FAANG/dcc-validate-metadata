@@ -20,10 +20,11 @@ use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
 use Bio::Metadata::Rules::Rule;
+use Bio::Metadata::Rules::Condition;
 
 has 'name'        => ( is => 'rw', isa => 'Str', );
 has 'description' => ( is => 'rw', isa => 'Str' );
-has 'condition'   => ( is => 'rw', isa => 'Str' );
+has 'condition'   => ( is => 'rw', isa => 'Bio::Metadata::Rules::Condition', coerce => 1 );
 has 'rules'       => (
     traits  => ['Array'],
     is      => 'rw',

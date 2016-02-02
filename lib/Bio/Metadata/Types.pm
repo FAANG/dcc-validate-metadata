@@ -19,7 +19,8 @@ use warnings;
 use Carp;
 use Moose::Util::TypeConstraints;
 
-enum 'Bio::Metadata::Rules::Rule::TypeEnum', [qw(text number enum ontology_uri ontology_text ontology_id uri_value date)];
+enum 'Bio::Metadata::Rules::Rule::TypeEnum',
+  [qw(text number enum ontology_uri ontology_text ontology_id uri_value date)];
 enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',
   [qw(mandatory recommended optional)];
 
@@ -102,6 +103,29 @@ coerce 'Bio::Metadata::Rules::RuleGroupArrayRef' => from 'ArrayRef[HashRef]' =>
     [ Bio::Metadata::Rules::RuleGroup->new($_) ];
   };
 
+#condition
+class_type 'Bio::Metadata::Rules::Condition';
+coerce 'Bio::Metadata::Rules::Condition' => from
+  'HashRef' => via { Bio::Metadata::Rules::Condition->new($_); },
+  from 'Str ' =>
+  via { Bio::Metadata::Rules::Condition->new( dpath_condition => $_ ); };
+
+subtype 'Bio::Metadata::Rules::ConditionArrayRef' => as
+  'ArrayRef[Bio::Metadata::Rules::Condition]';
+
+coerce 'Bio::Metadata::Rules::ConditionArrayRef' => from 'ArrayRef[HashRef]' =>
+  via {
+    [ map { Bio::Metadata::Rules::Condition->new($_) } @$_ ];
+  },
+  from 'Bio::Metadata::Rules::Condition' => via {
+    [$_];
+  },
+  from 'HashRef' => via {
+    [ Bio::Metadata::Rules::Condition->new($_) ];
+  },
+  from 'Str' =>
+  via { [ Bio::Metadata::Rules::Condition->new( dpath_condition => $_ ) ] };
+
 #validation outcome
 class_type 'Bio::Metadata::Validate::ValidationOutcome';
 coerce 'Bio::Metadata::Validate::ValidationOutcome' => from 'HashRef' =>
@@ -133,7 +157,7 @@ subtype 'Bio::Metadata::ValidateSchema::ValidationOutcomeArrayRef' => as
   'ArrayRef[Bio::Metadata::ValidateSchema::ValidationOutcome]';
 
 coerce 'Bio::Metadata::ValidateSchema::ValidationOutcomeArrayRef' => from
-  'ArrayRef[HashRef]'                                       => via {
+  'ArrayRef[HashRef]'                                             => via {
     [ map { Bio::Metadata::ValidateSchema::ValidationOutcome->new($_) } @$_ ];
   },
   from 'Bio::Metadata::ValidateSchema::ValidationOutcome' => via {
@@ -143,27 +167,26 @@ coerce 'Bio::Metadata::ValidateSchema::ValidationOutcomeArrayRef' => from
     [ Bio::Metadata::ValidateSchema::ValidationOutcome->new($_) ];
   };
 
-
 #warning
 class_type 'Bio::Metadata::ValidateSchema::Warning';
 
 coerce 'Bio::Metadata::ValidateSchema::Warning' => from 'HashRef' =>
   via { Bio::Metadata::Warning->new($_); };
 
-subtype 'Bio::Metadata::ValidateSchema::WarningArrayRef' => as 'ArrayRef[Bio::Metadata::ValidateSchema::Warning]';
+subtype 'Bio::Metadata::ValidateSchema::WarningArrayRef' => as
+  'ArrayRef[Bio::Metadata::ValidateSchema::Warning]';
 
-coerce 'Bio::Metadata::ValidateSchema::WarningArrayRef' => from 'ArrayRef[HashRef]' => via {
+coerce 'Bio::Metadata::ValidateSchema::WarningArrayRef' => from
+  'ArrayRef[HashRef]'                                   => via {
     [ map { Bio::Metadata::Warning->new($_) } @$_ ];
-},
+  },
   from 'Bio::Metadata::ValidateSchema::Warning' => via {
     [$_];
   },
   from 'HashRef' => via {
     [ Bio::Metadata::ValidateSchema::Warning->new($_) ];
   };
-  
-  
-class_type 'Bio::Metadata::Validate::Support::OlsLookup';  
 
+class_type 'Bio::Metadata::Validate::Support::OlsLookup';
 
 1;

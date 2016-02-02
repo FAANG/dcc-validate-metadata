@@ -41,6 +41,7 @@ use Bio::Metadata::Entity;
 use Bio::Metadata::Rules::Rule;
 use Bio::Metadata::Rules::RuleGroup;
 use Bio::Metadata::Rules::RuleSet;
+ues Bio::Metadata::Rules::Condition;
 
 use Bio::Metadata::Loader::RuleSetLoader;
 use Bio::Metadata::Validate::EntityValidator;

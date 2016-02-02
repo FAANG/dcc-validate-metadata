@@ -21,7 +21,6 @@ use Carp;
 use Moose;
 use namespace::autoclean;
 
-use Data::DPath 'dpath';
 use Data::Dumper;
 
 use Bio::Metadata::Types;
@@ -156,14 +155,10 @@ sub check {
 
   RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
 
-        if ( $rule_group->condition ) {
-
-            my $match_count =
-              dpath( $rule_group->condition )->match($entity_as_hash);
-
-            if ( !$match_count ) {
-                next RULE_GROUP;
-            }
+        if ( $rule_group->condition
+            && !$rule_group->condition->entity_passes($entity) )
+        {
+            next RULE_GROUP;
         }
 
         for my $rule ( $rule_group->all_rules ) {
