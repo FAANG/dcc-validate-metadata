@@ -6,28 +6,26 @@ use warnings;
 use Carp;
 use Moose::Role;
 use Spreadsheet::Read;
+use Spreadsheet::ParseExcel::Stream::XLSX;
 
+requires 'process_sheet';
 
 sub load {
 	my ( $self, $file_path ) = @_;
 	
-	my $workbook = ReadData($file_path);
+	my @entities;
 	
-	die("[ERROR] parsing $file_path. Please check the file") if ( !defined $workbook );
-	
-	my @rows = Spreadsheet::Read::rows($workbook->[2]);
-	
-	my $header=$rows[0];
-	shift @rows;
-	my %fields= map { $_ => 1 } split/\t/,$header;
-	
-	
-	foreach my $i (1 .. scalar @rows) {
-	    foreach my $j (1 .. scalar @{$rows[$i-1]}) {
-	        print "start:",$rows[$i-1][$j-1],":end\t";
-	    }
+	my $xls = Spreadsheet::ParseExcel::Stream::XLSX->new($file_path);
+	while ( my $sheet = $xls->sheet() ) {
+	 	my $set=$self->process_sheet($sheet);
+		if ($set!=0) {
+			foreach my $e (@$set) {
+				push @entities,$e
+			}
+		}
 	}
 	
+	return \@entities;
 }
 
 1;
