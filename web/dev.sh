@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
-PERL5LIB=${PERL5LIB}:../lib
-morbo -w . -w ./public validate_metadata.pl 
+pushd `dirname $0` > /dev/null
+SCRIPTPATH=`pwd`
+popd > /dev/null
+
+PERL5LIB=${PERL5LIB}:$SCRIPTPATH/../lib
+morbo -w $SCRIPTPATH/validate_metadata.conf -w $SCRIPTPATH/public $SCRIPTPATH/validate_metadata.pl 
