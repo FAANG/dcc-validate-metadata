@@ -16,6 +16,7 @@ requires 'JSON::XS';
 requires 'XML::Simple';
 requires 'URI';
 requires 'DateTime::Format::ISO8601';
+requires 'Mojolicious', '>= 6.33';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';
