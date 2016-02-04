@@ -16,11 +16,15 @@ use strict;
 use warnings;
 use Mojolicious::Lite;
 use Carp;
+use File::Temp qw(tempfile);
 
 use Bio::Metadata::Loader::JSONRuleSetLoader;
 use Bio::Metadata::Loader::JSONEntityLoader;
+use Bio::Metadata::Reporter::ExcelReporter;
+use Bio::Metadata::Validate::EntityValidator;
 
 plugin 'Config';
+plugin 'RenderFile';
 
 my $rule_locations = app->config('rules');
 
@@ -90,9 +94,47 @@ get '/validate' => sub {
 post '/validate_upload' => sub {
     my $self = shift;
 
-    my $name   = $self->param('rule_set_name');
-    my $format = $self->param('format');
+    my $rule_set_name = $self->param('rule_set_name');
+    my $format        = $self->param('format');
     my $metadata_file = $self->param('metadata_file');
+
+    my $loader   = $loaders->{$format};
+    my $rule_set = $rules->{$rule_set_name};
+
+    my $metadata =
+      $loader->load_blob( $metadata_file->slurp, $metadata_file->filename );
+
+    my $validator =
+      Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+
+    my (
+        $entity_status,    $entity_outcomes,
+        $attribute_status, $attribute_outcomes
+    ) = $validator->check_all($metadata);
+
+    my ( $tmpfh, $report_filepath ) = tempfile();
+
+    my $reporter =
+      Bio::Metadata::Reporter::ExcelReporter->new(
+        file_path => $report_filepath );
+
+    $reporter->report(
+        entities           => $metadata,
+        entity_status      => $entity_status,
+        entity_outcomes    => $entity_outcomes,
+        attribute_status   => $attribute_status,
+        attribute_outcomes => $attribute_outcomes
+    );
+
+    # Open file in browser(do not show save dialog)
+    $self->render_file(
+        filepath => $report_filepath,
+        filename => 'validation_report.xlsx',
+        content_type =>
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        content_disposition => 'attachment',
+        cleanup             => 1,
+    );
 
 };
 
