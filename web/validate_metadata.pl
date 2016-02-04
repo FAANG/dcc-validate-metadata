@@ -35,10 +35,8 @@ get '/' => sub {
 get '/rule_sets' => sub {
     my $self = shift;
 
-    my @rule_sets = sort keys %$rules;
-
     $self->respond_to(
-        json => sub { $self->render( json => \@rule_sets ) },
+        json => sub { $self->render( json => [sort keys %$rules] ) },
         html => sub {
             $self->stash(
                 rule_sets => $rules,
@@ -54,9 +52,11 @@ get '/rule_sets/#name' => sub {
     my $name     = $self->param('name');
     my $rule_set = $rules->{$name};
 
+    return $self->reply->not_found if (!$rule_set);
+
     $self->respond_to(
         json => sub {
-            $self->render( json => $rule_set );
+            $self->render( json => $rule_set->to_hash );
         },
         html => sub {
             $self->stash( rule_set => $rule_set, title => 'rule set ' . $name );
