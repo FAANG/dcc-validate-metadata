@@ -145,6 +145,41 @@ __DATA__
   <h3><%= $rule_group->name %></h3>
   <p class="description"><%= $rule_group->description%></p>
   
+  % if ($rule_group->condition) {
+  %  my $condition = $rule_group->condition; 
+    <p>Applied under these conditions:</p>
+    <dl class="dl-horizontal">
+    
+    % if ($condition->dpath_condition) {
+      <dt>Dpath rule</dt>
+      <dd><%= $condition->dpath_condition %></dd>
+    % }
+    
+    % for my $attr (sort $condition->attribute_value_match_keys) {
+    %  my $values = $condition->get_attribute_value_match($attr); 
+      
+      <dt><%= $attr %></dt>
+      <dd>
+      % if (scalar(@$values) == 1) {
+        is '<%= $values->[0]%>'
+      % } else {
+        is one of
+        <ul class="list-unstyled">
+        % for my $val (@$values) {
+          <li>'<%= $val%>'</li>
+        % }
+        </ul>    
+        
+      % }
+      
+      </dd>
+    % }
+    
+    </dl>
+  % } else {
+    <p>Applied to all entities</p>
+  % }
+  
   <table class="table table-hover table-condensed table-striped">
   <thead><tr>
     <th>Name</th>
@@ -164,12 +199,12 @@ __DATA__
     <td><%= $rule->allow_multiple ? 'Yes' : 'No' %></td>
     <td><ul class="list-unstyled">
     % for my $value ($rule->all_valid_values) { 
-      <li><%= $value %></li>
+      <li>'<%= $value %>'</li>
     %}
     </ul></td>
     <td><ul class="list-unstyled">
     % for my $units ($rule->all_valid_units) { 
-      <li><%= $units %></li>
+      <li>'<%= $units %>'</li>
     %}
     </ul></td>
     <td><ul class="list-unstyled">
