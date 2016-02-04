@@ -18,12 +18,15 @@ use Mojolicious::Lite;
 use Carp;
 
 use Bio::Metadata::Loader::JSONRuleSetLoader;
+use Bio::Metadata::Loader::JSONEntityLoader;
 
 plugin 'Config';
 
 my $rule_locations = app->config('rules');
 
 my $rules = load_rules($rule_locations);
+
+my $loaders = { json => Bio::Metadata::Loader::JSONEntityLoader->new() };
 
 get '/' => sub {
     my $self = shift;
@@ -36,11 +39,11 @@ get '/rule_sets' => sub {
     my $self = shift;
 
     $self->respond_to(
-        json => sub { $self->render( json => [sort keys %$rules] ) },
+        json => sub { $self->render( json => [ sort keys %$rules ] ) },
         html => sub {
             $self->stash(
                 rule_sets => $rules,
-                title          => 'rule sets'
+                title     => 'rule sets'
             );
             $self->render( template => 'rule_sets' );
         }
@@ -52,7 +55,7 @@ get '/rule_sets/#name' => sub {
     my $name     = $self->param('name');
     my $rule_set = $rules->{$name};
 
-    return $self->reply->not_found if (!$rule_set);
+    return $self->reply->not_found if ( !$rule_set );
 
     $self->respond_to(
         json => sub {
@@ -63,6 +66,34 @@ get '/rule_sets/#name' => sub {
             $self->render( template => 'rule_set' );
         }
     );
+};
+
+get '/validate' => sub {
+    my $self = shift;
+
+    my %supporting_data = (
+        formats   => [ sort keys %$loaders ],
+        rule_sets => [ sort keys %$rules ]
+    );
+
+    $self->respond_to(
+        json => sub {
+            $self->render( json => \%supporting_data );
+        },
+        html => sub {
+            $self->stash( %supporting_data, title => "Validate metadata" );
+            $self->render( template => 'validate_form' );
+        }
+    );
+};
+
+post '/validate_upload' => sub {
+    my $self = shift;
+
+    my $name   = $self->param('rule_set_name');
+    my $format = $self->param('format');
+    my $metadata_file = $self->param('metadata_file');
+
 };
 
 # Start the Mojolicious command system
@@ -223,6 +254,38 @@ __DATA__
 
 % }
 </dl>
+
+@@ validate_form.html.ep
+% layout 'layout';
+%= form_for validate_upload => (enctype => 'multipart/form-data', method => 'POST') => begin
+
+<h1>Metadata validation</h1>
+<dl class="dl-horizontal">
+
+  <dt>
+    Metadata file
+  </dt>
+  <dd>
+    %= file_field 'metadata_file'
+  </dd> 
+  
+  <dt>
+   File format
+  </dt>
+  <dd>
+    %= select_field format => $formats
+  </dd>
+
+  <dt>
+   Rule set
+  </dt>
+  <dd>
+    %= select_field rule_set_name => $rule_sets
+  </dd>
+
+</dl>
+%= submit_button 'Validate', class => 'btn btn-primary'
+% end
 
 @@ not_found.production.html.ep
 % layout 'layout', title => 'not found';
