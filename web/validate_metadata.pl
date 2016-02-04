@@ -222,6 +222,17 @@ __DATA__
   </table>
 
 % }
-
-
 </dl>
+
+@@ not_found.production.html.ep
+% layout 'layout', title => 'not found';
+<h1>404 - not found</h1>
+<p>Sorry, but the content you requested cannot be found. Please tell us so we can fix it.</p>
+
+@@ exception.production.html.ep
+% layout 'layout', title => 'error';
+<h1>Exception</h1>
+<p><%= $exception->message %></p>
+<h1>Stash</h1>
+<pre><%= dumper $snapshot %></pre>
+  
