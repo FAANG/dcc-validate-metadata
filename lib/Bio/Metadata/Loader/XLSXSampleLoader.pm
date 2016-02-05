@@ -27,15 +27,6 @@ use Bio::Metadata::Entity;
 
 with "Bio::Metadata::Loader::XLSXLoaderRole";
 
-has valid_fields => (
-    traits   => ['Enumeration'],
-    is       => 'bare',
-    enum     => [qw/ 'Sample Name' 'Sample Description' /],
-    handles  => 1,
-    required => 1,
- );
-
-
 sub process_sheet {
 	my ( $self, $sheet) = @_;
 	

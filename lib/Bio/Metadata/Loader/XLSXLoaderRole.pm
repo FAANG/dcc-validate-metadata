@@ -5,7 +5,6 @@ use warnings;
 
 use Carp;
 use Moose::Role;
-use Spreadsheet::Read;
 use Spreadsheet::ParseExcel::Stream::XLSX;
 
 requires 'process_sheet';
