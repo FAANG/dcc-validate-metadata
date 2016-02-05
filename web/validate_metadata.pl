@@ -23,13 +23,19 @@ use Bio::Metadata::Loader::JSONEntityLoader;
 use Bio::Metadata::Reporter::ExcelReporter;
 use Bio::Metadata::Reporter::JsonReporter;
 use Bio::Metadata::Validate::EntityValidator;
+use UUID::Generator::PurePerl;
 
 plugin 'Config';
 plugin 'RenderFile';
 
+app->secrets( ['nosecrets'] );
+
 my $rule_locations = app->config('rules');
 my $rules          = load_rules($rule_locations);
 my $loaders        = { json => Bio::Metadata::Loader::JSONEntityLoader->new() };
+
+my $uuid_generator = UUID::Generator::PurePerl->new();
+my %report_files;
 
 get '/' => sub {
     my $c   = shift;
@@ -101,6 +107,34 @@ post '/validate' => sub {
     else {
         validate_metadata($c);
     }
+};
+
+get '/validation_summary' => sub {
+    my $c = shift;
+
+    $c->stash(
+        total           => $c->flash("total"),
+        outcome_summary => $c->flash("outcome_summary"),
+        report          => $c->flash("report")
+    );
+
+    $c->render( template => 'validation_summary' );
+};
+
+get '/report/#report' => sub {
+    my $c = shift;
+
+    my $key = $c->param('report');
+    my $report = delete $report_files{$key};
+
+    $c->render_file(
+        filepath => $report->{tmp_file}->filename,
+        filename => $report->{report_filename},
+        content_type =>
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        content_disposition => 'attachment',
+        cleanup             => 1,
+    );
 };
 
 # Start the Mojolicious command system
@@ -181,11 +215,14 @@ sub validate_metadata {
             );
         },
         html => sub {
+            my $tmp_file = File::Temp->new();
+            my $key      = $uuid_generator->generate_v1()->as_string();
+
             my ( $tmpfh, $report_filepath ) = tempfile();
 
             my $reporter =
               Bio::Metadata::Reporter::ExcelReporter->new(
-                file_path => $report_filepath );
+                file_path => $tmp_file->filename );
 
             $reporter->report(
                 entities           => $metadata,
@@ -195,15 +232,21 @@ sub validate_metadata {
                 attribute_outcomes => $attribute_outcomes
             );
 
-            # Open file in browser(do not show save dialog)
-            $c->render_file(
-                filepath => $report_filepath,
-                filename => 'validation_report.xlsx',
-                content_type =>
-'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                content_disposition => 'attachment',
-                cleanup             => 1,
+            my %summary;
+            my $total = scalar(@$metadata);
+            map { $summary{$_}++ } values %$entity_status;
+            $c->flash(
+                outcome_summary => \%summary,
+                total           => $total,
+                report          => $key
             );
+
+            $report_files{$key} = {
+              tmp_file => $tmp_file,
+              report_filename => $metadata_file->filename().'.validation_report.xlsx'
+            };
+
+            $c->redirect_to('validation_summary');
         }
     );
 }
@@ -228,6 +271,13 @@ __DATA__
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script>
+$(document).ready(function(){
+  $("body").on("click",".report_link",function(){
+    $(this).click(function () {return false;}).attr("disabled","disabled");
+  });
+});
+</script>
 </body>
 </html>
 
@@ -392,6 +442,21 @@ __DATA__
 </dl>
 %= submit_button 'Validate', class => 'btn btn-primary'
 % end
+
+@@ validation_summary.html.ep
+% layout 'layout', title => 'validation summary';
+<h1>Validation summary</h1>
+<dl class="dl-horizontal">
+  
+  % for my $o (sort keys %$outcome_summary){ 
+  <dt><%= $o %></dt>
+  <dd><%= $outcome_summary->{$o} %></dd>
+  %}
+  <dt>Total</dt>
+  <dd><%= $total %></dd>
+</dl>
+%= link_to Report => 'report/'.$report => {} => (class => 'btn btn-primary report_link')
+
 
 @@ not_found.html.ep
 % layout 'layout', title => 'not found';

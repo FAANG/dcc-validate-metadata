@@ -18,6 +18,7 @@ requires 'URI';
 requires 'DateTime::Format::ISO8601';
 requires 'Mojolicious', '>= 6.33';
 requires 'Mojolicious::Plugin::RenderFile';
+requires 'UUID::Generator::PurePerl';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';
