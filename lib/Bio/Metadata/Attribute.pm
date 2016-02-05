@@ -44,8 +44,7 @@ sub to_hash {
         value                    => $self->value,
         units                    => $self->units,
         uri                      => $self->uri,
-        id                       => $self->id,
-        allow_further_validation => $self->allow_further_validation
+        id                       => $self->id
     };
 }
 
