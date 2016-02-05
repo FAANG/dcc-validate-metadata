@@ -29,25 +29,15 @@ use Bio::Metadata::Types;
 
 requires 'hash_to_object';
 
-sub load {
-    my ( $self, $file_path ) = @_;
+sub load_blob {
+    my ( $self, $blob, $src_name ) = @_;
 
-    my ( $json_text, $json_data, $o );
+    my ( $json_data, $o );
     try {
-        open( my $fh, '<', $file_path );
-        local $/ = undef;
-        $json_text = <$fh>;
-        close($fh);
+        $json_data = decode_json($blob);
     }
     catch {
-        croak "Failed to read from $file_path: $_";
-    };
-
-    try {
-        $json_data = decode_json($json_text);
-    }
-    catch {
-        croak "Could not convert contents of $file_path to JSON: $_";
+        croak "Could not convert contents of $src_name to JSON: $_";
     };
 
     try {
@@ -64,6 +54,23 @@ sub load {
     };
 
     return $o;
+}
+
+sub load {
+    my ( $self, $file_path ) = @_;
+
+    my $json_text;
+    try {
+        open( my $fh, '<', $file_path );
+        local $/ = undef;
+        $json_text = <$fh>;
+        close($fh);
+    }
+    catch {
+        croak "Failed to read from $file_path: $_";
+    };
+
+    return $self->load_blob($json_text, $file_path);
 }
 
 1;
