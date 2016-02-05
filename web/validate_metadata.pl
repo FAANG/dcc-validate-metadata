@@ -21,6 +21,7 @@ use File::Temp qw(tempfile);
 use Bio::Metadata::Loader::JSONRuleSetLoader;
 use Bio::Metadata::Loader::JSONEntityLoader;
 use Bio::Metadata::Reporter::ExcelReporter;
+use Bio::Metadata::Reporter::JsonReporter;
 use Bio::Metadata::Validate::EntityValidator;
 
 plugin 'Config';
@@ -168,13 +169,15 @@ sub validate_metadata {
 
     $c->respond_to(
         json => sub {
+            my $reporter = Bio::Metadata::Reporter::JsonReporter->new();
             $c->render(
-                json => {
+                json => $reporter->report(
+                    entities           => $metadata,
                     entity_status      => $entity_status,
                     entity_outcomes    => $entity_outcomes,
                     attribute_status   => $attribute_status,
                     attribute_outcomes => $attribute_outcomes
-                }
+                )
             );
         },
         html => sub {
