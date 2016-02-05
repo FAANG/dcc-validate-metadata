@@ -20,6 +20,7 @@ requires 'Mojolicious', '>= 6.33';
 requires 'Mojolicious::Plugin::RenderFile';
 requires 'UUID::Generator::PurePerl';
 requires 'Spreadsheet::ParseExcel::Stream::XLSX';
+requires 'Spreadsheet::XLSX';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';
