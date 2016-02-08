@@ -14,16 +14,19 @@
 #   limitations under the License.
 use strict;
 use warnings;
-use Mojolicious::Lite;
 use Carp;
 use File::Temp qw(tempfile);
+use FindBin qw/$Bin/;
+
+use Mojolicious::Lite;
+use UUID::Generator::PurePerl;
 
 use Bio::Metadata::Loader::JSONRuleSetLoader;
 use Bio::Metadata::Loader::JSONEntityLoader;
 use Bio::Metadata::Reporter::ExcelReporter;
 use Bio::Metadata::Reporter::JsonReporter;
 use Bio::Metadata::Validate::EntityValidator;
-use UUID::Generator::PurePerl;
+use Bio::Metadata::Loader::XLSXSampleLoader;
 
 plugin 'Config';
 plugin 'RenderFile';
@@ -32,7 +35,10 @@ app->secrets( ['nosecrets'] );
 
 my $rule_locations = app->config('rules');
 my $rules          = load_rules($rule_locations);
-my $loaders        = { json => Bio::Metadata::Loader::JSONEntityLoader->new() };
+my $loaders        = {
+    json        => Bio::Metadata::Loader::JSONEntityLoader->new(),
+    sample_xlsx => Bio::Metadata::Loader::XLSXSampleLoader->new()
+};
 
 my $uuid_generator = UUID::Generator::PurePerl->new();
 my %report_files;
@@ -124,7 +130,7 @@ get '/validation_summary' => sub {
 get '/report/#report' => sub {
     my $c = shift;
 
-    my $key = $c->param('report');
+    my $key    = $c->param('report');
     my $report = delete $report_files{$key};
 
     $c->render_file(
@@ -147,7 +153,12 @@ sub load_rules {
     my %rules;
 
     for my $k ( keys %$rule_locations ) {
-        my $loc      = $rule_locations->{$k};
+        my $loc = $rule_locations->{$k};
+
+        if ( !-e $loc && -e "$Bin/$loc" ) {
+            $loc = "$Bin/$loc";
+        }
+
         my $rule_set = $loader->load($loc);
         $rules{$k} = $rule_set;
     }
@@ -183,6 +194,18 @@ sub validation_form_errors {
     );
 }
 
+sub load_metadata {
+    my ( $metadata_file, $loader ) = @_;
+
+    my $tmp_upload_dir  = File::Temp->newdir();
+    my $tmp_upload_path = $tmp_upload_dir->dirname . '/uploaded_file';
+
+    $metadata_file->move_to($tmp_upload_path);
+    print STDERR "Loading $tmp_upload_path $/";
+
+    return $loader->load($tmp_upload_path);
+}
+
 sub validate_metadata {
     my ( $c, $target ) = @_;
 
@@ -190,8 +213,7 @@ sub validate_metadata {
     my $loader        = $loaders->{ $c->param('file_format') };
     my $rule_set      = $rules->{ $c->param('rule_set_name') };
 
-    my $metadata =
-      $loader->load_blob( $metadata_file->slurp, $metadata_file->filename );
+    my $metadata = load_metadata( $metadata_file, $loader );
 
     my $validator =
       Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
@@ -218,8 +240,6 @@ sub validate_metadata {
             my $tmp_file = File::Temp->new();
             my $key      = $uuid_generator->generate_v1()->as_string();
 
-            my ( $tmpfh, $report_filepath ) = tempfile();
-
             my $reporter =
               Bio::Metadata::Reporter::ExcelReporter->new(
                 file_path => $tmp_file->filename );
@@ -242,8 +262,9 @@ sub validate_metadata {
             );
 
             $report_files{$key} = {
-              tmp_file => $tmp_file,
-              report_filename => $metadata_file->filename().'.validation_report.xlsx'
+                tmp_file        => $tmp_file,
+                report_filename => $metadata_file->filename()
+                  . '.validation_report.xlsx'
             };
 
             $c->redirect_to('validation_summary');
