@@ -45,9 +45,7 @@ my %report_files;
 
 get '/' => sub {
     my $c   = shift;
-    my $url = $c->req->url->to_abs->to_string;
-    $url =~ s/\/$//;
-    $c->render( template => 'index', title => '', url => $url );
+    $c->render( template => 'index');
 };
 
 get '/rule_sets' => sub {
@@ -307,11 +305,15 @@ $(document).ready(function(){
 <h1>Validate metadata REST API</h1>
 <h2>Endpoints</h2>
 <dl class="dl-horizontal">
-<dt><a href="<%= $url %>/rule_sets">/rule_sets</a></dt>
+<dt>
+%= link_to '/rule_sets' => 'rule_sets'
+</dt>
 <dd>List rule sets loaded</dd>
 <dt>/rule_sets/:name</dt>
 <dd>View the detail of one ruleset</dt>
-<dt><a href="<%= $url %>/validate">/validate</a></dt>
+<dt>
+%= link_to '/validate' => 'validate'
+</dt>
 <dd>Validate metadata against a rule set</dd>
 </dl>
 <h2>Response types</h2>
