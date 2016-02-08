@@ -15,8 +15,13 @@ my $data_dir = "$Bin/../data/";
 
 my $sampletab= Bio::Metadata::BioSample::SampleTab->new();
 
-#$sampletab->create();
-#my $o=$loader->load("$data_dir/Excel/sampleset.bsamples.xlsx");
+$sampletab->read("$data_dir/Excel/sampleset.bsamples.xlsx");
+
+$sampletab->print_msi;
+$sampletab->print_scd;
+
+
+
 
 
 
