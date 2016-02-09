@@ -58,6 +58,7 @@ sub consume_attrs {
     for my $a (@$attrs) {
         $self->use_units(1) if ( $a->units );
         $self->use_uri(1)   if ( $a->uri );
+        $self->use_ref_id(1) if ( $a->source_ref_id);
 
         if ( defined $a->value ) {
             $self->term_count()->{value}{ $a->value }++;
@@ -67,6 +68,9 @@ sub consume_attrs {
         }
         if ( $a->units ) {
             $self->term_count()->{units}{ $a->units }++;
+        }
+        if ( $a->source_ref_id ) {
+            $self->term_count()->{ref_id}{ $a->source_ref_id }++;
         }
     }
 

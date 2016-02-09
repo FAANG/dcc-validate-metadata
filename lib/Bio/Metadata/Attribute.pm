@@ -20,31 +20,38 @@ use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
 
-has 'name'  => ( is => 'rw', isa => 'Str' );
-has 'value' => ( is => 'rw', isa => 'Str' );
-has 'units' => ( is => 'rw', isa => 'Str' );
-has 'uri'   => ( is => 'rw', isa => 'Str' );
-has 'id'    => ( is => 'rw', isa => 'Str' );
+has 'name'       => ( is => 'rw', isa => 'Str' );
+has 'value'      => ( is => 'rw', isa => 'Str' );
+has 'units'      => ( is => 'rw', isa => 'Str' );
+has 'uri'        => ( is => 'rw', isa => 'Str' );
+has 'id'         => ( is => 'rw', isa => 'Str' );
+has 'source_ref' => ( is => 'rw', isa => 'Str' );
 
 has 'allow_further_validation' => (
     is      => 'rw',
     isa     => 'Bool',
     default => 1,
     traits  => ['Bool'],
-    handles => {
-        block_further_validation => 'unset',
-    }
+    handles => { block_further_validation => 'unset', }
 );
+
+sub source_ref_id {
+    my ($self) = @_;
+    return ( $self->source_ref || $self->id )
+      ? join( ':', $self->source_ref // '', $self->id // '' )
+      : '';
+}
 
 sub to_hash {
     my ($self) = @_;
 
     return {
-        name                     => $self->name,
-        value                    => $self->value,
-        units                    => $self->units,
-        uri                      => $self->uri,
-        id                       => $self->id
+        name       => $self->name,
+        value      => $self->value,
+        units      => $self->units,
+        uri        => $self->uri,
+        id         => $self->id,
+        source_ref => $self->source_ref,
     };
 }
 
