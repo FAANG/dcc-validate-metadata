@@ -23,7 +23,7 @@ use autodie;
 use namespace::autoclean;
 
 has 'name' => ( is => 'rw', isa => 'Str', required => 1 );
-has [ 'use_units', 'use_uri', ] =>
+has [ 'use_units', 'use_uri', 'use_ref_id' ] =>
   ( is => 'rw', isa => 'Bool', required => 1, default => '' );
 has 'max_count' => (
     is       => 'rw',
@@ -36,8 +36,16 @@ has 'term_count' => (
     traits   => ['Hash'],
     is       => 'rw',
     isa      => 'HashRef[HashRef[Int]]',
-    default  =>  sub{ { value => {}, uri => {}, units => {} } },
+    default  => sub { { value => {}, uri => {}, units => {}, ref_id => {} } },
     required => 1,
+    handles => { categories => 'keys' }
+);
+
+has 'probable_duplicates' => (
+    traits => ['Hash'],
+    is     => 'rw',
+    isa    => 'HashRef[HashRef[Str]]',
+    default => sub { { value => {}, uri => {}, units => {}, ref_id => {} } },
 );
 
 sub consume_attrs {
@@ -54,8 +62,7 @@ sub consume_attrs {
         if ( defined $a->value ) {
             $self->term_count()->{value}{ $a->value }++;
         }
-        if ( $a->uri  ) {
-          
+        if ( $a->uri ) {
             $self->term_count()->{uri}{ $a->uri }++;
         }
         if ( $a->units ) {
@@ -63,6 +70,27 @@ sub consume_attrs {
         }
     }
 
+    for my $c ( $self->categories ) {
+        my %term_count = %{$self->term_count()->{$c}};
+        my %term_mash;
+
+        for my $k ( keys %term_count ) {
+            my $mashed_term = _mash_term($k);
+            $term_mash{$mashed_term}++;
+
+            if ( $term_mash{$mashed_term} == 2 ) {
+                $self->probable_duplicates()->{$c}{$k} = $k;
+            }
+        }
+
+    }
+}
+
+sub _mash_term {
+    my ($term) = @_;
+    my $mashed = lc($term);
+    $mashed =~ s/\W//g;    # remove anything that isn't a-z,1-0,_
+    return $mashed;
 }
 
 __PACKAGE__->meta->make_immutable;
