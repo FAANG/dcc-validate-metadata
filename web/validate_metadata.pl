@@ -19,7 +19,6 @@ use File::Temp qw(tempfile);
 use FindBin qw/$Bin/;
 
 use Mojolicious::Lite;
-use UUID::Generator::PurePerl;
 
 use Bio::Metadata::Loader::JSONRuleSetLoader;
 use Bio::Metadata::Loader::JSONEntityLoader;
@@ -31,7 +30,11 @@ use Bio::Metadata::Loader::XLSXSampleLoader;
 plugin 'Config';
 plugin 'RenderFile';
 
+my $xlsx_mime_type =
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
 app->secrets( ['nosecrets'] );
+app->types->type( xlsx => $xlsx_mime_type );
 
 my $rule_locations = app->config('rules');
 my $rules          = load_rules($rule_locations);
@@ -40,12 +43,9 @@ my $loaders        = {
     sample_xlsx => Bio::Metadata::Loader::XLSXSampleLoader->new()
 };
 
-my $uuid_generator = UUID::Generator::PurePerl->new();
-my %report_files;
-
 get '/' => sub {
-    my $c   = shift;
-    $c->render( template => 'index');
+    my $c = shift;
+    $c->render( template => 'index' );
 };
 
 get '/rule_sets' => sub {
@@ -113,7 +113,7 @@ post '/validate' => sub {
     }
 };
 
-get '/validation_summary' => sub {
+get '/validation_output' => sub {
     my $c = shift;
 
     $c->stash(
@@ -122,23 +122,7 @@ get '/validation_summary' => sub {
         report          => $c->flash("report")
     );
 
-    $c->render( template => 'validation_summary' );
-};
-
-get '/report/#report' => sub {
-    my $c = shift;
-
-    my $key    = $c->param('report');
-    my $report = delete $report_files{$key};
-
-    $c->render_file(
-        filepath => $report->{tmp_file}->filename,
-        filename => $report->{report_filename},
-        content_type =>
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        content_disposition => 'attachment',
-        cleanup             => 1,
-    );
+    $c->render( template => 'validation_output' );
 };
 
 # Start the Mojolicious command system
@@ -168,6 +152,7 @@ sub validation_supporting_data {
     return {
         valid_file_formats   => [ sort keys %$loaders ],
         valid_rule_set_names => [ sort keys %$rules ],
+        valid_output_formats => [qw(html xlsx json)],
     };
 }
 
@@ -188,7 +173,7 @@ sub validation_form_errors {
         html => sub {
             $c->stash(%$supporting_data);
             $c->render( template => 'validate' );
-        }
+        },
     );
 }
 
@@ -235,8 +220,22 @@ sub validate_metadata {
             );
         },
         html => sub {
+
+            my %summary;
+            my $total = scalar(@$metadata);
+            map { $summary{$_} = 0 } qw(pass error warning);
+            map { $summary{$_}++ } values %$entity_status;
+            $c->flash(
+                filename        => $metadata_file->filename(),
+                outcome_summary => \%summary,
+                total           => $total,
+                rule_set        => $rule_set,
+            );
+
+            $c->redirect_to('validation_output');
+        },
+        xlsx => sub {
             my $tmp_file = File::Temp->new();
-            my $key      = $uuid_generator->generate_v1()->as_string();
 
             my $reporter =
               Bio::Metadata::Reporter::ExcelReporter->new(
@@ -250,22 +249,13 @@ sub validate_metadata {
                 attribute_outcomes => $attribute_outcomes
             );
 
-            my %summary;
-            my $total = scalar(@$metadata);
-            map { $summary{$_}++ } values %$entity_status;
-            $c->flash(
-                outcome_summary => \%summary,
-                total           => $total,
-                report          => $key
+            $c->render_file(
+                filepath => $tmp_file->filename,
+                filename => $metadata_file->filename()
+                  . '.validation_report.xlsx',
+                content_type => $xlsx_mime_type,
+                cleanup      => 1,
             );
-
-            $report_files{$key} = {
-                tmp_file        => $tmp_file,
-                report_filename => $metadata_file->filename()
-                  . '.validation_report.xlsx'
-            };
-
-            $c->redirect_to('validation_summary');
         }
     );
 }
@@ -456,17 +446,17 @@ $(document).ready(function(){
   </dd>
 
   <dt>
-   %= label_for format => 'test format'
+   %= label_for format => 'output format'
   </dt>
   <dd>
-    %= select_field format => ['json', 'html']
+    %= select_field format => $valid_output_formats
   </dd>
 
 </dl>
 %= submit_button 'Validate', class => 'btn btn-primary'
 % end
 
-@@ validation_summary.html.ep
+@@ validation_output.html.ep
 % layout 'layout', title => 'validation summary';
 <h1>Validation summary</h1>
 <dl class="dl-horizontal">
@@ -478,7 +468,6 @@ $(document).ready(function(){
   <dt>Total</dt>
   <dd><%= $total %></dd>
 </dl>
-%= link_to Report => 'report/'.$report => {} => (class => 'btn btn-primary report_link')
 
 
 @@ not_found.html.ep
