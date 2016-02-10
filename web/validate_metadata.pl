@@ -190,13 +190,14 @@ sub validate_metadata {
       Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
     my (
-        $entity_status,    $entity_outcomes,
-        $attribute_status, $attribute_outcomes
+        $entity_status,      $entity_outcomes, $attribute_status,
+        $attribute_outcomes, $entity_rule_groups,
     ) = $validator->check_all($metadata);
+    my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
 
     $c->respond_to(
         json => sub {
-            my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
+
             $c->render(
                 json => $reporter->report(
                     entities           => $metadata,
@@ -208,14 +209,6 @@ sub validate_metadata {
             );
         },
         html => sub {
-            my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
-            my $report   = $reporter->report(
-                entities           => $metadata,
-                entity_status      => $entity_status,
-                entity_outcomes    => $entity_outcomes,
-                attribute_status   => $attribute_status,
-                attribute_outcomes => $attribute_outcomes
-            );
 
             my %summary;
             my $total = scalar(@$metadata);
@@ -223,11 +216,18 @@ sub validate_metadata {
             map { $summary{$_}++ } values %$entity_status;
 
             my %stash = (
-                filename        => $metadata_file->filename(),
-                outcome_summary => \%summary,
-                total           => $total,
-                rule_set_name   => $rule_set_name,
-                report          => $report,
+                filename           => $metadata_file->filename(),
+                outcome_summary    => \%summary,
+                total              => $total,
+                rule_set_name      => $rule_set_name,
+                entities           => $metadata,
+                entity_status      => $entity_status,
+                entity_outcomes    => $entity_outcomes,
+                attribute_status   => $attribute_status,
+                attribute_outcomes => $attribute_outcomes,
+                attribute_columns =>
+                  $reporter->determine_attr_columns($metadata),
+                entity_rule_groups => $entity_rule_groups,
             );
 
             $c->stash(%stash);
@@ -246,7 +246,8 @@ sub validate_metadata {
                 entity_status      => $entity_status,
                 entity_outcomes    => $entity_outcomes,
                 attribute_status   => $attribute_status,
-                attribute_outcomes => $attribute_outcomes
+                attribute_outcomes => $attribute_outcomes,
+
             );
 
             $c->render_file(
@@ -268,7 +269,7 @@ __DATA__
 <title>Validate metadata - <%= $title %></title>
 <link href="../favicon.ico" rel="icon" type="image/x-icon" />
 <!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/readable/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 <style>
   .field-with-error { background-color: rgb(217, 83, 79) }  
 </style>
@@ -279,12 +280,17 @@ __DATA__
 </div>
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 <script>
 $(document).ready(function(){
-  $("body").on("click",".report_link",function(){
-    $(this).click(function () {return false;}).attr("disabled","disabled");
-  });
+  $(function(){
+    $('[data-toggle="popover"]').popover({
+      html: true,
+      content: function () {
+        return $(this).next('.popover-content').html();
+      }
+    })
+  })
 });
 </script>
 </body>
@@ -472,7 +478,132 @@ $(document).ready(function(){
   %}
   
 </dl>
-<h2>Detail</h2>
+<h2>Entities</h2>
+<table class="table table-hover table-condensed table-striped">
+
+  <thead>
+    <th>
+      ID
+    </th>
+    <th>
+      Status
+    </th>
+    <th>
+      Entity type
+    </th>
+    <th>Rule groups applied</th>
+
+% for my $col (@{$attribute_columns}){
+%   for my $i (0..($col->max_count - 1)) {  
+      <th><%= $col->name %></th>
+%     if ($col->use_ref_id){      
+        <th>Term source REF</th>
+        <th>Term source ID</th>
+%     }
+%     if ($col->use_uri){      
+        <th>URI</th>
+%     }
+%     if ($col->use_units){      
+        <th>Units</th>
+%     }
+%   }
+% }  
+  </thead>
+  <tbody>
+  
+% my %class_lookup =(pass => 'success', warning => 'warning',error   => 'danger',);
+
+% for my $ent (@{$entities}) {
+% my $ent_status = $entity_status->{$ent};
+% my $ent_outcomes = $entity_outcomes->{$ent};
+  <tr>
+    <td><%= $ent->id %></td>
+    <td>
+%     my $btn_class = $class_lookup{$ent_status};
+
+      <button type="button" class="btn btn-<%= $btn_class %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes">
+        <%= $ent_status %>
+      </button>
+      <div class="hidden popover-content">
+      <ul class="outcomes">
+%       for my $o (@$ent_outcomes) {
+          <li class="bg-<%= $class_lookup{$o->outcome} %>">
+            <%= $o->message %>
+%            if ($o->rule) {
+             (<b><%= $o->rule->name %></b> from the <b><%= $o->rule_group->name %></b> rule group)
+%           }else{
+             (<b><%= $o->get_attribute(0)->name %></b>)
+%           }            
+          </li> 
+%       }
+%     if (!scalar(@$ent_outcomes)){
+        <li class="bg-success">No problems found</li>
+%     }
+      </ul>
+      <div>
+      
+    </td>
+    <td><%= $ent->entity_type %></td>
+    <td>
+      <ul>
+% for my $rg (@{$entity_rule_groups->{$ent}}){
+          <li><%= $rg->name %></li>
+% }        
+      </ul>
+<!-- RULE GROUPS -->        
+    </td>
+
+% my $organised_attr = $ent->organised_attr;
+
+% for my $col (@{$attribute_columns}){
+% my $attrs = $organised_attr->{ $col->name };
+%   for my $i (0..($col->max_count - 1)) {  
+%     my ($a,$a_status,$a_outcomes) = (undef,'',[]);
+%     if ( $attrs && $i < scalar(@$attrs) && $attrs->[$i] ) {
+%         $a = $attrs->[$i];
+%     }
+%     if ($a) { $a_status = $attribute_status->{$a};$a_outcomes = $attribute_outcomes->{$a}};
+      <td>
+      <%= $a ? $a->value : '' %>
+%     if (defined $a_outcomes && scalar(@$a_outcomes)){      
+        <button type="button" class="btn btn-<%= $class_lookup{$a_status} %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes">
+          <%= $a_status %>
+        </button>
+        <div class="hidden popover-content">
+        <ul class="outcomes">
+%         for my $o (@$a_outcomes) {
+            <li class="bg-<%= $class_lookup{$o->outcome} %>">
+              <%= $o->message %>
+%             if ($o->rule) {
+               (<b><%= $o->rule_group->name %></b> rule group)
+%             }                          
+            </li> 
+%         }
+%       if (!scalar(@$a_outcomes)){
+          <li class="bg-success">No problems found</li>
+%       }      
+        </div>
+%     }
+
+      </td>
+%     if ($col->use_ref_id){      
+        <td><%= $a ? $a->source_ref : '' %></td>
+        <td><%= $a ? $a->id : '' %></td>
+%     }
+%     if ($col->use_uri){      
+        <td><%= $a ? $a->uri : '' %></td>
+%     }
+%     if ($col->use_units){      
+        <td><%= $a ? $a->units : '' %></td>
+%     }
+%   }
+% }  
+        
+  </tr>
+% }  
+  </tbody>
+
+</table>
 
 
 @@ not_found.html.ep

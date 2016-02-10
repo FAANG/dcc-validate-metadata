@@ -72,7 +72,8 @@ sub report {
         my $col_to_cover_per_attr = 1;
         $col_to_cover_per_attr++ if ( $ac->use_units );
         $col_to_cover_per_attr++ if ( $ac->use_uri );
-
+        #$col_to_cover_per_attr =+ 2 if ( $ac->use_ref_id );
+        
         $col = $col + ( $ac->max_count * $col_to_cover_per_attr );
 
         $entity_sheet->set_column( $col, $col, undef, $rborder_format );

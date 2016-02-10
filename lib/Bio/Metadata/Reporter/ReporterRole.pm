@@ -67,5 +67,4 @@ sub determine_attr_columns {
     return \@columns;
 }
 
-
 1;
