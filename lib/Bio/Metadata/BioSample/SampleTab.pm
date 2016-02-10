@@ -52,8 +52,6 @@ has 'msi'       => (
 
 #define common FAANG attributes
 my @COMMON= ("Sample Description","Material","Availability");
-#different sheets in the Excel
-my @SHEETS= ("organism", "tissue specimen", "cell specimen", "cell culture");
 #accepeted Named Attributes. For definition see: https://www.ebi.ac.uk/biosamples/help/st_scd.html
 my @NAMED= ("Organism", "Material", "Sex", "Sample Description");
 #accepted Relationships. For definition see: https://www.ebi.ac.uk/biosamples/help/st_scd.html
@@ -110,32 +108,39 @@ sub print_scd {
 	
 #	my $fields=$self->parse_fields;
 	
-	my ($header,$str)=$self->generate_header;
+	my ($header_hash,$str,$sheets,$offsets)=$self->generate_header;
 	
 	print "[SCD]\n";
 	
 	print "Sample Name","\t",$str,"\n";
 	
 	foreach my $e (@{$self->scd}) {
-		print $e->id,"\t";
+		my $row=$e->id."\t";
 		my $atts=$e->organised_attr;
-		foreach my $i (@$header) {
-			my $a=$atts->{$i}->[0];
-			if ($a) {
-				print $a->value,"\t";
-				if ($a->id) {
-					my $ref=$1 if $a->id=~/(.+)_\d+/;
-					$ref='NCBI Taxonomy' if $a->name eq 'Organism';
-					die("[ERROR] I could not guess the Term Source REF from ",$a->id) if !$ref;
-					print $ref,"\t",$a->id,"\t";
-				}
-				
+		my $mat=$atts->{'Material'}->[0]->value;
+		foreach my $s (@$sheets) {
+			if ($s ne $mat) {
+				$row.="\t"x$offsets->{$s};
 			} else {
-				print "\t\t";
+				foreach my $i (@{$header_hash->{$mat}}) {
+					my $a=$atts->{$i}->[0];
+					if (defined($a->value)) {
+						$row.=$a->value."\t";
+						if (defined($a->id)) {
+							my $ref="";
+							$ref=$1 if $a->id=~/(.+)_\d+/;
+							$ref='NCBI Taxonomy' if $a->name eq 'Organism';
+							$row.=$ref."\t".$a->id."\t";
+						}
+						if (defined($a->units)) {
+							my $unit=$a->units;
+							$row.= $a->units."\t";
+						}			
+					}
+				}
 			}
 		}
-		print "\n";
-		
+		print $row,"caca\n";
 	}
 	
 	
@@ -146,40 +151,54 @@ sub generate_header {
 	
 	my $mat_seen=0;
 	my $common_seen=0;
-	my @header;
+	my %header_hash;
 	my $header_str;
+	my @sheets;
+	my %offsets;
+	my $counter=0;
 	
 	foreach my $e (@{$self->scd}) {
 		my $atts=$e->organised_attr;
+		my $mat=$atts->{'Material'}->[0]->value;
 		if ($common_seen==0) {
 			$common_seen=1;
 			foreach my $c (@COMMON) {
 				$header_str.=$c."\t";
-				push @header, $atts->{$c}->[0]->name;
 				$header_str.="Term Source REF\t" if $atts->{$c}->[0]->id;
 				$header_str.="Term Source ID\t" if $atts->{$c}->[0]->id;			
 			}
 		}
-		next if $mat_seen eq $atts->{'Material'}->[0]->value;
+		
+		next if $mat_seen eq $mat;
+		push @sheets,$mat;
+		foreach my $c (@COMMON) {
+			push @{$header_hash{$mat}},$atts->{$c}->[0]->name;
+		}
+		$offsets{$mat}=$counter;
 		$mat_seen=$atts->{'Material'}->[0]->value;
 		foreach my $a (@{$e->attributes}) {
 			next if exists($common{$a->name});
-			push @header,$a->name;
+			push @{$header_hash{$mat}},$a->name;
+			$counter++;
 			if (!exists($named{$a->name}) && !exists($relationships{$a->name})) {
 				$header_str.="Characteristic[".$a->name."]\t";
 			} else {
 				$header_str.=$a->name."\t";
 			}
-			if ($a->id) {
+			if (defined($a->id)) {
+				$counter++;
 				$header_str.="Term Source REF\t";
+				$counter++;
 				$header_str.="Term Source ID\t";
-			} elsif ($a->units) {
+			} elsif (defined($a->units)) {
+				$counter++;
 				$header_str.="Unit\t";
 			}
 		}
 	}
+	$offsets{'total'}=$counter;
 	
-	return (\@header,$header_str);
+	return (\%header_hash,$header_str,\@sheets,\%offsets);
 }
 
 sub parse_fields {
