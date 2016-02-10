@@ -88,8 +88,8 @@ sub report {
     my $uris_sheet = $self->new_worksheet("uris");
     $self->report_uniq_usage( $uris_sheet, 'uri', $attr_columns );
     
-    my $uris_sheet = $self->new_worksheet("ref+id");
-    $self->report_uniq_usage( $uris_sheet, 'ref_id', $attr_columns );
+    my $refid_sheet = $self->new_worksheet("ref+id");
+    $self->report_uniq_usage( $refid_sheet, 'ref_id', $attr_columns );
 
 }
 
