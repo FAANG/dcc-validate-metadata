@@ -23,7 +23,7 @@ use Mojolicious::Lite;
 use Bio::Metadata::Loader::JSONRuleSetLoader;
 use Bio::Metadata::Loader::JSONEntityLoader;
 use Bio::Metadata::Reporter::ExcelReporter;
-use Bio::Metadata::Reporter::JsonReporter;
+use Bio::Metadata::Reporter::BasicReporter;
 use Bio::Metadata::Validate::EntityValidator;
 use Bio::Metadata::Loader::XLSXSampleLoader;
 
@@ -208,7 +208,7 @@ sub validate_metadata {
 
     $c->respond_to(
         json => sub {
-            my $reporter = Bio::Metadata::Reporter::JsonReporter->new();
+            my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
             $c->render(
                 json => $reporter->report(
                     entities           => $metadata,
