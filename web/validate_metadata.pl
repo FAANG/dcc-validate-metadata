@@ -113,18 +113,6 @@ post '/validate' => sub {
     }
 };
 
-get '/validation_output' => sub {
-    my $c = shift;
-
-    $c->stash(
-        total           => $c->flash("total"),
-        outcome_summary => $c->flash("outcome_summary"),
-        report          => $c->flash("report")
-    );
-
-    $c->render( template => 'validation_output' );
-};
-
 # Start the Mojolicious command system
 app->start;
 
@@ -184,7 +172,6 @@ sub load_metadata {
     my $tmp_upload_path = $tmp_upload_dir->dirname . '/uploaded_file';
 
     $metadata_file->move_to($tmp_upload_path);
-    print STDERR "Loading $tmp_upload_path $/";
 
     return $loader->load($tmp_upload_path);
 }
@@ -192,9 +179,10 @@ sub load_metadata {
 sub validate_metadata {
     my ( $c, $target ) = @_;
 
+    my $rule_set_name = $c->param('rule_set_name');
     my $metadata_file = $c->param('metadata_file');
     my $loader        = $loaders->{ $c->param('file_format') };
-    my $rule_set      = $rules->{ $c->param('rule_set_name') };
+    my $rule_set      = $rules->{$rule_set_name};
 
     my $metadata = load_metadata( $metadata_file, $loader );
 
@@ -220,19 +208,31 @@ sub validate_metadata {
             );
         },
         html => sub {
+            my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
+            my $report   = $reporter->report(
+                entities           => $metadata,
+                entity_status      => $entity_status,
+                entity_outcomes    => $entity_outcomes,
+                attribute_status   => $attribute_status,
+                attribute_outcomes => $attribute_outcomes
+            );
 
             my %summary;
             my $total = scalar(@$metadata);
             map { $summary{$_} = 0 } qw(pass error warning);
             map { $summary{$_}++ } values %$entity_status;
-            $c->flash(
+
+            my %stash = (
                 filename        => $metadata_file->filename(),
                 outcome_summary => \%summary,
                 total           => $total,
-                rule_set        => $rule_set,
+                rule_set_name   => $rule_set_name,
+                report          => $report,
             );
 
-            $c->redirect_to('validation_output');
+            $c->stash(%stash);
+            $c->render( template => 'validation_output' );
+
         },
         xlsx => sub {
             my $tmp_file = File::Temp->new();
@@ -323,7 +323,9 @@ $(document).ready(function(){
 </p>
 <dl class="dl-horizontal">
 % for my $rule_set_key (sort keys %$rule_sets) {
-  <dt><a href="/rule_sets/<%= $rule_set_key %>"><%= $rule_set_key %></a></dt>
+  <dt>
+    %= link_to $rule_set_key => 'rule_sets/'.$rule_set_key
+  </dt>
   <dd><%= $rule_sets->{$rule_set_key}->name %></dd>
   <dd><%= $rule_sets->{$rule_set_key}->description %></dd>
 % }
@@ -458,16 +460,19 @@ $(document).ready(function(){
 
 @@ validation_output.html.ep
 % layout 'layout', title => 'validation summary';
-<h1>Validation summary</h1>
+<h1>Validation result</h1>
+<h2>Summary</h2>
+<p><%= $total %></dd> entities from <b><%= $filename %></b> were validated against the <%= link_to $rule_set_name => 'rule_sets/'.$rule_set_name %> rule set, with the following outcomes:</p>
+
 <dl class="dl-horizontal">
   
   % for my $o (sort keys %$outcome_summary){ 
   <dt><%= $o %></dt>
   <dd><%= $outcome_summary->{$o} %></dd>
   %}
-  <dt>Total</dt>
-  <dd><%= $total %></dd>
+  
 </dl>
+<h2>Detail</h2>
 
 
 @@ not_found.html.ep
