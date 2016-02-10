@@ -42,11 +42,22 @@ has 'term_count' => (
 );
 
 has 'probable_duplicates' => (
-    traits => ['Hash'],
-    is     => 'rw',
-    isa    => 'HashRef[HashRef[Str]]',
+    traits  => ['Hash'],
+    is      => 'rw',
+    isa     => 'HashRef[HashRef[Str]]',
     default => sub { { value => {}, uri => {}, units => {}, ref_id => {} } },
 );
+
+sub to_hash {
+    my ($self) = @_;
+
+    return {
+        name                => $self->name,
+        term_count          => $self->term_count,
+        max_count           => $self->max_count,
+        probable_duplicates => $self->probable_duplicates,
+    };
+}
 
 sub consume_attrs {
     my ( $self, $attrs ) = @_;
@@ -56,9 +67,9 @@ sub consume_attrs {
     }
 
     for my $a (@$attrs) {
-        $self->use_units(1) if ( $a->units );
-        $self->use_uri(1)   if ( $a->uri );
-        $self->use_ref_id(1) if ( $a->source_ref_id);
+        $self->use_units(1)  if ( $a->units );
+        $self->use_uri(1)    if ( $a->uri );
+        $self->use_ref_id(1) if ( $a->source_ref_id );
 
         if ( defined $a->value ) {
             $self->term_count()->{value}{ $a->value }++;
@@ -75,15 +86,17 @@ sub consume_attrs {
     }
 
     for my $c ( $self->categories ) {
-        my %term_count = %{$self->term_count()->{$c}};
+        my %term_count = %{ $self->term_count()->{$c} };
         my %term_mash;
 
         for my $k ( keys %term_count ) {
             my $mashed_term = _mash_term($k);
             $term_mash{$mashed_term}++;
-
-            if ( $term_mash{$mashed_term} == 2 ) {
-                $self->probable_duplicates()->{$c}{$k} = $k;
+        }
+        for my $k ( keys %term_count ) {
+            my $mashed_term = _mash_term($k);
+            if ($term_mash{$mashed_term} > 1) {
+              $self->probable_duplicates()->{$c}{$k} = $k;
             }
         }
 
