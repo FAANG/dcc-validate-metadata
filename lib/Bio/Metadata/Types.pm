@@ -24,7 +24,9 @@ enum 'Bio::Metadata::Rules::Rule::TypeEnum',
 enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',
   [qw(mandatory recommended optional)];
 
-enum 'Bio::Metadata::Validate::OutcomeEnum', [qw(pass error warning)];
+our @OUTCOME_VALUES = qw(pass error warning);
+
+enum 'Bio::Metadata::Validate::OutcomeEnum', \@OUTCOME_VALUES;
 
 role_type 'Bio::Metadata::Validate::AttributeValidatorRole';
 role_type 'Bio::Metadata::Loader::JSONLoaderRole';
