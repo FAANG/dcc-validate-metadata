@@ -215,19 +215,31 @@ sub validate_metadata {
             map { $summary{$_} = 0 } qw(pass error warning);
             map { $summary{$_}++ } values %$entity_status;
 
+            my $attribute_columns =
+              $reporter->determine_attr_columns($metadata),
+
+              my %useage_warning_summary;
+            for my $ac (@$attribute_columns) {
+                for my $k ( keys %{ $ac->probable_duplicates } ) {
+                    if ( scalar %{ $ac->probable_duplicates->{$k} } ) {
+                        $useage_warning_summary{$k}++;
+                    }
+                }
+            }
+
             my %stash = (
-                filename           => $metadata_file->filename(),
-                outcome_summary    => \%summary,
-                total              => $total,
-                rule_set_name      => $rule_set_name,
-                entities           => $metadata,
-                entity_status      => $entity_status,
-                entity_outcomes    => $entity_outcomes,
-                attribute_status   => $attribute_status,
-                attribute_outcomes => $attribute_outcomes,
-                attribute_columns =>
-                  $reporter->determine_attr_columns($metadata),
-                entity_rule_groups => $entity_rule_groups,
+                filename               => $metadata_file->filename(),
+                outcome_summary        => \%summary,
+                total                  => $total,
+                rule_set_name          => $rule_set_name,
+                entities               => $metadata,
+                entity_status          => $entity_status,
+                entity_outcomes        => $entity_outcomes,
+                attribute_status       => $attribute_status,
+                attribute_outcomes     => $attribute_outcomes,
+                attribute_columns      => $attribute_columns,
+                entity_rule_groups     => $entity_rule_groups,
+                useage_warning_summary => \%useage_warning_summary,
             );
 
             $c->stash(%stash);
@@ -273,6 +285,13 @@ __DATA__
 <style>
   .field-with-error { background-color: rgb(217, 83, 79) }  
 </style>
+<!-- Begin Cookie Consent plugin by Silktide - http://silktide.com/cookieconsent -->
+<script type="text/javascript">
+    window.cookieconsent_options = {"message":"This website uses cookies to ensure you get the best experience on our website","dismiss":"Got it!","learnMore":"More info","link":null,"theme":"dark-top"};
+</script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/1.0.9/cookieconsent.min.js"></script>
+<!-- End Cookie Consent plugin -->
 </head>
 <body>
 <div class="container-fluid">
@@ -467,143 +486,229 @@ $(document).ready(function(){
 @@ validation_output.html.ep
 % layout 'layout', title => 'validation summary';
 <h1>Validation result</h1>
-<h2>Summary</h2>
-<p><%= $total %></dd> entities from <b><%= $filename %></b> were validated against the <%= link_to $rule_set_name => 'rule_sets/'.$rule_set_name %> rule set, with the following outcomes:</p>
 
-<dl class="dl-horizontal">
+<div>
+% my @categories = qw(value units ref_id uri);
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs" role="tablist">
   
-  % for my $o (sort keys %$outcome_summary){ 
-  <dt><%= $o %></dt>
-  <dd><%= $outcome_summary->{$o} %></dd>
-  %}
+  <li role="presentation" class="active">
+    <a href="#summary" aria-controls="profile" role="tab" data-toggle="tab">Summary</a>
+  </li>
   
-</dl>
-<h2>Entities</h2>
-<table class="table table-hover table-condensed table-striped">
-
-  <thead>
-    <th>
-      ID
-    </th>
-    <th>
-      Status
-    </th>
-    <th>
-      Entity type
-    </th>
-    <th>Rule groups applied</th>
-
-% for my $col (@{$attribute_columns}){
-%   for my $i (0..($col->max_count - 1)) {  
-      <th><%= $col->name %></th>
-%     if ($col->use_ref_id){      
-        <th>Term source REF</th>
-        <th>Term source ID</th>
-%     }
-%     if ($col->use_uri){      
-        <th>URI</th>
-%     }
-%     if ($col->use_units){      
-        <th>Units</th>
-%     }
-%   }
+  <li role="presentation">
+    <a href="#entities" aria-controls="profile" role="tab" data-toggle="tab">Entities</a>
+  </li>
+  
+% for my $cat (@categories){
+  <li role="presentation">
+    <a href="#useage-<%= $cat %>" aria-controls="profile" role="tab" data-toggle="tab">Useage - <%= $cat %></a>
+  </li>
 % }  
-  </thead>
-  <tbody>
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content"> 
   
-% my %class_lookup =(pass => 'success', warning => 'warning',error   => 'danger',);
+  <div role="tabpanel" class="tab-pane active" id="summary">
+    <br/>
+    % if ($outcome_summary->{error}) {
+      <div class="alert alert-danger" role="alert">
+        <strong>Oh dear.</strong> The metadata did not pass validation. Please review the errors in the 'Entities' tab and update your metadata. 
+      </div>
+    % } elsif ($outcome_summary->{warning}) {
+      <div class="alert alert-warning" role="alert">
+        <strong>Not bad.</strong> The metadata passed validation, but with some warnings. Please review the errors in the 'Entities' tab and consider updating your metadata. 
+      </div>
+    % } elsif ($outcome_summary->{pass}) {
+      <div class="alert  alert-pass" role="alert">
+        <strong>Well done.</strong> The metadata passed validation.
+      </div>
+    %}
+    
+    <br/>
+    
+    % if (scalar(%$useage_warning_summary)) {
+      <div class="alert alert-warning" role="alert">
+        Some of the terms used look like they might have slight differences, such as different capitalisation or punctuation. This can make two entities look more different than they really are. Please check these useage tabs for problems:
+        <ul>
+        % for my $cat (sort keys %$useage_warning_summary){
+          <li>Usage - <%= $cat%></li>
+        %}
+        </ul>
+      </div>
+    % } 
+  
+    <p><%= $total %></dd> entities from <b><%= $filename %></b> were validated against the <%= link_to $rule_set_name => 'rule_sets/'.$rule_set_name %> rule set, with the following outcomes:</p>
 
-% for my $ent (@{$entities}) {
-% my $ent_status = $entity_status->{$ent};
-% my $ent_outcomes = $entity_outcomes->{$ent};
-  <tr>
-    <td><%= $ent->id %></td>
-    <td>
-%     my $btn_class = $class_lookup{$ent_status};
+    <dl class="dl-horizontal">
+  
+      % for my $o (sort keys %$outcome_summary){ 
+      <dt><%= $o %></dt>
+      <dd><%= $outcome_summary->{$o} %></dd>
+      %}
+    </dl>
+    
+    <p>This report is also available as a spreadsheet, just go back and submit the metadata and choose 'xlsx' as the output format.</p>
+    
+  </div>
+  
+  <div role="tabpanel" class="tab-pane" id="entities">
+    <table class="table table-hover table-condensed table-striped">
 
-      <button type="button" class="btn btn-<%= $btn_class %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes">
-        <%= $ent_status %>
-      </button>
-      <div class="hidden popover-content">
-      <ul class="outcomes">
-%       for my $o (@$ent_outcomes) {
-          <li class="bg-<%= $class_lookup{$o->outcome} %>">
-            <%= $o->message %>
-%            if ($o->rule) {
-             (<b><%= $o->rule->name %></b> from the <b><%= $o->rule_group->name %></b> rule group)
-%           }else{
-             (<b><%= $o->get_attribute(0)->name %></b>)
-%           }            
-          </li> 
-%       }
-%     if (!scalar(@$ent_outcomes)){
-        <li class="bg-success">No problems found</li>
-%     }
-      </ul>
-      <div>
+      <thead>
+        <th>
+          ID
+        </th>
+        <th>
+          Status
+        </th>
+        <th>
+          Entity type
+        </th>
+        <th>Rule groups applied</th>
+
+    % for my $col (@{$attribute_columns}){
+    %   for my $i (0..($col->max_count - 1)) {  
+          <th><%= $col->name %></th>
+    %     if ($col->use_ref_id){      
+            <th>Term source REF</th>
+            <th>Term source ID</th>
+    %     }
+    %     if ($col->use_uri){      
+            <th>URI</th>
+    %     }
+    %     if ($col->use_units){      
+            <th>Units</th>
+    %     }
+    %   }
+    % }  
+      </thead>
+      <tbody>
+  
+    % my %class_lookup =(pass => 'success', warning => 'warning',error   => 'danger',);
+
+    % for my $ent (@{$entities}) {
+    % my $ent_status = $entity_status->{$ent};
+    % my $ent_outcomes = $entity_outcomes->{$ent};
+      <tr>
+        <td><%= $ent->id %></td>
+        <td>
+    %     my $btn_class = $class_lookup{$ent_status};
+
+          <button type="button" class="btn btn-<%= $btn_class %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes">
+            <%= $ent_status %>
+          </button>
+          <div class="hidden popover-content">
+          <ul class="outcomes">
+    %       for my $o (@$ent_outcomes) {
+              <li class="bg-<%= $class_lookup{$o->outcome} %>">
+                <%= $o->message %>
+    %            if ($o->rule) {
+                 (<b><%= $o->rule->name %></b> from the <b><%= $o->rule_group->name %></b> rule group)
+    %           }else{
+                 (<b><%= $o->get_attribute(0)->name %></b>)
+    %           }            
+              </li> 
+    %       }
+    %     if (!scalar(@$ent_outcomes)){
+            <li class="bg-success">No problems found</li>
+    %     }
+          </ul>
+          <div>
       
-    </td>
-    <td><%= $ent->entity_type %></td>
-    <td>
-      <ul>
-% for my $rg (@{$entity_rule_groups->{$ent}}){
-          <li><%= $rg->name %></li>
-% }        
-      </ul>
-<!-- RULE GROUPS -->        
-    </td>
+        </td>
+        <td><%= $ent->entity_type %></td>
+        <td>
+          <ul>
+    % for my $rg (@{$entity_rule_groups->{$ent}}){
+              <li><%= $rg->name %></li>
+    % }        
+          </ul>
+        </td>
 
-% my $organised_attr = $ent->organised_attr;
+    % my $organised_attr = $ent->organised_attr;
 
-% for my $col (@{$attribute_columns}){
-% my $attrs = $organised_attr->{ $col->name };
-%   for my $i (0..($col->max_count - 1)) {  
-%     my ($a,$a_status,$a_outcomes) = (undef,'',[]);
-%     if ( $attrs && $i < scalar(@$attrs) && $attrs->[$i] ) {
-%         $a = $attrs->[$i];
-%     }
-%     if ($a) { $a_status = $attribute_status->{$a};$a_outcomes = $attribute_outcomes->{$a}};
-      <td>
-      <%= $a ? $a->value : '' %>
-%     if (defined $a_outcomes && scalar(@$a_outcomes)){      
-        <button type="button" class="btn btn-<%= $class_lookup{$a_status} %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes">
-          <%= $a_status %>
-        </button>
-        <div class="hidden popover-content">
-        <ul class="outcomes">
-%         for my $o (@$a_outcomes) {
-            <li class="bg-<%= $class_lookup{$o->outcome} %>">
-              <%= $o->message %>
-%             if ($o->rule) {
-               (<b><%= $o->rule_group->name %></b> rule group)
-%             }                          
-            </li> 
-%         }
-%       if (!scalar(@$a_outcomes)){
-          <li class="bg-success">No problems found</li>
-%       }      
-        </div>
-%     }
+    % for my $col (@{$attribute_columns}){
+    % my $attrs = $organised_attr->{ $col->name };
+    %   for my $i (0..($col->max_count - 1)) {  
+    %     my ($a,$a_status,$a_outcomes) = (undef,'',[]);
+    %     if ( $attrs && $i < scalar(@$attrs) && $attrs->[$i] ) {
+    %         $a = $attrs->[$i];
+    %     }
+    %     if ($a) { $a_status = $attribute_status->{$a};$a_outcomes = $attribute_outcomes->{$a}};
+          <td>
+          <%= $a ? $a->value : '' %>
+    %     if (defined $a_outcomes && scalar(@$a_outcomes)){      
+            <button type="button" class="btn btn-<%= $class_lookup{$a_status} %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes">
+              <%= $a_status %>
+            </button>
+            <div class="hidden popover-content">
+            <ul class="outcomes">
+    %         for my $o (@$a_outcomes) {
+                <li class="bg-<%= $class_lookup{$o->outcome} %>">
+                  <%= $o->message %>
+    %             if ($o->rule) {
+                   (<b><%= $o->rule_group->name %></b> rule group)
+    %             }                          
+                </li> 
+    %         }
+    %       if (!scalar(@$a_outcomes)){
+              <li class="bg-success">No problems found</li>
+    %       }      
+            </div>
+    %     }
 
-      </td>
-%     if ($col->use_ref_id){      
-        <td><%= $a ? $a->source_ref : '' %></td>
-        <td><%= $a ? $a->id : '' %></td>
-%     }
-%     if ($col->use_uri){      
-        <td><%= $a ? $a->uri : '' %></td>
-%     }
-%     if ($col->use_units){      
-        <td><%= $a ? $a->units : '' %></td>
-%     }
-%   }
-% }  
+          </td>
+    %     if ($col->use_ref_id){      
+            <td><%= $a ? $a->source_ref : '' %></td>
+            <td><%= $a ? $a->id : '' %></td>
+    %     }
+    %     if ($col->use_uri){      
+            <td><%= $a ? $a->uri : '' %></td>
+    %     }
+    %     if ($col->use_units){      
+            <td><%= $a ? $a->units : '' %></td>
+    %     }
+    %   }
+    % }  
         
-  </tr>
-% }  
-  </tbody>
+      </tr>
+    % }  
+      </tbody>
+    </table>  
+  </div>
+  
+  
+  %for my $cat (@categories){
+    <div role="tabpanel" class="tab-pane" id="useage-<%= $cat %>">  
+      <table class="table table-hover table-condensed table-striped">
+        <th>Attribute</th>
+        <th><%= $cat %></th>
+        <th>count</th>
+        <thead>
+      </thead>
+      <tbody>
+        % for my $col (@$attribute_columns){
+        % my $loop_count = 0;  
+        % my $term_count = $col->term_count->{$cat};
+        %  for my $term  (sort keys %$term_count){
+        %  my $cell_class = ($col->probable_duplicates()->{$cat}{$term}) ? 'bg-danger' : '';
+            <tr>
+              <td><%= ($loop_count++) ? '' : $col->name %></td>
+              <td class="<%= $cell_class%>"><%= $term %></td>
+              <td><%= $term_count->{$term} %></td>
+            </tr>
+        %  }
+        % }
+      </tbody>
+      </table>
+    </div>
+  % }
+  </div>
 
-</table>
+</div>
+
 
 
 @@ not_found.html.ep
