@@ -14,6 +14,7 @@ use Bio::Metadata::BioSample::SampleTab;
 my $data_dir = "$Bin/../data/";
 
 my $sampletab= Bio::Metadata::BioSample::SampleTab->new();
+isa_ok($sampletab, "Bio::Metadata::BioSample::SampleTab");
 
 $sampletab->read("$data_dir/Excel/sampleset.bsamples.xlsx");
 
@@ -21,7 +22,7 @@ $sampletab->print_msi;
 $sampletab->print_scd;
 
 
-
+done_testing();
 
 
 
