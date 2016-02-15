@@ -19,6 +19,8 @@ use warnings;
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
 
+use Encode::Guess;
+use Encode qw(encode decode);
 use Moose;
 use Carp;
 use Data::Dumper;
@@ -49,8 +51,6 @@ sub process_sheet {
 sub row_to_object {
 	my ($self, $row,$fields,$sheet_name) = @_;
 	
-	#TODO: Term Source REF guess 
-	
 	return 0 unless grep {defined($_)} @$row;
 	
   	croak("[ERROR] Number of fields in the header/rows does not match") if scalar(@$fields)!=scalar(@$row);
@@ -71,6 +71,17 @@ sub row_to_object {
 	my $pr_att;
     for (my $i=$index;$i<scalar(@$row);$i++) {
 		my $name=$fields->[$i];
+		if ($name=~/([^[:ascii:]])/) {
+			warn("[INFO] Non-ascii characters in '",$name,"'. These will be deleted\n");
+			$name=~s/[^[:ascii:]]/ /g;
+			$name=~s/\s{2}/ /;
+			$name=~s/^\s|\s$//g;
+		} elsif($row->[$i]=~/([^[:ascii:]])/) {
+			warn("[INFO] Non-ascii characters in '",$row->[$i],"'. These will be deleted\n");
+			$row->[$i]=~s/[^[:ascii:]]/ /g;
+			$row->[$i]=~s/\s{2}/ /;
+			$row->[$i]=~s/^\s|\s$//g;
+		}
 		next if $name eq 'Term Source REF';
 		if ($name eq 'Term Source ID') {
 			my $org_atts=$o->organised_attr;
@@ -81,6 +92,7 @@ sub row_to_object {
 			my $attr=$org_atts->{$pr_att}->[0];
 			$attr->units($row->[$i]);
 		} else {
+		
 			my $o_attrb= Bio::Metadata::Attribute->new(
 					name => $name,
   					value => $row->[$i]

@@ -16,11 +16,13 @@ package Bio::Metadata::BioSample::SampleTab;
 use strict;
 use warnings;
 use Data::Dumper;
-
+use utf8;
 use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Loader::XLSXBioSampleLoader;
 use Moose::Util::TypeConstraints;
+
+
 
 has 'scd'       => (
     traits  => ['Array'],
@@ -106,8 +108,6 @@ sub print_msi {
 sub print_scd {
 	my ($self)=@_;
 	
-#	my $fields=$self->parse_fields;
-	
 	my ($header_hash,$str,$sheets,$offsets)=$self->generate_header;
 	
 	print "[SCD]\n";
@@ -118,32 +118,53 @@ sub print_scd {
 		my $row=$e->id."\t";
 		my $atts=$e->organised_attr;
 		my $mat=$atts->{'Material'}->[0]->value;
+		my $ix=0;
+		foreach my $c (@COMMON) {
+			my $a=$atts->{$c}->[0];
+			$row=$self->_add_attribute($a,$row);
+		}
 		foreach my $s (@$sheets) {
 			if ($s ne $mat) {
-				$row.="\t"x$offsets->{$s};
+				my $a=$sheets->[$ix+1];
+				my $b=$sheets->[$ix];
+				my $offset;
+				if (!defined($a)) {
+					$offset=$offsets->{'total'}-$offsets->{$b};
+				} else {
+					$offset=$offsets->{$a}-$offsets->{$b};
+				}
+				$row.="\t"x$offset;
 			} else {
 				foreach my $i (@{$header_hash->{$mat}}) {
 					my $a=$atts->{$i}->[0];
-					if (defined($a->value)) {
-						$row.=$a->value."\t";
-						if (defined($a->id)) {
-							my $ref="";
-							$ref=$1 if $a->id=~/(.+)_\d+/;
-							$ref='NCBI Taxonomy' if $a->name eq 'Organism';
-							$row.=$ref."\t".$a->id."\t";
-						}
-						if (defined($a->units)) {
-							my $unit=$a->units;
-							$row.= $a->units."\t";
-						}			
-					}
+					$row=$self->_add_attribute($a,$row);
 				}
 			}
+			$ix++;
 		}
-		print $row,"caca\n";
+		
+		print $row,"\n";
 	}
 	
 	
+}
+
+sub _add_attribute {
+	my ($self,$a,$row)=@_;
+	if (defined($a->value)) {
+		$row.=$a->value."\t";
+		if (defined($a->id)) {
+			my $ref="";
+			$ref=$1 if $a->id=~/(.+)_\d+/;
+			$ref='NCBI Taxonomy' if $a->name eq 'Organism';
+			$row.=$ref."\t".$a->id."\t";
+		}
+		if (defined($a->units)) {
+			my $unit=$a->units;
+			$row.= $a->units."\t";
+		}			
+	}
+	return $row;
 }
 
 sub generate_header {
@@ -171,9 +192,6 @@ sub generate_header {
 		
 		next if $mat_seen eq $mat;
 		push @sheets,$mat;
-		foreach my $c (@COMMON) {
-			push @{$header_hash{$mat}},$atts->{$c}->[0]->name;
-		}
 		$offsets{$mat}=$counter;
 		$mat_seen=$atts->{'Material'}->[0]->value;
 		foreach my $a (@{$e->attributes}) {
@@ -199,33 +217,6 @@ sub generate_header {
 	$offsets{'total'}=$counter;
 	
 	return (\%header_hash,$header_str,\@sheets,\%offsets);
-}
-
-sub parse_fields {
-	my ($self)=@_;
-	
-	my %fields;
-	
-	foreach my $e (@{$self->scd}) {
-		my $atts=$e->organised_attr;
-		my $mat=$atts->{'Material'}->[0]->value;
-		if (!exists($fields{$mat})) {
-			foreach my $a (@{$e->attributes}) {
-				if (!exists($named{$a->name}) && !exists($relationships{$a->name})) {
-					push @{$fields{$mat}},'Characteristic['.$a->name.']';
-				} else {
-					push @{$fields{$mat}},$a->name;
-				}
-				if ($a->id) {
-					push @{$fields{$mat}}, 'Term Source REF';
-					push @{$fields{$mat}}, 'Term Source ID';
-				} elsif ($a->units) {
-					push @{$fields{$mat}}, 'Unit';
-				}
-			}
-		} 
-	}
-	return \%fields;
 }
 
 1;
