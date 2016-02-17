@@ -25,7 +25,7 @@ use Bio::Metadata::Loader::JSONEntityLoader;
 use Bio::Metadata::Reporter::ExcelReporter;
 use Bio::Metadata::Reporter::BasicReporter;
 use Bio::Metadata::Validate::EntityValidator;
-use Bio::Metadata::Loader::XLSXSampleLoader;
+use Bio::Metadata::Loader::XLSXBioSampleLoader;
 
 plugin 'Config';
 plugin 'RenderFile';
@@ -40,7 +40,7 @@ my $rule_locations = app->config('rules');
 my $rules          = load_rules($rule_locations);
 my $loaders        = {
     json        => Bio::Metadata::Loader::JSONEntityLoader->new(),
-    sample_xlsx => Bio::Metadata::Loader::XLSXSampleLoader->new()
+    biosample_xlsx => Bio::Metadata::Loader::XLSXBioSampleLoader->new()
 };
 
 get '/' => sub {
