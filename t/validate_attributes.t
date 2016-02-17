@@ -33,7 +33,7 @@ my %base_outcome_h = (
     attributes      => [],
 );
 
-
+date_rules();
 uri_rules();
 text_rules();
 num_rules();
@@ -68,11 +68,11 @@ sub date_rules {
     $attr->value('this is not a date');
     $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
     is( $o->outcome, "error", "very invalid date failed" );
-    
+
     $attr->value('2016-02-29');
     $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
     is( $o->outcome, "pass", "Feb 29 passes for leap year" );
-    
+
     $attr->value('2015-02-29');
     $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
     is( $o->outcome, "error", "Feb 29 fails for non-leap year" );
@@ -82,13 +82,24 @@ sub date_rules {
     is( $o->outcome, "error",
         "unacceptable date format in attributes is rejected" );
 
-    $date_rule->valid_units( ['MM-DD-YYYY'] );
-    throws_ok {
-        $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
-    }
-    qr/Rule has units that aren't a supported date format/,
-      "Invalid format in rule dies with croak";
+    $attr->value('2016-02');
+    $attr->units('YYYY-MM');
+    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+    is( $o->outcome, "pass", "valid month passed" );
 
+    $attr->value('2016-31');
+    $attr->units('YYYY-MM');
+    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+    is( $o->outcome, "error", "invalid month failed" );
+
+    $date_rule->valid_units( ['MM-DD-YYYY'] );
+    throws_ok(
+        sub {
+            $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+        },
+        qr/Rule has units that aren't a supported date format/,
+        "Invalid format in rule dies with croak"
+    );
 }
 
 sub text_rules {
