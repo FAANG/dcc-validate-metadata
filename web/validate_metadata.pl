@@ -17,7 +17,7 @@ use warnings;
 use Carp;
 use File::Temp qw(tempfile);
 use FindBin qw/$Bin/;
-
+use Try::Tiny;
 use Mojolicious::Lite;
 
 use Bio::Metadata::Loader::JSONRuleSetLoader;
@@ -105,11 +105,29 @@ post '/validate' => sub {
     $form_validation->required('metadata_file')
       ->upload->size( 1, 16 * ( 10**6 ) );
 
+    my $rule_set_name = $c->param('rule_set_name');
+    my $metadata_file = $c->param('metadata_file');
+    my $loader        = $loaders->{ $c->param('file_format') };
+    my $rule_set      = $rules->{$rule_set_name};
+
+    my $metadata;
+    if ( !$form_validation->has_error ) {
+        try {
+            $metadata = load_metadata( $metadata_file, $loader );
+        }
+        catch {
+            $form_validation->error(
+                'file_format'   => ['could not load file'],
+                'metadata_file' => ['could not load file']
+            );
+        };
+    }
+
     if ( $form_validation->has_error ) {
         validation_form_errors( $c, $form_validation );
     }
     else {
-        validate_metadata($c);
+        validate_metadata( $c, $metadata, $rule_set );
     }
 };
 
@@ -177,15 +195,11 @@ sub load_metadata {
 }
 
 sub validate_metadata {
-    my ( $c, $target ) = @_;
+    my ( $c, $metadata, $rule_set ) = @_;
 
     my $rule_set_name = $c->param('rule_set_name');
     my $metadata_file = $c->param('metadata_file');
-    my $loader        = $loaders->{ $c->param('file_format') };
-    my $rule_set      = $rules->{$rule_set_name};
-
-    my $metadata = load_metadata( $metadata_file, $loader );
-
+    
     my $validator =
       Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
