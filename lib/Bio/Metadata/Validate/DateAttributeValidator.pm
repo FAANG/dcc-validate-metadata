@@ -31,7 +31,11 @@ has 'valid_formats' => (
     is      => 'rw',
     isa     => 'HashRef[RegexpRef]',
     default => sub {
-        return { 'YYYY-MM-DD' => qr/\d{4}-\d{2}-\d{2}/ };
+        return {
+            'YYYY-MM-DD' => qr/\d{4}-\d{2}-\d{2}/,
+            'YYYY-MM'    => qr/\d{4}-\d{2}/,
+            'YYYY'       => qr/\d{4}/,
+        };
     },
     handles => { get_valid_format => 'get', all_valid_formats => 'keys' },
 );
@@ -77,7 +81,7 @@ sub check_rule_units {
     my ( $self, $rule ) = @_;
 
     for my $rule_unit ( @{ $rule->valid_units } ) {
-        my $match = $self->get_valid_format( sub { $rule_unit eq $_ } );
+        my $match = $self->get_valid_format($rule_unit);
         if ( !$match ) {
             croak(
 "Rule has units that aren't a supported date format. Received $rule_unit, but accepts "
