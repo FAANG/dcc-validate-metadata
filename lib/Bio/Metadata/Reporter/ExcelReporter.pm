@@ -72,7 +72,8 @@ sub report {
         my $col_to_cover_per_attr = 1;
         $col_to_cover_per_attr++ if ( $ac->use_units );
         $col_to_cover_per_attr++ if ( $ac->use_uri );
-
+        #$col_to_cover_per_attr =+ 2 if ( $ac->use_ref_id );
+        
         $col = $col + ( $ac->max_count * $col_to_cover_per_attr );
 
         $entity_sheet->set_column( $col, $col, undef, $rborder_format );
@@ -87,14 +88,10 @@ sub report {
 
     my $uris_sheet = $self->new_worksheet("uris");
     $self->report_uniq_usage( $uris_sheet, 'uri', $attr_columns );
+    
+    my $refid_sheet = $self->new_worksheet("ref+id");
+    $self->report_uniq_usage( $refid_sheet, 'ref_id', $attr_columns );
 
-}
-
-sub _mash_term {
-    my ($term) = @_;
-    my $mashed = lc($term);
-    $mashed =~ s/\W//g;    # remove anything that isn't a-z,1-0,_
-    return $mashed;
 }
 
 sub report_uniq_usage {
@@ -112,7 +109,8 @@ sub report_uniq_usage {
     $row++;
 
   AC: for my $ac (@$attr_columns) {
-        my $term_count = $ac->term_count->{$key};
+        my $term_count          = $ac->term_count->{$key};
+        my $probable_duplicates = $ac->probable_duplicates->{$key};
 
         if ( !keys %$term_count ) {
 
@@ -122,18 +120,10 @@ sub report_uniq_usage {
 
         $sheet->write( $row, 0, $ac->name );
 
-        my %term_mash;
-        for my $k ( keys %$term_count ) {
-            my $mashed_term = _mash_term($k);
-            $term_mash{$mashed_term}++;
-        }
-
-        for
-          my $k ( sort { _mash_term($a) cmp _mash_term($b) } keys %$term_count )
-        {
+        for my $k ( sort { lc($a) cmp lc($b) } keys %$term_count ) {
             $sheet->write( $row, 1, $k, );
 
-            if ( $term_mash{ _mash_term($k) } > 1 ) {
+            if ( $probable_duplicates->{$k} ) {
                 $sheet->write( $row, 1, $k, $wformat );
             }
             else {
@@ -145,10 +135,10 @@ sub report_uniq_usage {
         }
 
     }
-    
+
     my $rborder_format = $self->get_format('rborder');
-    $sheet->set_column( 0,1, 15, $rborder_format );
-  
+    $sheet->set_column( 0, 1, 15, $rborder_format );
+
 }
 
 sub create_formats {
@@ -157,12 +147,12 @@ sub create_formats {
     my $workbook = $self->_workbook;
 
     my %format;
-    $format{'pass'}           = $workbook->add_format();
-    $format{'warning'}        = $workbook->add_format();
-    $format{'error'}          = $workbook->add_format();
-    $format{'header'}         = $workbook->add_format();
-    $format{'rborder'}        = $workbook->add_format();
-    
+    $format{'pass'}    = $workbook->add_format();
+    $format{'warning'} = $workbook->add_format();
+    $format{'error'}   = $workbook->add_format();
+    $format{'header'}  = $workbook->add_format();
+    $format{'rborder'} = $workbook->add_format();
+
     $format{'pass'}->set_bg_color( $self->pass_color );
     $format{'warning'}->set_bg_color( $self->warning_color );
     $format{'error'}->set_bg_color( $self->error_color );
@@ -306,7 +296,6 @@ sub write_header {
     }
 }
 
-
 sub create_workbook {
     my ($self) = @_;
     my $workbook = Excel::Writer::XLSX->new( $self->file_path );
@@ -317,32 +306,6 @@ sub create_workbook {
 sub new_worksheet {
     my ( $self, $sheet_name ) = @_;
     return $self->_workbook()->add_worksheet($sheet_name);
-}
-
-sub determine_attr_columns {
-    my ( $self, $entities ) = @_;
-
-    my @columns;
-    my %column;
-
-    for my $e (@$entities) {
-        my $organised_attr = $e->organised_attr;
-
-        for my $name ( @{ $e->attr_names } ) {
-            my $attrs = $organised_attr->{$name};
-
-            if ( !$column{$name} ) {
-                $column{$name} =
-                  Bio::Metadata::Reporter::AttributeColumn->new(
-                    name => $name );
-                push @columns, $column{$name};
-            }
-            my $ac = $column{$name};
-            $ac->consume_attrs($attrs);
-        }
-    }
-
-    return \@columns;
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -17,35 +17,35 @@ use warnings;
 use Carp;
 use File::Temp qw(tempfile);
 use FindBin qw/$Bin/;
-
+use Try::Tiny;
 use Mojolicious::Lite;
-use UUID::Generator::PurePerl;
 
 use Bio::Metadata::Loader::JSONRuleSetLoader;
 use Bio::Metadata::Loader::JSONEntityLoader;
 use Bio::Metadata::Reporter::ExcelReporter;
-use Bio::Metadata::Reporter::JsonReporter;
+use Bio::Metadata::Reporter::BasicReporter;
 use Bio::Metadata::Validate::EntityValidator;
-use Bio::Metadata::Loader::XLSXSampleLoader;
+use Bio::Metadata::Loader::XLSXBioSampleLoader;
 
 plugin 'Config';
 plugin 'RenderFile';
 
+my $xlsx_mime_type =
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
 app->secrets( ['nosecrets'] );
+app->types->type( xlsx => $xlsx_mime_type );
 
 my $rule_locations = app->config('rules');
 my $rules          = load_rules($rule_locations);
 my $loaders        = {
     json        => Bio::Metadata::Loader::JSONEntityLoader->new(),
-    sample_xlsx => Bio::Metadata::Loader::XLSXSampleLoader->new()
+    biosample_xlsx => Bio::Metadata::Loader::XLSXBioSampleLoader->new()
 };
 
-my $uuid_generator = UUID::Generator::PurePerl->new();
-my %report_files;
-
 get '/' => sub {
-    my $c   = shift;
-    $c->render( template => 'index');
+    my $c = shift;
+    $c->render( template => 'index' );
 };
 
 get '/rule_sets' => sub {
@@ -105,40 +105,30 @@ post '/validate' => sub {
     $form_validation->required('metadata_file')
       ->upload->size( 1, 16 * ( 10**6 ) );
 
+    my $rule_set_name = $c->param('rule_set_name');
+    my $metadata_file = $c->param('metadata_file');
+    my $loader        = $loaders->{ $c->param('file_format') };
+    my $rule_set      = $rules->{$rule_set_name};
+
+    my $metadata;
+    if ( !$form_validation->has_error ) {
+        try {
+            $metadata = load_metadata( $metadata_file, $loader );
+        }
+        catch {
+            $form_validation->error( 'file_format' => ['could not parse file'],
+            );
+            $form_validation->error(
+                'metadata_file' => ['could not parse file'] );
+        };
+    }
+
     if ( $form_validation->has_error ) {
         validation_form_errors( $c, $form_validation );
     }
     else {
-        validate_metadata($c);
+        validate_metadata( $c, $metadata, $rule_set );
     }
-};
-
-get '/validation_summary' => sub {
-    my $c = shift;
-
-    $c->stash(
-        total           => $c->flash("total"),
-        outcome_summary => $c->flash("outcome_summary"),
-        report          => $c->flash("report")
-    );
-
-    $c->render( template => 'validation_summary' );
-};
-
-get '/report/#report' => sub {
-    my $c = shift;
-
-    my $key    = $c->param('report');
-    my $report = delete $report_files{$key};
-
-    $c->render_file(
-        filepath => $report->{tmp_file}->filename,
-        filename => $report->{report_filename},
-        content_type =>
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        content_disposition => 'attachment',
-        cleanup             => 1,
-    );
 };
 
 # Start the Mojolicious command system
@@ -168,6 +158,7 @@ sub validation_supporting_data {
     return {
         valid_file_formats   => [ sort keys %$loaders ],
         valid_rule_set_names => [ sort keys %$rules ],
+        valid_output_formats => [qw(html xlsx json)],
     };
 }
 
@@ -188,7 +179,7 @@ sub validation_form_errors {
         html => sub {
             $c->stash(%$supporting_data);
             $c->render( template => 'validate' );
-        }
+        },
     );
 }
 
@@ -199,31 +190,28 @@ sub load_metadata {
     my $tmp_upload_path = $tmp_upload_dir->dirname . '/uploaded_file';
 
     $metadata_file->move_to($tmp_upload_path);
-    print STDERR "Loading $tmp_upload_path $/";
 
     return $loader->load($tmp_upload_path);
 }
 
 sub validate_metadata {
-    my ( $c, $target ) = @_;
+    my ( $c, $metadata, $rule_set ) = @_;
 
+    my $rule_set_name = $c->param('rule_set_name');
     my $metadata_file = $c->param('metadata_file');
-    my $loader        = $loaders->{ $c->param('file_format') };
-    my $rule_set      = $rules->{ $c->param('rule_set_name') };
-
-    my $metadata = load_metadata( $metadata_file, $loader );
 
     my $validator =
       Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
     my (
-        $entity_status,    $entity_outcomes,
-        $attribute_status, $attribute_outcomes
+        $entity_status,      $entity_outcomes, $attribute_status,
+        $attribute_outcomes, $entity_rule_groups,
     ) = $validator->check_all($metadata);
+    my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
 
     $c->respond_to(
         json => sub {
-            my $reporter = Bio::Metadata::Reporter::JsonReporter->new();
+
             $c->render(
                 json => $reporter->report(
                     entities           => $metadata,
@@ -235,8 +223,45 @@ sub validate_metadata {
             );
         },
         html => sub {
+
+            my %summary;
+            my $total = scalar(@$metadata);
+            map { $summary{$_} = 0 } qw(pass error warning);
+            map { $summary{$_}++ } values %$entity_status;
+
+            my $attribute_columns =
+              $reporter->determine_attr_columns($metadata),
+
+              my %useage_warning_summary;
+            for my $ac (@$attribute_columns) {
+                for my $k ( keys %{ $ac->probable_duplicates } ) {
+                    if ( scalar %{ $ac->probable_duplicates->{$k} } ) {
+                        $useage_warning_summary{$k}++;
+                    }
+                }
+            }
+
+            my %stash = (
+                filename               => $metadata_file->filename(),
+                outcome_summary        => \%summary,
+                total                  => $total,
+                rule_set_name          => $rule_set_name,
+                entities               => $metadata,
+                entity_status          => $entity_status,
+                entity_outcomes        => $entity_outcomes,
+                attribute_status       => $attribute_status,
+                attribute_outcomes     => $attribute_outcomes,
+                attribute_columns      => $attribute_columns,
+                entity_rule_groups     => $entity_rule_groups,
+                useage_warning_summary => \%useage_warning_summary,
+            );
+
+            $c->stash(%stash);
+            $c->render( template => 'validation_output' );
+
+        },
+        xlsx => sub {
             my $tmp_file = File::Temp->new();
-            my $key      = $uuid_generator->generate_v1()->as_string();
 
             my $reporter =
               Bio::Metadata::Reporter::ExcelReporter->new(
@@ -247,25 +272,17 @@ sub validate_metadata {
                 entity_status      => $entity_status,
                 entity_outcomes    => $entity_outcomes,
                 attribute_status   => $attribute_status,
-                attribute_outcomes => $attribute_outcomes
+                attribute_outcomes => $attribute_outcomes,
+
             );
 
-            my %summary;
-            my $total = scalar(@$metadata);
-            map { $summary{$_}++ } values %$entity_status;
-            $c->flash(
-                outcome_summary => \%summary,
-                total           => $total,
-                report          => $key
+            $c->render_file(
+                filepath => $tmp_file->filename,
+                filename => $metadata_file->filename()
+                  . '.validation_report.xlsx',
+                content_type => $xlsx_mime_type,
+                cleanup      => 1,
             );
-
-            $report_files{$key} = {
-                tmp_file        => $tmp_file,
-                report_filename => $metadata_file->filename()
-                  . '.validation_report.xlsx'
-            };
-
-            $c->redirect_to('validation_summary');
         }
     );
 }
@@ -278,10 +295,11 @@ __DATA__
 <title>Validate metadata - <%= $title %></title>
 <link href="../favicon.ico" rel="icon" type="image/x-icon" />
 <!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/readable/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 <style>
   .field-with-error { background-color: rgb(217, 83, 79) }  
 </style>
+
 </head>
 <body>
 <div class="container-fluid">
@@ -289,12 +307,17 @@ __DATA__
 </div>
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 <script>
 $(document).ready(function(){
-  $("body").on("click",".report_link",function(){
-    $(this).click(function () {return false;}).attr("disabled","disabled");
-  });
+  $(function(){
+    $('[data-toggle="popover"]').popover({
+      html: true,
+      content: function () {
+        return $(this).next('.popover-content').html();
+      }
+    })
+  })
 });
 </script>
 </body>
@@ -333,7 +356,9 @@ $(document).ready(function(){
 </p>
 <dl class="dl-horizontal">
 % for my $rule_set_key (sort keys %$rule_sets) {
-  <dt><a href="/rule_sets/<%= $rule_set_key %>"><%= $rule_set_key %></a></dt>
+  <dt>
+    %= link_to $rule_set_key => 'rule_sets/'.$rule_set_key
+  </dt>
   <dd><%= $rule_sets->{$rule_set_key}->name %></dd>
   <dd><%= $rule_sets->{$rule_set_key}->description %></dd>
 % }
@@ -456,29 +481,242 @@ $(document).ready(function(){
   </dd>
 
   <dt>
-   %= label_for format => 'test format'
+   %= label_for format => 'output format'
   </dt>
   <dd>
-    %= select_field format => ['json', 'html']
+    %= select_field format => $valid_output_formats
   </dd>
 
 </dl>
 %= submit_button 'Validate', class => 'btn btn-primary'
 % end
 
-@@ validation_summary.html.ep
+@@ validation_output.html.ep
 % layout 'layout', title => 'validation summary';
-<h1>Validation summary</h1>
-<dl class="dl-horizontal">
+<h1>Validation result</h1>
+
+<div>
+% my @categories = qw(value units ref_id uri);
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs" role="tablist">
   
-  % for my $o (sort keys %$outcome_summary){ 
-  <dt><%= $o %></dt>
-  <dd><%= $outcome_summary->{$o} %></dd>
-  %}
-  <dt>Total</dt>
-  <dd><%= $total %></dd>
-</dl>
-%= link_to Report => 'report/'.$report => {} => (class => 'btn btn-primary report_link')
+  <li role="presentation" class="active">
+    <a href="#summary" aria-controls="profile" role="tab" data-toggle="tab">Summary</a>
+  </li>
+  
+  <li role="presentation">
+    <a href="#entities" aria-controls="profile" role="tab" data-toggle="tab">Entities</a>
+  </li>
+  
+% for my $cat (@categories){
+  <li role="presentation">
+    <a href="#useage-<%= $cat %>" aria-controls="profile" role="tab" data-toggle="tab">Useage - <%= $cat %></a>
+  </li>
+% }  
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content"> 
+  
+  <div role="tabpanel" class="tab-pane active" id="summary">
+    <br/>
+    % if ($outcome_summary->{error}) {
+      <div class="alert alert-danger" role="alert">
+        <strong>Oh dear.</strong> The metadata did not pass validation. Please review the errors in the 'Entities' tab and update your metadata. 
+      </div>
+    % } elsif ($outcome_summary->{warning}) {
+      <div class="alert alert-warning" role="alert">
+        <strong>Not bad.</strong> The metadata passed validation, but with some warnings. Please review the errors in the 'Entities' tab and consider updating your metadata. 
+      </div>
+    % } elsif ($outcome_summary->{pass}) {
+      <div class="alert  alert-pass" role="alert">
+        <strong>Well done.</strong> The metadata passed validation.
+      </div>
+    %}
+    
+    <br/>
+    
+    % if (scalar(%$useage_warning_summary)) {
+      <div class="alert alert-warning" role="alert">
+        Some of the terms used look like they might have slight differences, such as different capitalisation or punctuation. This can make two entities look more different than they really are. Please check these useage tabs for problems:
+        <ul>
+        % for my $cat (sort keys %$useage_warning_summary){
+          <li>Usage - <%= $cat%></li>
+        %}
+        </ul>
+      </div>
+    % } 
+  
+    <p><%= $total %></dd> entities from <b><%= $filename %></b> were validated against the <%= link_to $rule_set_name => 'rule_sets/'.$rule_set_name %> rule set, with the following outcomes:</p>
+
+    <dl class="dl-horizontal">
+  
+      % for my $o (sort keys %$outcome_summary){ 
+      <dt><%= $o %></dt>
+      <dd><%= $outcome_summary->{$o} %></dd>
+      %}
+    </dl>
+    
+    <p>This report is also available as a spreadsheet, just go back and submit the metadata and choose 'xlsx' as the output format.</p>
+    
+  </div>
+  
+  <div role="tabpanel" class="tab-pane" id="entities">
+    <table class="table table-hover table-condensed table-striped">
+
+      <thead>
+        <th>
+          ID
+        </th>
+        <th>
+          Status
+        </th>
+        <th>
+          Entity type
+        </th>
+        <th>Rule groups applied</th>
+
+    % for my $col (@{$attribute_columns}){
+    %   for my $i (0..($col->max_count - 1)) {  
+          <th><%= $col->name %></th>
+    %     if ($col->use_ref_id){      
+            <th>Term source REF</th>
+            <th>Term source ID</th>
+    %     }
+    %     if ($col->use_uri){      
+            <th>URI</th>
+    %     }
+    %     if ($col->use_units){      
+            <th>Units</th>
+    %     }
+    %   }
+    % }  
+      </thead>
+      <tbody>
+  
+    % my %class_lookup =(pass => 'success', warning => 'warning',error   => 'danger',);
+
+    % for my $ent (@{$entities}) {
+    % my $ent_status = $entity_status->{$ent};
+    % my $ent_outcomes = $entity_outcomes->{$ent};
+      <tr>
+        <td><%= $ent->id %></td>
+        <td>
+    %     my $btn_class = $class_lookup{$ent_status};
+
+          <button type="button" class="btn btn-<%= $btn_class %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes">
+            <%= $ent_status %>
+          </button>
+          <div class="hidden popover-content">
+          <ul class="outcomes">
+    %       for my $o (@$ent_outcomes) {
+              <li class="bg-<%= $class_lookup{$o->outcome} %>">
+                <%= $o->message %>
+    %            if ($o->rule) {
+                 (<b><%= $o->rule->name %></b> from the <b><%= $o->rule_group->name %></b> rule group)
+    %           }else{
+                 (<b><%= $o->get_attribute(0)->name %></b>)
+    %           }            
+              </li> 
+    %       }
+    %     if (!scalar(@$ent_outcomes)){
+            <li class="bg-success">No problems found</li>
+    %     }
+          </ul>
+          <div>
+      
+        </td>
+        <td><%= $ent->entity_type %></td>
+        <td>
+          <ul>
+    % for my $rg (@{$entity_rule_groups->{$ent}}){
+              <li><%= $rg->name %></li>
+    % }        
+          </ul>
+        </td>
+
+    % my $organised_attr = $ent->organised_attr;
+
+    % for my $col (@{$attribute_columns}){
+    % my $attrs = $organised_attr->{ $col->name };
+    %   for my $i (0..($col->max_count - 1)) {  
+    %     my ($a,$a_status,$a_outcomes) = (undef,'',[]);
+    %     if ( $attrs && $i < scalar(@$attrs) && $attrs->[$i] ) {
+    %         $a = $attrs->[$i];
+    %     }
+    %     if ($a) { $a_status = $attribute_status->{$a};$a_outcomes = $attribute_outcomes->{$a}};
+          <td>
+          <%= $a ? $a->value : '' %>
+    %     if (defined $a_outcomes && scalar(@$a_outcomes)){      
+            <button type="button" class="btn btn-<%= $class_lookup{$a_status} %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes">
+              <%= $a_status %>
+            </button>
+            <div class="hidden popover-content">
+            <ul class="outcomes">
+    %         for my $o (@$a_outcomes) {
+                <li class="bg-<%= $class_lookup{$o->outcome} %>">
+                  <%= $o->message %>
+    %             if ($o->rule) {
+                   (<b><%= $o->rule_group->name %></b> rule group)
+    %             }                          
+                </li> 
+    %         }
+    %       if (!scalar(@$a_outcomes)){
+              <li class="bg-success">No problems found</li>
+    %       }      
+            </div>
+    %     }
+
+          </td>
+    %     if ($col->use_ref_id){      
+            <td><%= $a ? $a->source_ref : '' %></td>
+            <td><%= $a ? $a->id : '' %></td>
+    %     }
+    %     if ($col->use_uri){      
+            <td><%= $a ? $a->uri : '' %></td>
+    %     }
+    %     if ($col->use_units){      
+            <td><%= $a ? $a->units : '' %></td>
+    %     }
+    %   }
+    % }  
+        
+      </tr>
+    % }  
+      </tbody>
+    </table>  
+  </div>
+  
+  
+  %for my $cat (@categories){
+    <div role="tabpanel" class="tab-pane" id="useage-<%= $cat %>">  
+      <table class="table table-hover table-condensed table-striped">
+        <th>Attribute</th>
+        <th><%= $cat %></th>
+        <th>count</th>
+        <thead>
+      </thead>
+      <tbody>
+        % for my $col (@$attribute_columns){
+        % my $loop_count = 0;  
+        % my $term_count = $col->term_count->{$cat};
+        %  for my $term  (sort keys %$term_count){
+        %  my $cell_class = ($col->probable_duplicates()->{$cat}{$term}) ? 'bg-danger' : '';
+            <tr>
+              <td><%= ($loop_count++) ? '' : $col->name %></td>
+              <td class="<%= $cell_class%>"><%= $term %></td>
+              <td><%= $term_count->{$term} %></td>
+            </tr>
+        %  }
+        % }
+      </tbody>
+      </table>
+    </div>
+  % }
+  </div>
+
+</div>
+
 
 
 @@ not_found.html.ep
