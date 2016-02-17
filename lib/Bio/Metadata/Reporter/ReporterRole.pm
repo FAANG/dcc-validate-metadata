@@ -51,7 +51,7 @@ sub determine_attr_columns {
         my $organised_attr = $e->organised_attr;
 
         for my $name ( @{ $e->attr_names } ) {
-            my $attrs = $organised_attr->{$name};
+            my $attrs = $organised_attr->{$name} || [];
 
             if ( !$column{$name} ) {
                 $column{$name} =
