@@ -96,12 +96,14 @@ sub check_all {
     my %entity_outcomes;
     my %attribute_status;
     my %attribute_outcomes;
+    my %entity_rule_groups;
 
     for my $e (@$entities) {
-        my ( $status, $outcomes ) = $self->check($e);
+        my ( $status, $outcomes, $rule_groups ) = $self->check($e);
 
-        $entity_status{$e}   = $status;
-        $entity_outcomes{$e} = $outcomes;
+        $entity_status{$e}      = $status;
+        $entity_outcomes{$e}    = $outcomes;
+        $entity_rule_groups{$e} = $rule_groups;
 
         for my $o (@$outcomes) {
             for my $a ( $o->all_attributes ) {
@@ -127,8 +129,8 @@ sub check_all {
     }
 
     return (
-        \%entity_status,    \%entity_outcomes,
-        \%attribute_status, \%attribute_outcomes
+        \%entity_status,      \%entity_outcomes, \%attribute_status,
+        \%attribute_outcomes, \%entity_rule_groups
     );
 }
 
@@ -136,7 +138,7 @@ sub check {
     my ( $self, $entity ) = @_;
 
     my @all_outcomes;
-
+    my @rule_groups_used;
     my $organised_attributes  = $entity->organised_attr;
     my $requirement_validator = $self->requirement_validator;
     my $unit_validator        = $self->unit_validator;
@@ -150,6 +152,7 @@ sub check {
         {
             next RULE_GROUP;
         }
+        push @rule_groups_used, $rule_group;
 
         for my $rule ( $rule_group->all_rules ) {
             my @r_outcomes;
@@ -205,9 +208,10 @@ sub check {
     }
 
     return pos_validated_list(
-        [ $outcome_overall, \@all_outcomes ],
+        [ $outcome_overall, \@all_outcomes, \@rule_groups_used ],
         { isa => 'Bio::Metadata::Validate::OutcomeEnum' },
-        { isa => 'Bio::Metadata::Validate::ValidationOutcomeArrayRef' }
+        { isa => 'Bio::Metadata::Validate::ValidationOutcomeArrayRef' },
+        { isa => 'Bio::Metadata::Rules::RuleGroupArrayRef' }
     );
 }
 

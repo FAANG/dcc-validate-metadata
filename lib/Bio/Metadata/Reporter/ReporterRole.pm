@@ -41,4 +41,30 @@ before 'report' => sub {
     );
 };
 
+sub determine_attr_columns {
+    my ( $self, $entities ) = @_;
+
+    my @columns;
+    my %column;
+
+    for my $e (@$entities) {
+        my $organised_attr = $e->organised_attr;
+
+        for my $name ( @{ $e->attr_names } ) {
+            my $attrs = $organised_attr->{$name} || [];
+
+            if ( !$column{$name} ) {
+                $column{$name} =
+                  Bio::Metadata::Reporter::AttributeColumn->new(
+                    name => $name );
+                push @columns, $column{$name};
+            }
+            my $ac = $column{$name};
+            $ac->consume_attrs($attrs);
+        }
+    }
+
+    return \@columns;
+}
+
 1;
