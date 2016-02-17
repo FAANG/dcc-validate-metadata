@@ -116,10 +116,10 @@ post '/validate' => sub {
             $metadata = load_metadata( $metadata_file, $loader );
         }
         catch {
-            $form_validation->error(
-                'file_format'   => ['could not load file'],
-                'metadata_file' => ['could not load file']
+            $form_validation->error( 'file_format' => ['could not parse file'],
             );
+            $form_validation->error(
+                'metadata_file' => ['could not parse file'] );
         };
     }
 
@@ -199,7 +199,7 @@ sub validate_metadata {
 
     my $rule_set_name = $c->param('rule_set_name');
     my $metadata_file = $c->param('metadata_file');
-    
+
     my $validator =
       Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
