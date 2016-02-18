@@ -47,6 +47,19 @@
                     "mandatory": "recommended",
                     "name": "weapon",
                     "type": "text"
+                },
+                {
+                    "allow_multiple": 1,
+                    "mandatory": "optional",
+                    "name": "carrying_ship",
+                    "type": "relationship",
+                    "condition": {
+                        "attribute_value_match": {
+                            "role": [
+                                "warship"
+                            ]
+                        }
+                    }
                 }
             ]
         },

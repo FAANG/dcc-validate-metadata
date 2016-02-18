@@ -121,16 +121,47 @@
                 "value": "missile launcher"
             },
             {
-                "name": "carrying_craft",
+                "name": "carrying_ship",
                 "value": "raptor"
             },
             {
-                "name": "carrying_craft",
+                "name": "carrying_ship",
                 "value": "viper"
             }
         ],
         "entity_type": "spacecraft",
         "id": "BS-75"
+    },
+    {
+        "attributes": [
+            {
+                "name": "crew_capacity",
+                "value": "1"
+            },
+            {
+                "name": "passenger_capacity",
+                "units": "people",
+                "value": "0"
+            },
+            {
+                "name": "class",
+                "value": "Viper (Mark II)"
+            },
+            {
+                "name": "role",
+                "value": "warship"
+            },
+            {
+                "name": "weapon",
+                "value": "kinetic energy weapon"
+            },
+            {
+                "name": "weapon",
+                "value": "missiles"
+            }
+        ],
+        "entity_type": "spacecraft",
+        "id": "viper"
     },
     {
         "attributes": [

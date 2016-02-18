@@ -67,6 +67,8 @@ has 'valid_ancestor_uris' => (
     },
     default => sub { [] },
 );
+has 'condition' =>
+  ( is => 'rw', isa => 'Bio::Metadata::Rules::Condition', coerce => 1 );
 
 sub to_hash {
     my ($self) = @_;
@@ -76,6 +78,7 @@ sub to_hash {
         type           => $self->type,
         mandatory      => $self->mandatory,
         allow_multiple => $self->allow_multiple,
+        condition      => $self->condition,
     };
 }
 
