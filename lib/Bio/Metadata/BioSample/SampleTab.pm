@@ -71,13 +71,8 @@ sub read {
 	
 	my $loader = Bio::Metadata::Loader::XLSXBioSampleLoader->new();
 	
-	my $o=$loader->load($file_path);
-	
-	my @msi=grep{$_->entity_type eq 'msi'} @$o;
-	my @scd=grep{$_->entity_type eq 'sample'} @$o;
-	
-	$self->msi(\@msi);
-	$self->scd(\@scd);
+	$self->msi($loader->load_msi_entities($file_path));
+	$self->scd($loader->load_scd_entities($file_path));
 }
 
 sub print_msi {
