@@ -38,6 +38,7 @@ use Bio::Metadata::Validate::OntologyTextAttributeValidator;
 use Bio::Metadata::Validate::OntologyIdAttributeValidator;
 use Bio::Metadata::Validate::UriValueAttributeValidator;
 use Bio::Metadata::Validate::DateAttributeValidator;
+use Bio::Metadata::Validate::RelationshipValidator;
 
 has 'rule_set' =>
   ( is => 'rw', isa => 'Bio::Metadata::Rules::RuleSet', required => 1 );
@@ -72,7 +73,9 @@ has 'type_validator' => (
               Bio::Metadata::Validate::OntologyIdAttributeValidator->new(),
             uri_value =>
               Bio::Metadata::Validate::UriValueAttributeValidator->new(),
-            date => Bio::Metadata::Validate::DateAttributeValidator->new()
+            date => Bio::Metadata::Validate::DateAttributeValidator->new(),
+            relationship =>
+              Bio::Metadata::Validate::RelationshipValidator->new(),
         };
     },
 );
@@ -98,8 +101,29 @@ sub check_all {
     my %attribute_outcomes;
     my %entity_rule_groups;
 
+    my %dupe_check;
+    my %entities_by_id;
+    for my $e (@$entities) {
+        if ( $dupe_check{ $e->id } ) {
+            $dupe_check{ $e->id } = [];
+        }
+        push @{ $dupe_check{ $e->id } }, $e;
+        $entities_by_id{ $e->id } = $e;
+    }
+    
+    $self->get_type_validator('relationship')->entities_by_id(\%entities_by_id);
+    
     for my $e (@$entities) {
         my ( $status, $outcomes, $rule_groups ) = $self->check($e);
+
+        if ( scalar @{ $dupe_check{ $e->id } } > 1 ) {
+            push @$outcomes,
+              Bio::Metadata::Validate::ValidationOutcome->new(
+                outcome => 'error',
+                message => 'multiple entities with this id found'
+              );
+            $status = 'error';
+        }
 
         $entity_status{$e}      = $status;
         $entity_outcomes{$e}    = $outcomes;
@@ -142,8 +166,6 @@ sub check {
     my $organised_attributes  = $entity->organised_attr;
     my $requirement_validator = $self->requirement_validator;
     my $unit_validator        = $self->unit_validator;
-
-    my $entity_as_hash = $entity->to_hash;
 
   RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
 
