@@ -37,7 +37,6 @@ app->secrets( ['nosecrets'] );
 app->types->type( xlsx => $xlsx_mime_type );
 
 my $rule_locations = app->config('rules');
-my $rules          = load_rules($rule_locations);
 my $loaders        = {
     json        => Bio::Metadata::Loader::JSONEntityLoader->new(),
     biosample_xlsx => Bio::Metadata::Loader::XLSXBioSampleLoader->new()
@@ -50,6 +49,8 @@ get '/' => sub {
 
 get '/rule_sets' => sub {
     my $c = shift;
+    
+    my $rules          = load_rules($rule_locations);
 
     $c->respond_to(
         json => sub {
@@ -65,7 +66,8 @@ get '/rule_sets' => sub {
 get '/rule_sets/#name' => sub {
     my $c        = shift;
     my $name     = $c->param('name');
-    my $rule_set = $rules->{$name};
+    
+    my $rule_set = load_rules($rule_locations,$name);
 
     return $c->reply->not_found if ( !$rule_set );
 
@@ -100,7 +102,7 @@ post '/validate' => sub {
     my $c = shift;
 
     my $form_validation = $c->validation;
-    $form_validation->required('rule_set_name')->in( keys %$rules );
+    $form_validation->required('rule_set_name')->in( keys %$rule_locations );
     $form_validation->required('file_format')->in( keys %$loaders );
     $form_validation->required('metadata_file')
       ->upload->size( 1, 16 * ( 10**6 ) );
@@ -108,7 +110,7 @@ post '/validate' => sub {
     my $rule_set_name = $c->param('rule_set_name');
     my $metadata_file = $c->param('metadata_file');
     my $loader        = $loaders->{ $c->param('file_format') };
-    my $rule_set      = $rules->{$rule_set_name};
+    my $rule_set      = load_rules($rule_locations,$rule_set_name);
 
     my $metadata;
     if ( !$form_validation->has_error ) {
@@ -135,9 +137,12 @@ post '/validate' => sub {
 app->start;
 
 sub load_rules {
-    my ($rule_locations) = @_;
+    my ($rule_locations,$name) = @_;
 
     my $loader = Bio::Metadata::Loader::JSONRuleSetLoader->new();
+    
+    my @locs = defined $name ? ($name) : keys %$rule_locations ;    
+    
     my %rules;
 
     for my $k ( keys %$rule_locations ) {
@@ -150,14 +155,16 @@ sub load_rules {
         my $rule_set = $loader->load($loc);
         $rules{$k} = $rule_set;
     }
+    
+    
 
-    return \%rules;
+    return defined $name ? $rules{$name} : \%rules;
 }
 
 sub validation_supporting_data {
     return {
         valid_file_formats   => [ sort keys %$loaders ],
-        valid_rule_set_names => [ sort keys %$rules ],
+        valid_rule_set_names => [ sort keys %$rule_locations ],
         valid_output_formats => [qw(html xlsx json)],
     };
 }
