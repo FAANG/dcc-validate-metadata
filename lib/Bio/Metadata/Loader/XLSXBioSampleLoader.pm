@@ -32,9 +32,6 @@ with "Bio::Metadata::Loader::XLSXLoaderRole";
 sub process_sheet {
 	my ( $self, $sheet) = @_;
 	
-	return 0 unless $sheet->name eq 'animal' || $sheet->name eq 'specimen' || $sheet->name eq 'purified cells' || $sheet->name eq 'cell culture'
-	|| $sheet->name eq 'submission' || $sheet->name eq 'person' || $sheet->name eq 'organization' || $sheet->name eq 'publication' || $sheet->name eq 'database' || $sheet->name eq 'term source';
-	
 	my $fields= $sheet->row;	
 	
 	my @entities;
