@@ -52,6 +52,7 @@ has 'msi'       => (
     coerce  => 1,
 );
 
+
 #define common FAANG attributes
 my @COMMON= ("Sample Description","Material","Availability");
 #accepeted Named Attributes. For definition see: https://www.ebi.ac.uk/biosamples/help/st_scd.html
@@ -75,10 +76,11 @@ sub read {
 	$self->scd($loader->load_scd_entities($file_path));
 }
 
-sub print_msi {
+sub report_msi {
 	my ($self)=@_;
-	
-	print "[MSI]\n";
+
+	my $output;
+	$output.="[MSI]\n";
 	my ($name,$uri,$version);
 	foreach my $e (@{$self->msi}) {
 		my $atts=$e->attributes;
@@ -89,25 +91,26 @@ sub print_msi {
 				$uri.=$a->value."\t" if $a->name eq 'Term Source URI';
 				$version.=$a->value."\t" if $a->name eq 'Term Source Version';
 			} else {
-				print $a->name,"\t",$a->value,"\n";
+				$output.=$a->name."\t".$a->value."\n";
 			}
 			
 		}
 	}
-	print "Term Source Name\t$name\n" if defined $name;
-	print "Term Source URI\t$uri\n" if defined $uri;
-	print "Term Source Version\t$version\n" if defined $version;
-	print "\n";
+	$output.="Term Source Name\t$name\n" if defined $name;
+	$output.="Term Source URI\t$uri\n" if defined $uri;
+	$output.="Term Source Version\t$version\n" if defined $version;
+	$output.="\n";
 }
 
-sub print_scd {
+sub report_scd {
 	my ($self)=@_;
 	
 	my ($header_hash,$str,$sheets,$offsets)=$self->generate_header;
 	
-	print "[SCD]\n";
+	my $output;
+	$output.="[SCD]\n";
 	
-	print "Sample Name","\t",$str,"\n";
+	$output.="Sample Name\t".$str."\n";
 	
 	foreach my $e (@{$self->scd}) {
 		my $row=$e->id."\t";
@@ -138,9 +141,9 @@ sub print_scd {
 			$ix++;
 		}
 		
-		print $row,"\n";
+		$output.=$row."\n";
 	}
-	
+	return $output;
 	
 }
 

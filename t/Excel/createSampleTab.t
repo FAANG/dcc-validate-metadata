@@ -18,9 +18,11 @@ isa_ok($sampletab, "Bio::Metadata::BioSample::SampleTab");
 
 $sampletab->read("$data_dir/Excel/sampleset.bsamples.xlsx");
 
-$sampletab->print_msi;
-$sampletab->print_scd;
+my $msi=$sampletab->report_msi;
+my $scd=$sampletab->report_scd;
 
+print $msi;
+print $scd;
 
 done_testing();
 
