@@ -142,12 +142,14 @@ my $expected_rule_group_h = {
             type           => 'text',
             mandatory      => 'mandatory',
             allow_multiple => 0,
+            condition      => undef
         },
         {
             name           => 'r2',
             type           => 'enum',
             mandatory      => 'mandatory',
             allow_multiple => 1,
+            condition      => undef
         }
     ],
 };
@@ -175,6 +177,7 @@ my $expected_vo_h = {
         type           => 'text',
         mandatory      => 'mandatory',
         allow_multiple => 0,
+        condition      => undef
     },
     message     => "c'est n'est pas un pipe",
     outcome     => 'error',
@@ -182,11 +185,11 @@ my $expected_vo_h = {
     entity_type => 'sample',
     attributes  => [
         {
-            name  => 'sex',
-            value => 'female',
-            units => undef,
-            uri   => undef,
-            id    => undef,
+            name       => 'sex',
+            value      => 'female',
+            units      => undef,
+            uri        => undef,
+            id         => undef,
             source_ref => undef,
         },
     ],
