@@ -72,11 +72,8 @@ sub read {
 	
 	my $loader = Bio::Metadata::Loader::XLSXBioSampleLoader->new();
 	
-	my $msi_o=$loader->load($file_path,['person','organization','publication','database','term source']);
-	my $scd_o=$loader->load($file_path,['animal','specimen','purified cells','cell culture']);
-		
-	$self->msi($msi_o);
-	$self->scd($scd_o);
+	$self->msi($loader->load_msi_entities($file_path));
+	$self->scd($loader->load_scd_entities($file_path));
 }
 
 sub report_msi {

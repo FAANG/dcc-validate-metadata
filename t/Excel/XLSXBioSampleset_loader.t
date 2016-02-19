@@ -14,7 +14,7 @@ my $data_dir = "$Bin/../data/";
 
 my $loader = Bio::Metadata::Loader::XLSXBioSampleLoader->new();
 
-my $o = $loader->load("$data_dir/Excel/sampleset.bsamples.xlsx",['animal','specimen','purified cells','cell culture']);
+my $o = $loader->load("$data_dir/Excel/sampleset.bsamples.xlsx");
 
 isa_ok($o, "ARRAY");
 
