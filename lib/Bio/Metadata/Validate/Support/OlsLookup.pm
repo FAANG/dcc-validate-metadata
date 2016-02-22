@@ -23,9 +23,6 @@ use Memoize;
 use Carp;
 use List::Util qw(none);
 
-#cache all calls to the rest service
-memoize('is_descendent');
-
 has 'base_url' => (
     is       => 'rw',
     isa      => 'Str',
