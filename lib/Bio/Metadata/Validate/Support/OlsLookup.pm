@@ -19,9 +19,9 @@ use REST::Client;
 use URI::Escape::XS qw/uri_escape/;
 use JSON;
 use Try::Tiny;
-use Memoize;
 use Carp;
 use List::Util qw(none);
+use Cache::LRU;
 
 has 'base_url' => (
     is       => 'rw',
@@ -35,6 +35,17 @@ has 'rest_client' => (
     required => 1,
     default  => sub { REST::Client->new() }
 );
+has 'cache' => (
+    is       => 'rw',
+    isa      => 'Cache::LRU',
+    required => 1,
+    default  => sub { Cache::LRU->new( size => 10000 ) }
+);
+
+sub _cache_key {
+    my ( $self, @fields ) = @_;
+    return join( '#', @fields );
+}
 
 sub is_descendent {
     my ( $self, $uri, $qfields, $ancestor_uri, $exact ) = @_;
@@ -42,6 +53,10 @@ sub is_descendent {
     if ( !ref $qfields ) {
         $qfields = [$qfields];
     }
+
+    my $cache_key = $self->_cache_key( $uri, @$qfields, $ancestor_uri, $exact );
+    my $cached_entry = $self->cache->get($cache_key);
+    return $cached_entry if $cached_entry;
 
     my @uri_elements = (
         $self->base_url,
@@ -107,7 +122,9 @@ sub is_descendent {
     if ( !defined $label ) {
         croak "Could not find label in search result for $request_uri";
     }
-
+    
+    $self->cache->set($cache_key => $label);
+    
     return $label;
 }
 
