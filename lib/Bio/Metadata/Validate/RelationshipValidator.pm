@@ -16,7 +16,7 @@ package Bio::Metadata::Validate::RelationshipValidator;
 
 use strict;
 use warnings;
-use Bio::Metadata::Validate::Support::BioSDLoader;
+use Bio::Metadata::Validate::Support::BioSDLookup;
 
 use Moose;
 use namespace::autoclean;
@@ -32,9 +32,9 @@ has 'entities_by_id' => (
 
 has 'biosd_lookup' => (
     is  => 'rw',
-    isa => 'Bio::Metadata::Validate::Support::BioSDLoader',
+    isa => 'Bio::Metadata::Validate::Support::BioSDLookup',
     required => 1,
-    default => sub {Bio::Metadata::Validate::Support::BioSDLoader->new()},
+    default => sub {Bio::Metadata::Validate::Support::BioSDLookup->new()},
 );
 
 sub validate_attribute {

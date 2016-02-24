@@ -21,6 +21,7 @@ use Bio::Metadata::Validate::OntologyTextAttributeValidator;
 use Bio::Metadata::Validate::OntologyIdAttributeValidator;
 use Bio::Metadata::Validate::UriValueAttributeValidator;
 use Bio::Metadata::Validate::DateAttributeValidator;
+use Bio::Metadata::Validate::RelationshipValidator;
 
 my $text_attr = Bio::Metadata::Attribute->new( value => 'text', );
 my $num_attr = Bio::Metadata::Attribute->new( value => 10, units => 'kg' );
@@ -33,6 +34,7 @@ my %base_outcome_h = (
     attributes      => [],
 );
 
+relationship_rules();
 date_rules();
 uri_rules();
 text_rules();
@@ -45,6 +47,25 @@ ontology_uri_rule();
 ontology_id_rule();
 ontology_text_rule();
 done_testing();
+
+sub relationship_rules {
+    my $rel_rule = Bio::Metadata::Rules::Rule->new( type => 'relationship', );
+    my $rel_validator = Bio::Metadata::Validate::RelationshipValidator->new();
+    my ( $attr, $o );
+
+    $attr = Bio::Metadata::Attribute->new( value => 'bob', );
+    
+    $o = $rel_validator->validate_attribute($rel_rule,$attr);
+    is($o->outcome,'error','no entities known');
+    
+    $rel_validator->entities_by_id({bob => Bio::Metadata::Entity->new(id => 'bob')});
+    $o = $rel_validator->validate_attribute($rel_rule,$attr);
+    is($o->outcome,'pass','entity known');
+    
+    $attr = Bio::Metadata::Attribute->new( value => 'SAMEA676028', );
+    $o = $rel_validator->validate_attribute($rel_rule,$attr);
+    is($o->outcome,'pass','biosamples entity known');
+}
 
 sub date_rules {
     my $date_rule = Bio::Metadata::Rules::Rule->new( type => 'date', );
