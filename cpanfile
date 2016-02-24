@@ -21,6 +21,7 @@ requires 'Mojolicious::Plugin::RenderFile';
 requires 'Spreadsheet::ParseExcel::Stream::XLSX';
 requires 'Spreadsheet::XLSX';
 requires 'Cache::LRU';
+requires 'git@github.com:EMBL-EBI-GCA/BioSD.git';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';
