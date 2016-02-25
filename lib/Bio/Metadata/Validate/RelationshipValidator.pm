@@ -16,6 +16,7 @@ package Bio::Metadata::Validate::RelationshipValidator;
 
 use strict;
 use warnings;
+use Bio::Metadata::Validate::Support::BioSDLookup;
 
 use Moose;
 use namespace::autoclean;
@@ -29,11 +30,22 @@ has 'entities_by_id' => (
     handles => { get_entity_by_id => 'get' },
 );
 
+has 'biosd_lookup' => (
+    is  => 'rw',
+    isa => 'Bio::Metadata::Validate::Support::BioSDLookup',
+    required => 1,
+    default => sub {Bio::Metadata::Validate::Support::BioSDLookup->new()},
+);
+
 sub validate_attribute {
     my ( $self, $rule, $attribute, $o ) = @_;
 
     my $sample_identifier = $attribute->value;
     my $entity            = $self->get_entity_by_id($sample_identifier);
+
+    if ( !defined $entity) {
+      $entity = $self->biosd_lookup->fetch_sample($sample_identifier);
+    }
 
     if ( !defined $entity ) {
         $o->outcome('error');
