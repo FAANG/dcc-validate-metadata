@@ -73,7 +73,7 @@ sub report {
         $col_to_cover_per_attr++ if ( $ac->use_units );
         $col_to_cover_per_attr++ if ( $ac->use_uri );
         #$col_to_cover_per_attr =+ 2 if ( $ac->use_ref_id );
-        
+
         $col = $col + ( $ac->max_count * $col_to_cover_per_attr );
 
         $entity_sheet->set_column( $col, $col, undef, $rborder_format );
@@ -88,7 +88,7 @@ sub report {
 
     my $uris_sheet = $self->new_worksheet("uris");
     $self->report_uniq_usage( $uris_sheet, 'uri', $attr_columns );
-    
+
     my $refid_sheet = $self->new_worksheet("ref+id");
     $self->report_uniq_usage( $refid_sheet, 'ref_id', $attr_columns );
 
@@ -258,7 +258,20 @@ sub write_entities {
 
                     $col++;
                 }
+                if ( $ac->use_source_ref){
+                  if ( $a && $a->source_ref ) {
+                      $worksheet->write( $row, $col, $a->source_ref );
+                  }
 
+                  $col++;
+                }
+                if ( $ac->use_id){
+                  if ( $a && $a->id ) {
+                      $worksheet->write( $row, $col, $a->id );
+                  }
+
+                  $col++;
+                }
                 if ( $ac->use_uri ) {
                     if ( $a && $a->uri ) {
                         $worksheet->write( $row, $col, $a->uri );
@@ -288,6 +301,12 @@ sub write_header {
             $worksheet->write( $row, $col++, $ac->name, $format );
             if ( $ac->use_units ) {
                 $worksheet->write( $row, $col++, 'units', $format );
+            }
+            if ( $ac->use_source_ref){
+              $worksheet->write( $row, $col++, 'Term Source REF', $format );
+            }
+            if ( $ac->use_id){
+              $worksheet->write( $row, $col++, 'Term Source ID', $format );
             }
             if ( $ac->use_uri ) {
                 $worksheet->write( $row, $col++, 'URI', $format );

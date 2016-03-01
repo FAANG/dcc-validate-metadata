@@ -14,7 +14,6 @@
 
 package Bio::Metadata::Loader::XLSXBioSampleLoader;
 
-use strict;
 use warnings;
 
 use FindBin qw/$Bin/;
@@ -138,30 +137,25 @@ sub row_to_object {
             $row->[$i] =~ s/\s{2}/ /;
             $row->[$i] =~ s/^\s|\s$//g;
         }
+
         if ($name eq 'Term Source REF'){
-          my $org_atts = $o->organised_attr;
-          my $attr     = $org_atts->{$pr_att}->[0];
-          $attr->source_ref( $row->[$i] );
+          $pr_att->source_ref( $row->[$i] );
         }
-        if ( $name eq 'Term Source ID' ) {
-            my $org_atts = $o->organised_attr;
-            my $attr     = $org_atts->{$pr_att}->[0];
-            $attr->id( $row->[$i] );
+        elsif ( $name eq 'Term Source ID' ) {
+          $pr_att->id( $row->[$i] );
         }
         elsif ( $name eq 'Unit' ) {
-            my $org_atts = $o->organised_attr;
-            my $attr     = $org_atts->{$pr_att}->[0];
-            $attr->units( $row->[$i] );
+          $pr_att->units( $row->[$i] );
         }
         else {
-
             my $o_attrb = Bio::Metadata::Attribute->new(
                 name  => $name,
                 value => $row->[$i]
             );
             $o->add_attribute($o_attrb);
+            $pr_att = $o_attrb;
         }
-        $pr_att = $name;
+
     }
     return $o;
 }

@@ -20,6 +20,7 @@ use warnings;
 use Carp;
 use Moose::Role;
 use MooseX::Params::Validate;
+use Bio::Metadata::Reporter::AttributeColumn;
 
 requires 'report';
 
