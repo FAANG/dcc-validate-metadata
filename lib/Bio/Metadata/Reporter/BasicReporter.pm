@@ -26,87 +26,85 @@ use namespace::autoclean;
 with "Bio::Metadata::Reporter::ReporterRole";
 
 sub report {
-    my ( $self, %params ) = @_;
-    my $entities           = $params{entities};
-    my $entity_status      = $params{entity_status};
-    my $entity_outcomes    = $params{entity_outcomes};
-    my $attribute_status   = $params{attribute_status};
-    my $attribute_outcomes = $params{attribute_outcomes};
+  my ( $self, %params ) = @_;
+  my $entities           = $params{entities};
+  my $entity_status      = $params{entity_status};
+  my $entity_outcomes    = $params{entity_outcomes};
+  my $attribute_status   = $params{attribute_status};
+  my $attribute_outcomes = $params{attribute_outcomes};
 
+  my $output = $self->prep_output($entities);
 
-    my $output = $self->prep_output($entities);
-    
-    $self->process_entities($entities,$output,$entity_status,$entity_outcomes,$attribute_status,$attribute_outcomes);
-    $self->add_term_usage($entities,$output);
-    
-    
-    return $output;
+  $self->process_entities( $entities, $output, $entity_status,
+    $entity_outcomes, $attribute_status, $attribute_outcomes );
+  $self->add_term_usage( $entities, $output );
+
+  return $output;
 }
 
 sub add_term_usage {
-  my ($self,$entities,$output) = @_;
-  
-  my @column_report = map {$_->to_hash} (@{$self->determine_attr_columns($entities)});
-  
+  my ( $self, $entities, $output ) = @_;
+
+  my @column_report =
+    map { $_->to_hash } ( @{ $self->determine_attr_columns($entities) } );
+
   for my $ac (@column_report) {
-    for my $c (keys %{$ac->{probable_duplicates}}){
-      $ac->{probable_duplicates}{$c} = [sort keys %{$ac->{probable_duplicates}{$c}}];
+    for my $c ( keys %{ $ac->{probable_duplicates} } ) {
+      $ac->{probable_duplicates}{$c} =
+        [ sort keys %{ $ac->{probable_duplicates}{$c} } ];
     }
   }
-  
+
   $output->{column_report} = \@column_report;
-  
-  
-  
 }
 
-
 sub process_entities {
-  my ($self,$entities,$output,$entity_status,$entity_outcomes,$attribute_status,$attribute_outcomes) = @_;
-  
-  for my $e (@$entities) {
-    $output->{summary}{$entity_status->{$e}}++;
+  my ( $self, $entities, $output, $entity_status, $entity_outcomes,
+    $attribute_status, $attribute_outcomes )
+    = @_;
 
-    
-      my $ent =
-        $self->report_outcome( $e, $entity_status->{$e},
-          $entity_outcomes->{$e} );
-      my @attributes = map {
-          $self->report_outcome(
-              $_,
-              $attribute_status->{$_},
-              $attribute_outcomes->{$_}
-            )
-      } $e->all_attributes;
-      $ent->{attributes} = \@attributes;
-      push @{ $output->{entities} }, $ent;
+  for my $e (@$entities) {
+    $output->{summary}{ $entity_status->{$e} }++;
+
+    my $ent =
+      $self->report_outcome( $e, $entity_status->{$e}, $entity_outcomes->{$e} );
+    my @attributes = map {
+      $self->report_outcome(
+        $_,
+        $attribute_status->{$_},
+        $attribute_outcomes->{$_}
+        )
+    } $e->all_attributes;
+    $ent->{attributes} = \@attributes;
+    push @{ $output->{entities} }, $ent;
   }
 }
 
 sub prep_output {
-  my ($self,$entities) = @_;
-  
-  my %output = ( entities => [], summary => {}, entity_count => scalar(@$entities), );
-    
-    for my $o (@Bio::Metadata::Types::OUTCOME_VALUES){
-      $output{summary}{$o} = 0;
-    }
-    return \%output;
+  my ( $self, $entities ) = @_;
+
+  my %output =
+    ( entities => [], summary => {}, entity_count => scalar(@$entities), );
+
+  for my $o (@Bio::Metadata::Types::OUTCOME_VALUES) {
+    $output{summary}{$o} = 0;
+  }
+  return \%output;
 }
 
 sub report_outcome {
-    my ( $self, $entity, $status, $outcomes ) = @_;
+  my ( $self, $entity, $status, $outcomes ) = @_;
 
-    my $e = $entity->to_hash;
-    $e->{_outcome} = {
-        status => $status || 'pass',
-        errors =>
-          [ map { $_->message } grep { $_->outcome eq 'error' } @$outcomes ],
-        warnings =>
-          [ map { $_->message } grep { $_->outcome eq 'warning' } @$outcomes ],
-    };
+  my $e = $entity->to_hash;
+  $e->{_outcome} = {
+    status => $status || 'pass',
+    errors =>
+      [ map { $_->message } grep { $_->outcome eq 'error' } @$outcomes ],
+    warnings =>
+      [ map { $_->message } grep { $_->outcome eq 'warning' } @$outcomes ],
+  };
 
-    return $e;
+  return $e;
 }
 
 __PACKAGE__->meta->make_immutable;
