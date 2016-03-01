@@ -138,7 +138,11 @@ sub row_to_object {
             $row->[$i] =~ s/\s{2}/ /;
             $row->[$i] =~ s/^\s|\s$//g;
         }
-        next if $name eq 'Term Source REF';
+        if ($name eq 'Term Source REF'){
+          my $org_atts = $o->organised_attr;
+          my $attr     = $org_atts->{$pr_att}->[0];
+          $attr->source_ref( $row->[$i] );
+        }
         if ( $name eq 'Term Source ID' ) {
             my $org_atts = $o->organised_attr;
             my $attr     = $org_atts->{$pr_att}->[0];
