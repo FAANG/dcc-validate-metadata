@@ -94,7 +94,7 @@ get '/sample_tab' => sub {
     },
     html => sub {
       $c->stash(%$supporting_data);
-      $c->render( template => 'sample_tab' );
+      $c->render( template => 'sample_tab', conversion_errors => [] );
     }
   );
 };
@@ -110,23 +110,25 @@ post '/sample_tab' => sub {
   my $metadata_file = $c->param('metadata_file');
   my $rule_set      = load_rules( $rule_locations, $rule_set_name );
 
-  my $st = Bio::Metadata::BioSample::SampleTab->new();
+  my $st_converter = Bio::Metadata::BioSample::SampleTab->new();
   my ( $msi, $scd );
   if ( !$form_validation->has_error ) {
     try {
       my ( $tmp_upload_dir, $tmp_upload_path ) = move_to_tmp($metadata_file);
-      $st->read($tmp_upload_path);
+      $st_converter->read($tmp_upload_path);
     }
     catch {
       $form_validation->error( 'metadata_file' => ['could not parse file'] );
     };
   }
 
-  if ( $form_validation->has_error ) {
-    sampletab_form_errors( $c, $form_validation );
+  my $st_errors = $st_converter->validate;
+
+  if ( $form_validation->has_error || @$st_errors ) {
+    sampletab_form_errors( $c, $form_validation, $st_errors );
   }
   else {
-    sampletab_conversion( $c, $st, $rule_set );
+    sampletab_conversion( $c, $st_converter, $rule_set );
   }
 
 };
@@ -226,22 +228,28 @@ sub validation_supporting_data {
 }
 
 sub sampletab_form_errors {
-  my ( $c, $form_validation ) = @_;
+  my ( $c, $form_validation, $st_errors ) = @_;
+
   my $supporting_data =
     { valid_rule_set_names => [ sort keys %$rule_locations ], };
 
+  my %errors =
+    map { $_ => $form_validation->error($_) }
+    grep { $form_validation->has_error($_) } qw(metadata_file rule_set_name);
+
   $c->respond_to(
     json => sub {
-      my %errors =
-        map { $_ => $form_validation->error($_) }
-        grep { $form_validation->has_error($_) }
-        qw(metadata_file rule_set_name);
-      $supporting_data->{errors} = \%errors;
+      $supporting_data->{errors}            = \%errors;
+      $supporting_data->{conversion_errors} = $st_errors;
       $c->render( json => $supporting_data );
     },
     html => sub {
       $c->stash(%$supporting_data);
-      $c->render( template => 'sample_tab' );
+      $c->render(
+        template          => 'sample_tab',
+        errors            => \%errors,
+        conversion_errors => $st_errors
+      );
     },
   );
 }
@@ -273,6 +281,9 @@ sub move_to_tmp {
   my $tmp_upload_path = $tmp_upload_dir->dirname . '/uploaded_file';
 
   $metadata_file->move_to($tmp_upload_path);
+
+  # return the directory object, it will be deleted from the disk
+  # when it goes out of scope
   return ( $tmp_upload_dir, $tmp_upload_path );
 }
 
@@ -608,10 +619,34 @@ $(document).ready(function(){
   <dd>
     %= select_field rule_set_name => $valid_rule_set_names
   </dd>
-
-
 </dl>
 %= submit_button 'Convert', class => 'btn btn-primary'
+
+% if ($conversion_errors ) {
+<h2>Conversion errors</h2>
+<table class="table table-hover table-striped table-condensed">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Status</th>
+      <th>Message</th>
+    </tr>
+  </thead>
+% for my $outcome (@$conversion_errors) {
+  <tr>
+    <td>
+%= $outcome->rule ? $outcome->rule->name : $outcome->get_attribute(0) ? $outcome->get_attribute(0)->name : ''
+    </td>
+    <td>
+%= $outcome->outcome
+    </td>
+    <td>
+%= $outcome->message
+    </td>
+  </tr>
+% }
+</table>
+% }
 % end
 
 @@ validate.html.ep

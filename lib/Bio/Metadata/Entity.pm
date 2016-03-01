@@ -73,10 +73,8 @@ sub organised_attr {
     my %h;
 
     for my $a ( $self->all_attributes ) {
-        next unless $a->name;
-        if ( !exists $h{ $a->name } ) {
-            $h{ $a->name } = [];
-        }
+        next if (!$a->name || !defined $a->value || $a->value eq '');
+        $h{ $a->name } //= [];
         push @{ $h{ $a->name } }, $a;
     }
     return \%h;

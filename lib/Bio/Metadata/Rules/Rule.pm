@@ -21,7 +21,7 @@ use namespace::autoclean;
 use Bio::Metadata::Types;
 
 has 'name' => ( is => 'rw', isa => 'Str' );
-has 'type' => ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::TypeEnum' );
+has 'type' => ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::TypeEnum', required => 1 );
 has 'mandatory' =>
   ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::MandatoryEnum' );
 has 'allow_multiple' => ( is => 'rw', isa => 'Bool', default => sub { '' } );
