@@ -622,7 +622,7 @@ $(document).ready(function(){
 </dl>
 %= submit_button 'Convert', class => 'btn btn-primary'
 
-% if ($conversion_errors ) {
+% if ($conversion_errors && @$conversion_errors) {
 <h2>Conversion errors</h2>
 <table class="table table-hover table-striped table-condensed">
   <thead>
