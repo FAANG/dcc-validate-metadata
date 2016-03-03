@@ -22,199 +22,166 @@ use namespace::autoclean;
 use Bio::Metadata::Loader::XLSXBioSampleLoader;
 use Moose::Util::TypeConstraints;
 
+use Bio::Metadata::BioSample::MSIValidation;
+use Bio::Metadata::Reporter::BasicReporter;
 
-
-has 'scd'       => (
-    traits  => ['Array'],
-    is      => 'rw',
-    isa     => 'Bio::Metadata::EntityArrayRef',
-    handles => {
-        all_scd   => 'elements',
-        add_scd    => 'push',
-        count_scd => 'count',
-        get_scd    => 'get',
-    },
-    default => sub { [] },
-    coerce  => 1,
+has 'scd' => (
+  traits  => ['Array'],
+  is      => 'rw',
+  isa     => 'Bio::Metadata::EntityArrayRef',
+  handles => {
+    all_scd   => 'elements',
+    add_scd   => 'push',
+    count_scd => 'count',
+    get_scd   => 'get',
+  },
+  default => sub { [] },
+  coerce  => 1,
 );
 
-has 'msi'       => (
-    traits  => ['Array'],
-    is      => 'rw',
-    isa     => 'Bio::Metadata::EntityArrayRef',
-    handles => {
-        all_msi   => 'elements',
-        add_msi    => 'push',
-        count_msi => 'count',
-        get_msi    => 'get',
-    },
-    default => sub { [] },
-    coerce  => 1,
+has 'msi' => (
+  traits  => ['Array'],
+  is      => 'rw',
+  isa     => 'Bio::Metadata::EntityArrayRef',
+  handles => {
+    all_msi   => 'elements',
+    add_msi   => 'push',
+    count_msi => 'count',
+    get_msi   => 'get',
+  },
+  default => sub { [] },
+  coerce  => 1,
 );
 
+has 'msi_validator' => (
+  is      => 'rw',
+  isa     => 'Bio::Metadata::BioSample::MSIValidation',
+  default => sub { Bio::Metadata::BioSample::MSIValidation->new },
+);
 
-#define common FAANG attributes
-my @COMMON= ("Sample Description","Material","Availability");
 #accepeted Named Attributes. For definition see: https://www.ebi.ac.uk/biosamples/help/st_scd.html
-my @NAMED= ("Organism", "Material", "Sex", "Sample Description");
+my %named =
+  map { $_ => 1 } ( "Organism", "Material", "Sex", "Sample Description" );
+
 #accepted Relationships. For definition see: https://www.ebi.ac.uk/biosamples/help/st_scd.html
-my @RELATIONSHIPS= ("Same as","Derived from","Child of");
-
-my %common=map {$_ => 1} @COMMON;
-my %named=map {$_ => 1} @NAMED;
-my %relationships=map {$_ => 1} @RELATIONSHIPS;
-
+my %relationships = map { $_ => 1 } ( "Same as", "Derived from", "Child of" );
 
 sub read {
-	my ($self,$file_path)=@_;
-	
-	die("[ERROR] Please provide the path to a XLSX file") if !$file_path;
-	
-	my $loader = Bio::Metadata::Loader::XLSXBioSampleLoader->new();
-	
-	$self->msi($loader->load_msi_entities($file_path));
-	$self->scd($loader->load_scd_entities($file_path));
+  my ( $self, $file_path ) = @_;
+
+  die("[ERROR] Please provide the path to a XLSX file") if !$file_path;
+
+  my $loader = Bio::Metadata::Loader::XLSXBioSampleLoader->new();
+
+  $self->msi( $loader->load_msi_entities($file_path) );
+  $self->scd( $loader->load_scd_entities($file_path) );
+}
+
+sub validate {
+  my ($self) = @_;
+  my $msi_errors = $self->msi_validator->validate_msi( $self->msi );
+  my $ref_errors =
+    $self->msi_validator->check_term_source_refs( $self->msi, $self->scd );
+  push @$msi_errors, @$ref_errors;
+  return $msi_errors;
 }
 
 sub report_msi {
-	my ($self)=@_;
+  my ($self) = @_;
 
-	my $output;
-	$output.="[MSI]\n";
-	my ($name,$uri,$version);
-	foreach my $e (@{$self->msi}) {
-		my $atts=$e->attributes;
-		foreach my $a (@$atts) {
-			next if !$a->value;
-			if ($a->name=~/Term Source/) {
-				$name.=$a->value."\t" if $a->name eq 'Term Source Name';
-				$uri.=$a->value."\t" if $a->name eq 'Term Source URI';
-				$version.=$a->value."\t" if $a->name eq 'Term Source Version';
-			} else {
-				$output.=$a->name."\t".$a->value."\n";
-			}
-			
-		}
-	}
-	$output.="Term Source Name\t$name\n" if defined $name;
-	$output.="Term Source URI\t$uri\n" if defined $uri;
-	$output.="Term Source Version\t$version\n" if defined $version;
-	$output.="\n";
+  my $output;
+  $output .= "[MSI]\n";
+
+  my ( $name, $uri, $version );
+  foreach my $e ( @{ $self->msi } ) {
+    my $atts = $e->attributes;
+    foreach my $a (@$atts) {
+      next if !$a->value;
+      if ( $a->name =~ /Term Source/ ) {
+        $name    .= $a->value . "\t" if $a->name eq 'Term Source Name';
+        $uri     .= $a->value . "\t" if $a->name eq 'Term Source URI';
+        $version .= $a->value . "\t" if $a->name eq 'Term Source Version';
+      }
+      else {
+        $output .= $a->name . "\t" . $a->value . "\n";
+      }
+
+    }
+  }
+  $output .= "Term Source Name\t$name\n"       if defined $name;
+  $output .= "Term Source URI\t$uri\n"         if defined $uri;
+  $output .= "Term Source Version\t$version\n" if defined $version;
+  $output .= "\n";
 }
 
 sub report_scd {
-	my ($self)=@_;
-	
-	my ($header_hash,$str,$sheets,$offsets)=$self->generate_header;
-	
-	my $output;
-	$output.="[SCD]\n";
-	
-	$output.="Sample Name\t".$str."\n";
-	
-	foreach my $e (@{$self->scd}) {
-		my $row=$e->id."\t";
-		my $atts=$e->organised_attr;
-		my $mat=$atts->{'Material'}->[0]->value;
-		my $ix=0;
-		foreach my $c (@COMMON) {
-			my $a=$atts->{$c}->[0];
-			$row=$self->_add_attribute($a,$row);
-		}
-		foreach my $s (@$sheets) {
-			if ($s ne $mat) {
-				my $a=$sheets->[$ix+1];
-				my $b=$sheets->[$ix];
-				my $offset;
-				if (!defined($a)) {
-					$offset=$offsets->{'total'}-$offsets->{$b};
-				} else {
-					$offset=$offsets->{$a}-$offsets->{$b};
-				}
-				$row.="\t"x$offset;
-			} else {
-				foreach my $i (@{$header_hash->{$mat}}) {
-					my $a=$atts->{$i}->[0];
-					$row=$self->_add_attribute($a,$row);
-				}
-			}
-			$ix++;
-		}
-		
-		$output.=$row."\n";
-	}
-	return $output;
-	
-}
+  my ($self) = @_;
 
-sub _add_attribute {
-	my ($self,$a,$row)=@_;
-	if (defined($a->value)) {
-		$row.=$a->value."\t";
-		if (defined($a->id)) {
-			my $ref="";
-			$ref=$1 if $a->id=~/(.+)_\d+/;
-			$ref='NCBI Taxonomy' if $a->name eq 'Organism';
-			$row.=$ref."\t".$a->id."\t";
-		}
-		if (defined($a->units)) {
-			my $unit=$a->units;
-			$row.= $a->units."\t";
-		}			
-	}
-	return $row;
+  my $scd_entities      = $self->scd;
+  my $reporter          = Bio::Metadata::Reporter::BasicReporter->new();
+  my $attribute_columns = $reporter->determine_attr_columns($scd_entities);
+
+  my @output_rows = ( ['[SCD]'] );
+  push @output_rows, $self->generate_header($attribute_columns);
+
+  #for each sample
+  for my $e (@$scd_entities) {
+    my @row = ( $e->id );
+    push @output_rows, \@row;
+
+    my $organised_attr = $e->organised_attr;
+
+    #for each possible attribute
+    for my $ac (@$attribute_columns) {
+      my $attrs = $organised_attr->{ $ac->name };
+
+      #for each possible occurance of that attribute
+      for ( my $i = 0 ; $i < $ac->max_count ; $i++ ) {
+        my $a;
+        if ( $attrs && $i < scalar(@$attrs) && $attrs->[$i] ) {
+          $a = $attrs->[$i];
+        }
+        if ($a) {
+          push @row, $a->value      // '';
+          push @row, $a->units      // '' if ( $ac->use_units );
+          push @row, $a->source_ref // '' if ( $ac->use_source_ref );
+          push @row, $a->id         // '' if ( $ac->use_id );
+          push @row, $a->uri        // '' if ( $ac->use_uri );
+        }
+        else {
+          push @row, '';
+          push @row, '' if ( $ac->use_units );
+          push @row, '' if ( $ac->use_source_ref );
+          push @row, '' if ( $ac->use_id );
+          push @row, '' if ( $ac->use_uri );
+        }
+      }
+    }
+  }
+  my $col_sep  = "\t";
+  my $line_sep = "\n";
+
+  return join $line_sep, map { join( $col_sep, @$_ ) } @output_rows;
 }
 
 sub generate_header {
-	my ($self)=@_;
-	
-	my $mat_seen=0;
-	my $common_seen=0;
-	my %header_hash;
-	my $header_str;
-	my @sheets;
-	my %offsets;
-	my $counter=0;
-	
-	foreach my $e (@{$self->scd}) {
-		my $atts=$e->organised_attr;
-		my $mat=$atts->{'Material'}->[0]->value;
-		if ($common_seen==0) {
-			$common_seen=1;
-			foreach my $c (@COMMON) {
-				$header_str.=$c."\t";
-				$header_str.="Term Source REF\t" if $atts->{$c}->[0]->id;
-				$header_str.="Term Source ID\t" if $atts->{$c}->[0]->id;			
-			}
-		}
-		
-		next if $mat_seen eq $mat;
-		push @sheets,$mat;
-		$offsets{$mat}=$counter;
-		$mat_seen=$atts->{'Material'}->[0]->value;
-		foreach my $a (@{$e->attributes}) {
-			next if exists($common{$a->name});
-			push @{$header_hash{$mat}},$a->name;
-			$counter++;
-			if (!exists($named{$a->name}) && !exists($relationships{$a->name})) {
-				$header_str.="Characteristic[".$a->name."]\t";
-			} else {
-				$header_str.=$a->name."\t";
-			}
-			if (defined($a->id)) {
-				$counter++;
-				$header_str.="Term Source REF\t";
-				$counter++;
-				$header_str.="Term Source ID\t";
-			} elsif (defined($a->units)) {
-				$counter++;
-				$header_str.="Unit\t";
-			}
-		}
-	}
-	$offsets{'total'}=$counter;
-	
-	return (\%header_hash,$header_str,\@sheets,\%offsets);
+  my ( $self, $attribute_columns ) = @_;
+  my @row = ('Sample Name');
+
+  for my $ac (@$attribute_columns) {
+    for ( my $i = 0 ; $i < $ac->max_count ; $i++ ) {
+      my $name = $ac->name;
+      if ( !exists $named{$name} && !exists $relationships{$name} ) {
+        $name = "Characteristic[$name]";
+      }
+      push @row, $name;
+      push @row, 'Unit' if ( $ac->use_units );
+      push @row, 'Term Source REF' if ( $ac->use_source_ref );
+      push @row, 'Term Source ID' if ( $ac->use_id );
+      push @row, 'Term Source URI' if ( $ac->use_uri );
+    }
+  }
+  return \@row;
 }
 
 1;

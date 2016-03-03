@@ -23,91 +23,93 @@ use autodie;
 use namespace::autoclean;
 
 has 'name' => ( is => 'rw', isa => 'Str', required => 1 );
-has [ 'use_units', 'use_uri', 'use_ref_id' ] =>
+has [ 'use_units', 'use_uri', 'use_ref_id', 'use_source_ref', 'use_id' ] =>
   ( is => 'rw', isa => 'Bool', required => 1, default => '' );
 has 'max_count' => (
-    is       => 'rw',
-    isa      => 'Int',
-    required => 1,
-    default  => 0,
+  is       => 'rw',
+  isa      => 'Int',
+  required => 1,
+  default  => 0,
 );
 
 has 'term_count' => (
-    traits   => ['Hash'],
-    is       => 'rw',
-    isa      => 'HashRef[HashRef[Int]]',
-    default  => sub { { value => {}, uri => {}, units => {}, ref_id => {} } },
-    required => 1,
-    handles => { categories => 'keys' }
+  traits   => ['Hash'],
+  is       => 'rw',
+  isa      => 'HashRef[HashRef[Int]]',
+  default  => sub { { value => {}, uri => {}, units => {}, ref_id => {} } },
+  required => 1,
+  handles => { categories => 'keys' }
 );
 
 has 'probable_duplicates' => (
-    traits  => ['Hash'],
-    is      => 'rw',
-    isa     => 'HashRef[HashRef[Str]]',
-    default => sub { { value => {}, uri => {}, units => {}, ref_id => {} } },
+  traits  => ['Hash'],
+  is      => 'rw',
+  isa     => 'HashRef[HashRef[Str]]',
+  default => sub { { value => {}, uri => {}, units => {}, ref_id => {} } },
 );
 
 sub to_hash {
-    my ($self) = @_;
+  my ($self) = @_;
 
-    return {
-        name                => $self->name,
-        term_count          => $self->term_count,
-        max_count           => $self->max_count,
-        probable_duplicates => $self->probable_duplicates,
-    };
+  return {
+    name                => $self->name,
+    term_count          => $self->term_count,
+    max_count           => $self->max_count,
+    probable_duplicates => $self->probable_duplicates,
+  };
 }
 
 sub consume_attrs {
-    my ( $self, $attrs ) = @_;
+  my ( $self, $attrs ) = @_;
 
-    if ( scalar(@$attrs) > $self->max_count ) {
-        $self->max_count( scalar(@$attrs) );
+  if ( scalar(@$attrs) > $self->max_count ) {
+    $self->max_count( scalar(@$attrs) );
+  }
+
+  for my $a (@$attrs) {
+    $self->use_units(1)      if ( $a->units );
+    $self->use_uri(1)        if ( $a->uri );
+    $self->use_ref_id(1)     if ( $a->source_ref_id );
+    $self->use_source_ref(1) if ( $a->source_ref );
+    $self->use_id(1)         if ( $a->id );
+
+    if ( defined $a->value ) {
+      $self->term_count()->{value}{ $a->value }++;
+    }
+    if ( $a->uri ) {
+      $self->term_count()->{uri}{ $a->uri }++;
+    }
+    if ( $a->units ) {
+      $self->term_count()->{units}{ $a->units }++;
+    }
+    if ( $a->source_ref_id ) {
+      $self->term_count()->{ref_id}{ $a->source_ref_id }++;
+    }
+  }
+
+  for my $c ( $self->categories ) {
+    my %term_count = %{ $self->term_count()->{$c} };
+    my %term_mash;
+
+    for my $k ( keys %term_count ) {
+      my $mashed_term = _mash_term($k);
+      $term_mash{$mashed_term}++;
+    }
+    for my $k ( keys %term_count ) {
+      my $mashed_term = _mash_term($k);
+      if ( $term_mash{$mashed_term} > 1 ) {
+        $self->probable_duplicates()->{$c}{$k} = $k;
+      }
     }
 
-    for my $a (@$attrs) {
-        $self->use_units(1)  if ( $a->units );
-        $self->use_uri(1)    if ( $a->uri );
-        $self->use_ref_id(1) if ( $a->source_ref_id );
-
-        if ( defined $a->value ) {
-            $self->term_count()->{value}{ $a->value }++;
-        }
-        if ( $a->uri ) {
-            $self->term_count()->{uri}{ $a->uri }++;
-        }
-        if ( $a->units ) {
-            $self->term_count()->{units}{ $a->units }++;
-        }
-        if ( $a->source_ref_id ) {
-            $self->term_count()->{ref_id}{ $a->source_ref_id }++;
-        }
-    }
-
-    for my $c ( $self->categories ) {
-        my %term_count = %{ $self->term_count()->{$c} };
-        my %term_mash;
-
-        for my $k ( keys %term_count ) {
-            my $mashed_term = _mash_term($k);
-            $term_mash{$mashed_term}++;
-        }
-        for my $k ( keys %term_count ) {
-            my $mashed_term = _mash_term($k);
-            if ($term_mash{$mashed_term} > 1) {
-              $self->probable_duplicates()->{$c}{$k} = $k;
-            }
-        }
-
-    }
+  }
 }
 
 sub _mash_term {
-    my ($term) = @_;
-    my $mashed = lc($term);
-    $mashed =~ s/\W//g;    # remove anything that isn't a-z,1-0,_
-    return $mashed;
+  my ($term) = @_;
+  my $mashed = lc($term);
+  $mashed =~ s/\W//g;    # remove anything that isn't a-z,1-0,_
+  return $mashed;
 }
 
 __PACKAGE__->meta->make_immutable;

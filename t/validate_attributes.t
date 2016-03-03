@@ -27,11 +27,11 @@ my $text_attr = Bio::Metadata::Attribute->new( value => 'text', );
 my $num_attr = Bio::Metadata::Attribute->new( value => 10, units => 'kg' );
 
 my %base_outcome_h = (
-    rule_group_name => undef,
-    entity_id       => undef,
-    entity_type     => undef,
-    rule            => undef,
-    attributes      => [],
+  rule_group_name => undef,
+  entity_id       => undef,
+  entity_type     => undef,
+  rule            => undef,
+  attributes      => [],
 );
 
 relationship_rules();
@@ -49,545 +49,537 @@ ontology_text_rule();
 done_testing();
 
 sub relationship_rules {
-    my $rel_rule = Bio::Metadata::Rules::Rule->new( type => 'relationship', );
-    my $rel_validator = Bio::Metadata::Validate::RelationshipValidator->new();
-    my ( $attr, $o );
+  my $rel_rule = Bio::Metadata::Rules::Rule->new( type => 'relationship', );
+  my $rel_validator = Bio::Metadata::Validate::RelationshipValidator->new();
+  my ( $attr, $o );
 
-    $attr = Bio::Metadata::Attribute->new( value => 'bob', );
-    
-    $o = $rel_validator->validate_attribute($rel_rule,$attr);
-    is($o->outcome,'error','no entities known');
-    
-    $rel_validator->entities_by_id({bob => Bio::Metadata::Entity->new(id => 'bob')});
-    $o = $rel_validator->validate_attribute($rel_rule,$attr);
-    is($o->outcome,'pass','entity known');
-    
-    $attr = Bio::Metadata::Attribute->new( value => 'SAMEA676028', );
-    $o = $rel_validator->validate_attribute($rel_rule,$attr);
-    is($o->outcome,'pass','biosamples entity known');
+  $attr = Bio::Metadata::Attribute->new( value => 'bob', );
+
+  $o = $rel_validator->validate_attribute( $rel_rule, $attr );
+  is( $o->outcome, 'error', 'no entities known' );
+
+  $rel_validator->entities_by_id(
+    { bob => Bio::Metadata::Entity->new( id => 'bob' ) } );
+  $o = $rel_validator->validate_attribute( $rel_rule, $attr );
+  is( $o->outcome, 'pass', 'entity known' );
+
+  $attr = Bio::Metadata::Attribute->new( value => 'SAMEA676028', );
+  $o = $rel_validator->validate_attribute( $rel_rule, $attr );
+  is( $o->outcome, 'pass', 'biosamples entity known' );
 }
 
 sub date_rules {
-    my $date_rule = Bio::Metadata::Rules::Rule->new( type => 'date', );
-    my $date_attr_validator =
-      Bio::Metadata::Validate::DateAttributeValidator->new();
+  my $date_rule = Bio::Metadata::Rules::Rule->new( type => 'date', );
+  my $date_attr_validator =
+    Bio::Metadata::Validate::DateAttributeValidator->new();
 
-    my ( $attr, $o );
+  my ( $attr, $o );
 
-    $attr = Bio::Metadata::Attribute->new(
-        value => '2016-02-01',
-        units => 'YYYY-MM-DD'
-    );
+  $attr = Bio::Metadata::Attribute->new(
+    value => '2016-02-01',
+    units => 'YYYY-MM-DD'
+  );
 
-    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
-    is( $o->outcome, "pass", "valid date passed" );
+  $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+  is( $o->outcome, "pass", "valid date passed" );
 
-    $attr->value('2016-01-32');
-    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
-    is( $o->outcome, "error", "subtly invalid date failed" );
+  $attr->value('2016-01-32');
+  $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+  is( $o->outcome, "error", "subtly invalid date failed" );
 
-    $attr->value('this is not a date');
-    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
-    is( $o->outcome, "error", "very invalid date failed" );
+  $attr->value('this is not a date');
+  $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+  is( $o->outcome, "error", "very invalid date failed" );
 
-    $attr->value('2016-02-29');
-    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
-    is( $o->outcome, "pass", "Feb 29 passes for leap year" );
+  $attr->value('2016-02-29');
+  $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+  is( $o->outcome, "pass", "Feb 29 passes for leap year" );
 
-    $attr->value('2015-02-29');
-    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
-    is( $o->outcome, "error", "Feb 29 fails for non-leap year" );
+  $attr->value('2015-02-29');
+  $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+  is( $o->outcome, "error", "Feb 29 fails for non-leap year" );
 
-    $attr->units('MM-DD-YYYY');
-    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
-    is( $o->outcome, "error",
-        "unacceptable date format in attributes is rejected" );
+  $attr->units('MM-DD-YYYY');
+  $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+  is( $o->outcome, "error",
+    "unacceptable date format in attributes is rejected" );
 
-    $attr->value('2016-02');
-    $attr->units('YYYY-MM');
-    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
-    is( $o->outcome, "pass", "valid month passed" );
+  $attr->value('2016-02');
+  $attr->units('YYYY-MM');
+  $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+  is( $o->outcome, "pass", "valid month passed" );
 
-    $attr->value('2016-31');
-    $attr->units('YYYY-MM');
-    $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
-    is( $o->outcome, "error", "invalid month failed" );
+  $attr->value('2016-31');
+  $attr->units('YYYY-MM');
+  $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+  is( $o->outcome, "error", "invalid month failed" );
 
-    $date_rule->valid_units( ['MM-DD-YYYY'] );
-    throws_ok(
-        sub {
-            $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
-        },
-        qr/Rule has units that aren't a supported date format/,
-        "Invalid format in rule dies with croak"
-    );
+  $date_rule->valid_units( ['MM-DD-YYYY'] );
+  throws_ok(
+    sub {
+      $o = $date_attr_validator->validate_attribute( $date_rule, $attr );
+    },
+    qr/Rule has units that aren't a supported date format/,
+    "Invalid format in rule dies with croak"
+  );
 }
 
 sub text_rules {
-    my $text_rule = Bio::Metadata::Rules::Rule->new( type => 'text', );
-    my $text_attr_validator =
-      Bio::Metadata::Validate::TextAttributeValidator->new();
+  my $text_rule = Bio::Metadata::Rules::Rule->new( type => 'text', );
+  my $text_attr_validator =
+    Bio::Metadata::Validate::TextAttributeValidator->new();
 
-    my %expected_t_outcome = (
-        %base_outcome_h,
-        message    => undef,
-        outcome    => 'pass',
-        rule       => $text_rule->to_hash,
-        attributes => [ $text_attr->to_hash ]
-    );
+  my %expected_t_outcome = (
+    %base_outcome_h,
+    message    => undef,
+    outcome    => 'pass',
+    rule       => $text_rule->to_hash,
+    attributes => [ $text_attr->to_hash ]
+  );
 
-    my $t_outcome =
-      $text_attr_validator->validate_attribute( $text_rule, $text_attr );
+  my $t_outcome =
+    $text_attr_validator->validate_attribute( $text_rule, $text_attr );
 
-    is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
-        "text rule passes any content" );
+  is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
+    "text rule passes any content" );
 
 }
 
 sub num_rules {
-    my $num_rule = Bio::Metadata::Rules::Rule->new( type => 'number' );
-    my $num_attr_validator =
-      Bio::Metadata::Validate::NumberAttributeValidator->new();
+  my $num_rule = Bio::Metadata::Rules::Rule->new( type => 'number' );
+  my $num_attr_validator =
+    Bio::Metadata::Validate::NumberAttributeValidator->new();
 
-    my %expected_n_outcome = (
-        %base_outcome_h,
-        message    => undef,
-        outcome    => 'pass',
-        rule       => $num_rule->to_hash,
-        attributes => [ $num_attr->to_hash ]
-    );
+  my %expected_n_outcome = (
+    %base_outcome_h,
+    message    => undef,
+    outcome    => 'pass',
+    rule       => $num_rule->to_hash,
+    attributes => [ $num_attr->to_hash ]
+  );
 
-    my $n_outcome =
-      $num_attr_validator->validate_attribute( $num_rule, $num_attr );
+  my $n_outcome =
+    $num_attr_validator->validate_attribute( $num_rule, $num_attr );
 
-    is_deeply( $n_outcome->to_hash, \%expected_n_outcome,
-        "number rule passes integer" );
+  is_deeply( $n_outcome->to_hash, \%expected_n_outcome,
+    "number rule passes integer" );
 
-    my %expected_t_outcome = (
-        %base_outcome_h,
-        message    => 'value is not a number',
-        outcome    => 'error',
-        rule       => $num_rule->to_hash,
-        attributes => [ $text_attr->to_hash ]
-    );
+  my %expected_t_outcome = (
+    %base_outcome_h,
+    message    => 'value is not a number',
+    outcome    => 'error',
+    rule       => $num_rule->to_hash,
+    attributes => [ $text_attr->to_hash ]
+  );
 
-    my $t_outcome =
-      $num_attr_validator->validate_attribute( $num_rule, $text_attr );
-    is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
-        "number rule rejects text" );
+  my $t_outcome =
+    $num_attr_validator->validate_attribute( $num_rule, $text_attr );
+  is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
+    "number rule rejects text" );
 }
 
 sub enum_rules {
-    my $enum_rule = Bio::Metadata::Rules::Rule->new(
-        type         => 'enum',
-        valid_values => [ 'text', 'horse' ]
-    );
-    my $enum_attr_validator =
-      Bio::Metadata::Validate::EnumAttributeValidator->new();
+  my $enum_rule = Bio::Metadata::Rules::Rule->new(
+    type         => 'enum',
+    valid_values => [ 'text', 'horse' ]
+  );
+  my $enum_attr_validator =
+    Bio::Metadata::Validate::EnumAttributeValidator->new();
 
-    my %expected_t_outcome = (
-        %base_outcome_h,
-        message    => undef,
-        outcome    => 'pass',
-        rule       => $enum_rule->to_hash,
-        attributes => [ $text_attr->to_hash ]
-    );
+  my %expected_t_outcome = (
+    %base_outcome_h,
+    message    => undef,
+    outcome    => 'pass',
+    rule       => $enum_rule->to_hash,
+    attributes => [ $text_attr->to_hash ]
+  );
 
-    my $t_outcome =
-      $enum_attr_validator->validate_attribute( $enum_rule, $text_attr );
+  my $t_outcome =
+    $enum_attr_validator->validate_attribute( $enum_rule, $text_attr );
 
-    is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
-        "enum rule passes expected value" );
+  is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
+    "enum rule passes expected value" );
 
-    my %expected_n_outcome = (
-        %base_outcome_h,
-        message    => 'value is not in list of valid values:text,horse',
-        outcome    => 'error',
-        rule       => $enum_rule->to_hash,
-        attributes => [ $num_attr->to_hash ]
-    );
+  my %expected_n_outcome = (
+    %base_outcome_h,
+    message    => 'value is not in list of valid values:text,horse',
+    outcome    => 'error',
+    rule       => $enum_rule->to_hash,
+    attributes => [ $num_attr->to_hash ]
+  );
 
-    my $n_outcome =
-      $enum_attr_validator->validate_attribute( $enum_rule, $num_attr );
-    is_deeply( $n_outcome->to_hash, \%expected_n_outcome,
-        "enum rule rejects unexpected value" );
+  my $n_outcome =
+    $enum_attr_validator->validate_attribute( $enum_rule, $num_attr );
+  is_deeply( $n_outcome->to_hash, \%expected_n_outcome,
+    "enum rule rejects unexpected value" );
 }
 
 sub unit_rules {
-    my $unit_rule = Bio::Metadata::Rules::Rule->new(
-        type        => 'number',
-        valid_units => ['kg']
-    );
-    my $unit_attr_validator =
-      Bio::Metadata::Validate::UnitAttributeValidator->new();
+  my $unit_rule = Bio::Metadata::Rules::Rule->new(
+    type        => 'number',
+    valid_units => ['kg']
+  );
+  my $unit_attr_validator =
+    Bio::Metadata::Validate::UnitAttributeValidator->new();
 
-    my %expected_n_outcome = (
-        %base_outcome_h,
-        message    => undef,
-        outcome    => 'pass',
-        rule       => $unit_rule->to_hash,
-        attributes => [ $num_attr->to_hash ]
-    );
+  my %expected_n_outcome = (
+    %base_outcome_h,
+    message    => undef,
+    outcome    => 'pass',
+    rule       => $unit_rule->to_hash,
+    attributes => [ $num_attr->to_hash ]
+  );
 
-    my $n_outcome =
-      $unit_attr_validator->validate_attribute( $unit_rule, $num_attr );
+  my $n_outcome =
+    $unit_attr_validator->validate_attribute( $unit_rule, $num_attr );
 
-    is_deeply( $n_outcome->to_hash, \%expected_n_outcome,
-        "unit rule passes expected unit" );
+  is_deeply( $n_outcome->to_hash, \%expected_n_outcome,
+    "unit rule passes expected unit" );
 
-    $unit_rule = Bio::Metadata::Rules::Rule->new(
-        type        => 'number',
-        valid_units => ['picoseconds']
-    );
+  $unit_rule = Bio::Metadata::Rules::Rule->new(
+    type        => 'number',
+    valid_units => ['picoseconds']
+  );
 
-    my %expected_bn_outcome = (
-        %base_outcome_h,
-        message    => 'units are not in list of valid units:picoseconds',
-        outcome    => 'error',
-        rule       => $unit_rule->to_hash,
-        attributes => [ $num_attr->to_hash ]
-    );
+  my %expected_bn_outcome = (
+    %base_outcome_h,
+    message    => 'units are not in list of valid units:picoseconds',
+    outcome    => 'error',
+    rule       => $unit_rule->to_hash,
+    attributes => [ $num_attr->to_hash ]
+  );
 
-    my $bn_outcome =
-      $unit_attr_validator->validate_attribute( $unit_rule, $num_attr );
-    is_deeply( $n_outcome->to_hash, \%expected_n_outcome,
-        "unit rule rejects unexpected units" );
+  my $bn_outcome =
+    $unit_attr_validator->validate_attribute( $unit_rule, $num_attr );
+  is_deeply( $n_outcome->to_hash, \%expected_n_outcome,
+    "unit rule rejects unexpected units" );
 
-    my %expected_t_outcome = (
-        %base_outcome_h,
-        message    => 'no units provided, should be one of these:picoseconds',
-        outcome    => 'error',
-        rule       => $unit_rule->to_hash,
-        attributes => [ $text_attr->to_hash ]
-    );
+  my %expected_t_outcome = (
+    %base_outcome_h,
+    message    => 'no units provided, should be one of these:picoseconds',
+    outcome    => 'error',
+    rule       => $unit_rule->to_hash,
+    attributes => [ $text_attr->to_hash ]
+  );
 
-    my $t_outcome =
-      $unit_attr_validator->validate_attribute( $unit_rule, $text_attr );
-    is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
-        "unit rule rejects absent units" );
+  my $t_outcome =
+    $unit_attr_validator->validate_attribute( $unit_rule, $text_attr );
+  is_deeply( $t_outcome->to_hash, \%expected_t_outcome,
+    "unit rule rejects absent units" );
 }
 
 sub ontology_id_rule {
-    my $ols_rule = Bio::Metadata::Rules::Rule->new(
-        type => 'ontology_uri',
-        valid_ancestor_uris =>
-          ['http://purl.obolibrary.org/obo/UBERON_0002530'],
-    );
-    my $ols_id_attr_validator =
-      Bio::Metadata::Validate::OntologyIdAttributeValidator->new();
-    my ( $ols_attr, $outcome );
+  my $ols_rule = Bio::Metadata::Rules::Rule->new(
+    type                => 'ontology_uri',
+    valid_ancestor_uris => ['http://purl.obolibrary.org/obo/UBERON_0002530'],
+  );
+  my $ols_id_attr_validator =
+    Bio::Metadata::Validate::OntologyIdAttributeValidator->new();
+  my ( $ols_attr, $outcome );
 
-    #valid term
-    $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'liver',
-        id    => 'UBERON_0002107'
-    );
-    $outcome =
-      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'pass', 'OLS passed valid term - _ separator' );
+  #valid term
+  $ols_attr = Bio::Metadata::Attribute->new(
+    value => 'liver',
+    id    => 'UBERON_0002107'
+  );
+  $outcome = $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'pass', 'OLS passed valid term - _ separator' );
 
-    #valid term
-    $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'liver',
-        id    => 'UBERON:0002107'
-    );
-    $outcome =
-      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'pass', 'OLS passed valid term - : separator' );
+  #valid term
+  $ols_attr = Bio::Metadata::Attribute->new(
+    value => 'liver',
+    id    => 'UBERON:0002107'
+  );
+  $outcome = $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'pass', 'OLS passed valid term - : separator' );
 
-    #wrong ancestor
-    $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'distal tarsal bone 4',
-        id    => 'UBERON_0010737'
-    );
-    $outcome =
-      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'error', 'OLS errored term with wrong ancestor' );
+  #wrong ancestor
+  $ols_attr = Bio::Metadata::Attribute->new(
+    value => 'distal tarsal bone 4',
+    id    => 'UBERON_0010737'
+  );
+  $outcome = $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'error', 'OLS errored term with wrong ancestor' );
 
-    #not a term ID
-    $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'not a term',
-        id    => 'cbeebies'
-    );
-    $outcome =
-      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'error', 'OLS errored URI term that is not in OLS' );
+  #not a term ID
+  $ols_attr = Bio::Metadata::Attribute->new(
+    value => 'not a term',
+    id    => 'cbeebies'
+  );
+  $outcome = $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'error', 'OLS errored URI term that is not in OLS' );
 
-    $outcome =
-      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'error', 'OLS errored for term that is not a URI' );
+  $outcome = $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'error', 'OLS errored for term that is not a URI' );
 
-    #warn for term/label mismatch
-    $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'not a liver',
-        id    => 'UBERON:0002107'
-    );
-    $outcome =
-      $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'warning',
-        'OLS warning for term with different label/value term' );
+  #warn for term/label mismatch
+  $ols_attr = Bio::Metadata::Attribute->new(
+    value => 'not a liver',
+    id    => 'UBERON:0002107'
+  );
+  $outcome = $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'warning',
+    'OLS warning for term with different label/value term' );
 
 }
 
 sub uri_rules {
-    my $uri_rule = Bio::Metadata::Rules::Rule->new( type => 'uri_value', );
-    my $uri_value_validator =
-      Bio::Metadata::Validate::UriValueAttributeValidator->new();
+  my $uri_rule = Bio::Metadata::Rules::Rule->new( type => 'uri_value', );
+  my $uri_value_validator =
+    Bio::Metadata::Validate::UriValueAttributeValidator->new();
 
-    my ( $attr, $outcome );
+  my ( $attr, $outcome );
 
-    #valid url
-    $attr = Bio::Metadata::Attribute->new( value => 'http://www.ebi.ac.uk' );
-    $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
-    is( $outcome->outcome, 'pass', 'Valid url passed' );
+  #valid url
+  $attr = Bio::Metadata::Attribute->new( value => 'http://www.ebi.ac.uk' );
+  $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+  is( $outcome->outcome, 'pass', 'Valid url passed' );
 
-    #valid mailto
-    $attr = Bio::Metadata::Attribute->new( value => 'mailto:bob@example.org' );
-    $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
-    is( $outcome->outcome, 'pass', 'Valid mailto passed' );
+  #valid mailto
+  $attr = Bio::Metadata::Attribute->new( value => 'mailto:bob@example.org' );
+  $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+  is( $outcome->outcome, 'pass', 'Valid mailto passed' );
 
-    #vaild ftp
-    $attr = Bio::Metadata::Attribute->new( value => 'ftp://ftp.ebi.ac.uk' );
-    $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
-    is( $outcome->outcome, 'pass', 'Valid ftp passed' );
+  #vaild ftp
+  $attr = Bio::Metadata::Attribute->new( value => 'ftp://ftp.ebi.ac.uk' );
+  $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+  is( $outcome->outcome, 'pass', 'Valid ftp passed' );
 
-    #not a uri
-    $attr =
-      Bio::Metadata::Attribute->new( value => 'not actually a URI in a way' );
-    $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
-    is( $outcome->outcome, 'error', 'Invalid url failed' );
+  #not a uri
+  $attr =
+    Bio::Metadata::Attribute->new( value => 'not actually a URI in a way' );
+  $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+  is( $outcome->outcome, 'error', 'Invalid url failed' );
 
-    #unsupported uri type
-    $attr =
-      Bio::Metadata::Attribute->new(
-        value => 'telnet://bob:password@example.org:9000' );
-    $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
-    is( $outcome->outcome, 'error', 'Unsupported schema failed' );
-    is(
-        $outcome->message,
+  #unsupported uri type
+  $attr =
+    Bio::Metadata::Attribute->new(
+    value => 'telnet://bob:password@example.org:9000' );
+  $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+  is( $outcome->outcome, 'error', 'Unsupported schema failed' );
+  is(
+    $outcome->message,
 'uri scheme is not supported. It is telnet but only http, https, ftp, mailto are accepted',
-        'Unsupported schema failed with correct message'
-    );
+    'Unsupported schema failed with correct message'
+  );
 }
 
 sub ontology_uri_rule {
-    my $ols_rule = Bio::Metadata::Rules::Rule->new(
-        type => 'ontology_uri',
-        valid_ancestor_uris =>
-          ['http://purl.obolibrary.org/obo/UBERON_0002530'],
-    );
-    my $ols_text_attr_validator =
-      Bio::Metadata::Validate::OntologyUriAttributeValidator->new();
+  my $ols_rule = Bio::Metadata::Rules::Rule->new(
+    type                => 'ontology_uri',
+    valid_ancestor_uris => ['http://purl.obolibrary.org/obo/UBERON_0002530'],
+  );
+  my $ols_text_attr_validator =
+    Bio::Metadata::Validate::OntologyUriAttributeValidator->new();
 
-    #valid term
-    my $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'liver',
-        uri   => 'http://purl.obolibrary.org/obo/UBERON_0002107'
-    );
-    my $outcome =
-      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'pass', 'OLS passed valid term' );
+  #valid term
+  my $ols_attr = Bio::Metadata::Attribute->new(
+    value => 'liver',
+    uri   => 'http://purl.obolibrary.org/obo/UBERON_0002107'
+  );
+  my $outcome =
+    $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'pass', 'OLS passed valid term' );
 
-    #wrong ancestor
-    $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'distal tarsal bone 4',
-        uri   => 'http://purl.obolibrary.org/obo/UBERON_0010737'
-    );
-    $outcome =
-      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'error', 'OLS errored term with wrong ancestor' );
+  #wrong ancestor
+  $ols_attr = Bio::Metadata::Attribute->new(
+    value => 'distal tarsal bone 4',
+    uri   => 'http://purl.obolibrary.org/obo/UBERON_0010737'
+  );
+  $outcome =
+    $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'error', 'OLS errored term with wrong ancestor' );
 
-    #not a term URI
-    $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'not a term',
-        uri   => 'http://www.bbc.co.uk/cbeebies'
-    );
-    $outcome =
-      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'error', 'OLS errored URI term that is not in OLS' );
+  #not a term URI
+  $ols_attr = Bio::Metadata::Attribute->new(
+    value => 'not a term',
+    uri   => 'http://www.bbc.co.uk/cbeebies'
+  );
+  $outcome =
+    $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'error', 'OLS errored URI term that is not in OLS' );
 
-    #not URI
-    $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'not a term',
-        uri   => 'not a term'
-    );
-    $outcome =
-      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'error', 'OLS errored for term that is not a URI' );
+  #not URI
+  $ols_attr = Bio::Metadata::Attribute->new(
+    value => 'not a term',
+    uri   => 'not a term'
+  );
+  $outcome =
+    $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'error', 'OLS errored for term that is not a URI' );
 
-    #warn for term/label mismatch
-    $ols_attr = Bio::Metadata::Attribute->new(
-        value => 'not a liver',
-        uri   => 'http://purl.obolibrary.org/obo/UBERON_0002107'
-    );
-    $outcome =
-      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'warning',
-        'OLS warning for term with different label/value term' );
+  #warn for term/label mismatch
+  $ols_attr = Bio::Metadata::Attribute->new(
+    value => 'not a liver',
+    uri   => 'http://purl.obolibrary.org/obo/UBERON_0002107'
+  );
+  $outcome =
+    $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'warning',
+    'OLS warning for term with different label/value term' );
 
 }
 
 sub ontology_text_rule {
-    my $ols_rule = Bio::Metadata::Rules::Rule->new(
-        type => 'ontology_text',
-        valid_ancestor_uris =>
-          ['http://purl.obolibrary.org/obo/UBERON_0002530'],
-    );
-    my $ols_text_attr_validator =
-      Bio::Metadata::Validate::OntologyTextAttributeValidator->new();
+  my $ols_rule = Bio::Metadata::Rules::Rule->new(
+    type                => 'ontology_text',
+    valid_ancestor_uris => ['http://purl.obolibrary.org/obo/UBERON_0002530'],
+  );
+  my $ols_text_attr_validator =
+    Bio::Metadata::Validate::OntologyTextAttributeValidator->new();
 
-    use Data::Dumper;
+  use Data::Dumper;
 
-    #valid term
-    my $ols_attr = Bio::Metadata::Attribute->new( value => 'liver' );
-    my $outcome =
-      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  #valid term
+  my $ols_attr = Bio::Metadata::Attribute->new( value => 'liver' );
+  my $outcome =
+    $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
 
-    is( $outcome->outcome, 'pass', 'OLS passed valid term' );
+  is( $outcome->outcome, 'pass', 'OLS passed valid term' );
 
-    #wrong ancestor
-    $ols_attr =
-      Bio::Metadata::Attribute->new( value => 'distal tarsal bone 4' );
-    $outcome =
-      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'error', 'OLS errored term with wrong ancestor' );
+  #wrong ancestor
+  $ols_attr = Bio::Metadata::Attribute->new( value => 'distal tarsal bone 4' );
+  $outcome =
+    $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'error', 'OLS errored term with wrong ancestor' );
 
-    #not a term
-    $ols_attr = Bio::Metadata::Attribute->new( value => 'not a term' );
-    $outcome =
-      $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
-    is( $outcome->outcome, 'error', 'OLS errored term that is not in OLS' );
+  #not a term
+  $ols_attr = Bio::Metadata::Attribute->new( value => 'not a term' );
+  $outcome =
+    $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
+  is( $outcome->outcome, 'error', 'OLS errored term that is not in OLS' );
 
 }
 
 sub mandatory_rules {
-    my $validator = Bio::Metadata::Validate::RequirementValidator->new();
+  my $validator = Bio::Metadata::Validate::RequirementValidator->new();
 
-    my $mandatory_rule =
-      Bio::Metadata::Rules::Rule->new( mandatory => 'mandatory' );
-    my $recommended_rule =
-      Bio::Metadata::Rules::Rule->new( mandatory => 'recommended' );
-    my $optional_rule =
-      Bio::Metadata::Rules::Rule->new( mandatory => 'optional' );
+  my $mandatory_rule =
+    Bio::Metadata::Rules::Rule->new( mandatory => 'mandatory', type => 'text' );
+  my $recommended_rule = Bio::Metadata::Rules::Rule->new(
+    mandatory => 'recommended',
+    type      => 'text'
+  );
+  my $optional_rule =
+    Bio::Metadata::Rules::Rule->new( mandatory => 'optional', type => 'text' );
 
-    my $mandatory_multiple_rule = Bio::Metadata::Rules::Rule->new(
-        mandatory      => 'mandatory',
-        allow_multiple => 1
-    );
+  my $mandatory_multiple_rule = Bio::Metadata::Rules::Rule->new(
+    mandatory      => 'mandatory',
+    allow_multiple => 1,
+    type           => 'text'
+  );
 
-    my $no_attr   = [];
-    my $one_attr  = [$text_attr];
-    my $many_attr = [ $text_attr, $text_attr ];
+  my $no_attr   = [];
+  my $one_attr  = [$text_attr];
+  my $many_attr = [ $text_attr, $text_attr ];
 
-    my %expected_error_outcome = (
-        %base_outcome_h,
-        message => 'mandatory attribute not present',
-        outcome => 'error',
-    );
-    my %expected_multiple_error_outcome = (
-        %base_outcome_h,
-        message => 'multiple entries for attribute present',
-        outcome => 'error',
-    );
-    my %expected_warning_outcome = (
-        %base_outcome_h,
-        message => 'recommended attribute not present',
-        outcome => 'warning',
-    );
-    my %expected_pass_outcome = (
-        %base_outcome_h,
-        message => undef,
-        outcome => 'pass',
-    );
+  my %expected_error_outcome = (
+    %base_outcome_h,
+    message => 'mandatory attribute not present',
+    outcome => 'error',
+  );
+  my %expected_multiple_error_outcome = (
+    %base_outcome_h,
+    message => 'multiple entries for attribute present',
+    outcome => 'error',
+  );
+  my %expected_warning_outcome = (
+    %base_outcome_h,
+    message => 'recommended attribute not present',
+    outcome => 'warning',
+  );
+  my %expected_pass_outcome = (
+    %base_outcome_h,
+    message => undef,
+    outcome => 'pass',
+  );
 
-    #mandatory rule
-    is_deeply(
-        scrub_rule_attr(
-            $validator->validate_requirements( $mandatory_rule, $no_attr )
-        ),
-        \%expected_error_outcome,
-        'mand attr absent - fail'
-    );
-    is_deeply(
-        scrub_rule_attr(
-            $validator->validate_requirements( $mandatory_rule, $one_attr )
-        ),
-        \%expected_pass_outcome,
-        'mand attr present - pass'
-    );
-    is_deeply(
-        scrub_rule_attr(
-            $validator->validate_requirements( $mandatory_rule, $many_attr )
+  #mandatory rule
+  is_deeply(
+    scrub_rule_attr(
+      $validator->validate_requirements( $mandatory_rule, $no_attr )
+    ),
+    \%expected_error_outcome,
+    'mand attr absent - fail'
+  );
+  is_deeply(
+    scrub_rule_attr(
+      $validator->validate_requirements( $mandatory_rule, $one_attr )
+    ),
+    \%expected_pass_outcome,
+    'mand attr present - pass'
+  );
+  is_deeply(
+    scrub_rule_attr(
+      $validator->validate_requirements( $mandatory_rule, $many_attr )
 
-        ),
-        \%expected_multiple_error_outcome,
-        'mand attr present multiple - fail'
-    );
+    ),
+    \%expected_multiple_error_outcome,
+    'mand attr present multiple - fail'
+  );
 
-    # recommended rule
-    is_deeply(
-        scrub_rule_attr(
-            $validator->validate_requirements( $recommended_rule, $no_attr )
-        ),
-        \%expected_warning_outcome,
-        'recc attr absent - warn'
-    );
-    is_deeply(
-        scrub_rule_attr(
-            $validator->validate_requirements( $recommended_rule, $one_attr )
-        ),
-        \%expected_pass_outcome,
-        'recc attr present - pass'
-    );
-    is_deeply(
-        scrub_rule_attr(
-            $validator->validate_requirements( $recommended_rule, $many_attr )
-        ),
-        \%expected_multiple_error_outcome,
-        'recc attr present multiple - fail'
-    );
+  # recommended rule
+  is_deeply(
+    scrub_rule_attr(
+      $validator->validate_requirements( $recommended_rule, $no_attr )
+    ),
+    \%expected_warning_outcome,
+    'recc attr absent - warn'
+  );
+  is_deeply(
+    scrub_rule_attr(
+      $validator->validate_requirements( $recommended_rule, $one_attr )
+    ),
+    \%expected_pass_outcome,
+    'recc attr present - pass'
+  );
+  is_deeply(
+    scrub_rule_attr(
+      $validator->validate_requirements( $recommended_rule, $many_attr )
+    ),
+    \%expected_multiple_error_outcome,
+    'recc attr present multiple - fail'
+  );
 
-    # optional rule
-    is_deeply(
-        scrub_rule_attr(
-            $validator->validate_requirements( $optional_rule, $no_attr )
-        ),
-        \%expected_pass_outcome,
-        'opt attr absent - pass'
-    );
-    is_deeply(
-        scrub_rule_attr(
-            $validator->validate_requirements( $optional_rule, $one_attr )
-        ),
-        \%expected_pass_outcome,
-        'opt attr present - pass'
-    );
-    is_deeply(
-        scrub_rule_attr(
-            $validator->validate_requirements( $optional_rule, $many_attr )
-        ),
-        \%expected_multiple_error_outcome,
-        'opt attr present multiple - fail'
-    );
+  # optional rule
+  is_deeply(
+    scrub_rule_attr(
+      $validator->validate_requirements( $optional_rule, $no_attr )
+    ),
+    \%expected_pass_outcome,
+    'opt attr absent - pass'
+  );
+  is_deeply(
+    scrub_rule_attr(
+      $validator->validate_requirements( $optional_rule, $one_attr )
+    ),
+    \%expected_pass_outcome,
+    'opt attr present - pass'
+  );
+  is_deeply(
+    scrub_rule_attr(
+      $validator->validate_requirements( $optional_rule, $many_attr )
+    ),
+    \%expected_multiple_error_outcome,
+    'opt attr present multiple - fail'
+  );
 
-    #mandatory multiple
-    is_deeply(
-        scrub_rule_attr(
-            $validator->validate_requirements(
-                $mandatory_multiple_rule, $many_attr
-            )
-        ),
-        \%expected_pass_outcome,
-        'multiple attr present - pass'
-    );
+  #mandatory multiple
+  is_deeply(
+    scrub_rule_attr(
+      $validator->validate_requirements( $mandatory_multiple_rule, $many_attr )
+    ),
+    \%expected_pass_outcome,
+    'multiple attr present - pass'
+  );
 
 }
 
 sub scrub_rule_attr {
-    my ($o) = @_;
-    my $oh = $o->to_hash;
-    $oh->{rule}       = undef;
-    $oh->{attributes} = [];
+  my ($o) = @_;
+  my $oh = $o->to_hash;
+  $oh->{rule}       = undef;
+  $oh->{attributes} = [];
 
-    return $oh;
+  return $oh;
 }

@@ -20,7 +20,9 @@ use Carp;
 use Moose::Util::TypeConstraints;
 
 enum 'Bio::Metadata::Rules::Rule::TypeEnum',
-  [qw(text number enum ontology_uri ontology_text ontology_id uri_value date relationship)];
+  [
+  qw(text number enum ontology_uri ontology_text ontology_id uri_value date relationship)
+  ];
 enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',
   [qw(mandatory recommended optional)];
 
@@ -41,14 +43,30 @@ subtype 'Bio::Metadata::AttributeArrayRef' => as
   'ArrayRef[Bio::Metadata::Attribute]';
 
 coerce 'Bio::Metadata::AttributeArrayRef' => from 'ArrayRef[HashRef]' => via {
-    [ map { Bio::Metadata::Attribute->new($_) } @$_ ];
+  [ map { Bio::Metadata::Attribute->new($_) } @$_ ];
 },
   from 'Bio::Metadata::Attribute' => via {
-    [$_];
+  [$_];
   },
   from 'HashRef' => via {
-    [ Bio::Metadata::Attribute->new($_) ];
+  [ Bio::Metadata::Attribute->new($_) ];
   };
+
+#rule set
+class_type 'Bio::Metadata::Rules::RuleSet';
+coerce 'Bio::Metadata::Rules::RuleSet' => from 'HashRef' =>
+  via { Bio::Metadata::Rules::RuleSet->new($_) };
+
+subtype 'Bio::Metadata::Rules::RuleSetArrayRef' => as
+  'ArrayRef[Bio::Metadata::Rules::RuleSet]';
+
+coerce 'Bio::Metadata::Rules::RuleSetArrayRef' => from 'ArrayRef[HashRef]' =>
+  via {
+  [ map { Bio::Metadata::Rules::RuleSet->new($_) } @$_ ];
+  },
+  from
+  'Bio::Metadata::Rules::RuleSet' => via { [$_] },
+  from 'HashRef' => via { [ Bio::Metadata::Rules::RuleSet->new($_) ] };
 
 #entity
 class_type 'Bio::Metadata::Entity';
@@ -59,13 +77,13 @@ coerce 'Bio::Metadata::Entity' => from 'HashRef' =>
 subtype 'Bio::Metadata::EntityArrayRef' => as 'ArrayRef[Bio::Metadata::Entity]';
 
 coerce 'Bio::Metadata::EntityArrayRef' => from 'ArrayRef[HashRef]' => via {
-    [ map { Bio::Metadata::Entity->new($_) } @$_ ];
+  [ map { Bio::Metadata::Entity->new($_) } @$_ ];
 },
   from 'Bio::Metadata::Entity' => via {
-    [$_];
+  [$_];
   },
   from 'HashRef' => via {
-    [ Bio::Metadata::Entity->new($_) ];
+  [ Bio::Metadata::Entity->new($_) ];
   };
 
 #rule
@@ -77,13 +95,13 @@ subtype 'Bio::Metadata::Rules::RuleArrayRef' => as
   'ArrayRef[Bio::Metadata::Rules::Rule]';
 
 coerce 'Bio::Metadata::Rules::RuleArrayRef' => from 'ArrayRef[HashRef]' => via {
-    [ map { Bio::Metadata::Rules::Rule->new($_) } @$_ ];
+  [ map { Bio::Metadata::Rules::Rule->new($_) } @$_ ];
 },
   from 'Bio::Metadata::Rules::Rule' => via {
-    [$_];
+  [$_];
   },
   from 'HashRef' => via {
-    [ Bio::Metadata::Rules::Rule->new($_) ];
+  [ Bio::Metadata::Rules::Rule->new($_) ];
   };
 
 #rule group
@@ -96,13 +114,13 @@ subtype 'Bio::Metadata::Rules::RuleGroupArrayRef' => as
 
 coerce 'Bio::Metadata::Rules::RuleGroupArrayRef' => from 'ArrayRef[HashRef]' =>
   via {
-    [ map { Bio::Metadata::Rules::RuleGroup->new($_) } @$_ ];
+  [ map { Bio::Metadata::Rules::RuleGroup->new($_) } @$_ ];
   },
   from 'Bio::Metadata::Rules::RuleGroup' => via {
-    [$_];
+  [$_];
   },
   from 'HashRef' => via {
-    [ Bio::Metadata::Rules::RuleGroup->new($_) ];
+  [ Bio::Metadata::Rules::RuleGroup->new($_) ];
   };
 
 #condition
@@ -117,13 +135,13 @@ subtype 'Bio::Metadata::Rules::ConditionArrayRef' => as
 
 coerce 'Bio::Metadata::Rules::ConditionArrayRef' => from 'ArrayRef[HashRef]' =>
   via {
-    [ map { Bio::Metadata::Rules::Condition->new($_) } @$_ ];
+  [ map { Bio::Metadata::Rules::Condition->new($_) } @$_ ];
   },
   from 'Bio::Metadata::Rules::Condition' => via {
-    [$_];
+  [$_];
   },
   from 'HashRef' => via {
-    [ Bio::Metadata::Rules::Condition->new($_) ];
+  [ Bio::Metadata::Rules::Condition->new($_) ];
   },
   from 'Str' =>
   via { [ Bio::Metadata::Rules::Condition->new( dpath_condition => $_ ) ] };
@@ -138,13 +156,13 @@ subtype 'Bio::Metadata::Validate::ValidationOutcomeArrayRef' => as
 
 coerce 'Bio::Metadata::Validate::ValidationOutcomeArrayRef' => from
   'ArrayRef[HashRef]'                                       => via {
-    [ map { Bio::Metadata::Validate::ValidationOutcome->new($_) } @$_ ];
+  [ map { Bio::Metadata::Validate::ValidationOutcome->new($_) } @$_ ];
   },
   from 'Bio::Metadata::Validate::ValidationOutcome' => via {
-    [$_];
+  [$_];
   },
   from 'HashRef' => via {
-    [ Bio::Metadata::Validate::ValidationOutcome->new($_) ];
+  [ Bio::Metadata::Validate::ValidationOutcome->new($_) ];
   };
 
 #validationschema
@@ -160,13 +178,13 @@ subtype 'Bio::Metadata::ValidateSchema::ValidationOutcomeArrayRef' => as
 
 coerce 'Bio::Metadata::ValidateSchema::ValidationOutcomeArrayRef' => from
   'ArrayRef[HashRef]'                                             => via {
-    [ map { Bio::Metadata::ValidateSchema::ValidationOutcome->new($_) } @$_ ];
+  [ map { Bio::Metadata::ValidateSchema::ValidationOutcome->new($_) } @$_ ];
   },
   from 'Bio::Metadata::ValidateSchema::ValidationOutcome' => via {
-    [$_];
+  [$_];
   },
   from 'HashRef' => via {
-    [ Bio::Metadata::ValidateSchema::ValidationOutcome->new($_) ];
+  [ Bio::Metadata::ValidateSchema::ValidationOutcome->new($_) ];
   };
 
 #warning
@@ -180,13 +198,13 @@ subtype 'Bio::Metadata::ValidateSchema::WarningArrayRef' => as
 
 coerce 'Bio::Metadata::ValidateSchema::WarningArrayRef' => from
   'ArrayRef[HashRef]'                                   => via {
-    [ map { Bio::Metadata::Warning->new($_) } @$_ ];
+  [ map { Bio::Metadata::Warning->new($_) } @$_ ];
   },
   from 'Bio::Metadata::ValidateSchema::Warning' => via {
-    [$_];
+  [$_];
   },
   from 'HashRef' => via {
-    [ Bio::Metadata::ValidateSchema::Warning->new($_) ];
+  [ Bio::Metadata::ValidateSchema::Warning->new($_) ];
   };
 
 class_type 'Bio::Metadata::Validate::Support::OlsLookup';
