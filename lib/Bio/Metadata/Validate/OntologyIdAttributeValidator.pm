@@ -53,7 +53,7 @@ sub validate_attribute {
 
     if ( !$label ) {
         $o->outcome('error');
-        $o->message('uri is not descendent of valid ancestor');
+        $o->message('uri is not a descendent of a valid ancestor');
         return $o;
     }
 
