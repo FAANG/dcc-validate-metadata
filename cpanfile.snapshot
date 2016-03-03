@@ -2493,6 +2493,56 @@ DISTRIBUTIONS
       Fcntl 0
       URI 1.10
       perl 5.008001
+  XML-LibXML-2.0124
+    pathname: S/SH/SHLOMIF/XML-LibXML-2.0124.tar.gz
+    provides:
+      XML::LibXML 2.0124
+      XML::LibXML::Attr 2.0124
+      XML::LibXML::AttributeHash 2.0124
+      XML::LibXML::Boolean 2.0124
+      XML::LibXML::CDATASection 2.0124
+      XML::LibXML::Comment 2.0124
+      XML::LibXML::Common 2.0124
+      XML::LibXML::Devel 2.0124
+      XML::LibXML::Document 2.0124
+      XML::LibXML::DocumentFragment 2.0124
+      XML::LibXML::Dtd 2.0124
+      XML::LibXML::Element 2.0124
+      XML::LibXML::ErrNo 2.0124
+      XML::LibXML::Error 2.0124
+      XML::LibXML::InputCallback 2.0124
+      XML::LibXML::Literal 2.0124
+      XML::LibXML::NamedNodeMap 2.0124
+      XML::LibXML::Namespace 2.0124
+      XML::LibXML::Node 2.0124
+      XML::LibXML::NodeList 2.0124
+      XML::LibXML::Number 2.0124
+      XML::LibXML::PI 2.0124
+      XML::LibXML::Pattern 2.0124
+      XML::LibXML::Reader 2.0124
+      XML::LibXML::RegExp 2.0124
+      XML::LibXML::RelaxNG 2.0124
+      XML::LibXML::SAX 2.0124
+      XML::LibXML::SAX::AttributeNode 2.0124
+      XML::LibXML::SAX::Builder 2.0124
+      XML::LibXML::SAX::Generator 2.0124
+      XML::LibXML::SAX::Parser 2.0124
+      XML::LibXML::Schema 2.0124
+      XML::LibXML::Text 2.0124
+      XML::LibXML::XPathContext 2.0124
+      XML::LibXML::XPathExpression 2.0124
+      XML::LibXML::_SAXParser 2.0124
+    requirements:
+      ExtUtils::MakeMaker 0
+      Test::More 0
+      XML::NamespaceSupport 1.07
+      XML::SAX 0.11
+      base 0
+      parent 0
+      perl 5.008
+      strict 0
+      vars 0
+      warnings 0
   XML-NamespaceSupport-1.11
     pathname: P/PE/PERIGRIN/XML-NamespaceSupport-1.11.tar.gz
     provides:

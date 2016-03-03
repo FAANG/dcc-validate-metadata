@@ -21,6 +21,8 @@ requires 'Mojolicious::Plugin::RenderFile';
 requires 'Spreadsheet::ParseExcel::Stream::XLSX';
 requires 'Spreadsheet::XLSX';
 requires 'Cache::LRU';
+requires 'LWP::UserAgent';
+requires 'XML::LibXML';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';
