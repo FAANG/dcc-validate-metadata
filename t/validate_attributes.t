@@ -270,7 +270,7 @@ sub unit_rules {
 
 sub ontology_id_rule {
   my $ols_rule = Bio::Metadata::Rules::Rule->new(
-    type                => 'ontology_uri',
+    type                => 'ontology_id',
     valid_ancestor_uris => ['http://purl.obolibrary.org/obo/UBERON_0002530'],
   );
   my $ols_id_attr_validator =
