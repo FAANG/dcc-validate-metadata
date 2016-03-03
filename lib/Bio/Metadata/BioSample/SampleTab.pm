@@ -80,7 +80,9 @@ sub read {
 sub validate {
   my ($self) = @_;
   my $msi_errors = $self->msi_validator->validate_msi( $self->msi );
-
+  my $ref_errors =
+    $self->msi_validator->check_term_source_refs( $self->msi, $self->scd );
+  push @$msi_errors, @$ref_errors;
   return $msi_errors;
 }
 
