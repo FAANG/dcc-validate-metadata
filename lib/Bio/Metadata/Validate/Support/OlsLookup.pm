@@ -98,7 +98,7 @@ sub _is_same {
     map { '&fieldList=' . uri_escape($_) } ( @$fields ),
   );
   my $request_uri = join( '', @uri_elements );
-  print STDERR "is_same? $request_uri$/";
+
   my $search_result = $self->request_to_json( join( '', @uri_elements ) );
 
   my $num_found = $search_result->{response}->{numFound};
