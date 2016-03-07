@@ -113,7 +113,12 @@ sub _is_same {
   if ( $num_found == 0 ) {
     return '';
   }
-  my $label = $search_result->{response}{docs}[0]{label};
+  my $term = $search_result->{response}{docs}[0];
+
+  if ($term->{obo_id} eq $query || $term->{short_form} eq $query){
+    return $term->{label}
+  }
+  return '';
 }
 
 sub _is_descendent {
@@ -133,7 +138,7 @@ sub _is_descendent {
   );
   my $request_uri = join( '', @uri_elements );
   my $search_result = $self->request_to_json($request_uri);
-
+  
   my $num_found = $search_result->{response}->{numFound};
 
   if ( !defined $num_found ) {
