@@ -41,6 +41,18 @@ has 'cache' => (
   required => 1,
   default  => sub { Cache::LRU->new( size => 10000 ) }
 );
+has 'valid_qfields' => (
+  is      => 'ro',
+  traits  => ['Array'],
+  isa     => 'ArrayRef[Str]',
+  default => sub {
+    [
+      qw(label synonym description short_form obo_id annotations logical_description iri)
+    ];
+  },
+  handles => { find_valid_qfield => 'first', join_valid_qfields => 'join' },
+
+);
 
 sub _cache_key {
   my ( $self, @fields ) = @_;
@@ -48,65 +60,79 @@ sub _cache_key {
 }
 
 sub is_descendent {
-  my ( $self, $uri, $qfields, $ancestor_uri, $exact ) = @_;
+  my ( $self, $query, $qfields, $ancestor_uri, $exact ) = @_;
 
   if ( !ref $qfields ) {
     $qfields = [$qfields];
   }
-  my $cache_key = $self->_cache_key( $uri, @$qfields, $ancestor_uri, $exact );
+  my $cache_key = $self->_cache_key( $query, @$qfields, $ancestor_uri, $exact );
   my $cached_entry = $self->cache->get($cache_key);
-  if (defined $cached_entry) {
-    print "Cache hit for $cache_key$/";
+
+  if ( defined $cached_entry ) {
     return $cached_entry;
   }
-  else {
-    print "Cache miss for $cache_key$/";
+  my $label = $self->_is_descendent( $query, $qfields, $ancestor_uri, $exact );
+
+  if ( !$label ) {
+    $label = $self->_is_same( $query, $ancestor_uri );
   }
 
-  my $label = $self->_is_descendent($uri,$qfields,$ancestor_uri,$exact);
   $self->cache->set( $cache_key => $label );
+
   return $label;
 }
 
-sub _is_descendent {
-  my ( $self, $uri, $qfields, $ancestor_uri, $exact ) = @_;
+sub _is_same {
+  my ( $self, $query, $ancestor_uri,  ) = @_;
+
+  my $fields = [qw(short_form obo_id label)];
+  my $exact = 'true';
 
   my @uri_elements = (
-    $self->base_url, '/search?q=', uri_escape($uri), '&exact=', $exact,
-    '&fieldList=label&groupField=true&childrenOf=',
-    uri_escape($ancestor_uri)
+    $self->base_url,
+    '/search?q=',
+    uri_escape($ancestor_uri),
+    '&qfield=iri&exact=',
+    $exact,
+    '&groupField=true',
+    map { '&fieldList=' . uri_escape($_) } ( @$fields ),
   );
-  my @valid_qfields =
-    qw(label synonym description short_form obo_id annotations logical_description iri);
-
-  for my $qf (@$qfields) {
-    if ( none { $_ eq $qf } @valid_qfields ) {
-      croak( " Invalid query field. Got $qf but should be one of " . join(', '),
-        @valid_qfields );
-    }
-
-    push @uri_elements, '&queryFields=', uri_escape($qf);
-  }
-
   my $request_uri = join( '', @uri_elements );
-  #print $request_uri. $/;
-  my $response = $self->rest_client->GET($request_uri);
+  print STDERR "is_same? $request_uri$/";
+  my $search_result = $self->request_to_json( join( '', @uri_elements ) );
 
-  if ( $response->responseCode != 200 ) {
-    croak('Unsuccessful search - got status code '
-        . $response->responseCode . ' for '
-        . $request_uri );
+  my $num_found = $search_result->{response}->{numFound};
+  if ( !defined $num_found ) {
+    croak "Could not find numFound in search result for $request_uri";
   }
-  my $response_content = $response->responseContent;
 
-  my $search_result;
-
-  try {
-    $search_result = decode_json($response_content);
+  if ( $num_found > 1 || $num_found < 0 ) {
+    croak "Num found was $num_found, but we expect 1 or 0 for $request_uri";
   }
-  catch {
-    croak "Could not convert response content to JSON from $request_uri: $_";
-  };
+
+  if ( $num_found == 0 ) {
+    return '';
+  }
+  my $label = $search_result->{response}{docs}[0]{label};
+}
+
+sub _is_descendent {
+  my ( $self, $query, $qfields, $ancestor_uri, $exact ) = @_;
+
+  $self->check_qfields($qfields);
+
+  my @uri_elements = (
+    $self->base_url,
+    '/search?q=',
+    uri_escape($query),
+    '&exact=',
+    $exact,
+    '&fieldList=label&groupField=true&childrenOf=',
+    uri_escape($ancestor_uri),
+    map { '&queryFields=' . uri_escape($_) } @$qfields
+  );
+  my $request_uri = join( '', @uri_elements );
+  my $search_result = $self->request_to_json($request_uri);
 
   my $num_found = $search_result->{response}->{numFound};
 
@@ -129,6 +155,40 @@ sub _is_descendent {
   }
 
   return $label;
+}
+
+sub check_qfields {
+  my ( $self, $qfields ) = @_;
+
+  for my $qf (@$qfields) {
+    if ( !$self->find_valid_qfield( sub { $_ eq $qf } ) ) {
+      croak( " Invalid query field. Got $qf but should be one of "
+          . $self->join_valid_qfields(',') );
+    }
+  }
+}
+
+sub request_to_json {
+  my ( $self, $request_uri ) = @_;
+
+  my $response = $self->rest_client->GET($request_uri);
+
+  if ( $response->responseCode != 200 ) {
+    croak('Unsuccessful search - got status code '
+        . $response->responseCode . ' for '
+        . $request_uri );
+  }
+
+  my $result;
+
+  try {
+    $result = decode_json( $response->responseContent );
+  }
+  catch {
+    croak "Could not convert response content to JSON from $request_uri: $_";
+  };
+
+  return $result;
 }
 
 1;
