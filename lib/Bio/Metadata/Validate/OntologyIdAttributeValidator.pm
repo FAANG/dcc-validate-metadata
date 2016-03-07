@@ -60,7 +60,7 @@ sub validate_attribute {
     if ( $label ne $attribute->value ) {
         $o->outcome('warning');
         $o->message(
-            'value does not precisely match ontology term label - ' . $label );
+            "value does not precisely match ontology term label ($label) for term ".$attribute->id);
         return $o;
     }
 
