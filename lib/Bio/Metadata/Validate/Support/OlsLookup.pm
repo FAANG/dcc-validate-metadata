@@ -24,108 +24,111 @@ use List::Util qw(none);
 use Cache::LRU;
 
 has 'base_url' => (
-    is       => 'rw',
-    isa      => 'Str',
-    required => 1,
-    default  => 'http://www.ebi.ac.uk/ols/beta/api'
+  is       => 'rw',
+  isa      => 'Str',
+  required => 1,
+  default  => 'http://www.ebi.ac.uk/ols/beta/api'
 );
 has 'rest_client' => (
-    is       => 'rw',
-    isa      => 'REST::Client',
-    required => 1,
-    default  => sub { REST::Client->new() }
+  is       => 'rw',
+  isa      => 'REST::Client',
+  required => 1,
+  default  => sub { REST::Client->new() }
 );
 has 'cache' => (
-    is       => 'rw',
-    isa      => 'Cache::LRU',
-    required => 1,
-    default  => sub { Cache::LRU->new( size => 10000 ) }
+  is       => 'rw',
+  isa      => 'Cache::LRU',
+  required => 1,
+  default  => sub { Cache::LRU->new( size => 10000 ) }
 );
 
 sub _cache_key {
-    my ( $self, @fields ) = @_;
-    return join( '#', @fields );
+  my ( $self, @fields ) = @_;
+  return join( '#', @fields );
 }
 
 sub is_descendent {
-    my ( $self, $uri, $qfields, $ancestor_uri, $exact ) = @_;
+  my ( $self, $uri, $qfields, $ancestor_uri, $exact ) = @_;
 
-    if ( !ref $qfields ) {
-        $qfields = [$qfields];
+  if ( !ref $qfields ) {
+    $qfields = [$qfields];
+  }
+  my $cache_key = $self->_cache_key( $uri, @$qfields, $ancestor_uri, $exact );
+  my $cached_entry = $self->cache->get($cache_key);
+  if (defined $cached_entry) {
+    print "Cache hit for $cache_key$/";
+    return $cached_entry;
+  }
+  else {
+    print "Cache miss for $cache_key$/";
+  }
+
+  my $label = $self->_is_descendent($uri,$qfields,$ancestor_uri,$exact);
+  $self->cache->set( $cache_key => $label );
+  return $label;
+}
+
+sub _is_descendent {
+  my ( $self, $uri, $qfields, $ancestor_uri, $exact ) = @_;
+
+  my @uri_elements = (
+    $self->base_url, '/search?q=', uri_escape($uri), '&exact=', $exact,
+    '&fieldList=label&groupField=true&childrenOf=',
+    uri_escape($ancestor_uri)
+  );
+  my @valid_qfields =
+    qw(label synonym description short_form obo_id annotations logical_description iri);
+
+  for my $qf (@$qfields) {
+    if ( none { $_ eq $qf } @valid_qfields ) {
+      croak( " Invalid query field. Got $qf but should be one of " . join(', '),
+        @valid_qfields );
     }
 
-    my $cache_key = $self->_cache_key( $uri, @$qfields, $ancestor_uri, $exact );
-    my $cached_entry = $self->cache->get($cache_key);
-    return $cached_entry if $cached_entry;
+    push @uri_elements, '&queryFields=', uri_escape($qf);
+  }
 
-    my @uri_elements = (
-        $self->base_url,
-        '/search?q=',
-        uri_escape($uri),
-        '&exact=',
-        $exact,
-        '&fieldList=label&groupField=true&childrenOf=',
-        uri_escape($ancestor_uri)
-    );
-    my @valid_qfields =
-      qw(label synonym description short_form obo_id annotations logical_description iri);
+  my $request_uri = join( '', @uri_elements );
+  #print $request_uri. $/;
+  my $response = $self->rest_client->GET($request_uri);
 
-    for my $qf (@$qfields) {
-        if ( none { $_ eq $qf } @valid_qfields ) {
-            croak(
-                " Invalid query field. Got $qf but should be one of "
-                  . join(', '),
-                @valid_qfields
-            );
-        }
+  if ( $response->responseCode != 200 ) {
+    croak('Unsuccessful search - got status code '
+        . $response->responseCode . ' for '
+        . $request_uri );
+  }
+  my $response_content = $response->responseContent;
 
-        push @uri_elements, '&queryFields=', uri_escape($qf);
-    }
+  my $search_result;
 
-    my $request_uri = join( '', @uri_elements );
+  try {
+    $search_result = decode_json($response_content);
+  }
+  catch {
+    croak "Could not convert response content to JSON from $request_uri: $_";
+  };
 
-    my $response = $self->rest_client->GET($request_uri);
+  my $num_found = $search_result->{response}->{numFound};
 
-    if ( $response->responseCode != 200 ) {
-        croak(  'Unsuccessful search - got status code '
-              . $response->responseCode . ' for '
-              . $request_uri );
-    }
-    my $response_content = $response->responseContent;
+  if ( !defined $num_found ) {
+    croak "Could not find numFound in search result for $request_uri";
+  }
 
-    my $search_result;
+  if ( $num_found > 1 || $num_found < 0 ) {
+    croak "Num found was $num_found, but we expect 1 or 0 for $request_uri";
+  }
 
-    try {
-        $search_result = decode_json($response_content);
-    }
-    catch {
-        croak
-          "Could not convert response content to JSON from $request_uri: $_";
-    };
+  if ( $num_found == 0 ) {
+    return '';
+  }
 
-    my $num_found = $search_result->{response}->{numFound};
+  my $label = $search_result->{response}{docs}[0]{label};
 
-    if ( !defined $num_found ) {
-        croak "Could not find numFound in search result for $request_uri";
-    }
+  if ( !defined $label ) {
+    croak "Could not find label in search result for $request_uri";
+  }
 
-    if ( $num_found > 1 || $num_found < 0 ) {
-        croak "Num found was $num_found, but we expect 1 or 0 for $request_uri";
-    }
-
-    if ( $num_found == 0 ) {
-        return undef;
-    }
-
-    my $label = $search_result->{response}{docs}[0]{label};
-
-    if ( !defined $label ) {
-        croak "Could not find label in search result for $request_uri";
-    }
-    
-    $self->cache->set($cache_key => $label);
-    
-    return $label;
+  return $label;
 }
 
 1;
