@@ -37,6 +37,15 @@ my $tsv_mime_type = ' text/tab-separated-values';
 app->secrets( ['nosecrets'] );
 app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type );
 
+# Move first part and slash from path to base path in production mode
+app->hook(
+  before_dispatch => sub {
+    my $c = shift;
+    push @{ $c->req->url->base->path->trailing_slash(1) },
+      shift @{ $c->req->url->path->leading_slash(0) };
+  }
+) if app->mode eq 'production';
+
 my $rule_locations = app->config('rules');
 my $loaders        = {
   json           => Bio::Metadata::Loader::JSONEntityLoader->new(),
@@ -94,7 +103,11 @@ get '/sample_tab' => sub {
     },
     html => sub {
       $c->stash(%$supporting_data);
-      $c->render( template => 'sample_tab', conversion_errors => [] );
+      $c->render(
+        template          => 'sample_tab',
+        conversion_errors => [],
+        status_counts     => {}
+      );
     }
   );
 };
@@ -123,9 +136,18 @@ post '/sample_tab' => sub {
   }
 
   my $st_errors = $st_converter->validate;
+  my $validator =
+    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
-  if ( $form_validation->has_error || @$st_errors ) {
-    sampletab_form_errors( $c, $form_validation, $st_errors );
+  my ($entity_status) = $validator->check_all( $st_converter->scd );
+
+  my %status_counts;
+  for ( values %$entity_status ) {
+    $status_counts{$_}++;
+  }
+
+  if ( $form_validation->has_error || @$st_errors || $status_counts{error} ) {
+    sampletab_form_errors( $c, $form_validation, $st_errors, \%status_counts );
   }
   else {
     sampletab_conversion( $c, $st_converter, $rule_set );
@@ -228,7 +250,7 @@ sub validation_supporting_data {
 }
 
 sub sampletab_form_errors {
-  my ( $c, $form_validation, $st_errors ) = @_;
+  my ( $c, $form_validation, $st_errors, $status_counts ) = @_;
 
   my $supporting_data =
     { valid_rule_set_names => [ sort keys %$rule_locations ], };
@@ -241,6 +263,7 @@ sub sampletab_form_errors {
     json => sub {
       $supporting_data->{errors}            = \%errors;
       $supporting_data->{conversion_errors} = $st_errors;
+      $supporting_data->{status_counts}     = $status_counts;
       $c->render( json => $supporting_data );
     },
     html => sub {
@@ -248,7 +271,8 @@ sub sampletab_form_errors {
       $c->render(
         template          => 'sample_tab',
         errors            => \%errors,
-        conversion_errors => $st_errors
+        conversion_errors => $st_errors,
+        status_counts     => $status_counts,
       );
     },
   );
@@ -621,9 +645,28 @@ $(document).ready(function(){
   </dd>
 </dl>
 %= submit_button 'Convert', class => 'btn btn-primary'
+% if ($status_counts && %$status_counts){
+  <h2>Validation outcome summary</h2>
+  <p>The following list shows how many of the entities (e.g. samples) submitted hit each validation status.
+  You can get more detail from the
+  %= link_to 'validation' => 'validate'
+  page
+</p>
+  <dl class="dl-horizontal">
+% for my $k (sort keys %$status_counts) {
+  <dt>
+    %= $k
+  </dt>
+  <dd>
+    %= $status_counts->{$k}
+  </dd>
+% }
+  </dl>
 
+
+% }
 % if ($conversion_errors && @$conversion_errors) {
-<h2>Conversion errors</h2>
+<h2>SampleTab Conversion errors</h2>
 <table class="table table-hover table-striped table-condensed">
   <thead>
     <tr>
@@ -924,6 +967,6 @@ $(document).ready(function(){
 @@ exception.html.ep
 % layout 'layout', title => 'error';
 <h1>Exception</h1>
-<p><%= $exception->message %></p>
+<pre><%= $exception->message %></pre>
 <h1>Stash</h1>
 <pre><%= dumper $snapshot %></pre>
