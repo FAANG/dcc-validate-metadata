@@ -138,13 +138,13 @@ sub row_to_object {
             $row->[$i] =~ s/^\s|\s$//g;
         }
 
-        if ($name eq 'Term Source REF'){
+        if (lc($name) eq 'term source ref'){
           $pr_att->source_ref( $row->[$i] );
         }
-        elsif ( $name eq 'Term Source ID' ) {
+        elsif ( lc($name) eq 'term source id' ) {
           $pr_att->id( $row->[$i] );
         }
-        elsif ( $name eq 'Unit' ) {
+        elsif ( lc($name) eq 'unit' || lc($name) eq 'units' ) {
           $pr_att->units( $row->[$i] );
         }
         else {
