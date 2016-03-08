@@ -488,17 +488,17 @@ $(document).ready(function(){
 <h2>Endpoints</h2>
 <dl class="dl-horizontal">
 <dt>
-%= link_to '/rule_sets' => 'rule_sets'
+<a href="./rule_sets">/rule_sets</a>
 </dt>
 <dd>List rule sets loaded</dd>
 <dt>/rule_sets/:name</dt>
 <dd>View the detail of one ruleset</dt>
 <dt>
-%= link_to '/validate' => 'validate'
+  <a href="./validate">/validate</a>
 </dt>
 <dd>Validate metadata against a rule set</dd>
 <dt>
-%= link_to '/sample_tab' => 'sample_tab'
+  <a href="./sample_tab">/sample_tab</a>
 </dt>
 <dd>Convert from Excel to SampleTab format, ready for submission to <a href="http://www.ebi.ac.uk/biosamples/">BioSamples@EMBL-EBI</a></dd>
 </dl>
@@ -520,7 +520,7 @@ $(document).ready(function(){
 <dl class="dl-horizontal">
 % for my $rule_set_key (sort keys %$rule_sets) {
   <dt>
-    %= link_to $rule_set_key => 'rule_sets/'.$rule_set_key
+    <a href="./rule_sets/<%= $rule_set_key %>"><%= $rule_set_key %></a>
   </dt>
   <dd><%= $rule_sets->{$rule_set_key}->name %></dd>
   <dd><%= $rule_sets->{$rule_set_key}->description %></dd>
