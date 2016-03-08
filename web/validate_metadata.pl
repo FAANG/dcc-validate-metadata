@@ -37,15 +37,6 @@ my $tsv_mime_type = ' text/tab-separated-values';
 app->secrets( ['nosecrets'] );
 app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type );
 
-# Move first part and slash from path to base path in production mode
-app->hook(
-  before_dispatch => sub {
-    my $c = shift;
-    push @{ $c->req->url->base->path->trailing_slash(1) },
-      shift @{ $c->req->url->path->leading_slash(0) };
-  }
-) if app->mode eq 'production';
-
 my $rule_locations = app->config('rules');
 my $loaders        = {
   json           => Bio::Metadata::Loader::JSONEntityLoader->new(),
