@@ -801,7 +801,7 @@ $(document).ready(function(){
         <td>
     %     my $btn_class = $class_lookup{$ent_status};
 
-          <button type="button" class="btn btn-<%= $btn_class %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes">
+          <button type="button" class="btn btn-<%= $btn_class %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes" data-trigger="focus">
             <%= $ent_status %>
           </button>
           <div class="hidden popover-content">
@@ -845,7 +845,7 @@ $(document).ready(function(){
           <td>
           <%= $a ? $a->value : '' %>
     %     if (defined $a_outcomes && scalar(@$a_outcomes)){
-            <button type="button" class="btn btn-<%= $class_lookup{$a_status} %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes">
+            <button type="button" class="btn btn-<%= $class_lookup{$a_status} %>" data-container="body" data-toggle="popover" data-placement="right" data-title="Notes" data-trigger="focus">
               <%= $a_status %>
             </button>
             <div class="hidden popover-content">
