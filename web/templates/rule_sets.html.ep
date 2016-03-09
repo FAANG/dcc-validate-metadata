@@ -1,5 +1,5 @@
 % layout 'layout', title => 'rule sets';
-<h1>Rule sets</h1>
+%= include 'page_title', title =>'Rule sets',help => 'rule_sets'
 <p>
 <%= scalar(keys %$rule_sets)%> rule sets available.
 </p>

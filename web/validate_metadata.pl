@@ -38,27 +38,31 @@ my $xlsx_mime_type =
 my $tsv_mime_type = ' text/tab-separated-values';
 app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type );
 
-my $rule_config = app->config('rules');
-my %rule_locations = map {%$_} @$rule_config;
-my @rule_names = map {keys %$_} @$rule_config;
+my $rule_config    = app->config('rules');
+my %rule_locations = map { %$_ } @$rule_config;
+my @rule_names     = map { keys %$_ } @$rule_config;
 
-my $brand = app->config('brand') || '';
+my $brand     = app->config('brand')     || '';
 my $brand_img = app->config('brand_img') || '';
-app->hook(before_render => sub {
-  my ($c, $args) = @_;
-  $c->stash('brand',app->config('brand') || '');
-  $c->stash('brand_img',app->config('brand_img') || '');
-  $c->stash('resource_name',app->config('resource_name') || '');
-  $c->stash('resource_description',app->config('resource_description') || '');
-  $c->stash('contact_email',app->config('contact_email') || '');
-});
+app->hook(
+  before_render => sub {
+    my ( $c, $args ) = @_;
+    $c->stash( 'brand',         app->config('brand')         || '' );
+    $c->stash( 'brand_img',     app->config('brand_img')     || '' );
+    $c->stash( 'resource_name', app->config('resource_name') || '' );
+    $c->stash( 'resource_description',
+      app->config('resource_description') || '' );
+    $c->stash( 'contact_email', app->config('contact_email') || '' );
+  }
+);
 
-my $loaders        = {
-  'JSON'           => Bio::Metadata::Loader::JSONEntityLoader->new(),
-  'BioSample .xlsx' => Bio::Metadata::Loader::XLSXBioSampleLoader->new()
+my $loaders = {
+  'JSON'            => Bio::Metadata::Loader::JSONEntityLoader->new(),
+  'BioSample .xlsx' => Bio::Metadata::Loader::XLSXBioSampleLoader->new(),
 };
 
-my %help_pages = ('REST API' => 'rest' );
+my %help_pages =
+  ( 'REST API' => 'rest', 'SampleTab conversion' => 'sample_tab', 'Rule sets' => 'rule_sets' );
 
 get '/' => sub {
   my $c = shift;
@@ -67,20 +71,20 @@ get '/' => sub {
 
 get '/help' => sub {
   my $c = shift;
-  $c->stash('help_pages', \%help_pages);
-  $c->render(template => 'help');
+  $c->stash( 'help_pages', \%help_pages );
+  $c->render( template => 'help' );
 };
 
 get '/help/#name' => sub {
   my $c    = shift;
   my $name = $c->param('name');
-  $c->render(template => 'help_'.$name);
+  $c->render( template => 'help_' . $name );
 };
 
 get '/rule_sets' => sub {
   my $c = shift;
 
-  my $rules = load_rules(\%rule_locations);
+  my $rules = load_rules( \%rule_locations );
 
   $c->respond_to(
     json => sub {
@@ -114,8 +118,7 @@ get '/rule_sets/#name' => sub {
 
 get '/sample_tab' => sub {
   my $c = shift;
-  my $supporting_data =
-    { valid_rule_set_names => \@rule_names, };
+  my $supporting_data = { valid_rule_set_names => \@rule_names, };
 
   $c->respond_to(
     json => sub {
@@ -235,7 +238,7 @@ sub form_validate_metadata_file {
 
 sub form_validate_rule_name {
   my ($form_validation) = @_;
-  $form_validation->required('rule_set_name')->in( @rule_names );
+  $form_validation->required('rule_set_name')->in(@rule_names);
 }
 
 sub load_rules {
@@ -265,15 +268,15 @@ sub validation_supporting_data {
   return {
     valid_file_formats   => [ sort keys %$loaders ],
     valid_rule_set_names => \@rule_names,
-    valid_output_formats => [ ['Web page' => 'html'], ['Excel' => 'xlsx'], ['JSON' => 'json'] ],
+    valid_output_formats =>
+      [ [ 'Web page' => 'html' ], [ 'Excel' => 'xlsx' ], [ 'JSON' => 'json' ] ],
   };
 }
 
 sub sampletab_form_errors {
   my ( $c, $form_validation, $st_errors, $status_counts ) = @_;
 
-  my $supporting_data =
-    { valid_rule_set_names => \@rule_names, };
+  my $supporting_data = { valid_rule_set_names => \@rule_names, };
 
   my %errors =
     map { $_ => $form_validation->error($_) }

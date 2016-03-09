@@ -1,8 +1,8 @@
 % layout 'layout', title => 'Excel to SampleTab conversion tool';
 %= form_for sample_tab => (enctype => 'multipart/form-data', method => 'POST') => begin
 
-<h1>Excel to SampleTab conversion</h1>
-<p>Convert an Excel file, based on the sample template, to SampleTab, ready for submission to <a href="http://www.ebi.ac.uk/biosamples">BioSamples@EMBL-EBI</a>.</p>
+%= include 'page_title', title => 'Excel to SampleTab conversion',help => 'sample_tab'
+<p>Convert an Excel file, based on the sample template, to <a href="http://www.ebi.ac.uk/biosamples/help/st.html">SampleTab</a>, ready for submission to <a href="http://www.ebi.ac.uk/biosamples">BioSamples@EMBL-EBI</a>.</p>
 <dl class="dl-horizontal">
   <dt>
     %= label_for metadata_file => 'Metadata file'
@@ -35,8 +35,6 @@
   </dd>
 % }
   </dl>
-
-
 % }
 % if ($conversion_errors && @$conversion_errors) {
 <h2>SampleTab Conversion errors</h2>
@@ -64,4 +62,3 @@
 </table>
 % }
 % end
-
