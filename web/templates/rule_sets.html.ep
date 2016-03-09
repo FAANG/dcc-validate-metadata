@@ -1,7 +1,7 @@
 % layout 'layout', title => 'rule sets';
-<h1>Available rule sets</h1>
+<h1>Rule sets</h1>
 <p>
-<%= scalar(keys %$rule_sets)%> rule sets loaded.
+<%= scalar(keys %$rule_sets)%> rule sets available.
 </p>
 <dl class="dl-horizontal">
 % for my $rule_set_key (sort keys %$rule_sets) {
@@ -12,4 +12,3 @@
   <dd><%= $rule_sets->{$rule_set_key}->description %></dd>
 % }
 </dl>
-
