@@ -1,0 +1,67 @@
+% layout 'layout', title => 'Excel to SampleTab conversion tool';
+%= form_for sample_tab => (enctype => 'multipart/form-data', method => 'POST') => begin
+
+<h1>Excel to SampleTab conversion</h1>
+<p>Convert an Excel file, based on the sample template, to SampleTab, ready for submission to <a href="http://www.ebi.ac.uk/biosamples">BioSamples@EMBL-EBI</a>.</p>
+<dl class="dl-horizontal">
+  <dt>
+    %= label_for metadata_file => 'Metadata file'
+  </dt>
+  <dd>
+    %= file_field 'metadata_file'
+  </dd>
+  <dt>
+   %= label_for rule_set_name => 'Rule set'
+  </dt>
+  <dd>
+    %= select_field rule_set_name => $valid_rule_set_names
+  </dd>
+</dl>
+%= submit_button 'Convert', class => 'btn btn-primary'
+% if ($status_counts && %$status_counts){
+  <h2>Validation outcome summary</h2>
+  <p>The following list shows how many of the entities (e.g. samples) submitted hit each validation status.
+  You can get more detail from the
+  %= link_to 'validation' => '/validate'
+  page
+</p>
+  <dl class="dl-horizontal">
+% for my $k (sort keys %$status_counts) {
+  <dt>
+    %= $k
+  </dt>
+  <dd>
+    %= $status_counts->{$k}
+  </dd>
+% }
+  </dl>
+
+
+% }
+% if ($conversion_errors && @$conversion_errors) {
+<h2>SampleTab Conversion errors</h2>
+<table class="table table-hover table-striped table-condensed">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Status</th>
+      <th>Message</th>
+    </tr>
+  </thead>
+% for my $outcome (@$conversion_errors) {
+  <tr>
+    <td>
+%= $outcome->rule ? $outcome->rule->name : $outcome->get_attribute(0) ? $outcome->get_attribute(0)->name : ''
+    </td>
+    <td>
+%= $outcome->outcome
+    </td>
+    <td>
+%= $outcome->message
+    </td>
+  </tr>
+% }
+</table>
+% }
+% end
+

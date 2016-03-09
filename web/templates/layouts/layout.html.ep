@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <title>Validate metadata - <%= $title %></title>
+
+    <link href="../favicon.ico" rel="icon" type="image/x-icon" />
+
+    <!-- Latest bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <style>
+      .field-with-error { background-color: rgb(217, 83, 79) }
+    </style>
+
+  </head>
+  <body>
+
+%= include 'navbar'
+
+    <div class="container-fluid">
+%= content
+    </div>
+
+    <!-- jquery and bootstrap JavaScript -->
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script>
+      $(document).ready(function(){
+        $(function(){
+          $('[data-toggle="popover"]').popover({
+            html: true,
+            content: function () {
+              return $(this).next('.popover-content').html();
+            }
+          })
+        })
+      });
+    </script>
+  </body>
+</html>
