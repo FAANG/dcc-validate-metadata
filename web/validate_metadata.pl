@@ -31,32 +31,50 @@ use Bio::Metadata::BioSample::SampleTab;
 plugin 'Config';
 plugin 'RenderFile';
 
+app->secrets( ['nosecrets'] );
+
 my $xlsx_mime_type =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 my $tsv_mime_type = ' text/tab-separated-values';
-app->secrets( ['nosecrets'] );
 app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type );
-
 
 my $rule_config = app->config('rules');
 my %rule_locations = map {%$_} @$rule_config;
 my @rule_names = map {keys %$_} @$rule_config;
+
 my $brand = app->config('brand') || '';
 my $brand_img = app->config('brand_img') || '';
+app->hook(before_render => sub {
+  my ($c, $args) = @_;
+  $c->stash('brand',app->config('brand') || '');
+  $c->stash('brand_img',app->config('brand_img') || '');
+  $c->stash('resource_name',app->config('resource_name') || '');
+  $c->stash('resource_description',app->config('resource_description') || '');
+  $c->stash('contact_email',app->config('contact_email') || '');
+});
+
 my $loaders        = {
   'JSON'           => Bio::Metadata::Loader::JSONEntityLoader->new(),
   'BioSample .xlsx' => Bio::Metadata::Loader::XLSXBioSampleLoader->new()
 };
 
-app->hook(before_render => sub {
-  my ($c, $args) = @_;
-  $c->stash('brand',$brand);
-  $c->stash('brand_img',$brand_img);
-});
+my %help_pages = ('REST API' => 'rest' );
 
 get '/' => sub {
   my $c = shift;
   $c->render( template => 'index' );
+};
+
+get '/help' => sub {
+  my $c = shift;
+  $c->stash('help_pages', \%help_pages);
+  $c->render(template => 'help');
+};
+
+get '/help/#name' => sub {
+  my $c    = shift;
+  my $name = $c->param('name');
+  $c->render(template => 'help_'.$name);
 };
 
 get '/rule_sets' => sub {

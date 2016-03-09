@@ -1,5 +1,9 @@
 % layout 'layout', title => 'error';
 <h1>Exception</h1>
-<pre><%= $exception->message %></pre>
+<pre>
+  <%= $exception->message %>
+</pre>
 <h1>Stash</h1>
-<pre><%= dumper $snapshot %></pre>
+<pre>
+  <%= dumper $snapshot %>
+</pre>

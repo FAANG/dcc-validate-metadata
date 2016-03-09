@@ -1,28 +1,4 @@
 % layout 'layout', title => 'home';
-<h1>Validate metadata REST API</h1>
-<h2>Endpoints</h2>
-<dl class="dl-horizontal">
-<dt>
-%= link_to '/rule_sets' => '/rule_sets'
-</dt>
-<dd>List rule sets loaded</dd>
-<dt>/rule_sets/:name</dt>
-<dd>View the detail of one ruleset</dt>
-<dt>
-%= link_to '/validate' => '/validate'
-</dt>
-<dd>Validate metadata against a rule set</dd>
-<dt>
-%= link_to '/sample_tab' => '/sample_tab'
-</dt>
-<dd>Convert from Excel to SampleTab format, ready for submission to <a href="http://www.ebi.ac.uk/biosamples/">BioSamples@EMBL-EBI</a></dd>
-</dl>
-<h2>Response types</h2>
-<p>Append <code>?format=<var>x</var></code> to the end of your query to control the format.</p>
-<p>Formats available:</p>
-<ul>
-<li>json</li>
-<li>html</li>
-</ul>
-<p>Alternatively, use the <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">"Accept"</a> header in your HTTP request.</p>
-
+<div class="jumbotron">
+  <h1>Metadata validation</h1>
+</div>

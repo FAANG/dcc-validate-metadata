@@ -1,0 +1,9 @@
+% layout 'layout', title => 'help';
+<h1>Help</h1>
+<ul>
+% for my $k (sort keys %$help_pages) {
+  <li>
+    <a href="/help/<%= $help_pages->{$k}%>"><%= $k%></a>
+  </li>
+% }
+</ul>
