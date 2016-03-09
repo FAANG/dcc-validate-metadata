@@ -37,10 +37,14 @@ my $tsv_mime_type = ' text/tab-separated-values';
 app->secrets( ['nosecrets'] );
 app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type );
 
-my $rule_locations = app->config('rules');
+
+my $rule_config = app->config('rules');
+my %rule_locations = map {%$_} @$rule_config;
+my @rule_names = map {keys %$_} @$rule_config;
+
 my $loaders        = {
-  json           => Bio::Metadata::Loader::JSONEntityLoader->new(),
-  biosample_xlsx => Bio::Metadata::Loader::XLSXBioSampleLoader->new()
+  'JSON'           => Bio::Metadata::Loader::JSONEntityLoader->new(),
+  'BioSample .xlsx' => Bio::Metadata::Loader::XLSXBioSampleLoader->new()
 };
 
 get '/' => sub {
@@ -51,7 +55,7 @@ get '/' => sub {
 get '/rule_sets' => sub {
   my $c = shift;
 
-  my $rules = load_rules($rule_locations);
+  my $rules = load_rules(\%rule_locations);
 
   $c->respond_to(
     json => sub {
@@ -68,7 +72,7 @@ get '/rule_sets/#name' => sub {
   my $c    = shift;
   my $name = $c->param('name');
 
-  my $rule_set = load_rules( $rule_locations, $name );
+  my $rule_set = load_rules( \%rule_locations, $name );
 
   return $c->reply->not_found if ( !$rule_set );
 
@@ -86,7 +90,7 @@ get '/rule_sets/#name' => sub {
 get '/sample_tab' => sub {
   my $c = shift;
   my $supporting_data =
-    { valid_rule_set_names => [ sort keys %$rule_locations ], };
+    { valid_rule_set_names => \@rule_names, };
 
   $c->respond_to(
     json => sub {
@@ -112,7 +116,7 @@ post '/sample_tab' => sub {
 
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
-  my $rule_set      = load_rules( $rule_locations, $rule_set_name );
+  my $rule_set      = load_rules( \%rule_locations, $rule_set_name );
 
   my $st_converter = Bio::Metadata::BioSample::SampleTab->new();
   my ( $msi, $scd );
@@ -174,7 +178,7 @@ post '/validate' => sub {
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
   my $loader        = $loaders->{ $c->param('file_format') };
-  my $rule_set      = load_rules( $rule_locations, $rule_set_name );
+  my $rule_set      = load_rules( \%rule_locations, $rule_set_name );
 
   my $metadata;
   if ( !$form_validation->has_error ) {
@@ -206,7 +210,7 @@ sub form_validate_metadata_file {
 
 sub form_validate_rule_name {
   my ($form_validation) = @_;
-  $form_validation->required('rule_set_name')->in( keys %$rule_locations );
+  $form_validation->required('rule_set_name')->in( @rule_names );
 }
 
 sub load_rules {
@@ -235,7 +239,7 @@ sub load_rules {
 sub validation_supporting_data {
   return {
     valid_file_formats   => [ sort keys %$loaders ],
-    valid_rule_set_names => [ sort keys %$rule_locations ],
+    valid_rule_set_names => \@rule_names,
     valid_output_formats => [qw(html xlsx json)],
   };
 }
@@ -244,7 +248,7 @@ sub sampletab_form_errors {
   my ( $c, $form_validation, $st_errors, $status_counts ) = @_;
 
   my $supporting_data =
-    { valid_rule_set_names => [ sort keys %$rule_locations ], };
+    { valid_rule_set_names => \@rule_names, };
 
   my %errors =
     map { $_ => $form_validation->error($_) }
