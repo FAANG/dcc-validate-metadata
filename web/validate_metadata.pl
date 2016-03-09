@@ -265,7 +265,7 @@ sub validation_supporting_data {
   return {
     valid_file_formats   => [ sort keys %$loaders ],
     valid_rule_set_names => \@rule_names,
-    valid_output_formats => [qw(html xlsx json)],
+    valid_output_formats => [ ['Web page' => 'html'], ['Excel' => 'xlsx'], ['JSON' => 'json'] ],
   };
 }
 

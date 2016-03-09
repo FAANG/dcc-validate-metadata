@@ -5,6 +5,13 @@
 <dl class="dl-horizontal">
 
   <dt>
+   %= label_for rule_set_name => 'Rule set'
+  </dt>
+  <dd>
+    %= select_field rule_set_name => $valid_rule_set_names
+  </dd>
+
+  <dt>
     %= label_for metadata_file => 'Metadata file'
   </dt>
   <dd>
@@ -19,14 +26,7 @@
   </dd>
 
   <dt>
-   %= label_for rule_set_name => 'Rule set'
-  </dt>
-  <dd>
-    %= select_field rule_set_name => $valid_rule_set_names
-  </dd>
-
-  <dt>
-   %= label_for format => 'output format'
+   %= label_for format => 'Output format'
   </dt>
   <dd>
     %= select_field format => $valid_output_formats
@@ -35,4 +35,3 @@
 </dl>
 %= submit_button 'Validate', class => 'btn btn-primary'
 % end
-
