@@ -31,6 +31,7 @@ body {
 
 /* Custom page footer */
 .footer {
+  margin-top: 20px;
   padding-top: 20px;
   color: #777;
   border-top: 1px solid rgb(87,87,86);
