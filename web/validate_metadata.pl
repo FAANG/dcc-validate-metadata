@@ -488,17 +488,17 @@ $(document).ready(function(){
 <h2>Endpoints</h2>
 <dl class="dl-horizontal">
 <dt>
-%= link_to '/rule_sets' => 'rule_sets'
+%= link_to '/rule_sets' => '/rule_sets'
 </dt>
 <dd>List rule sets loaded</dd>
 <dt>/rule_sets/:name</dt>
 <dd>View the detail of one ruleset</dt>
 <dt>
-%= link_to '/validate' => 'validate'
+%= link_to '/validate' => '/validate'
 </dt>
 <dd>Validate metadata against a rule set</dd>
 <dt>
-%= link_to '/sample_tab' => 'sample_tab'
+%= link_to '/sample_tab' => '/sample_tab'
 </dt>
 <dd>Convert from Excel to SampleTab format, ready for submission to <a href="http://www.ebi.ac.uk/biosamples/">BioSamples@EMBL-EBI</a></dd>
 </dl>
@@ -520,7 +520,7 @@ $(document).ready(function(){
 <dl class="dl-horizontal">
 % for my $rule_set_key (sort keys %$rule_sets) {
   <dt>
-    %= link_to $rule_set_key => 'rule_sets/'.$rule_set_key
+    %= link_to $rule_set_key => '/rule_sets/'.$rule_set_key
   </dt>
   <dd><%= $rule_sets->{$rule_set_key}->name %></dd>
   <dd><%= $rule_sets->{$rule_set_key}->description %></dd>
@@ -640,7 +640,7 @@ $(document).ready(function(){
   <h2>Validation outcome summary</h2>
   <p>The following list shows how many of the entities (e.g. samples) submitted hit each validation status.
   You can get more detail from the
-  %= link_to 'validation' => 'validate'
+  %= link_to 'validation' => '/validate'
   page
 </p>
   <dl class="dl-horizontal">
@@ -778,7 +778,7 @@ $(document).ready(function(){
       </div>
     % }
 
-    <p><%= $total %></dd> entities from <b><%= $filename %></b> were validated against the <%= link_to $rule_set_name => 'rule_sets/'.$rule_set_name %> rule set, with the following outcomes:</p>
+    <p><%= $total %></dd> entities from <b><%= $filename %></b> were validated against the <%= link_to $rule_set_name => '/rule_sets/'.$rule_set_name %> rule set, with the following outcomes:</p>
 
     <dl class="dl-horizontal">
 
