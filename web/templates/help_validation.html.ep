@@ -1,7 +1,31 @@
 % layout 'layout', title => 'Help: Validation';
 <h1>Help <small>Validation</small></h1>
 <p>
-  The <%= link_to 'validation' => '/validate/' %> page can help you check if a set of
-  metadata, describing things such as samples or experiments, passes a set of
-  rules. The rule sets are described on a <%= link_to 'separate page' => '/rule_sets/' %>.
+  The <%= link_to 'validation' => '/validate/' %> page can help you check if a
+  set of metadata, describing things such as samples or experiments, passes a
+  set of rules. The rule sets are described on a
+  <%= link_to 'separate page' => '/rule_sets/' %>.
+</p>
+<p>
+  Select a metadata file to upload, choose the rule set to apply and choose an
+  output format - Web page or Excel are most likely to be useful. Either of
+  these will give you a table of all the entities in your input file, with a
+  note of whether they passed or failed the validation, and why.
+</p>
+
+<h2>REST API</h2>
+<h3>POST to <%= link_to '/validate' => '/validate' %></h3>
+<p>The form takes these parameters:</p>
+<dl>
+  <dt>rule_set</dt>
+  <dd>Name of the rule set to use in validation</dd>
+  <dt>metadata_file</dt>
+  <dd>A file containing metadata to validate</dd>
+  <dt>file_format</dt>
+  <dd>What format is the metadata in?</dd>
+  <dt>format</dt>
+  <dd>Desired output format</dd>
+</dl>
+<p>Make a GET request to <%= link_to '/validate' => '/validate?format=json' %>
+  to see valid values for each field.
 </p>
