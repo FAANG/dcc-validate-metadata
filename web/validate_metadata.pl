@@ -214,6 +214,7 @@ post '/validate' => sub {
       $metadata = load_metadata( $metadata_file, $loader );
     }
     catch {
+      print STDERR "Conversion error:$/".$_;
       $form_validation->error( 'file_format'   => ['could not parse file'], );
       $form_validation->error( 'metadata_file' => ['could not parse file'] );
     };
