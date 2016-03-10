@@ -5,7 +5,8 @@ use warnings;
 
 use Carp;
 use Moose::Role;
-use Spreadsheet::ParseExcel::Stream::XLSX;
+use Spreadsheet::ParseXLSX;
+
 requires 'process_sheet';
 
 sub load {
@@ -15,12 +16,13 @@ sub load {
 
     my @entities;
 
-    my $xls = Spreadsheet::ParseExcel::Stream::XLSX->new($file_path);
+    my $parser = Spreadsheet::ParseXLSX->new;
+    my $workbook = $parser->parse($file_path);
 
-    while ( my $sheet = $xls->sheet() ) {
+    for my $sheet  ($workbook->worksheets ) {
         my $set;
         if (%to_process) {
-            next unless exists( $to_process{ $sheet->name } );
+            next unless exists( $to_process{ $sheet->get_name } );
             $set = $self->process_sheet($sheet);
         }
         else {
