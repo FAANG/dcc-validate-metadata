@@ -120,15 +120,15 @@ sub validate_by_count {
 
     if ( $rule->mandatory eq 'mandatory' && $num_attrs == 0 ) {
         $o->outcome('error');
-        $o->message('mandatory attribute not present');
+        $o->message('mandatory attribute not present - '.$rule->name);
     }
     elsif ( $rule->mandatory eq 'recommended' && $num_attrs == 0 ) {
         $o->outcome('warning');
-        $o->message('recommended attribute not present');
+        $o->message('recommended attribute not present - '.$rule->name);
     }
     elsif ( !$rule->allow_multiple && $num_attrs > 1 ) {
         $o->outcome('error');
-        $o->message('multiple entries for attribute present');
+        $o->message('multiple entries for attribute present - '.$rule->name);
     }
 }
 
