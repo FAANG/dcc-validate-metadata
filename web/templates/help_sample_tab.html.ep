@@ -1,5 +1,5 @@
-% layout 'layout', title => 'SampleTab Conversion';
-<h1>Excel to SampleTab Conversion</h1>
+% layout 'layout', title => 'Help: SampleTab Conversion';
+<h1>Help <small>Excel to SampleTab Conversion</small></h1>
 <p><a href="http://www.ebi.ac.uk/biosamples">BioSamples@EMBL-EBI</a> accept
   submissions in the <a href="http://www.ebi.ac.uk/biosamples/help/st.html">SampleTab</a>
 format. This tool converts files based on an excel template into SampleTab.</p>
