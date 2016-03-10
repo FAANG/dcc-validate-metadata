@@ -60,7 +60,7 @@
 </p>
 <p>
   When searching for appropriate ontology terms, we prefer to use the
-  <% link_to 'new version of OLS' => 'http://www.ebi.ac.uk/ols/beta/index' %>.
+  <%= link_to 'latest version of OLS' => 'http://www.ebi.ac.uk/ols/beta/index' %>.
 </p>
 <p>
   All samples can refer to other BioSamples, to indicate parent/child
@@ -70,4 +70,13 @@
    BioSample ID (e.g. SAMEA2399277), if the sample was submitted previously.
    References to samples from previous submissions will only pass validation if
    the samples are public in BioSamples.
+</p>
+
+<h1>Next steps</h1>
+<p>
+  Once the the spreadsheet has been prepared, use the
+  <%= link_to 'validation tool' => '/validate' %> to see if the metadata satifies
+  the metadata rules. Once the spreadsheet passes the validation checks, convert
+  it to SampleTab, using the <%= 'conversion tool' => '/convert' %>. Finally,
+  submit the resulting SampleTab file to BioSamples.
 </p>
