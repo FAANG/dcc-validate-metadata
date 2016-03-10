@@ -61,8 +61,13 @@ my $loaders = {
   'BioSample .xlsx' => Bio::Metadata::Loader::XLSXBioSampleLoader->new(),
 };
 
-my %help_pages =
-  ( 'REST API' => 'rest', 'SampleTab conversion' => 'sample_tab', 'Rule sets' => 'rule_sets', 'Validation' => 'validation' );
+my %help_pages = (
+  'REST API'             => 'rest',
+  'SampleTab conversion' => 'sample_tab',
+  'Rule sets'            => 'rule_sets',
+  'Validation'           => 'validation',
+  'How to use this site' => 'how_to'
+);
 
 get '/' => sub {
   my $c = shift;
@@ -214,7 +219,7 @@ post '/validate' => sub {
       $metadata = load_metadata( $metadata_file, $loader );
     }
     catch {
-      print STDERR "Conversion error:$/".$_;
+      print STDERR "Conversion error:$/" . $_;
       $form_validation->error( 'file_format'   => ['could not parse file'], );
       $form_validation->error( 'metadata_file' => ['could not parse file'] );
     };
