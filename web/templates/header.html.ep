@@ -5,10 +5,18 @@
     <nav>
       <ul class="nav nav-pills pull-right">
 
-          <li><a class="inactive" href="/rule_sets">Rule sets</a></li>
-          <li><a class="inactive" href="/validate">Validate</a></li>
-          <li><a class="inactive" href="/sample_tab">Convert</a></li>
-          <li><a class="inactive" href="/help">Help</a></li>
+          <li>
+            %= link_to 'Rule sets' => '/rule_sets/'
+          </li>
+          <li>
+            %= link_to 'Validate' => '/validate/'
+          </li>
+          <li>
+            %= link_to 'Convert' => '/sample_tab/'
+          </li>
+          <li>
+            %= link_to 'Help' => '/help/'
+          </li>
         </ul>
       </ul>
     </nav>
