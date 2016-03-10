@@ -1,0 +1,37 @@
+% layout 'layout', title => 'validation tool';
+%= form_for validate => (enctype => 'multipart/form-data', method => 'POST') => begin
+
+%= include 'page_title', title => 'Metadata validation',help => 'validation'
+<dl class="dl-horizontal">
+
+  <dt>
+   %= label_for rule_set_name => 'Rule set'
+  </dt>
+  <dd>
+    %= select_field rule_set_name => $valid_rule_set_names
+  </dd>
+
+  <dt>
+    %= label_for metadata_file => 'Metadata file'
+  </dt>
+  <dd>
+    %= file_field 'metadata_file'
+  </dd>
+
+  <dt>
+   %= label_for file_format => 'File format'
+  </dt>
+  <dd>
+    %= select_field file_format => $valid_file_formats
+  </dd>
+
+  <dt>
+   %= label_for format => 'Output format'
+  </dt>
+  <dd>
+    %= select_field format => $valid_output_formats
+  </dd>
+
+</dl>
+%= submit_button 'Validate', class => 'btn btn-primary'
+% end

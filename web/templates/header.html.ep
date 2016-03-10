@@ -1,0 +1,25 @@
+<header class="header clearfix">
+
+  <div class="wrapper">
+    <!-- Fixed navbar -->
+    <nav>
+      <ul class="nav nav-pills pull-right">
+
+          <li><a class="inactive" href="/rule_sets">Rule sets</a></li>
+          <li><a class="inactive" href="/validate">Validate</a></li>
+          <li><a class="inactive" href="/sample_tab">Convert</a></li>
+          <li><a class="inactive" href="/help">Help</a></li>
+        </ul>
+      </ul>
+    </nav>
+    <a href="/">
+    % if ($brand_img) {
+      <img src="<%= $brand_img %>"/>
+    % } elsif ($resource_name) {
+      <%= $resource_name %>
+    %} else {
+      Validate metadata
+    %}
+    </a>
+  </div>
+</header>

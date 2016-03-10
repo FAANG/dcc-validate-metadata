@@ -1,0 +1,19 @@
+<footer class="footer">
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-xs-6">
+        <dl class="dl-horiztonal">
+          <dt><%= $resource_name %></dt>
+          <dd>
+            <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+            <a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>
+          </dd>
+        </dl>
+      </div>
+      <div class="col-xs-6">
+        <p class="text"><%= $resource_description %></p>
+      </div>
+    </div>
+  </div>
+</footer>

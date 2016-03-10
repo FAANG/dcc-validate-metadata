@@ -5,4 +5,4 @@ popd > /dev/null
 
 APPLIBPATH=$SCRIPTPATH/../lib
 PERL5LIB=${PERL5LIB}:$APPLIBPATH
-morbo -w $SCRIPTPATH/validate_metadata.conf -w $SCRIPTPATH/public -w $APPLIBPATH $SCRIPTPATH/validate_metadata.pl 
+morbo -w $SCRIPTPATH/validate_metadata.conf -w $SCRIPTPATH/public -w $SCRIPTPATH/templates -w $APPLIBPATH $SCRIPTPATH/validate_metadata.pl 

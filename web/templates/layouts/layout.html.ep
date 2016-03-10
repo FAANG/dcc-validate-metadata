@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <title>Validate metadata - <%= $title %></title>
+
+    <link href="/favicon.ico" rel="icon" type="image/x-icon" />
+
+    <!-- Latest bootstrap CSS -->
+    %= stylesheet 'https://maxcdn.bootstrapcdn.com/bootswatch/3.3.6/flatly/bootstrap.min.css'
+    %= stylesheet '/css/site.css'
+
+  </head>
+  <body>
+    <div class="container">
+      %= include 'header'
+      <div class="wrapper">
+        %= content
+      </div>
+      %= include 'footer'
+    </div>
+
+    <!-- jquery and bootstrap JavaScript -->
+    %= javascript 'https://code.jquery.com/jquery-1.11.3.min.js'
+    %= javascript 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js'
+    %= javascript '/js/site.js'
+  </body>
+</html>

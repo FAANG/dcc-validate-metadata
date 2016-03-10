@@ -1,0 +1,7 @@
+% layout 'layout', title => 'Help: Validation';
+<h1>Help <small>Validation</small></h1>
+<p>
+  The <a href="/validation">validation</a> page can help you check if a set of
+  metadata, describing things such as samples or experiments, passes a set of
+  rules. The rule sets are described on a <a href="/rule_sets">separate page</a>.
+</p>
