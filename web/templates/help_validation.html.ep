@@ -3,5 +3,5 @@
 <p>
   The <a href="/validation">validation</a> page can help you check if a set of
   metadata, describing things such as samples or experiments, passes a set of
-  rules. The rule sets are described on a <a href="/rule_sets">separate page</a>.
+  rules. The rule sets are described on a <%= link_to 'separate page' => '/rule_sets/' %>.
 </p>
