@@ -62,7 +62,7 @@ my $loaders = {
 };
 
 my %help_pages =
-  ( 'REST API' => 'rest', 'SampleTab conversion' => 'sample_tab', 'Rule sets' => 'rule_sets' );
+  ( 'REST API' => 'rest', 'SampleTab conversion' => 'sample_tab', 'Rule sets' => 'rule_sets', 'Validation' => 'validation' );
 
 get '/' => sub {
   my $c = shift;

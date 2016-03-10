@@ -1,5 +1,8 @@
 % layout 'layout', title => 'help';
 <h1>Help</h1>
+<p>Help is available on each page by clicking the question mark icons <a><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></p></a>
+
+<h2>Help pages</h2>
 <ul>
 % for my $k (sort keys %$help_pages) {
   <li>

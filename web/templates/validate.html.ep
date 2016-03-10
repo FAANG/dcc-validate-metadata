@@ -1,7 +1,7 @@
 % layout 'layout', title => 'validation tool';
 %= form_for validate => (enctype => 'multipart/form-data', method => 'POST') => begin
 
-<h1>Metadata validation</h1>
+%= include 'page_title', title => 'Metadata validation',help => 'validation'
 <dl class="dl-horizontal">
 
   <dt>
