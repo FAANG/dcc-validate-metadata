@@ -6,7 +6,7 @@
 <ul>
 % for my $k (sort keys %$help_pages) {
   <li>
-    <a href="/help/<%= $help_pages->{$k}%>"><%= $k%></a>
+    %= link_to $k => '/help/'.$help_pages->{$k}
   </li>
 % }
 </ul>

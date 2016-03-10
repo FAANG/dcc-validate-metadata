@@ -20,7 +20,7 @@
         </ul>
       </ul>
     </nav>
-    <a href="/">
+    <a href="<%= url_for '/' %>">
     % if ($brand_img) {
       <img src="<%= $brand_img %>"/>
     % } elsif ($resource_name) {
