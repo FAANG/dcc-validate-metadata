@@ -16,7 +16,7 @@
 <h2>REST API</h2>
 <h3>POST to <%= link_to '/validate' => '/validate' %></h3>
 <p>The form takes these parameters:</p>
-<dl>
+<dl class="dl-horizontal">
   <dt>rule_set</dt>
   <dd>Name of the rule set to use in validation</dd>
   <dt>metadata_file</dt>
