@@ -66,10 +66,6 @@ sub validate {
 	 my ($self,$entity)=@_;
 	 
 	 my $org_attrbs=$entity->organised_attr;
-	 
-	 if ($self->selector) {
-		 die("[ERROR] attribute ",$self->selector," is not a valid 'selector' attribute") if !exists($org_attrbs->{$self->selector});
-	 }
   
      my $validator = JSON::Validator->new;
      $validator->schema($self->schema());
@@ -81,13 +77,34 @@ sub validate {
 	 $hash->{'attributes'}=();
 	 $hash->{'attributes'}->{'SELECTOR'}=$attrbs;
 	 	 
-	 my @warnings = $validator->validate($hash);
-	 
 	 my @outcomes;
 	 my $outcome_overall='pass';
 	 
+	 if ($self->selector) {
+		 warn("[ERROR] attribute ",$self->selector," is not a valid 'selector' attribute for entity with alias:",$entity->id,
+		 ".\n\tMaybe this attribute is not present in this Entity?.\n\tSkipping...\n") if !exists($org_attrbs->{$self->selector});
+		 if (!exists($org_attrbs->{$self->selector})) {
+			my $msg="attribute ".$self->selector." selector is not present";
+		 	my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
+			$v_outcome->entity($entity);
+			$v_outcome->message($msg);
+	  		$v_outcome->outcome('error');
+			my $rule= Bio::Metadata::Rules::Rule->new (
+				mandatory=> 'mandatory',
+				name=> $self->selector,
+				type=> 'text'
+			);
+			$v_outcome->rule($rule);
+			push @outcomes,$v_outcome;
+			return ('error',\@outcomes);
+		 }
+	 }
+
+	 my @warnings = $validator->validate($hash);
+	 
 	 if (@warnings) {
 		 my $new_warnings=$self->prepare_warnings($warnings[0]);
+
          foreach my $w (@$new_warnings) {
 			$outcome_overall='warning' unless $outcome_overall eq 'error' ;
 			my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
@@ -137,6 +154,8 @@ sub validate_all {
   
   
     for my $e (@$entities){
+	  warn("[INFO] Validating sample ",$e->id,"\n");
+
       my ($status, $outcomes) = $self->validate($e);
   	
       $entity_status{$e} = $status;
@@ -181,35 +200,42 @@ sub prepare_attrs {
 sub prepare_warnings {
 	my ($self,$w)=@_;
 	
-	my $not_branch;
+	my %notbranch;
 	my $selector=$self->selector;
 	
 	my @a=split/\[\d+\]/,$w->message;
 	
-	if ($self->selector) {
+	if ($self->selector && $w->path=~/SELECTOR/) {
 		foreach my $a (@a) {
 			$a=~s/^\s\///;
 			if ($a=~/$selector\: Not in enum list\:/) {
-				$not_branch=$1 if $a=~/branch\:(\d+)\]/;
-				last;
+				$notbranch{$1}=0 if $a=~/branch\:(\d+)\]/;
 			}
 		}
 	}
 	
-	$not_branch="n.a." if !$not_branch;
-	
 	my @warnings;
+	my $seen=0;
 
-	foreach my $a (@a) {
-		next if $a=~/branch\:$not_branch\]/;
-		next if $a=~/oneOf failed\:\s\(/;
-		my $msg;
-		$a=~s/^\s\///;
-		$a=~s/\[\w+\sbranch\:\d+\][\s|\)]//;
-		my $name=$1 if $a=~/^(\w+)\:\s.+/;
-		die("[ERROR] Attribute was not found") if !$name;
-		$msg.="[ATTRIBUTE]:".$a;
-		push @warnings,&E($name,$msg);
+	if ($w->path=~/SELECTOR/) {
+		foreach my $msg (@a) {
+			next if $msg=~/oneOf failed\:\s\(/;
+			my $branch=$1 if $msg=~/branch\:(\d+)\]/;
+			next if exists($notbranch{$branch});
+			$seen=1;
+			$msg=~s/^\s\///;
+			$msg=~s/\[\w+\sbranch\:\d+\][\s|\)]//;
+			my $name=$1 if $msg=~/^(\w+)\:\s.+/;
+			die("[ERROR] Attribute was not found") if !$name;
+			push @warnings,&E($name,$msg);
+		}
+    } else {
+		my $name=$1 if $w->path=~/\/(\w+)/;
+		push @warnings,&E($name,$w->message);
+	}
+	
+	if ($w->path=~/SELECTOR/ && keys(%notbranch)>1 && $seen==0) {
+		push @warnings,&E($self->selector,"[ATTRIBUTE]: is not a valid term");
 	}
 	
 	return \@warnings;

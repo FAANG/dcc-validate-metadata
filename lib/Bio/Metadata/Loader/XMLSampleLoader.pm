@@ -39,14 +39,25 @@ sub hash_to_object {
 
   #set 'attributes' in Entity.pm
   #arrayref of hashes
-  my $attrb_array=$hash->{'SAMPLE_ATTRIBUTES'}->{'SAMPLE_ATTRIBUTE'};
+  my $attrb_array;
+  
+  if (ref $hash->{'SAMPLE_ATTRIBUTES'}->{'SAMPLE_ATTRIBUTE'} eq 'ARRAY') {
+	  $attrb_array=$hash->{'SAMPLE_ATTRIBUTES'}->{'SAMPLE_ATTRIBUTE'};
+  } elsif(ref $hash->{'SAMPLE_ATTRIBUTES'}->{'SAMPLE_ATTRIBUTE'} eq 'HASH') {
+  	  push @$attrb_array,$hash->{'SAMPLE_ATTRIBUTES'}->{'SAMPLE_ATTRIBUTE'};
+  }
 
   foreach my $attrb (@$attrb_array) {
-    my $o_attrb= Bio::Metadata::Attribute->new(
-					 name => $attrb->{'TAG'},
-					 value => $attrb->{'VALUE'}
-					);
-    $o->add_attribute($o_attrb);
+	  my $tag=$attrb->{'TAG'};
+	  my $value=$attrb->{'VALUE'};
+	  $tag="NA" if ref $tag;
+	  $value="NA" if ref $value;
+	  
+	  my $o_attrb= Bio::Metadata::Attribute->new(
+	  	name => $tag,
+		value => $value
+		);
+		$o->add_attribute($o_attrb);
   }
   
   if ($self->attr_links) {
