@@ -30,7 +30,7 @@ else {
   print 'Description: '.($rules->description//'').$/.'Groups:'.$/;
   for my $rg ( $rules->all_rule_groups ) {
     print
-      join( ' ', "\t".$rg->name, 'with', $rg->count_rules, 'rules'.$/ );
+      join( ' ', "\t".$rg->name, 'with', $rg->count_rules, 'rules,', $rg->count_imports,'imports'.$/ );
   }
 }
 exit 0;
