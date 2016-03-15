@@ -1,0 +1,8 @@
+% layout 'layout', title => 'home';
+<h1>Metadata validation</h1>
+<p>This site has three purposes:</p>
+<ol>
+  <li>Provide access to the project metadata rules</li>
+  <li>Allow project members to check that their metadata complies with the specification</li>
+  <li>Convert spreadsheets into to SampleTab format for submission to BioSamples</li>
+</ol>

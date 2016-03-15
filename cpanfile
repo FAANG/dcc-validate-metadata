@@ -18,11 +18,11 @@ requires 'URI';
 requires 'DateTime::Format::ISO8601';
 requires 'Mojolicious', '>= 6.33';
 requires 'Mojolicious::Plugin::RenderFile';
-requires 'Spreadsheet::ParseExcel::Stream::XLSX';
-requires 'Spreadsheet::XLSX';
+requires 'Spreadsheet::ParseXLSX';
 requires 'Cache::LRU';
 requires 'LWP::UserAgent';
 requires 'XML::LibXML';
+requires 'Text::Unidecode';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';

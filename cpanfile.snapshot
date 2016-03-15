@@ -291,6 +291,85 @@ DISTRIBUTIONS
       Crypt::RC4 2.02
     requirements:
       ExtUtils::MakeMaker 0
+  CryptX-0.027
+    pathname: M/MI/MIK/CryptX-0.027.tar.gz
+    provides:
+      Crypt::AuthEnc undef
+      Crypt::AuthEnc::CCM undef
+      Crypt::AuthEnc::EAX undef
+      Crypt::AuthEnc::GCM undef
+      Crypt::AuthEnc::OCB undef
+      Crypt::Cipher undef
+      Crypt::Cipher::AES undef
+      Crypt::Cipher::Anubis undef
+      Crypt::Cipher::Blowfish undef
+      Crypt::Cipher::CAST5 undef
+      Crypt::Cipher::Camellia undef
+      Crypt::Cipher::DES undef
+      Crypt::Cipher::DES_EDE undef
+      Crypt::Cipher::KASUMI undef
+      Crypt::Cipher::Khazad undef
+      Crypt::Cipher::MULTI2 undef
+      Crypt::Cipher::Noekeon undef
+      Crypt::Cipher::RC2 undef
+      Crypt::Cipher::RC5 undef
+      Crypt::Cipher::RC6 undef
+      Crypt::Cipher::SAFERP undef
+      Crypt::Cipher::SAFER_K128 undef
+      Crypt::Cipher::SAFER_K64 undef
+      Crypt::Cipher::SAFER_SK128 undef
+      Crypt::Cipher::SAFER_SK64 undef
+      Crypt::Cipher::SEED undef
+      Crypt::Cipher::Skipjack undef
+      Crypt::Cipher::Twofish undef
+      Crypt::Cipher::XTEA undef
+      Crypt::Digest undef
+      Crypt::Digest::CHAES undef
+      Crypt::Digest::MD2 undef
+      Crypt::Digest::MD4 undef
+      Crypt::Digest::MD5 undef
+      Crypt::Digest::RIPEMD128 undef
+      Crypt::Digest::RIPEMD160 undef
+      Crypt::Digest::RIPEMD256 undef
+      Crypt::Digest::RIPEMD320 undef
+      Crypt::Digest::SHA1 undef
+      Crypt::Digest::SHA224 undef
+      Crypt::Digest::SHA256 undef
+      Crypt::Digest::SHA384 undef
+      Crypt::Digest::SHA512 undef
+      Crypt::Digest::SHA512_224 undef
+      Crypt::Digest::SHA512_256 undef
+      Crypt::Digest::Tiger192 undef
+      Crypt::Digest::Whirlpool undef
+      Crypt::KeyDerivation undef
+      Crypt::Mac undef
+      Crypt::Mac::F9 undef
+      Crypt::Mac::HMAC undef
+      Crypt::Mac::OMAC undef
+      Crypt::Mac::PMAC undef
+      Crypt::Mac::Pelican undef
+      Crypt::Mac::XCBC undef
+      Crypt::Mode undef
+      Crypt::Mode::CBC undef
+      Crypt::Mode::CFB undef
+      Crypt::Mode::CTR undef
+      Crypt::Mode::ECB undef
+      Crypt::Mode::OFB undef
+      Crypt::PK undef
+      Crypt::PK::DH undef
+      Crypt::PK::DSA undef
+      Crypt::PK::ECC undef
+      Crypt::PK::RSA undef
+      Crypt::PRNG undef
+      Crypt::PRNG::Fortuna undef
+      Crypt::PRNG::RC4 undef
+      Crypt::PRNG::Sober128 undef
+      Crypt::PRNG::Yarrow undef
+      CryptX 0.027
+    requirements:
+      ExtUtils::CBuilder 0
+      Module::Build 0
+      perl 5.006
   Data-DPath-0.55
     pathname: S/SC/SCHWIGON/Data-DPath-0.55.tar.gz
     provides:
@@ -1058,6 +1137,13 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       HTTP::Date 6
       perl 5.006002
+  Graphics-ColorUtils-0.17
+    pathname: J/JA/JANERT/Graphics-ColorUtils-0.17.tar.gz
+    provides:
+      Graphics::ColorUtils 0.17
+    requirements:
+      Carp 0
+      ExtUtils::MakeMaker 0
   Guard-1.023
     pathname: M/ML/MLEHMANN/Guard-1.023.tar.gz
     provides:
@@ -2165,6 +2251,31 @@ DISTRIBUTIONS
       Coro 0
       ExtUtils::MakeMaker 0
       Spreadsheet::ParseExcel 0
+  Spreadsheet-ParseXLSX-0.20
+    pathname: D/DO/DOY/Spreadsheet-ParseXLSX-0.20.tar.gz
+    provides:
+      Spreadsheet::ParseXLSX 0.20
+      Spreadsheet::ParseXLSX::Decryptor 0.20
+      Spreadsheet::ParseXLSX::Decryptor::Agile 0.20
+      Spreadsheet::ParseXLSX::Decryptor::Standard 0.20
+    requirements:
+      Archive::Zip 0
+      Crypt::Mode::CBC 0
+      Crypt::Mode::ECB 0
+      Digest::SHA 0
+      Encode 0
+      ExtUtils::MakeMaker 0
+      File::Temp 0
+      Graphics::ColorUtils 0
+      MIME::Base64 0
+      OLE::Storage_Lite 0
+      Scalar::Util 0
+      Spreadsheet::ParseExcel 0.61
+      XML::Twig 0
+      base 0
+      perl 5.008
+      strict 0
+      warnings 0
   Spreadsheet-XLSX-0.15
     pathname: M/MI/MIKEB/Spreadsheet-XLSX-0.15.tar.gz
     provides:
@@ -2369,6 +2480,13 @@ DISTRIBUTIONS
       perl 5.006
       strict 0
       warnings 0
+  Text-Unidecode-1.27
+    pathname: S/SB/SBURKE/Text-Unidecode-1.27.tar.gz
+    provides:
+      Text::Unidecode 1.27
+    requirements:
+      ExtUtils::MakeMaker 0
+      perl 5.008
   Try-Tiny-0.24
     pathname: E/ET/ETHER/Try-Tiny-0.24.tar.gz
     provides:
@@ -2613,6 +2731,20 @@ DISTRIBUTIONS
       XML::SAX 0.15
       XML::SAX::Expat 0
       perl 5.008
+  XML-Twig-3.49
+    pathname: M/MI/MIROD/XML-Twig-3.49.tar.gz
+    provides:
+      XML::Twig 3.49
+      XML::Twig::Elt 3.49
+      XML::Twig::Entity 3.49
+      XML::Twig::Entity_list 3.49
+      XML::Twig::XPath 0.02
+      XML::Twig::XPath::Attribute 0.02
+      XML::Twig::XPath::Elt 0.02
+      XML::Twig::XPath::Namespace 0.02
+    requirements:
+      ExtUtils::MakeMaker 0
+      XML::Parser 2.23
   aliased-0.34
     pathname: E/ET/ETHER/aliased-0.34.tar.gz
     provides:
