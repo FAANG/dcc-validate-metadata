@@ -61,6 +61,8 @@ my $loaders = {
   'BioSample .xlsx' => Bio::Metadata::Loader::XLSXBioSampleLoader->new(),
 };
 
+my $rules = load_rules( \%rule_locations );
+
 my %help_pages = (
   'REST API'             => 'rest',
   'SampleTab conversion' => 'sample_tab',
@@ -89,8 +91,6 @@ get '/help/#name' => sub {
 get '/rule_sets' => sub {
   my $c = shift;
 
-  my $rules = load_rules( \%rule_locations );
-
   $c->respond_to(
     json => sub {
       $c->render( json => { rule_set_names => [ sort keys %$rules ] } );
@@ -106,7 +106,7 @@ get '/rule_sets/#name' => sub {
   my $c    = shift;
   my $name = $c->param('name');
 
-  my $rule_set = load_rules( \%rule_locations, $name );
+  my $rule_set = $rules->{$name};
 
   return $c->reply->not_found if ( !$rule_set );
 
@@ -149,7 +149,7 @@ post '/sample_tab' => sub {
 
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
-  my $rule_set      = load_rules( \%rule_locations, $rule_set_name );
+  my $rule_set      = $rules->{$rule_set_name};
 
   my $st_converter = Bio::Metadata::BioSample::SampleTab->new();
   my ( $msi, $scd );
@@ -211,7 +211,7 @@ post '/validate' => sub {
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
   my $loader        = $loaders->{ $c->param('file_format') };
-  my $rule_set      = load_rules( \%rule_locations, $rule_set_name );
+  my $rule_set      = $rules->{$rule_set_name};
 
   my $metadata;
   if ( !$form_validation->has_error ) {
@@ -248,11 +248,9 @@ sub form_validate_rule_name {
 }
 
 sub load_rules {
-  my ( $rule_locations, $name ) = @_;
+  my ( $rule_locations ) = @_;
 
   my $loader = Bio::Metadata::Loader::JSONRuleSetLoader->new();
-
-  my @locs = defined $name ? ($name) : keys %$rule_locations;
 
   my %rules;
 
@@ -267,7 +265,7 @@ sub load_rules {
     $rules{$k} = $rule_set;
   }
 
-  return defined $name ? $rules{$name} : \%rules;
+  return \%rules;
 }
 
 sub validation_supporting_data {
