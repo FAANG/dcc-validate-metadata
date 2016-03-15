@@ -1,0 +1,31 @@
+{
+	"description": "Set of rules for the validation of sample entities", 
+	"name": "Sample validation for primary tissue samples", 
+	"rule_groups": [
+		{
+			"name": "Primary Tissue", 
+			"rules": [
+				{
+					"mandatory": "mandatory", 
+					"name": "TISSUE_TYPE",
+					"type": "ontology_uri",
+					"valid_ancestor_uris" : [  
+						"http://purl.obolibrary.org/obo/UBERON_0000178",
+						"http://purl.obolibrary.org/obo/UBERON_0005057"
+					]
+				},
+				{
+					"mandatory": "mandatory", 
+					"name": "SAMPLE_ONTOLOGY_URI",
+					"type": "enum",
+					"valid_values": [
+						"http://purl.obolibrary.org/obo/UBERON_0012168",
+						"http://purl.obolibrary.org/obo/UBERON_0002371",
+						"http://purl.obolibrary.org/obo/UBERON_0000029",
+						"http://purl.obolibrary.org/obo/UBERON_0013756"
+					]
+				}
+			]
+		}
+	]
+}

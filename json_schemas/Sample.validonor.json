@@ -1,0 +1,87 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "title":"North America address",
+  "description":"Postal addresses for Canada, USA and Mexico",
+
+  "type":"object",
+  "properties":
+  {
+  	"id": {
+  	    "type": "string",
+  	     "minLength": 2
+  	},
+  	"entity_type": {
+  	    "type": "string",
+  	    "enum": ["EXPERIMENT","SAMPLE","RUN","STUDY"]
+	    
+  	},
+    "attributes":
+    {
+      "type":"object",
+      "properties":
+      {
+        "SELECTOR":
+        {
+          "oneOf":
+          [
+            {
+              "properties":
+              {
+				"BIOMATERIAL_PROVIDER":{
+					"type":"string",
+					"enum":["Prof: Lucia Altucci  (SECONDA UNIVERSITA' di NAPOLI- IT)"]
+				},
+				"DONOR_ID": {"type": "string","pattern": "^pz [0-9]"}
+				},
+              "additionalProperties":true,
+			  "required":["BIOMATERIAL_PROVIDER","DONOR_ID"]
+            },
+			{
+             "properties":
+             {
+  			   "BIOMATERIAL_PROVIDER":{
+  					"type":"string",
+  					"enum":["NIHR Cambridge BioResource"]
+  				},
+  				"DONOR_ID": {"type": "string", "minLength": 6}
+  				},
+               "additionalProperties":true,
+  			   "required":["BIOMATERIAL_PROVIDER","DONOR_ID"]	
+			},
+			{
+             "properties":
+             {
+  			   "BIOMATERIAL_PROVIDER":{
+  					"type":"string",
+  					"enum":["Prof.dr. E. Vellenga, University Medical Centre Groningen - Department of Hematology"]
+  				},
+  				"DONOR_ID": {
+					"type": "string", 
+					"pattern": "^UMCG|^S|^C",
+					"minLength": 6
+					}
+  				},
+               "additionalProperties":true,
+  			   "required":["BIOMATERIAL_PROVIDER","DONOR_ID"]	
+			}
+          ]
+        }
+      },
+      "additionalProperties":false,
+      "required":["SELECTOR"]
+    }
+  },
+   "required": ["id","entity_type","attributes"],
+   
+   "definitions": {
+	   "BIOMATERIAL_PROVIDER": {
+		   "type": "string",
+		   "enum": ["-","Anke Bergmann","Anke Bergmann/ Siebert","DSMZ","Felipe Prosper in collaboration with Jose I. Martin-Subero, University of Navarra","ICGC_Siebert/Bergmann",
+			 "Jose I. Martin-Subero","NCMLS","Nijmegen","Necker's hospital","NIHR Cambridge BioResource","Prof.dr. E. Vellenga, University Medical Centre Groningen - Department of Hematology",
+			 "Prof: Lucia Altucci  (SECONDA UNIVERSITA' di NAPOLI- IT)","Sanquin Amsterdam","Sanquin Blood bank, Nijmegen, the Netherlands","Sanquin_Nijmegen","WP4_Bergmann_Siebert_Martin-Subero"]
+	   }
+   }
+}
+	   
+	   
+	   
