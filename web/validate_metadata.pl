@@ -33,14 +33,13 @@ plugin 'RenderFile';
 
 app->secrets( ['nosecrets'] );
 
+
 my $xlsx_mime_type =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 my $tsv_mime_type = ' text/tab-separated-values';
 app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type );
 
-my $rule_config    = app->config('rules');
-my %rule_locations = map { %$_ } @$rule_config;
-my @rule_names     = map { keys %$_ } @$rule_config;
+
 
 my $brand     = app->config('brand')     || '';
 my $brand_img = app->config('brand_img') || '';
@@ -61,7 +60,11 @@ my $loaders = {
   'BioSample .xlsx' => Bio::Metadata::Loader::XLSXBioSampleLoader->new(),
 };
 
-my $rules = load_rules( \%rule_locations );
+my $rule_config    = app->config('rules');
+my %rule_locations = map { %$_ } @$rule_config;
+my @rule_names     = map { keys %$_ } @$rule_config;
+
+my ($rules,$validators) = load_rules( \%rule_locations );
 
 my %help_pages = (
   'REST API'             => 'rest',
@@ -164,8 +167,7 @@ post '/sample_tab' => sub {
   }
 
   my $st_errors = $st_converter->validate;
-  my $validator =
-    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+  my $validator = $validators->{$rule_set_name};
 
   my ($entity_status) = $validator->check_all( $st_converter->scd );
 
@@ -250,9 +252,10 @@ sub form_validate_rule_name {
 sub load_rules {
   my ( $rule_locations ) = @_;
 
-  my $loader = Bio::Metadata::Loader::JSONRuleSetLoader->new();
-
   my %rules;
+  my %validators;
+
+  my $loader = Bio::Metadata::Loader::JSONRuleSetLoader->new();
 
   for my $k ( keys %$rule_locations ) {
     my $loc = $rule_locations->{$k};
@@ -263,6 +266,10 @@ sub load_rules {
 
     my $rule_set = $loader->load($loc);
     $rules{$k} = $rule_set;
+    $validators{$k} = Bio::Metadata::Validate::EntityValidator->new(
+      rule_set => $rule_set,
+      ols_lookup => $loader->ols_lookup
+    );
   }
 
   return \%rules;

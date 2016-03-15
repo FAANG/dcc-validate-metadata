@@ -41,21 +41,23 @@ has 'cache' => (
   required => 1,
   default  => sub { Cache::LRU->new( size => 1000 ) }
 );
-has 'valid_qfields' => (
+has 'qfields' => (
   is      => 'ro',
   traits  => ['Array'],
   isa     => 'ArrayRef[Str]',
   default => sub {
-    [
-      qw(label synonym description short_form obo_id annotations logical_description iri)
-    ];
+    [qw(label short_form obo_id iri)];
   },
-  handles => { find_valid_qfield => 'first', join_valid_qfields => 'join' },
+  handles => {
+    all_qfields        => 'elements',
+    find_valid_qfield  => 'first',
+    join_valid_qfields => 'join'
+  },
 );
 has 'request_size' => (
   is      => 'ro',
   isa     => 'Int',
-  default => 500
+  default => 5000
 );
 
 sub _cache_key {
@@ -64,12 +66,57 @@ sub _cache_key {
 }
 
 sub find_match {
-  my ( $self, $query, $permitted_term ) = @_;
+  my ( $self, $query, $permitted_term, $exact ) = @_;
 
-  my $hashed_descendants = $self->hashed_descendants( $permitted_term );
+  my $pth = $permitted_term->to_hash;
+  my $cache_key =
+    $self->_cache_key( $query, $exact // 0, map { $pth->{$_}  } sort keys %$pth);
 
-  return
-    exists $hashed_descendants->{$query} ? $hashed_descendants->{$query} : '';
+  my $cache_value = $self->cache->get($cache_key);
+
+  if ( defined $cache_value ) {
+    return $cache_value;
+  }
+  else {
+    my $value = $self->_find_match( $query, $permitted_term, $exact );
+    $self->cache->set( $cache_key, $value );
+    return $value;
+  }
+}
+
+sub _find_match {
+  my ( $self, $query, $permitted_term, $exact ) = @_;
+
+  my @uri_elements = (
+    $self->base_url,
+    '/search?q=',
+    uri_escape($query),
+    '&exact=',
+    $exact ? 'true' : 'false',
+    '&groupField=true',
+    '&childrenOf=',
+    uri_escape( $permitted_term->term_iri ),
+    '&ontology=', lc( $permitted_term->ontology_name ),
+    map { '&queryFields=' . uri_escape($_) } $self->all_qfields,
+  );
+  my $request_uri = join( '', @uri_elements );
+  my $search_result = $self->request_to_json($request_uri);
+
+  if ( $search_result->{response}{docs} && $search_result->{response}{docs}[0]) {
+    return $search_result->{response}{docs}[0];
+  }
+
+  if ( $permitted_term->include_root ) {
+    my $terms = $self->_matching_terms( $permitted_term->ontology_name,
+      $permitted_term->term_iri, 0, 0, 1 );
+
+    if ( $terms->[0] && grep { $query eq $terms->[0]{$_} } $self->all_qfields )
+    {
+      return $terms->[0];
+    }
+  }
+
+  return '';
 }
 
 sub hashed_descendants {
@@ -85,7 +132,7 @@ sub hashed_descendants {
 
   my $cached_value = $self->cache->get($cache_key);
   if ( defined $cached_value ) {
-   return $cached_value;
+    return $cached_value;
   }
   else {
     my $matching_terms = $self->_matching_terms(@args);
@@ -118,8 +165,7 @@ sub _matching_terms {
 
   my @uri_elements = (
     $self->base_url, '/ontologies/', uri_escape( lc($ontology_name) ),
-    '/terms/', uri_escape( uri_escape($term_iri) ),
-    '?size=', $self->request_size
+    '/terms/', uri_escape( uri_escape($term_iri) )
   );
   my $term_uri = join( '', @uri_elements );
   my $root_term_json = $self->request_to_json($term_uri);
@@ -132,7 +178,9 @@ sub _matching_terms {
     my $next_uri =
         $root_term_json->{_links}{descendants}
       ? $root_term_json->{_links}{descendants}{href}
-      : '';
+      . '?size='
+      . $self->request_size
+      : undef;
 
     while ($next_uri) {
       my $json = $self->request_to_json($next_uri);
@@ -147,8 +195,8 @@ sub _matching_terms {
     }
   }
 
-  if ($leaf_only){
-    @terms_json = grep { ! $_->{has_children}  } @terms_json;
+  if ($leaf_only) {
+    @terms_json = grep { !$_->{has_children} } @terms_json;
   }
   return \@terms_json;
 }

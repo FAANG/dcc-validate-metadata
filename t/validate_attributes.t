@@ -438,7 +438,6 @@ sub ontology_text_rule {
   my $ols_text_attr_validator =
     Bio::Metadata::Validate::OntologyTextAttributeValidator->new();
 
-  use Data::Dumper;
 
   #valid term
   my $ols_attr = Bio::Metadata::Attribute->new( value => 'liver' );

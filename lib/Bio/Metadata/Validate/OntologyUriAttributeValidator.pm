@@ -61,7 +61,7 @@ sub validate_attribute {
     my $term;
   ANCESTOR: for my $valid_term ( $rule->all_valid_terms ) {
         $term =
-          $self->ols_lookup->find_match( $attribute->uri, $valid_term );
+          $self->ols_lookup->find_match( $attribute->uri, $valid_term, undef );
         if ($term) {
             last ANCESTOR;
         }
