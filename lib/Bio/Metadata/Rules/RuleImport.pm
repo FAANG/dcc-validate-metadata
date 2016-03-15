@@ -11,7 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-package Bio::Metadata::Rules::PermittedTerm;
+package Bio::Metadata::Rules::RuleImport;
 
 use strict;
 use warnings;
@@ -19,22 +19,21 @@ use warnings;
 use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
+use Bio::Metadata::Rules::PermittedTerm;
 
-has 'ontology_name'     => ( is => 'ro', isa => 'Str' );
-has 'term_iri'          => ( is => 'ro', isa => 'Str', required => 1 );
-has 'allow_descendants' => ( is => 'ro', isa => 'Bool', default => 1 );
-has 'leaf_only'         => ( is => 'ro', isa => 'Bool', default => 0 );
-has 'include_root'      => ( is => 'ro', isa => 'Bool', default => 1 );
+has 'rule_prefix' => ( is => 'ro', isa => 'Str' );
+has 'term' => (
+  is       => 'ro',
+  isa      => 'Bio::Metadata::Rules::PermittedTerm',
+  coerce   => 1,
+  required => 1
+);
 
 sub to_hash {
   my ($self) = @_;
-
   return {
-    ontology_name     => $self->ontology_name,
-    term_iri          => $self->term_iri,
-    allow_descendants => $self->allow_descendants,
-    leaf_only         => $self->leaf_only ? 1 : 0,
-    include_root      => $self->include_root ? 1 : 0,
+    rule_prefix => $self->rule_prefix,
+    term        => $self->term->to_hash,
   };
 }
 

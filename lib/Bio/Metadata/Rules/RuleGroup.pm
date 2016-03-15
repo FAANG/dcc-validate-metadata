@@ -21,35 +21,52 @@ use namespace::autoclean;
 use Bio::Metadata::Types;
 use Bio::Metadata::Rules::Rule;
 use Bio::Metadata::Rules::Condition;
+use Bio::Metadata::Rules::RuleImport;
 
 has 'name'        => ( is => 'rw', isa => 'Str', );
 has 'description' => ( is => 'rw', isa => 'Str' );
-has 'condition'   => ( is => 'rw', isa => 'Bio::Metadata::Rules::Condition', coerce => 1 );
-has 'rules'       => (
-    traits  => ['Array'],
-    is      => 'rw',
-    isa     => 'Bio::Metadata::Rules::RuleArrayRef',
-    handles => {
-        all_rules   => 'elements',
-        add_rule    => 'push',
-        count_rules => 'count',
-        get_rule    => 'get',
-    },
-    default => sub { [] },
-    coerce  => 1,
+has 'condition' =>
+  ( is => 'rw', isa => 'Bio::Metadata::Rules::Condition', coerce => 1 );
+has 'rules' => (
+  traits  => ['Array'],
+  is      => 'rw',
+  isa     => 'Bio::Metadata::Rules::RuleArrayRef',
+  handles => {
+    all_rules   => 'elements',
+    add_rule    => 'push',
+    count_rules => 'count',
+    get_rule    => 'get',
+  },
+  default => sub { [] },
+  coerce  => 1,
+);
+has 'imports' => (
+  traits  => ['Array'],
+  is      => 'rw',
+  isa     => 'Bio::Metadata::Rules::RuleImportArrayRef',
+  handles => {
+    all_imports   => 'elements',
+    add_imports   => 'push',
+    count_imports => 'count',
+    get_imports   => 'get',
+  },
+  default => sub { [] },
+  coerce  => 1,
 );
 
 sub to_hash {
-    my ($self) = @_;
+  my ($self) = @_;
 
-    my @r = map { $_->to_hash } $self->all_rules;
+  my @r = map { $_->to_hash } $self->all_rules;
+  my @i = map { $_->to_hash } $self->all_imports;
 
-    return {
-        name        => $self->name,
-        description => $self->description,
-        condition   => $self->condition,
-        rules       => \@r,
-    };
+  return {
+    name        => $self->name,
+    description => $self->description,
+    condition   => $self->condition,
+    rules       => \@r,
+    imports     => \@i,
+  };
 }
 
 __PACKAGE__->meta->make_immutable;

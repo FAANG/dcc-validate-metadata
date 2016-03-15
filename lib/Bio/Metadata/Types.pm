@@ -164,6 +164,23 @@ coerce 'Bio::Metadata::Rules::PermittedTermArrayRef' => from
   [ Bio::Metadata::Rules::PermittedTerm->new($_) ];
   };
 
+#RuleImport
+class_type 'Bio::Metadata::Rules::RuleImport';
+coerce 'Bio::Metadata::Rules::RuleImport' => from 'HashRef' =>
+  via { Bio::Metadata::Rules::RuleImport->new($_); };
+subtype 'Bio::Metadata::Rules::RuleImportArrayRef' => as
+  'ArrayRef[Bio::Metadata::Rules::RuleImport]';
+coerce 'Bio::Metadata::Rules::RuleImportArrayRef' => from
+  'ArrayRef[HashRef]'                             => via {
+  [ map { Bio::Metadata::Rules::RuleImport->new($_) } @$_ ];
+  },
+  from 'Bio::Metadata::Rules::RuleImport' => via {
+  [$_];
+  },
+  from 'HashRef' => via {
+  [ Bio::Metadata::Rules::RuleImport->new($_) ];
+  };
+
 #validation outcome
 class_type 'Bio::Metadata::Validate::ValidationOutcome';
 coerce 'Bio::Metadata::Validate::ValidationOutcome' => from 'HashRef' =>
