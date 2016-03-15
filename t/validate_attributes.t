@@ -270,8 +270,11 @@ sub unit_rules {
 
 sub ontology_id_rule {
   my $ols_rule = Bio::Metadata::Rules::Rule->new(
-    type                => 'ontology_id',
-    valid_ancestor_uris => ['http://purl.obolibrary.org/obo/UBERON_0002530'],
+    type        => 'ontology_id',
+    valid_terms => {
+      term_iri      => 'http://purl.obolibrary.org/obo/UBERON_0002530',
+      ontology_name => 'UBERON'
+    },
   );
   my $ols_id_attr_validator =
     Bio::Metadata::Validate::OntologyIdAttributeValidator->new();
@@ -366,9 +369,13 @@ sub uri_rules {
 
 sub ontology_uri_rule {
   my $ols_rule = Bio::Metadata::Rules::Rule->new(
-    type                => 'ontology_uri',
-    valid_ancestor_uris => ['http://purl.obolibrary.org/obo/UBERON_0002530'],
+    type        => 'ontology_uri',
+    valid_terms => [{
+      term_iri      => 'http://purl.obolibrary.org/obo/UBERON_0002530',
+      ontology_name => 'UBERON'
+    }],
   );
+
   my $ols_text_attr_validator =
     Bio::Metadata::Validate::OntologyUriAttributeValidator->new();
 
@@ -422,8 +429,11 @@ sub ontology_uri_rule {
 
 sub ontology_text_rule {
   my $ols_rule = Bio::Metadata::Rules::Rule->new(
-    type                => 'ontology_text',
-    valid_ancestor_uris => ['http://purl.obolibrary.org/obo/UBERON_0002530'],
+    type        => 'ontology_text',
+    valid_terms => {
+      term_iri      => 'http://purl.obolibrary.org/obo/UBERON_0002530',
+      ontology_name => 'UBERON'
+    },
   );
   my $ols_text_attr_validator =
     Bio::Metadata::Validate::OntologyTextAttributeValidator->new();

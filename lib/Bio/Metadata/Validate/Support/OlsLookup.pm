@@ -39,7 +39,7 @@ has 'cache' => (
   is       => 'rw',
   isa      => 'Cache::LRU',
   required => 1,
-  default  => sub { Cache::LRU->new( size => 10000 ) }
+  default  => sub { Cache::LRU->new( size => 1000 ) }
 );
 has 'valid_qfields' => (
   is      => 'ro',
@@ -51,7 +51,11 @@ has 'valid_qfields' => (
     ];
   },
   handles => { find_valid_qfield => 'first', join_valid_qfields => 'join' },
-
+);
+has 'request_size' => (
+  is      => 'ro',
+  isa     => 'Int',
+  default => 500
 );
 
 sub _cache_key {
@@ -59,118 +63,106 @@ sub _cache_key {
   return join( '#', @fields );
 }
 
-sub is_descendent {
-  my ( $self, $query, $qfields, $ancestor_uri, $exact ) = @_;
+sub find_match {
+  my ( $self, $query, $permitted_term ) = @_;
 
-  if ( !ref $qfields ) {
-    $qfields = [$qfields];
-  }
-  my $cache_key = $self->_cache_key( $query, @$qfields, $ancestor_uri, $exact );
-  my $cached_entry = $self->cache->get($cache_key);
+  my $hashed_descendants = $self->hashed_descendants( $permitted_term );
 
-  if ( defined $cached_entry ) {
-    return $cached_entry;
-  }
-  my $label = $self->_is_descendent( $query, $qfields, $ancestor_uri, $exact );
-
-  if ( !$label ) {
-    $label = $self->_is_same( $query, $ancestor_uri );
-  }
-
-  $self->cache->set( $cache_key => $label );
-
-  return $label;
+  return
+    exists $hashed_descendants->{$query} ? $hashed_descendants->{$query} : '';
 }
 
-sub _is_same {
-  my ( $self, $query, $ancestor_uri,  ) = @_;
+sub hashed_descendants {
+  my ( $self, $permitted_term ) = @_;
 
-  my $fields = [qw(short_form obo_id label)];
-  my $exact = 'true';
+  my @args = (
+    $permitted_term->ontology_name,     $permitted_term->term_iri,
+    $permitted_term->allow_descendants, $permitted_term->leaf_only,
+    $permitted_term->include_root
+  );
+
+  my $cache_key = $self->_cache_key(@args);
+
+  my $cached_value = $self->cache->get($cache_key);
+  if ( defined $cached_value ) {
+   return $cached_value;
+  }
+  else {
+    my $matching_terms = $self->_matching_terms(@args);
+    my $reduced_terms  = $self->_reduce_terms($matching_terms);
+    my $hashed_terms   = $self->_hash_terms($reduced_terms);
+    $self->cache->set( $cache_key, $hashed_terms );
+    return $hashed_terms;
+  }
+}
+
+sub _reduce_terms {
+  my ( $self, $terms_json ) = @_;
+  my @terms = map {
+    {
+      label      => $_->{label},
+      short_form => $_->{short_form},
+      obo_id     => $_->{obo_id},
+      iri        => $_->{iri}
+    }
+  } @$terms_json;
+
+  return \@terms;
+}
+
+sub _matching_terms {
+  my (
+    $self,              $ontology_name, $term_iri,
+    $allow_descendants, $leaf_only,     $include_root
+  ) = @_;
 
   my @uri_elements = (
-    $self->base_url,
-    '/search?q=',
-    uri_escape($ancestor_uri),
-    '&qfield=iri&exact=',
-    $exact,
-    '&groupField=true',
-    map { '&fieldList=' . uri_escape($_) } ( @$fields ),
+    $self->base_url, '/ontologies/', uri_escape( lc($ontology_name) ),
+    '/terms/', uri_escape( uri_escape($term_iri) ),
+    '?size=', $self->request_size
   );
-  my $request_uri = join( '', @uri_elements );
+  my $term_uri = join( '', @uri_elements );
+  my $root_term_json = $self->request_to_json($term_uri);
 
-  my $search_result = $self->request_to_json( join( '', @uri_elements ) );
+  my @terms_json;
 
-  my $num_found = $search_result->{response}->{numFound};
-  if ( !defined $num_found ) {
-    croak "Could not find numFound in search result for $request_uri";
-  }
+  push @terms_json, $root_term_json if ($include_root);
 
-  if ( $num_found > 1 || $num_found < 0 ) {
-    croak "Num found was $num_found, but we expect 1 or 0 for $request_uri";
-  }
+  if ($allow_descendants) {
+    my $next_uri =
+        $root_term_json->{_links}{descendants}
+      ? $root_term_json->{_links}{descendants}{href}
+      : '';
 
-  if ( $num_found == 0 ) {
-    return '';
-  }
-  my $term = $search_result->{response}{docs}[0];
+    while ($next_uri) {
+      my $json = $self->request_to_json($next_uri);
 
-  if ($term->{obo_id} eq $query || $term->{short_form} eq $query){
-    return $term->{label}
-  }
-  return '';
-}
+      $next_uri =
+        exists $json->{_links}{next} ? $json->{_links}{next}{href} : undef;
 
-sub _is_descendent {
-  my ( $self, $query, $qfields, $ancestor_uri, $exact ) = @_;
-
-  $self->check_qfields($qfields);
-
-  my @uri_elements = (
-    $self->base_url,
-    '/search?q=',
-    uri_escape($query),
-    '&exact=',
-    $exact,
-    '&fieldList=label&groupField=true&childrenOf=',
-    uri_escape($ancestor_uri),
-    map { '&queryFields=' . uri_escape($_) } @$qfields
-  );
-  my $request_uri = join( '', @uri_elements );
-  my $search_result = $self->request_to_json($request_uri);
-  
-  my $num_found = $search_result->{response}->{numFound};
-
-  if ( !defined $num_found ) {
-    croak "Could not find numFound in search result for $request_uri";
-  }
-
-  if ( $num_found > 1 || $num_found < 0 ) {
-    croak "Num found was $num_found, but we expect 1 or 0 for $request_uri";
-  }
-
-  if ( $num_found == 0 ) {
-    return '';
-  }
-
-  my $label = $search_result->{response}{docs}[0]{label};
-
-  if ( !defined $label ) {
-    croak "Could not find label in search result for $request_uri";
-  }
-
-  return $label;
-}
-
-sub check_qfields {
-  my ( $self, $qfields ) = @_;
-
-  for my $qf (@$qfields) {
-    if ( !$self->find_valid_qfield( sub { $_ eq $qf } ) ) {
-      croak( " Invalid query field. Got $qf but should be one of "
-          . $self->join_valid_qfields(',') );
+      if ( $json->{_embedded}{terms} ) {
+        my $terms_in_page = $json->{_embedded}{terms};
+        push @terms_json, @$terms_in_page;
+      }
     }
   }
+
+  if ($leaf_only){
+    @terms_json = grep { ! $_->{has_children}  } @terms_json;
+  }
+  return \@terms_json;
+}
+
+sub _hash_terms {
+  my ( $self, $terms ) = @_;
+
+  my %h;
+  for my $t (@$terms) {
+    for my $k (qw(short_form label obo_id iri)) {
+      $h{ $t->{$k} } = $t if ( $t->{$k} );
+    }
+  }
+  return \%h;
 }
 
 sub request_to_json {

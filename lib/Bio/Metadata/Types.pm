@@ -146,6 +146,24 @@ coerce 'Bio::Metadata::Rules::ConditionArrayRef' => from 'ArrayRef[HashRef]' =>
   from 'Str' =>
   via { [ Bio::Metadata::Rules::Condition->new( dpath_condition => $_ ) ] };
 
+#PermittedTerm
+class_type 'Bio::Metadata::Rules::PermittedTerm';
+
+coerce 'Bio::Metadata::Rules::PermittedTerm' => from 'HashRef' =>
+  via { Bio::Metadata::Rules::PermittedTerm->new($_); };
+subtype 'Bio::Metadata::Rules::PermittedTermArrayRef' => as
+  'ArrayRef[Bio::Metadata::Rules::PermittedTerm]';
+coerce 'Bio::Metadata::Rules::PermittedTermArrayRef' => from
+  'ArrayRef[HashRef]'                                => via {
+  [ map { Bio::Metadata::Rules::PermittedTerm->new($_) } @$_ ];
+  },
+  from 'Bio::Metadata::Rules::PermittedTerm' => via {
+  [$_];
+  },
+  from 'HashRef' => via {
+  [ Bio::Metadata::Rules::PermittedTerm->new($_) ];
+  };
+
 #validation outcome
 class_type 'Bio::Metadata::Validate::ValidationOutcome';
 coerce 'Bio::Metadata::Validate::ValidationOutcome' => from 'HashRef' =>

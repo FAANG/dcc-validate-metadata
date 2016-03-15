@@ -41,18 +41,18 @@ sub validate_attribute {
         return $o;
     }
 
-    my $label;
-  ANCESTOR: for my $ancestor_uri ( $rule->all_valid_ancestor_uris ) {        
-        $label =
-          $self->ols_lookup->is_descendent( $attribute->value, 'label', $ancestor_uri, 'true' );
-        if ($label) {
+    my $match;
+  ANCESTOR: for my $valid_term ( $rule->all_valid_terms ) {
+        $match =
+          $self->ols_lookup->find_match( $attribute->value, $valid_term );
+        if ($match) {
             last ANCESTOR;
         }
     }
 
-    if ( !$label ) {
+    if ( !$match ) {
         $o->outcome('error');
-        $o->message('value is not descendent of valid ancestor');
+        $o->message('value is not a valid term');
         return $o;
     }
 
