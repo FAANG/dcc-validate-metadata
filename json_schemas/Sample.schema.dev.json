@@ -111,6 +111,37 @@
 				"additionalProperties":true,
 				"required":["BIOMATERIAL_PROVIDER","BIOMATERIAL_TYPE","DIFFERENTIATION_STAGE","DIFFERENTIATION_METHOD","DISEASE","DISEASE_ONTOLOGY_URI","LINE","LINEAGE","MEDIUM","MOLECULE","PASSAGE",
 							"SAMPLE_ONTOLOGY_URI","SEX"]
+			},
+			{
+				"properties":
+				{
+					"BIOMATERIAL_PROVIDER": {"$ref":"#/definitions/BIOMATERIAL_PROVIDER"},
+					"BIOMATERIAL_TYPE": {"type":"string", "enum":["Primary Cell Culture"]},
+					"CELL_TYPE": {"$ref":"#/definitions/CELL_TYPE"},
+					"CULTURE_CONDITIONS": {"type":"string"},
+					"DISEASE_ONTOLOGY_URI": {"$ref":"#/definitions/DISEASE_ONTOLOGY_URI"},
+					"DISEASE": {"$ref":"#/definitions/DISEASE"},
+					"DONOR_AGE": {"$ref":"#/definitions/DONOR_AGE"},
+					"DONOR_AGE_UNIT": {"$ref":"#/definitions/DONOR_AGE_UNIT"},
+					"DONOR_ETHNICITY": {"$ref":"#/definitions/DONOR_ETHNICITY"},
+					"DONOR_HEALTH_STATUS": {"$ref":"#/definitions/DONOR_HEALTH_STATUS"},
+					"DONOR_ID": {"type": "string"},
+					"DONOR_LIFE_STAGE": {"$ref":"#/definitions/DONOR_LIFE_STAGE"},
+					"DONOR_SEX": {"$ref":"#/definitions/DONOR_SEX"},
+					"MARKERS":{
+						"type":"string",
+						"pattern": "^CD"
+					},
+					"MOLECULE": {"$ref":"#/definitions/MOLECULE"},
+					"PASSAGE_IF_EXPANDED": {"type": "string"},
+					"SAMPLE_ONTOLOGY_URI": {
+    					"type": "string",
+    				  	"pattern": "http://purl.obolibrary.org/obo/CL_+"
+					}
+				},
+				"additionalProperties":true,
+				"required":["BIOMATERIAL_PROVIDER","BIOMATERIAL_TYPE","CELL_TYPE","CULTURE_CONDITIONS","DISEASE_ONTOLOGY_URI","DISEASE","DONOR_AGE","DONOR_AGE_UNIT",
+							"DONOR_ETHNICITY","DONOR_HEALTH_STATUS","DONOR_ID","DONOR_LIFE_STAGE","DONOR_SEX","MARKERS","MOLECULE","SAMPLE_ONTOLOGY_URI"]
 			}
           ]
         }
@@ -156,23 +187,31 @@
 			   ]
 	   },
 	   "DONOR_AGE": {
-		"type": "string",
-		"pattern": "[0-9]+ - [0-9]+|NA"
+			"type": "string",
+			"pattern": "[0-9]+ - [0-9]+|NA"
+	    },
+	    "DONOR_AGE_UNIT": {
+			"type": "string",
+			"enum": ["year","month","week","day"]
 	    },
 	    "DONOR_ETHNICITY": {
-		"type": "string",
-		"enum": ["arab","caucasian","dutch","northern european","NA"]
+			"type": "string",
+			"enum": ["arab","caucasian","dutch","northern european","NA"]
 	    },
 	    "DONOR_HEALTH_STATUS": {
-		"type": "string",
-		"enum": ["-","Activated B-Cell-Like Diffuse Large B-Cell Lymphoma","Acute lymphocytic leukemia","Acute Myeloid Leukemia","Acute Myeloid Leukemia, POST-MDS",
-			 "Acute Myeloid Leukemia (relapse)","Acute Myeloid Leukemia-relapse","Acute Myeloid Leukemia (Upfront)","Burkitt Lymphoma","Chronic lymphocytic leukemia",
-			 "Germinal Center B-Cell-Like Diffuse Large B-Cell Lymphoma","Healthy","immature TALL","Leukemia","Lymphoma_Follicular","Mantle Cell Lymphoma",
-			 "Multiple myeloma","NA","T-Cell Prolymphocytic Leukemia"]
+			"type": "string",
+			"enum": ["-","Activated B-Cell-Like Diffuse Large B-Cell Lymphoma","Acute lymphocytic leukemia","Acute Myeloid Leukemia","Acute Myeloid Leukemia, POST-MDS",
+				 "Acute Myeloid Leukemia (relapse)","Acute Myeloid Leukemia-relapse","Acute Myeloid Leukemia (Upfront)","Burkitt Lymphoma","Chronic lymphocytic leukemia",
+			 	"Germinal Center B-Cell-Like Diffuse Large B-Cell Lymphoma","Healthy","immature TALL","Leukemia","Lymphoma_Follicular","Mantle Cell Lymphoma",
+			 	"Multiple myeloma","NA","T-Cell Prolymphocytic Leukemia"]
 	    },
+		"DONOR_LIFE_STAGE": {
+			"type": "string",
+			"enum": ["fetal","newborn","child","adult","unknown","embryonic","postnatal"]
+		},
 	    "DONOR_SEX": {
 		"type": "string",
-		"enum": ["Male","Female","Unknown"]
+		"enum": ["Male","Female","Unknown","Mixed"]
 	    },
 	   "DISEASE": {
 		"type": "string",

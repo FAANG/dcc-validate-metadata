@@ -154,6 +154,7 @@ sub validate_all {
   
   
     for my $e (@$entities){
+	
 	  warn("[INFO] Validating sample ",$e->id,"\n");
 
       my ($status, $outcomes) = $self->validate($e);
