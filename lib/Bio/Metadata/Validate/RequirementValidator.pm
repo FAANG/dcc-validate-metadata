@@ -55,7 +55,7 @@ has 'missing_value_outcome' => (
         $restricted_access_term => 'warning',
       },
       recommended => {
-        $not_applicable_term    => 'warning',
+        $not_applicable_term    => 'pass',
         $not_collected_term     => 'warning',
         $not_provided_term      => 'warning',
         $restricted_access_term => 'pass',
