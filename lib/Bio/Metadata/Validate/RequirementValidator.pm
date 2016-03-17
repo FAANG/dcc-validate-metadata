@@ -101,12 +101,15 @@ sub check_missing_values {
     if ( defined $a->value
       && $self->find_missing_values_term( sub { $a->value eq $_ } ) )
     {
+      #this is a missing value, no further work to do
+      $a->block_further_validation;
+
       my $outcome_type =
         $self->missing_value_outcome->{ $rule->mandatory }{ $a->value };
+
       $outcome->outcome($outcome_type);
       if ( $outcome_type ne 'pass' ) {
         $outcome->message( 'attribute is ' . $rule->mandatory );
-        $a->block_further_validation;
       }
 
     }
