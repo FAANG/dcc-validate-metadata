@@ -16,6 +16,8 @@ package Bio::Metadata::Rules::RuleSet;
 use strict;
 use warnings;
 
+use Unicode::CaseFold;
+
 use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
@@ -48,6 +50,23 @@ sub to_hash {
         rule_groups => \@rg,
     };
 }
+
+sub organised_rules {
+  my ($self) = @_;
+
+  my %h;
+
+  for my $rg ( $self->all_rule_groups ) {
+    for my $r ($rg->all_rules){
+      my $name = fc $r->name;
+      $h{$name} //= [];
+      push @{ $h{$name} }, $r;
+    }
+  }
+
+  return \%h;
+}
+
 
 __PACKAGE__->meta->make_immutable;
 1;

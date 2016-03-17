@@ -23,6 +23,7 @@ requires 'Cache::LRU';
 requires 'LWP::UserAgent';
 requires 'XML::LibXML';
 requires 'Text::Unidecode';
+requires 'Unicode::CaseFold';
 
 on 'build' => sub {
   requires 'Module::Build::Pluggable';

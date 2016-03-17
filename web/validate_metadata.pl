@@ -33,13 +33,10 @@ plugin 'RenderFile';
 
 app->secrets( ['nosecrets'] );
 
-
 my $xlsx_mime_type =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 my $tsv_mime_type = ' text/tab-separated-values';
 app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type );
-
-
 
 my $brand     = app->config('brand')     || '';
 my $brand_img = app->config('brand_img') || '';
@@ -64,7 +61,7 @@ my $rule_config    = app->config('rules');
 my %rule_locations = map { %$_ } @$rule_config;
 my @rule_names     = map { keys %$_ } @$rule_config;
 
-my ($rules,$validators) = load_rules( \%rule_locations );
+my ( $rules, $validators ) = load_rules( \%rule_locations );
 
 my %help_pages = (
   'REST API'             => 'rest',
@@ -250,7 +247,7 @@ sub form_validate_rule_name {
 }
 
 sub load_rules {
-  my ( $rule_locations ) = @_;
+  my ($rule_locations) = @_;
 
   my %rules;
   my %validators;
@@ -265,14 +262,14 @@ sub load_rules {
     }
 
     my $rule_set = $loader->load($loc);
-    $rules{$k} = $rule_set;
+    $rules{$k}      = $rule_set;
     $validators{$k} = Bio::Metadata::Validate::EntityValidator->new(
-      rule_set => $rule_set,
+      rule_set   => $rule_set,
       ols_lookup => $loader->ols_lookup
     );
   }
 
-  return \%rules;
+  return (\%rules, \%validators);
 }
 
 sub validation_supporting_data {
@@ -404,8 +401,7 @@ sub validate_metadata {
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
 
-  my $validator =
-    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+  my $validator = $validators->{$rule_set_name};
 
   my (
     $entity_status,      $entity_outcomes, $attribute_status,
@@ -449,6 +445,7 @@ sub validate_metadata {
         outcome_summary        => \%summary,
         total                  => $total,
         rule_set_name          => $rule_set_name,
+        rule_set               => $rule_set,
         entities               => $metadata,
         entity_status          => $entity_status,
         entity_outcomes        => $entity_outcomes,

@@ -181,8 +181,10 @@ RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
       croak( "No type validator for " . $rule->type )
         if ( !$type_validator );
 
-      my $attrs = $organised_attributes->{ $rule->name } // [];
-      delete $organised_attributes->{ $rule->name };
+      my $normalised_rule_name = $entity->normalise_attribute_name($rule->name);
+
+      my $attrs = $organised_attributes->{ $normalised_rule_name } // [];
+      delete $organised_attributes->{ $normalised_rule_name };
 
       push @r_outcomes,
         $requirement_validator->validate_requirements( $rule, $attrs );
