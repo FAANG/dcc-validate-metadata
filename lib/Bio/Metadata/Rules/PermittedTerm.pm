@@ -19,6 +19,7 @@ use warnings;
 use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
+use Bio::Metadata::Rules::Rule;
 
 has 'ontology_name'     => ( is => 'ro', isa => 'Str' );
 has 'term_iri'          => ( is => 'ro', isa => 'Str', required => 1 );

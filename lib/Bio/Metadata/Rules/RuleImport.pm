@@ -29,6 +29,27 @@ has 'term' => (
   required => 1
 );
 
+sub create_rule {
+  my ($self,$term) = @_;
+
+  my $name = $self->rule_prefix ? $self->rule_prefix.$term->{label} : $term->{label} ;
+  
+  my $valid_term = Bio::Metadata::Rules::PermittedTerm->new(
+    ontology_name => $self->term->ontology_name,
+    term_iri => $term->{iri},
+    allow_descendants => 0,
+    include_root => 1,
+  );
+
+  return Bio::Metadata::Rules::Rule->new(
+    name => $name,
+    type => 'text',
+    mandatory => 'optional',
+    valid_terms => [$valid_term],
+  );
+}
+
+
 sub to_hash {
   my ($self) = @_;
   return {

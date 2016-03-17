@@ -23,12 +23,12 @@ use namespace::autoclean;
 use Bio::Metadata::Rules::RuleSet;
 use Bio::Metadata::Types;
 
-with "Bio::Metadata::Loader::JSONLoaderRole";
+with "Bio::Metadata::Loader::JSONLoaderRole", "Bio::Metadata::Loader::RuleSetLoaderRole";
 
 sub hash_to_object {
     my ( $self, $hash ) = @_;
 
-    my $o = Bio::Metadata::Rules::RuleSet->new($hash); 
+    my $o = Bio::Metadata::Rules::RuleSet->new($hash);
 
     return $o;
 }

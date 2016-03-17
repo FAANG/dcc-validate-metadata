@@ -31,11 +31,8 @@ sub test_many_descendents {
     include_root      => 1
   );
 
-  my $terms = $ols_lookup->_matching_terms(
-    $pt->ontology_name, $pt->term_iri, $pt->allow_descendants,
-    $pt->leaf_only,     $pt->include_root
-  );
-  my $expected_number_of_terms = 3364;
+  my $terms                    = $ols_lookup->matching_terms( $pt );
+  my $expected_number_of_terms = 3149;
 
   is( scalar(@$terms), $expected_number_of_terms,
     'Loaded continuant terms from ERO' );
@@ -57,20 +54,16 @@ sub test_many_descendents {
 
 sub test_few_descendents {
 
-    my $pt = Bio::Metadata::Rules::PermittedTerm->new(
-      ontology_name     => 'ERO',
-      term_iri          => 'http://purl.org/net/OCRe/study_design.owl#OCRE100038',
-      allow_descendants => 1,
-      leaf_only         => 1,
-      include_root      => 0,
-    );
-
-
-  my $terms = $ols_lookup->_matching_terms(
-      $pt->ontology_name, $pt->term_iri, $pt->allow_descendants,
-      $pt->leaf_only,     $pt->include_root
+  my $pt = Bio::Metadata::Rules::PermittedTerm->new(
+    ontology_name     => 'ERO',
+    term_iri          => 'http://purl.org/net/OCRe/study_design.owl#OCRE100038',
+    allow_descendants => 1,
+    leaf_only         => 1,
+    include_root      => 0,
   );
-  my $reduced_terms = $ols_lookup->_reduce_terms($terms);
+
+  my $terms          = $ols_lookup->matching_terms( $pt );
+  my $reduced_terms  = $ols_lookup->_reduce_terms($terms);
   my $expected_terms = [
     {
       label      => 'Phase 1',
@@ -121,8 +114,7 @@ sub test_ancestor_uri_pass {
   my $pass_uri       = 'http://purl.obolibrary.org/obo/UBERON_0002107'; # liver'
   my $expected_label = 'liver';
 
-
-  my $output = $ols_lookup->find_match($pass_uri,$pt);
+  my $output = $ols_lookup->find_match( $pass_uri, $pt );
   is( $output->{label}, $expected_label, "Get match for liver under good uri" );
 }
 
@@ -135,9 +127,9 @@ sub test_ancestor_uri_fail {
     include_root      => 0,
   );
 
-  my $fail_uri = 'http://www.bbc.co.uk/cbeebies';    # not an ontology uri
+  my $fail_uri       = 'http://www.bbc.co.uk/cbeebies';    # not an ontology uri
   my $expected_label = '';
 
-  my $output = $ols_lookup->find_match($fail_uri, $pt);
+  my $output = $ols_lookup->find_match( $fail_uri, $pt );
   is( $output, $expected_label, "Get undef for liver under bogus uri" );
 }

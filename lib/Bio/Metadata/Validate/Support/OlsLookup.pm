@@ -119,7 +119,7 @@ sub _find_match {
   return '';
 }
 
-sub hashed_descendants {
+sub matching_terms {
   my ( $self, $permitted_term ) = @_;
 
   my @args = (
@@ -137,9 +137,9 @@ sub hashed_descendants {
   else {
     my $matching_terms = $self->_matching_terms(@args);
     my $reduced_terms  = $self->_reduce_terms($matching_terms);
-    my $hashed_terms   = $self->_hash_terms($reduced_terms);
-    $self->cache->set( $cache_key, $hashed_terms );
-    return $hashed_terms;
+    my $uniq_terms   = $self->_uniq_terms($reduced_terms);
+    $self->cache->set( $cache_key, $uniq_terms );
+    return $uniq_terms;
   }
 }
 
@@ -201,16 +201,18 @@ sub _matching_terms {
   return \@terms_json;
 }
 
-sub _hash_terms {
+sub _uniq_terms {
   my ( $self, $terms ) = @_;
 
   my %h;
+  my @u;
   for my $t (@$terms) {
-    for my $k (qw(short_form label obo_id iri)) {
-      $h{ $t->{$k} } = $t if ( $t->{$k} );
+    if (! $h{$t->{iri}}++){
+      push @u, $t;
     }
   }
-  return \%h;
+
+  return \@u;
 }
 
 sub request_to_json {
