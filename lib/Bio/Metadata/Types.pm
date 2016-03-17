@@ -21,7 +21,7 @@ use Moose::Util::TypeConstraints;
 
 enum 'Bio::Metadata::Rules::Rule::TypeEnum',
   [
-  qw(text number enum ontology_uri ontology_text ontology_id uri_value date relationship)
+  qw(text number enum ontology_uri ontology_text ontology_id uri_value date relationship ncbi_taxon)
   ];
 enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',
   [qw(mandatory recommended optional)];

@@ -39,6 +39,7 @@ use Bio::Metadata::Validate::OntologyIdAttributeValidator;
 use Bio::Metadata::Validate::UriValueAttributeValidator;
 use Bio::Metadata::Validate::DateAttributeValidator;
 use Bio::Metadata::Validate::RelationshipValidator;
+use Bio::Metadata::Validate::NcbiTaxonomyValidator;
 
 has 'rule_set' =>
   ( is => 'rw', isa => 'Bio::Metadata::Rules::RuleSet', required => 1 );
@@ -74,6 +75,7 @@ has 'type_validator' => (
       uri_value => Bio::Metadata::Validate::UriValueAttributeValidator->new(),
       date      => Bio::Metadata::Validate::DateAttributeValidator->new(),
       relationship => Bio::Metadata::Validate::RelationshipValidator->new(),
+      ncbi_taxon   => Bio::Metadata::Validate::NcbiTaxonomyValidator->new()
     };
   },
 );
@@ -181,10 +183,11 @@ RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
       croak( "No type validator for " . $rule->type )
         if ( !$type_validator );
 
-      my $normalised_rule_name = $entity->normalise_attribute_name($rule->name);
+      my $normalised_rule_name =
+        $entity->normalise_attribute_name( $rule->name );
 
-      my $attrs = $organised_attributes->{ $normalised_rule_name } // [];
-      delete $organised_attributes->{ $normalised_rule_name };
+      my $attrs = $organised_attributes->{$normalised_rule_name} // [];
+      delete $organised_attributes->{$normalised_rule_name};
 
       push @r_outcomes,
         $requirement_validator->validate_requirements( $rule, $attrs );
