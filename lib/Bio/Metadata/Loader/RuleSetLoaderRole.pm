@@ -47,7 +47,6 @@ around 'load' => sub {
 
     #import extra rules
     for my $i ( $g->all_imports ) {
-      print "importing$/";
       #import
       my $terms = $ols_lookup->matching_terms( $i->term );
       $g->add_rule( map { $i->create_rule($_) } @$terms );
