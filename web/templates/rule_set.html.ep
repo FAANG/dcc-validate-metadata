@@ -43,7 +43,7 @@
       % my $id = $rg_count.'_imd';
 
         <div class="panel-heading">
-          <a data-toggle="collapse" href="#<%= $id %>">Imported</a>
+          <a data-toggle="collapse" href="#<%= $id %>">Imported from ontologies</a>
           <small>
             <%= $rule_group->count_imported_rules %> rules
           </small>
