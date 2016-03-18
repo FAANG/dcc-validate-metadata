@@ -5,6 +5,6 @@ $(document).ready(function(){
       content: function () {
         return $(this).next('.popover-content').html();
       }
-    })
+    });
   })
 });

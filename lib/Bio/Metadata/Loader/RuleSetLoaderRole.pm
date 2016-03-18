@@ -61,7 +61,7 @@ around 'load' => sub {
       my @elided_rules =
         grep { exists $organised_rules->{ fc $_->name } } @created_rules;
 
-      $g->add_rule(@rules_to_add);
+      $g->add_imported_rule(@rules_to_add);
 
       my $num_rules_added  = scalar(@rules_to_add);
       my $num_rules_elided = scalar(@elided_rules);
