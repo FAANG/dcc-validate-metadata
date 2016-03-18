@@ -65,12 +65,6 @@ around 'load' => sub {
 
       my $num_rules_added  = scalar(@rules_to_add);
       my $num_rules_elided = scalar(@elided_rules);
-
-      print "Imported $num_rules_added rules into "
-        . $g->name
-        . ' from '
-        . $i->term->term_iri
-        . ". $num_rules_elided rules were elided$/";
     }
   }
 
