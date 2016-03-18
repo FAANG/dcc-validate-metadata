@@ -28,6 +28,8 @@ use MooseX::Params::Validate;
 use Bio::Metadata::Types;
 use Bio::Metadata::Validate::Support::OlsLookup;
 
+use Unicode::CaseFold;
+
 has 'ols_lookup' => (
   is      => 'rw',
   isa     => 'Bio::Metadata::Validate::Support::OlsLookup',
@@ -43,13 +45,32 @@ around 'load' => sub {
 
   my $rule_set   = $self->$orig(@args);
   my $ols_lookup = $self->ols_lookup;
+
   for my $g ( $rule_set->all_rule_groups ) {
 
     #import extra rules
     for my $i ( $g->all_imports ) {
-      #import
+      my $organised_rules = $g->organised_rules;
+
+      #import, unless rule with same name already known in the group
       my $terms = $ols_lookup->matching_terms( $i->term );
-      $g->add_rule( map { $i->create_rule($_) } @$terms );
+
+      my @created_rules = map { $i->create_rule($_) } @$terms;
+      my @rules_to_add =
+        grep { !exists $organised_rules->{ fc $_->name } } @created_rules;
+      my @elided_rules =
+        grep { exists $organised_rules->{ fc $_->name } } @created_rules;
+
+      $g->add_rule(@rules_to_add);
+
+      my $num_rules_added  = scalar(@rules_to_add);
+      my $num_rules_elided = scalar(@elided_rules);
+
+      print "Imported $num_rules_added rules into "
+        . $g->name
+        . ' from '
+        . $i->term->term_iri
+        . ". $num_rules_elided rules were elided$/";
     }
   }
 

@@ -20,7 +20,7 @@ use URI::Escape::XS qw/uri_escape/;
 use JSON;
 use Try::Tiny;
 use Carp;
-use List::Util qw(none);
+use List::Util qw(none any);
 use Cache::LRU;
 
 has 'base_url' => (
@@ -57,7 +57,7 @@ has 'qfields' => (
 has 'request_size' => (
   is      => 'ro',
   isa     => 'Int',
-  default => 5000
+  default => 1000
 );
 
 sub _cache_key {
@@ -70,7 +70,8 @@ sub find_match {
 
   my $pth = $permitted_term->to_hash;
   my $cache_key =
-    $self->_cache_key( $query, $exact // 0, map { $pth->{$_}  } sort keys %$pth);
+    $self->_cache_key( $query, $exact // 0,
+    map { $pth->{$_} } sort keys %$pth );
 
   my $cache_value = $self->cache->get($cache_key);
 
@@ -79,9 +80,23 @@ sub find_match {
   }
   else {
     my $value = $self->_find_match( $query, $permitted_term, $exact );
+
+    #OLS loading of ATOL and EOL terms is currently giving IDs like owlATOL_00001
+    if ( !$value
+      && ($permitted_term->ontology_name eq 'ATOL' || $permitted_term->ontology_name eq 'EOL' )
+      && begins_with( $query, $permitted_term->ontology_name )
+    )
+    {
+      $value = $self->_find_match( 'owl' . $query, $permitted_term, $exact );
+    }
+
     $self->cache->set( $cache_key, $value );
     return $value;
   }
+}
+
+sub begins_with {
+  return substr( $_[0], 0, length( $_[1] ) ) eq $_[1];
 }
 
 sub _find_match {
@@ -96,13 +111,15 @@ sub _find_match {
     '&groupField=true',
     '&childrenOf=',
     uri_escape( $permitted_term->term_iri ),
-    '&ontology=', lc( $permitted_term->ontology_name ),
+    '&ontology=',
+    lc( $permitted_term->ontology_name ),
     map { '&queryFields=' . uri_escape($_) } $self->all_qfields,
   );
   my $request_uri = join( '', @uri_elements );
   my $search_result = $self->request_to_json($request_uri);
 
-  if ( $search_result->{response}{docs} && $search_result->{response}{docs}[0]) {
+  if ( $search_result->{response}{docs} && $search_result->{response}{docs}[0] )
+  {
     return $search_result->{response}{docs}[0];
   }
 
@@ -137,7 +154,7 @@ sub matching_terms {
   else {
     my $matching_terms = $self->_matching_terms(@args);
     my $reduced_terms  = $self->_reduce_terms($matching_terms);
-    my $uniq_terms   = $self->_uniq_terms($reduced_terms);
+    my $uniq_terms     = $self->_uniq_terms($reduced_terms);
     $self->cache->set( $cache_key, $uniq_terms );
     return $uniq_terms;
   }
@@ -207,7 +224,7 @@ sub _uniq_terms {
   my %h;
   my @u;
   for my $t (@$terms) {
-    if (! $h{$t->{iri}}++){
+    if ( !$h{ $t->{iri} }++ ) {
       push @u, $t;
     }
   }
@@ -217,7 +234,7 @@ sub _uniq_terms {
 
 sub request_to_json {
   my ( $self, $request_uri ) = @_;
-
+  print STDERR $request_uri.$/;
   my $response = $self->rest_client->GET($request_uri);
 
   if ( $response->responseCode != 200 ) {

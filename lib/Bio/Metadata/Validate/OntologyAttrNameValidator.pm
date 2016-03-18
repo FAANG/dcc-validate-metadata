@@ -21,56 +21,57 @@ use Carp;
 use Moose;
 use namespace::autoclean;
 use Try::Tiny;
-
+use Unicode::CaseFold qw(fc);
 use URI;
 use Bio::Metadata::Validate::Support::OlsLookup;
 
 with 'Bio::Metadata::Validate::AttributeValidatorRole';
 
 has 'ols_lookup' => (
-    is      => 'rw',
-    isa     => 'Bio::Metadata::Validate::Support::OlsLookup',
-    default => sub { return Bio::Metadata::Validate::Support::OlsLookup->new() }
+  is      => 'rw',
+  isa     => 'Bio::Metadata::Validate::Support::OlsLookup',
+  default => sub { return Bio::Metadata::Validate::Support::OlsLookup->new() }
 );
 
 sub validate_attribute {
-    my ( $self, $rule, $attribute, $o ) = @_;
+  my ( $self, $rule, $attribute, $o ) = @_;
 
-    if ( !$attribute->value || !$attribute->id ) {
-        $o->outcome('error');
-        $o->message('value and ID required');
-        return $o;
-    }
-
-    my $matching_term;
-  ANCESTOR: for my $valid_term ( $rule->all_valid_terms ) {
-        $matching_term =
-          $self->ols_lookup->find_match( $attribute->name, $valid_term, undef );
-        if ($matching_term) {
-            last ANCESTOR;
-        }
-    }
-
-    if ( !$matching_term ) {
-        $o->outcome('error');
-        $o->message('term is not a descendent of a valid ancestor');
-        return $o;
-    }
-
-
-    my $label = $matching_term->{label};
-
-
-    if ( $label ne $attribute->name ) {
-        $o->outcome('warning');
-        $o->message(
-            "attribute name does not precisely match label ($label) for term ".$attribute->id);
-        return $o;
-    }
-
-    $o->outcome('pass');
-
+  if ( !$attribute->value || !$attribute->id ) {
+    $o->outcome('error');
+    $o->message('value and ID required');
     return $o;
+  }
+
+  my $matching_term;
+ANCESTOR: for my $valid_term ( $rule->all_valid_terms ) {
+    $matching_term =
+      $self->ols_lookup->find_match( $attribute->id, $valid_term, undef );
+    if ($matching_term) {
+      last ANCESTOR;
+    }
+  }
+
+  if ( !$matching_term ) {
+    $o->outcome('error');
+    $o->message('term is not a descendent of a valid ancestor');
+    return $o;
+  }
+
+  if ( fc $attribute->name ne fc $matching_term->{label} ) {
+    my $label = $matching_term->{label};
+    my $name  = $attribute->name;
+    print STDERR $name.$/;
+    print STDERR $label.$/;
+    $o->outcome('warning');
+    $o->message(
+      "attribute name ($name) does not precisely match label ($label) for term "
+        . $attribute->id );
+    return $o;
+  }
+
+  $o->outcome('pass');
+
+  return $o;
 }
 
 __PACKAGE__->meta->make_immutable;

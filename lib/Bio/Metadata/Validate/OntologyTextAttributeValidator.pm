@@ -44,7 +44,9 @@ sub validate_attribute {
     my $match;
   ANCESTOR: for my $valid_term ( $rule->all_valid_terms ) {
         $match =
-          $self->ols_lookup->find_match( $attribute->value, $valid_term, 1 );
+          $self->ols_lookup->find_match( $attribute->value, $valid_term, undef );
+use Data::Dumper;
+print Dumper($attribute->value, $valid_term,$match);
         if ($match) {
             last ANCESTOR;
         }
@@ -52,7 +54,7 @@ sub validate_attribute {
 
     if ( !$match ) {
         $o->outcome('error');
-        $o->message('value is not a valid term');
+        $o->message('value ('.$attribute->value.') is not a valid term');
         return $o;
     }
 
