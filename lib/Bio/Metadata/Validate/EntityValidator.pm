@@ -40,6 +40,7 @@ use Bio::Metadata::Validate::UriValueAttributeValidator;
 use Bio::Metadata::Validate::DateAttributeValidator;
 use Bio::Metadata::Validate::RelationshipValidator;
 use Bio::Metadata::Validate::NcbiTaxonomyValidator;
+use Bio::Metadata::Validate::OntologyAttrNameValidator;
 
 has 'rule_set' =>
   ( is => 'rw', isa => 'Bio::Metadata::Rules::RuleSet', required => 1 );
@@ -72,6 +73,8 @@ has 'type_validator' => (
         Bio::Metadata::Validate::OntologyTextAttributeValidator->new(),
       ontology_id =>
         Bio::Metadata::Validate::OntologyIdAttributeValidator->new(),
+      ontology_attr_name =>
+        Bio::Metadata::Validate::OntologyAttrNameValidator->new(),
       uri_value => Bio::Metadata::Validate::UriValueAttributeValidator->new(),
       date      => Bio::Metadata::Validate::DateAttributeValidator->new(),
       relationship => Bio::Metadata::Validate::RelationshipValidator->new(),

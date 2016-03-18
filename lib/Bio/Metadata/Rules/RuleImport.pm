@@ -32,8 +32,6 @@ has 'term' => (
 sub create_rule {
   my ($self,$term) = @_;
 
-  my $name = $self->rule_prefix ? $self->rule_prefix.$term->{label} : $term->{label} ;
-  
   my $valid_term = Bio::Metadata::Rules::PermittedTerm->new(
     ontology_name => $self->term->ontology_name,
     term_iri => $term->{iri},
@@ -41,9 +39,11 @@ sub create_rule {
     include_root => 1,
   );
 
+  my $name = $self->rule_prefix ? $self->rule_prefix.$term->{label} : $term->{label} ;
+
   return Bio::Metadata::Rules::Rule->new(
     name => $name,
-    type => 'text',
+    type => 'ontology_attr_name',
     mandatory => 'optional',
     valid_terms => [$valid_term],
   );

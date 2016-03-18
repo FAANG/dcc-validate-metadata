@@ -19,10 +19,10 @@ use warnings;
 use Carp;
 use Moose::Util::TypeConstraints;
 
-enum 'Bio::Metadata::Rules::Rule::TypeEnum',
-  [
-  qw(text number enum ontology_uri ontology_text ontology_id uri_value date relationship ncbi_taxon)
-  ];
+enum 'Bio::Metadata::Rules::Rule::TypeEnum', [
+  qw(text number enum ontology_uri ontology_text ontology_id uri_value date
+    relationship ncbi_taxon ontology_attr_name)
+];
 enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',
   [qw(mandatory recommended optional)];
 
