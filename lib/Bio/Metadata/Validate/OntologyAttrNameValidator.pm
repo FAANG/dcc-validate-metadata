@@ -60,8 +60,7 @@ ANCESTOR: for my $valid_term ( $rule->all_valid_terms ) {
   if ( fc $attribute->name ne fc $matching_term->{label} ) {
     my $label = $matching_term->{label};
     my $name  = $attribute->name;
-    print STDERR $name.$/;
-    print STDERR $label.$/;
+
     $o->outcome('warning');
     $o->message(
       "attribute name ($name) does not precisely match label ($label) for term "

@@ -234,7 +234,7 @@ sub _uniq_terms {
 
 sub request_to_json {
   my ( $self, $request_uri ) = @_;
-  print STDERR $request_uri.$/;
+
   my $response = $self->rest_client->GET($request_uri);
 
   if ( $response->responseCode != 200 ) {

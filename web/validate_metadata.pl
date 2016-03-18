@@ -151,7 +151,7 @@ post '/sample_tab' => sub {
   my $metadata_file = $c->param('metadata_file');
   my $rule_set      = $rules->{$rule_set_name};
 
-  my $st_converter = Bio::Metadata::BioSample::SampleTab->new();
+  my $st_converter = Bio::Metadata::BioSample::SampleTab->new(rule_set => $rule_set);
   my ( $msi, $scd );
   if ( !$form_validation->has_error ) {
     try {
