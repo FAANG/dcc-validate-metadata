@@ -2,7 +2,7 @@
 <h1>Validation result</h1>
 
 <div>
-% my @categories = qw(value units ref_id uri);
+% my @categories = qw(value units ref_id);
   <!-- Nav tabs -->
   <ul class="nav nav-tabs" role="tablist">
 
@@ -63,7 +63,7 @@
       %}
     </dl>
 
-    <p>This report is also available as a spreadsheet, just go back and submit the metadata and choose 'xlsx' as the output format.</p>
+    <p>This report is also available as a spreadsheet, just go back and submit the metadata and choose 'Excel' as the output format.</p>
 
   </div>
 
