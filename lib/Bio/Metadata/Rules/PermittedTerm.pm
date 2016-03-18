@@ -20,19 +20,21 @@ use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
 use Bio::Metadata::Rules::Rule;
+use MooseX::Types::URI qw(Uri);
 
 has 'ontology_name'     => ( is => 'ro', isa => 'Str' );
-has 'term_iri'          => ( is => 'ro', isa => 'Str', required => 1 );
 has 'allow_descendants' => ( is => 'ro', isa => 'Bool', default => 1 );
 has 'leaf_only'         => ( is => 'ro', isa => 'Bool', default => 0 );
 has 'include_root'      => ( is => 'ro', isa => 'Bool', default => 1 );
+
+has 'term_iri' => ( is => 'ro', isa => Uri, required => 1, coerce => 1 );
 
 sub to_hash {
   my ($self) = @_;
 
   return {
     ontology_name     => $self->ontology_name,
-    term_iri          => $self->term_iri,
+    term_iri          => $self->term_iri->as_string,
     allow_descendants => $self->allow_descendants,
     leaf_only         => $self->leaf_only ? 1 : 0,
     include_root      => $self->include_root ? 1 : 0,
