@@ -93,10 +93,10 @@ get '/rule_sets' => sub {
 
   $c->respond_to(
     json => sub {
-      $c->render( json => { rule_set_names => [ sort keys %$rules ] } );
+      $c->render( json => { rule_set_names => \@rule_names, } );
     },
     html => sub {
-      $c->stash( rule_sets => $rules );
+      $c->stash( rule_sets => $rules, rule_set_names => \@rule_names );
       $c->render( template => 'rule_sets' );
     }
   );
@@ -151,7 +151,8 @@ post '/sample_tab' => sub {
   my $metadata_file = $c->param('metadata_file');
   my $rule_set      = $rules->{$rule_set_name};
 
-  my $st_converter = Bio::Metadata::BioSample::SampleTab->new(rule_set => $rule_set);
+  my $st_converter =
+    Bio::Metadata::BioSample::SampleTab->new( rule_set => $rule_set );
   my ( $msi, $scd );
   if ( !$form_validation->has_error ) {
     try {
@@ -269,7 +270,7 @@ sub load_rules {
     );
   }
 
-  return (\%rules, \%validators);
+  return ( \%rules, \%validators );
 }
 
 sub validation_supporting_data {

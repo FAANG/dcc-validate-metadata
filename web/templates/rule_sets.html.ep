@@ -1,10 +1,10 @@
 % layout 'layout', title => 'rule sets';
 %= include 'page_title', title =>'Rule sets',help => 'rule_sets'
 <p>
-<%= scalar(keys %$rule_sets)%> rule sets available.
+<%= scalar(@$rule_set_names)%> rule sets available.
 </p>
 <dl class="dl-horizontal">
-% for my $rule_set_key (sort keys %$rule_sets) {
+% for my $rule_set_key (@$rule_set_names) {
   <dt>
     %= link_to $rule_set_key => '/rule_sets/'.$rule_set_key
   </dt>
