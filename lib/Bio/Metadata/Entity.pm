@@ -74,13 +74,13 @@ sub normalise_attribute_name {
 }
 
 sub organised_attr {
-  my ($self) = @_;
+  my ($self, $preserve_case) = @_;
 
   my %h;
 
   for my $a ( $self->all_attributes ) {
     next if ( !$a->name || !defined $a->value || $a->value eq '' );
-    my $name = $self->normalise_attribute_name( $a->name );
+    my $name = $preserve_case ? $a->name : $self->normalise_attribute_name( $a->name );
     $h{$name} //= [];
     push @{ $h{$name} }, $a;
   }

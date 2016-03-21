@@ -64,28 +64,28 @@ has 'selector' => (
 
 sub validate {
 	 my ($self,$entity)=@_;
-	 
-	 my $org_attrbs=$entity->organised_attr;
-	 
+
+	 my $org_attrbs=$entity->organised_attr(1);
+
 	 if ($self->selector) {
 		 die("[ERROR] attribute ",$self->selector," is not a valid 'selector' attribute") if !exists($org_attrbs->{$self->selector});
 	 }
-  
+
      my $validator = JSON::Validator->new;
      $validator->schema($self->schema());
-	 
+
 	 my $hash=$entity->to_hash();
-	 
+
 	 my $attrbs=$self->prepare_attrs($entity);
-	 
+
 	 $hash->{'attributes'}=();
 	 $hash->{'attributes'}->{'SELECTOR'}=$attrbs;
-	 	 
+
 	 my @warnings = $validator->validate($hash);
-	 
+
 	 my @outcomes;
 	 my $outcome_overall='pass';
-	 
+
 	 if (@warnings) {
 		 my $new_warnings=$self->prepare_warnings($warnings[0]);
          foreach my $w (@$new_warnings) {
@@ -108,7 +108,7 @@ sub validate {
 				$v_outcome->rule($rule);
 				$outcome_overall='error';
 		  	}
-			push @outcomes,$v_outcome;			 
+			push @outcomes,$v_outcome;
 		 }
 	 } else {
 		my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
@@ -121,27 +121,27 @@ sub validate {
 		);
 		$v_outcome->rule($rule);
 		$v_outcome->message('pass');
-		push @outcomes,$v_outcome;	 
+		push @outcomes,$v_outcome;
 	 }
-	 
+
 	 return ($outcome_overall,\@outcomes);
 }
 
 sub validate_all {
 	my ($self,$entities)=@_;
-	
+
     my %entity_status;
     my %entity_outcomes;
     my %attribute_status;
     my %attribute_outcomes;
-  
-  
+
+
     for my $e (@$entities){
       my ($status, $outcomes) = $self->validate($e);
-  	
+
       $entity_status{$e} = $status;
       $entity_outcomes{$e} = $outcomes;
-    
+
       for my $o (@$outcomes) {
         for my $a ($o->all_attributes) {
           if (! exists $attribute_outcomes{$a}){
@@ -149,7 +149,7 @@ sub validate_all {
             $attribute_outcomes{$a} = [];
           }
           push @{$attribute_outcomes{$a}}, $o;
-        
+
           if ($o->outcome eq 'error' && $attribute_status{$a} ne 'error') {
             $attribute_status{$a} = 'error';
           }
@@ -159,33 +159,33 @@ sub validate_all {
         }
       }
     }
-  
+
     return (\%entity_status, \%entity_outcomes, \%attribute_status, \%attribute_outcomes);
 }
 
 sub prepare_attrs {
 	my ($self,$entity)=@_;
-	
+
 	my $old_attrbs=$entity->attributes;
-	
+
 	my %new_attrbs;
-	
+
 	foreach my $attr (@$old_attrbs) {
-		$new_attrbs{$attr->{'name'}}= $attr->{'value'};				
+		$new_attrbs{$attr->{'name'}}= $attr->{'value'};
 	}
-	
+
 	return \%new_attrbs;
 }
 
 
 sub prepare_warnings {
 	my ($self,$w)=@_;
-	
+
 	my $not_branch;
 	my $selector=$self->selector;
-	
+
 	my @a=split/\[\d+\]/,$w->message;
-	
+
 	if ($self->selector) {
 		foreach my $a (@a) {
 			$a=~s/^\s\///;
@@ -195,9 +195,9 @@ sub prepare_warnings {
 			}
 		}
 	}
-	
+
 	$not_branch="n.a." if !$not_branch;
-	
+
 	my @warnings;
 
 	foreach my $a (@a) {
@@ -211,9 +211,9 @@ sub prepare_warnings {
 		$msg.="[ATTRIBUTE]:".$a;
 		push @warnings,&E($name,$msg);
 	}
-	
+
 	return \@warnings;
-	
+
 }
 
 sub E { bless {path => $_[0] || '/', message => $_[1]}, 'JSON::Validator::Error'; }
