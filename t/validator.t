@@ -111,7 +111,7 @@ my @expected_outcomes = (
         rule_group_name => 'standard',
         outcome         => 'error',
         message         => 'mandatory attribute not present',
-        rule            => $rule_set->get_rule_group(0)->get_rule(2)->to_hash,
+        rule            => $rule_set->get_rule_group(0)->get_native_rule(2)->to_hash,
         attributes      => [],
     },
     {

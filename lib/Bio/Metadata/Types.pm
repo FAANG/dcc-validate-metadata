@@ -19,10 +19,10 @@ use warnings;
 use Carp;
 use Moose::Util::TypeConstraints;
 
-enum 'Bio::Metadata::Rules::Rule::TypeEnum',
-  [
-  qw(text number enum ontology_uri ontology_text ontology_id uri_value date relationship)
-  ];
+enum 'Bio::Metadata::Rules::Rule::TypeEnum', [
+  qw(text number enum ontology_uri ontology_text ontology_id uri_value date
+    relationship ncbi_taxon ontology_attr_name)
+];
 enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',
   [qw(mandatory recommended optional)];
 
@@ -32,6 +32,7 @@ enum 'Bio::Metadata::Validate::OutcomeEnum', \@OUTCOME_VALUES;
 
 role_type 'Bio::Metadata::Validate::AttributeValidatorRole';
 role_type 'Bio::Metadata::Loader::JSONLoaderRole';
+role_type 'Bio::Metadata::Loader::RuleSetLoaderRole';
 
 #attribute
 class_type 'Bio::Metadata::Attribute';
@@ -145,6 +146,41 @@ coerce 'Bio::Metadata::Rules::ConditionArrayRef' => from 'ArrayRef[HashRef]' =>
   },
   from 'Str' =>
   via { [ Bio::Metadata::Rules::Condition->new( dpath_condition => $_ ) ] };
+
+#PermittedTerm
+class_type 'Bio::Metadata::Rules::PermittedTerm';
+
+coerce 'Bio::Metadata::Rules::PermittedTerm' => from 'HashRef' =>
+  via { Bio::Metadata::Rules::PermittedTerm->new($_); };
+subtype 'Bio::Metadata::Rules::PermittedTermArrayRef' => as
+  'ArrayRef[Bio::Metadata::Rules::PermittedTerm]';
+coerce 'Bio::Metadata::Rules::PermittedTermArrayRef' => from
+  'ArrayRef[HashRef]'                                => via {
+  [ map { Bio::Metadata::Rules::PermittedTerm->new($_) } @$_ ];
+  },
+  from 'Bio::Metadata::Rules::PermittedTerm' => via {
+  [$_];
+  },
+  from 'HashRef' => via {
+  [ Bio::Metadata::Rules::PermittedTerm->new($_) ];
+  };
+
+#RuleImport
+class_type 'Bio::Metadata::Rules::RuleImport';
+coerce 'Bio::Metadata::Rules::RuleImport' => from 'HashRef' =>
+  via { Bio::Metadata::Rules::RuleImport->new($_); };
+subtype 'Bio::Metadata::Rules::RuleImportArrayRef' => as
+  'ArrayRef[Bio::Metadata::Rules::RuleImport]';
+coerce 'Bio::Metadata::Rules::RuleImportArrayRef' => from
+  'ArrayRef[HashRef]'                             => via {
+  [ map { Bio::Metadata::Rules::RuleImport->new($_) } @$_ ];
+  },
+  from 'Bio::Metadata::Rules::RuleImport' => via {
+  [$_];
+  },
+  from 'HashRef' => via {
+  [ Bio::Metadata::Rules::RuleImport->new($_) ];
+  };
 
 #validation outcome
 class_type 'Bio::Metadata::Validate::ValidationOutcome';

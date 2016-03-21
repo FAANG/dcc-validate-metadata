@@ -1,6 +1,6 @@
 
 =head1 LICENSE
-   Copyright 2015 EMBL - European Bioinformatics Institute
+   Copyright 2016 EMBL - European Bioinformatics Institute
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -12,7 +12,7 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Loader::JSONRuleSetLoader;
+package Bio::Metadata::Validate::NcbiTaxonomyValidator;
 
 use strict;
 use warnings;
@@ -20,18 +20,24 @@ use warnings;
 use Carp;
 use Moose;
 use namespace::autoclean;
-use Bio::Metadata::Rules::RuleSet;
-use Bio::Metadata::Types;
 
-with "Bio::Metadata::Loader::JSONLoaderRole", "Bio::Metadata::Loader::RuleSetLoaderRole";
+use Scalar::Util qw(looks_like_number);
+use Bio::Metadata::Attribute;
 
-sub hash_to_object {
-    my ( $self, $hash ) = @_;
+extends 'Bio::Metadata::Validate::OntologyIdAttributeValidator';
 
-    my $o = Bio::Metadata::Rules::RuleSet->new($hash);
+sub validate_attribute {
+  my ( $self, $rule, $attribute) = @_;
 
-    return $o;
+  my $old_id = $attribute->id;
+
+  if ($attribute->id && looks_like_number($attribute->id)){
+    $attribute->id( 'NCBITaxon_'.$attribute->id);
+
+  }
+  my @ret = $self->SUPER::validate_attribute($rule, $attribute);
+
+  $attribute->id($old_id);
+
+  return @ret;
 }
-
-__PACKAGE__->meta->make_immutable;
-1;

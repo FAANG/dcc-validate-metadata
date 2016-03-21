@@ -51,28 +51,29 @@ sub validate_attribute {
         $o->message('uri is not valid');
         return $o;
     };
-    
+
     if (! $uri->has_recognized_scheme){
       $o->outcome('error');
       $o->message('uri is not valid');
       return $o;
     }
 
-    my $label;
-  ANCESTOR: for my $ancestor_uri ( $rule->all_valid_ancestor_uris ) {
-        $label =
-          $self->ols_lookup->is_descendent( $attribute->uri, 'iri', $ancestor_uri, 'true' );
-        if ($label) {
+    my $term;
+  ANCESTOR: for my $valid_term ( $rule->all_valid_terms ) {
+        $term =
+          $self->ols_lookup->find_match( $attribute->uri, $valid_term, undef );
+        if ($term) {
             last ANCESTOR;
         }
     }
 
-    if ( !$label ) {
+    if ( !$term ) {
         $o->outcome('error');
-        $o->message('uri is not descendent of valid ancestor');
+        $o->message('URI is not for a valid term');
         return $o;
     }
 
+    my $label = $term->{label};
     if ( $label ne $attribute->value ) {
         $o->outcome('warning');
         $o->message(

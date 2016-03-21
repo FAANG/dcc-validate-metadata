@@ -29,7 +29,7 @@ use Bio::Metadata::Types;
 
 requires 'hash_to_object';
 
-sub load_blob {
+sub _load_blob {
     my ( $self, $blob, $src_name ) = @_;
 
     my ( $json_data, $o );
@@ -57,20 +57,20 @@ sub load_blob {
 }
 
 sub load {
-    my ( $self, $file_path ) = @_;
+    my ( $self, $location ) = @_;
 
     my $json_text;
     try {
-        open( my $fh, '<', $file_path );
+        open( my $fh, '<', $location );
         local $/ = undef;
         $json_text = <$fh>;
         close($fh);
     }
     catch {
-        croak "Failed to read from $file_path: $_";
+        croak "Failed to read from $location: $_";
     };
 
-    return $self->load_blob($json_text, $file_path);
+    return $self->_load_blob($json_text, $location);
 }
 
 1;

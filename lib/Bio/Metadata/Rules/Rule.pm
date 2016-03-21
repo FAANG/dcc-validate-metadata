@@ -19,6 +19,7 @@ use warnings;
 use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
+use Bio::Metadata::Rules::PermittedTerm;
 
 has 'name' => ( is => 'rw', isa => 'Str' );
 has 'type' => ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::TypeEnum', required => 1 );
@@ -53,20 +54,21 @@ has 'valid_units' => (
     },
     default => sub { [] },
 );
-has 'valid_ancestor_uris' => (
-    traits  => ['Array'],
-    is      => 'rw',
-    isa     => 'ArrayRef[Str]',
-    handles => {
-        all_valid_ancestor_uris   => 'elements',
-        add_valid_ancestor_uri    => 'push',
-        count_valid_ancestor_uris => 'count',
-        get_valid_ancestor_uri    => 'get',
-        find_valid_ancestor_uri   => 'first',
-        join_valid_ancestor_uris  => 'join',
-    },
-    default => sub { [] },
+has 'valid_terms' => (
+  traits => ['Array'],
+  is => 'rw',
+  isa => 'Bio::Metadata::Rules::PermittedTermArrayRef',
+  handles => {
+    all_valid_terms => 'elements',
+    add_valid_terms => 'push',
+    count_valid_terms => 'count',
+    get_valid_term => 'get',
+    find_valid_term => 'first',
+  },
+  coerce => 1,
+  default => sub {[]},
 );
+
 has 'condition' =>
   ( is => 'rw', isa => 'Bio::Metadata::Rules::Condition', coerce => 1 );
 

@@ -38,10 +38,6 @@ my $xlsx_mime_type =
 my $tsv_mime_type = ' text/tab-separated-values';
 app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type );
 
-my $rule_config    = app->config('rules');
-my %rule_locations = map { %$_ } @$rule_config;
-my @rule_names     = map { keys %$_ } @$rule_config;
-
 my $brand     = app->config('brand')     || '';
 my $brand_img = app->config('brand_img') || '';
 app->hook(
@@ -60,6 +56,12 @@ my $loaders = {
   'JSON'            => Bio::Metadata::Loader::JSONEntityLoader->new(),
   'BioSample .xlsx' => Bio::Metadata::Loader::XLSXBioSampleLoader->new(),
 };
+
+my $rule_config    = app->config('rules');
+my %rule_locations = map { %$_ } @$rule_config;
+my @rule_names     = map { keys %$_ } @$rule_config;
+
+my ( $rules, $validators ) = load_rules( \%rule_locations );
 
 my %help_pages = (
   'REST API'             => 'rest',
@@ -89,14 +91,12 @@ get '/help/#name' => sub {
 get '/rule_sets' => sub {
   my $c = shift;
 
-  my $rules = load_rules( \%rule_locations );
-
   $c->respond_to(
     json => sub {
-      $c->render( json => { rule_set_names => [ sort keys %$rules ] } );
+      $c->render( json => { rule_set_names => \@rule_names, } );
     },
     html => sub {
-      $c->stash( rule_sets => $rules );
+      $c->stash( rule_sets => $rules, rule_set_names => \@rule_names );
       $c->render( template => 'rule_sets' );
     }
   );
@@ -106,7 +106,7 @@ get '/rule_sets/#name' => sub {
   my $c    = shift;
   my $name = $c->param('name');
 
-  my $rule_set = load_rules( \%rule_locations, $name );
+  my $rule_set = $rules->{$name};
 
   return $c->reply->not_found if ( !$rule_set );
 
@@ -149,9 +149,10 @@ post '/sample_tab' => sub {
 
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
-  my $rule_set      = load_rules( \%rule_locations, $rule_set_name );
+  my $rule_set      = $rules->{$rule_set_name};
 
-  my $st_converter = Bio::Metadata::BioSample::SampleTab->new();
+  my $st_converter =
+    Bio::Metadata::BioSample::SampleTab->new( rule_set => $rule_set );
   my ( $msi, $scd );
   if ( !$form_validation->has_error ) {
     try {
@@ -164,8 +165,7 @@ post '/sample_tab' => sub {
   }
 
   my $st_errors = $st_converter->validate;
-  my $validator =
-    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+  my $validator = $validators->{$rule_set_name};
 
   my ($entity_status) = $validator->check_all( $st_converter->scd );
 
@@ -211,7 +211,7 @@ post '/validate' => sub {
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
   my $loader        = $loaders->{ $c->param('file_format') };
-  my $rule_set      = load_rules( \%rule_locations, $rule_set_name );
+  my $rule_set      = $rules->{$rule_set_name};
 
   my $metadata;
   if ( !$form_validation->has_error ) {
@@ -248,13 +248,12 @@ sub form_validate_rule_name {
 }
 
 sub load_rules {
-  my ( $rule_locations, $name ) = @_;
-
-  my $loader = Bio::Metadata::Loader::JSONRuleSetLoader->new();
-
-  my @locs = defined $name ? ($name) : keys %$rule_locations;
+  my ($rule_locations) = @_;
 
   my %rules;
+  my %validators;
+
+  my $loader = Bio::Metadata::Loader::JSONRuleSetLoader->new();
 
   for my $k ( keys %$rule_locations ) {
     my $loc = $rule_locations->{$k};
@@ -264,10 +263,14 @@ sub load_rules {
     }
 
     my $rule_set = $loader->load($loc);
-    $rules{$k} = $rule_set;
+    $rules{$k}      = $rule_set;
+    $validators{$k} = Bio::Metadata::Validate::EntityValidator->new(
+      rule_set   => $rule_set,
+      ols_lookup => $loader->ols_lookup
+    );
   }
 
-  return defined $name ? $rules{$name} : \%rules;
+  return ( \%rules, \%validators );
 }
 
 sub validation_supporting_data {
@@ -399,8 +402,7 @@ sub validate_metadata {
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
 
-  my $validator =
-    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+  my $validator = $validators->{$rule_set_name};
 
   my (
     $entity_status,      $entity_outcomes, $attribute_status,
@@ -444,6 +446,7 @@ sub validate_metadata {
         outcome_summary        => \%summary,
         total                  => $total,
         rule_set_name          => $rule_set_name,
+        rule_set               => $rule_set,
         entities               => $metadata,
         entity_status          => $entity_status,
         entity_outcomes        => $entity_outcomes,

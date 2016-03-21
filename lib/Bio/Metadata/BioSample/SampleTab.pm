@@ -39,6 +39,11 @@ has 'scd' => (
   coerce  => 1,
 );
 
+has 'rule_set' => (
+  is => 'rw',
+  isa => 'Bio::Metadata::Rules::RuleSet'
+);
+
 has 'msi' => (
   traits  => ['Array'],
   is      => 'rw',
@@ -130,11 +135,11 @@ sub report_scd {
     push @output_rows, \@row;
 
     my $organised_attr = $e->organised_attr;
-
     #for each possible attribute
+
+
     for my $ac (@$attribute_columns) {
       my $attrs = $organised_attr->{ $ac->name };
-
       #for each possible occurance of that attribute
       for ( my $i = 0 ; $i < $ac->max_count ; $i++ ) {
         my $a;
@@ -168,9 +173,13 @@ sub generate_header {
   my ( $self, $attribute_columns ) = @_;
   my @row = ('Sample Name');
 
+  my $organised_rules = $self->rule_set ? $self->rule_set->organised_rules : {};
+
   for my $ac (@$attribute_columns) {
+
     for ( my $i = 0 ; $i < $ac->max_count ; $i++ ) {
-      my $name = $ac->name;
+      my $rules = $organised_rules->{$ac->name};
+      my $name = $rules ? $rules->[0]->name : $ac->name;
       if ( !exists $named{$name} && !exists $relationships{$name} ) {
         $name = "Characteristic[$name]";
       }

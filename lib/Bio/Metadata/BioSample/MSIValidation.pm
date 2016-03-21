@@ -102,10 +102,15 @@ has 'person_rule_set' => (
             },
             { name => 'Person Email', mandatory => 'optional', type => 'text' },
             {
-              name                => 'Person Role',
-              mandatory           => 'optional',
-              type                => 'ontology_text',
-              valid_ancestor_uris => ['http://www.ebi.ac.uk/efo/EFO_0002012']
+              name        => 'Person Role',
+              mandatory   => 'optional',
+              type        => 'ontology_text',
+              valid_terms => [
+                {
+                  term_iri      => 'http://www.ebi.ac.uk/efo/EFO_0002012',
+                  ontology_name => 'EFO'
+                }
+              ]
             },
           ]
         },
@@ -142,10 +147,15 @@ has 'organisation_rule_set' => (
               type      => 'text'
             },
             {
-              name                => 'Organization Role',
-              mandatory           => 'optional',
-              type                => 'ontology_text',
-              valid_ancestor_uris => ['http://www.ebi.ac.uk/efo/EFO_0002012']
+              name        => 'Organization Role',
+              mandatory   => 'optional',
+              type        => 'ontology_text',
+              valid_terms => [
+                {
+                  term_iri      => 'http://www.ebi.ac.uk/efo/EFO_0002012',
+                  ontology_name => 'EFO'
+                }
+              ]
             },
           ]
         }
@@ -343,7 +353,7 @@ sub check_term_source_refs {
         name => 'term source',
         type => 'text'
       ),
-    );
+      );
   }
   return \@errors;
 }

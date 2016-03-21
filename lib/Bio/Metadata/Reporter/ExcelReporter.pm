@@ -87,9 +87,6 @@ sub report {
     my $units_sheet = $self->new_worksheet("units");
     $self->report_uniq_usage( $units_sheet, 'units', $attr_columns );
 
-    my $uris_sheet = $self->new_worksheet("uris");
-    $self->report_uniq_usage( $uris_sheet, 'uri', $attr_columns );
-
     my $refid_sheet = $self->new_worksheet("ref+id");
     $self->report_uniq_usage( $refid_sheet, 'ref_id', $attr_columns );
 

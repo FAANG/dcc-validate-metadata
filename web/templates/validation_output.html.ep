@@ -2,7 +2,7 @@
 <h1>Validation result</h1>
 
 <div>
-% my @categories = qw(value units ref_id uri);
+% my @categories = qw(value units ref_id);
   <!-- Nav tabs -->
   <ul class="nav nav-tabs" role="tablist">
 
@@ -63,7 +63,7 @@
       %}
     </dl>
 
-    <p>This report is also available as a spreadsheet, just go back and submit the metadata and choose 'xlsx' as the output format.</p>
+    <p>This report is also available as a spreadsheet, just go back and submit the metadata and choose 'Excel' as the output format.</p>
 
   </div>
 
@@ -82,9 +82,12 @@
         </th>
         <th>Rule groups applied</th>
 
+    % my $organised_rules = $rule_set->organised_rules;
     % for my $col (@{$attribute_columns}){
+    %   my $rules = $organised_rules->{$col->name};
+    %   my $name = $rules ? $rules->[0]->name : $col->name;
     %   for my $i (0..($col->max_count - 1)) {
-          <th><%= $col->name %></th>
+          <th><%= $name %></th>
     %     if ($col->use_ref_id){
             <th>Term source REF</th>
             <th>Term source ID</th>
@@ -93,7 +96,7 @@
             <th>URI</th>
     %     }
     %     if ($col->use_units){
-            <th>Units</th>
+            <th>Unit</th>
     %     }
     %   }
     % }
@@ -144,7 +147,8 @@
     % my $organised_attr = $ent->organised_attr;
 
     % for my $col (@{$attribute_columns}){
-    % my $attrs = $organised_attr->{ $col->name };
+    % my $col_name = $ent->normalise_attribute_name( $col->name );
+    % my $attrs = $organised_attr->{ $col_name };
     %   for my $i (0..($col->max_count - 1)) {
     %     my ($a,$a_status,$a_outcomes) = (undef,'',[]);
     %     if ( $attrs && $i < scalar(@$attrs) && $attrs->[$i] ) {

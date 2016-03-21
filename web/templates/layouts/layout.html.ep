@@ -14,9 +14,13 @@
   <body>
     <div class="container">
       %= include 'header'
+
       <div class="wrapper">
+
         %= content
+
       </div>
+
       %= include 'footer'
     </div>
 
