@@ -22,6 +22,30 @@ use List::Util qw(any none);
 
 my ( $sire, $dam ) = qw(sire dam);
 
+=head1 parse
+  $parser->parse($breed_text);
+
+  interprets the breed text based on the FAANG breed spec and converts it to
+  structured data
+
+  returns a hash ref.
+
+  Pure bred:
+  'Breed A' returns {breeds => ['Breed A']}
+  Mixed breed:
+  'Breed A, Breed B' returns {breeds => ['Breed A', 'Breed B']}
+  Crossbred:
+  'Breed A sire x Breed B dam' returns {sire => 'Breed A',dam => 'Breed B'}
+  Backcross etc.:
+  'Breed A sire x (Breed B sire x Breed A dam) dam' returns
+    {
+      sire => 'Breed A',
+      dam  => {
+        sire => 'Breed B',
+        dam => 'Breed A',
+      }
+    }
+=cut
 sub parse {
   my ( $self, $breed_text ) = @_;
 
@@ -30,6 +54,12 @@ sub parse {
   return $self->_parser(@tokens);
 }
 
+=head1 _parser
+  $parser->_parser(@tokens);
+
+  convert tokens to structured breed data, or an empty hash if it can't be
+  understood
+=cut
 sub _parser {
   my ( $self, @tokens ) = @_;
 
@@ -51,6 +81,11 @@ sub _parser {
   return $b;
 }
 
+=head1 _nested
+  $parser->_nested(@tokens);
+
+  decode nested breed information.
+=cut
 sub _nested {
   my ( $self, @tokens ) = @_;
 
@@ -145,9 +180,16 @@ sub _pure {
   return { breeds => [ join( ' ', @tokens ) ] };
 }
 
-#tokenise the text
-# These chars are significant: ()x,
-# Spaces are delimiters, but aren't significant otherwise
+=head1 parse
+  $parser->_lexer($breed_text);
+
+  tokenises the text, returning a list of words.
+  each space delimted word is a token.
+  Commas are treated as tokens.
+  round brackets are treated as tokens, if they enclose signifcant delimiters
+  from the spec i.e. '(',')', 'x' or ','. The aim is to allow for breed names
+  that contain brackets.
+=cut
 sub _lexer {
   my ( $self, $text ) = @_;
 
@@ -175,11 +217,16 @@ sub _lexer {
   }
   push @tokens, $word_buffer if $word_buffer;
 
-  my @cleaned = $self->_lexer_cleanup(@tokens);
-
-  return @cleaned;
+  return $self->_lexer_cleanup(@tokens);
 }
 
+=head1 parse
+  $parser->_lexer_cleanup(@tokens);
+
+  cleanup the tokens, so that round brackets are only treated as tokens, if they
+  enclose signifcant delimiters from the spec i.e. '(',')', 'x' or ','.
+  The aim is to allow for breed names that contain brackets.
+=cut
 sub _lexer_cleanup {
 
   my ( $self, @tokens ) = @_;
