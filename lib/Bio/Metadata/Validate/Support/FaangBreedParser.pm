@@ -43,7 +43,6 @@ sub _parser {
   }
   elsif ( any { $_ eq ',' } @tokens ) {
     $b = $self->_mixed(@tokens);
-
   }
   else {
     $b = $self->_pure(@tokens);
@@ -62,11 +61,15 @@ sub _nested {
   for ( my $i = 0 ; $i < scalar(@tokens) ; $i++ ) {
 
     if ( $tokens[$i] eq '(' ) {
+      push @nested, $tokens[$i] if @opener;
       push @opener, $i;
     }
     elsif ( $tokens[$i] eq ')' && @opener ) {
       pop @opener;
-      if ( !@opener ) {
+      if (@opener) {
+        push @nested, $tokens[$i];
+      }
+      else {
         push @b, $self->_parser(@nested);
         @nested = ();
       }
@@ -82,10 +85,8 @@ sub _nested {
     }
 
   }
-  print Dumper( \@b, \@opener );
 
   if (@opener) {
-
     #unbalanced brackets, must be an error
     return {};
   }
@@ -174,41 +175,57 @@ sub _lexer {
   }
   push @tokens, $word_buffer if $word_buffer;
 
-  my @checked_tokens;
-  #some breeds have brackets in their names.
-  while (@tokens) {
-    my $t = pop @tokens;    #start at the end
+  my @cleaned = $self->_lexer_cleanup(@tokens);
 
-    if (
-      $t eq ')'
-      && ( !@checked_tokens
-        || none { $checked_tokens[0] eq $_ } ( $sire, $dam ) )
-      && @tokens
-      )
-    {
-        unshift @checked_tokens, (pop @tokens).$t;
+  return @cleaned;
+}
 
-        while (@tokens){
-          my $s = pop @tokens;
-          if ($s eq '(') {
-            $checked_tokens[0] = $s.$checked_tokens[0];
-            last;
-          }
-          else{
-            unshift @checked_tokens, $s;
-          }
+sub _lexer_cleanup {
+
+  my ( $self, @tokens ) = @_;
+
+  my @opener;
+  my @b;
+  my @nested;
+
+  for ( my $i = 0 ; $i < scalar(@tokens) ; $i++ ) {
+
+    if ( $tokens[$i] eq '(' ) {
+      push @nested, $tokens[$i] if @opener;
+      push @opener, $i;
+    }
+    elsif ( $tokens[$i] eq ')' && @opener ) {
+      pop @opener;
+
+      if ( !@opener ) {
+        if ( any { $_ eq '(' || $_ eq ')' || $_ eq 'x' || $_ eq ',' } @nested )
+        {
+          push @b, '(', $self->_lexer_cleanup(@nested), ')';
         }
+        elsif (@nested) {
+          $nested[0]  = '(' . $nested[0];
+          $nested[-1] = $nested[-1] . ')';
+          push @b, @nested;
+        }
+        else {
+          push @b, '(', ')';
+        }
+
+        @nested = ();
+      }
+      else {
+        push @nested, $tokens[$i];
+      }
+    }
+    elsif (@opener) {
+      push @nested, $tokens[$i];
     }
     else {
-      unshift @checked_tokens, $t;
+      push @b, $tokens[$i];
     }
-
-    print STDERR Dumper($t,@tokens,@checked_tokens);
-
   }
 
-  return @checked_tokens;
-
+  return @b;
 }
 
 __PACKAGE__->meta->make_immutable;
