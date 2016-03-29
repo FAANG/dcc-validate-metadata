@@ -43,7 +43,7 @@ sub create_rule {
 
   return Bio::Metadata::Rules::Rule->new(
     name => $name,
-    type => 'ontology_attr_name',
+    type => 'text',
     mandatory => 'optional',
     valid_terms => [$valid_term],
   );

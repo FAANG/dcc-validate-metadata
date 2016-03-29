@@ -27,7 +27,7 @@ use Data::Dumper;
 with "Bio::Metadata::Reporter::ReporterRole";
 
 has 'file_path' => ( is => 'rw', isa => 'Str', required => 1 );
-has 'max_size_msg' => (is => 'rw', isa => 'Str');
+has 'max_size_msg' => (is => 'rw', isa => 'Int');
 
 
 sub report {
@@ -37,20 +37,24 @@ sub report {
     my $entity_outcomes    = $params{entity_outcomes};
     my $attribute_status   = $params{attribute_status};
     my $attribute_outcomes = $params{attribute_outcomes};
-	
+
 
 	$self->print($entity_outcomes);
 }
 
 sub print {
 	my ($self,$entity_outcomes)=@_;
-	
+
 	open OUTFH,">",$self->file_path;
 	print OUTFH "#id\tstatus\tmessage\tvalue\n";
 	foreach my $e (keys %$entity_outcomes) {
 		my @outcomes=@{$entity_outcomes->{$e}};
 		foreach my $o (@outcomes) {
-			my $msg=substr($o->message,0,$self->max_size_msg) if ($o->message);
+      my $msg = $o->message;
+      if ($o->message && $self->max_size_msg && length($msg) > $self->max_size_msg){
+        $msg =substr($o->message,0,$self->max_size_msg)
+      }
+
 			if ($o->outcome eq 'error') {
 				print OUTFH $o->entity->id,"\t",$o->outcome,"\t'",$msg,"'\tNA\n";
 			} elsif ($o->outcome eq 'warning') {
@@ -58,7 +62,7 @@ sub print {
 			}
 		}
 	}
-	
+
 	close OUTFH;
 }
 

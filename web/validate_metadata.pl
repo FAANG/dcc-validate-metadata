@@ -24,6 +24,7 @@ use Bio::Metadata::Loader::JSONRuleSetLoader;
 use Bio::Metadata::Loader::JSONEntityLoader;
 use Bio::Metadata::Reporter::ExcelReporter;
 use Bio::Metadata::Reporter::BasicReporter;
+use Bio::Metadata::Reporter::TextReporter;
 use Bio::Metadata::Validate::EntityValidator;
 use Bio::Metadata::Loader::XLSXBioSampleLoader;
 use Bio::Metadata::BioSample::SampleTab;
@@ -277,8 +278,12 @@ sub validation_supporting_data {
   return {
     valid_file_formats   => [ sort keys %$loaders ],
     valid_rule_set_names => \@rule_names,
-    valid_output_formats =>
-      [ [ 'Web page' => 'html' ], [ 'Excel' => 'xlsx' ], [ 'JSON' => 'json' ] ],
+    valid_output_formats => [
+      [ 'Web page' => 'html' ],
+      [ 'Excel'    => 'xlsx' ],
+      [ 'JSON'     => 'json' ],
+      [ 'Text'     => 'txt' ]
+    ],
   };
 }
 
@@ -480,6 +485,29 @@ sub validate_metadata {
       $c->render_file(
         filepath     => $tmp_file->filename,
         filename     => $metadata_file->filename() . '.validation_report.xlsx',
+        content_type => $xlsx_mime_type,
+        cleanup      => 1,
+      );
+    },
+    txt => sub {
+      my $tmp_file = File::Temp->new();
+
+      my $reporter =
+        Bio::Metadata::Reporter::TextReporter->new(
+        file_path => $tmp_file->filename );
+
+      $reporter->report(
+        entities           => $metadata,
+        entity_status      => $entity_status,
+        entity_outcomes    => $entity_outcomes,
+        attribute_status   => $attribute_status,
+        attribute_outcomes => $attribute_outcomes,
+
+      );
+
+      $c->render_file(
+        filepath     => $tmp_file->filename,
+        filename     => $metadata_file->filename() . '.validation_report.txt',
         content_type => $xlsx_mime_type,
         cleanup      => 1,
       );
