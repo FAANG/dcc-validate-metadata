@@ -93,11 +93,18 @@ sub validate_cross {
     return $self->_parse_error($o);
   }
 
+  my %u_breeds = map {$_ => 1} @$breeds;
+  @$breeds = sort keys %u_breeds;
+
   for my $b (@$breeds){
     my $match = $self->lookup_breed($b);
     if (!$match){
       return $self->_breed_match_error($o,$b);
     }
+  }
+
+  if (scalar(@$breeds) < 2){
+    return $self->_parse_error($o);
   }
 
   $o->outcome('pass');

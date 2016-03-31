@@ -35,7 +35,7 @@ sub test_validator {
     'Charolais, Holstein',
     'Charolais sire x Holstein dam',
     '(Charolais sire x Holstein dam) sire x Holstein dam',
-    'Holstein sire x (Charolais sire x Holstein dam) dam'
+    'Holstein sire x (Charolais sire x Holstein dam) dam',
   );
 
   for my $val (@valid_values) {
@@ -45,10 +45,11 @@ sub test_validator {
   }
 
   my @invalid_values = (
-    'Not a breed name',
-    'Holstein,NOTABREEDNAME',
-    '((Charolais sire x Holstein dam) sire x Holstein dam) sire x Holstein dam',
-    '(Charolais,Holstein) sire x Holstein dam'
+    'Not a breed name', #won't match in LBO
+    'Holstein,NOTABREEDNAME', #part won't match in LBO
+    '((Charolais sire x Holstein dam) sire x Holstein dam) sire x Holstein dam', #should just be a list
+    '(Charolais,Holstein) sire x Holstein dam', #should just be a list
+    'Holstein sire x Holstein dam', #should just be a single value
   );
   for my $val (@invalid_values) {
     my $a = Bio::Metadata::Attribute->new( value => $val );
