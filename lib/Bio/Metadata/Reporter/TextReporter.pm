@@ -44,9 +44,9 @@ sub report {
 
 sub print {
 	my ($self,$entity_outcomes)=@_;
-
+  my $sep = "\t";
 	open OUTFH,">",$self->file_path;
-	print OUTFH "#id\tstatus\tmessage\tvalue\n";
+	print OUTFH join($sep,'#id','status','message','value');
 	foreach my $e (keys %$entity_outcomes) {
 		my @outcomes=@{$entity_outcomes->{$e}};
 		foreach my $o (@outcomes) {
@@ -54,11 +54,12 @@ sub print {
       if ($o->message && $self->max_size_msg && length($msg) > $self->max_size_msg){
         $msg =substr($o->message,0,$self->max_size_msg)
       }
+      my $val = join($sep, map {$_->value} @{$o->attributes}) ;
 
-			if ($o->outcome eq 'error') {
-				print OUTFH $o->entity->id,"\t",$o->outcome,"\t'",$msg,"'\tNA\n";
+      if ($o->outcome eq 'error') {
+				print OUTFH join($sep,$o->entity->id,$o->outcome,$msg,$val).$/;
 			} elsif ($o->outcome eq 'warning') {
-				print OUTFH $o->entity->id,"\t",$o->outcome,"\t'",$msg,"'\t",$o->attributes->[0]->value,"\n";
+				print OUTFH join($sep,$o->entity->id,$o->outcome,"'".$msg."'",$val).$/;
 			}
 		}
 	}
