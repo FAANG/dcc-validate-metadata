@@ -74,16 +74,18 @@ sub normalise_attribute_name {
 }
 
 sub organised_attr {
-  my ($self, $preserve_case) = @_;
+  my ( $self, $preserve_case ) = @_;
 
   my %h;
 
   for my $a ( $self->all_attributes ) {
     next if ( !$a->name || !defined $a->value || $a->value eq '' );
-    my $name = $preserve_case ? $a->name : $self->normalise_attribute_name( $a->name );
+    my $name =
+      $preserve_case ? $a->name : $self->normalise_attribute_name( $a->name );
     $h{$name} //= [];
     push @{ $h{$name} }, $a;
   }
+
   return \%h;
 }
 
@@ -91,9 +93,16 @@ sub attr_names {
   my ($self) = @_;
 
   my %names_seen;
-  my @names =
-    grep { !$names_seen{$_}++ }
-    map  { $self->normalise_attribute_name( $_->name ) } @{ $self->attributes };
+  my @names;
+  for my $a (@{ $self->attributes }){
+    next if ( !$a->name || !defined $a->value || $a->value eq '' );
+    my $n = $self->normalise_attribute_name( $a->name );
+
+    if (!$names_seen{$n}++){
+      push @names, $n;
+    }
+  }
+
   return \@names;
 }
 
