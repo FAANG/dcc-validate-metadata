@@ -10,6 +10,9 @@ use Data::Dumper;
 use Test::More;
 
 use Bio::Metadata::Validate::Support::FaangBreedParser;
+use Bio::Metadata::Validate::FaangBreedValidator;
+use Bio::Metadata::Attribute;
+use Bio::Metadata::Rules::Rule;
 
 my $parser = Bio::Metadata::Validate::Support::FaangBreedParser->new();
 
@@ -17,8 +20,42 @@ lexer_tests();
 compliance_tests();
 non_compliance_tests();
 what_the_heck_tests();
+test_validator();
 
 done_testing();
+
+#test the validator
+sub test_validator {
+  my $v = Bio::Metadata::Validate::FaangBreedValidator->new();
+  my $r = Bio::Metadata::Rules::Rule->new( type => 'faang_breed' );
+
+  my @valid_values = (
+    'Charolais',
+    'Charolais,Holstein',
+    'Charolais, Holstein',
+    'Charolais sire x Holstein dam',
+    '(Charolais sire x Holstein dam) sire x Holstein dam',
+    'Holstein sire x (Charolais sire x Holstein dam) dam'
+  );
+
+  for my $val (@valid_values) {
+    my $a = Bio::Metadata::Attribute->new( value => $val );
+    my $o = $v->validate_attribute( $r, $a );
+    is( $o->outcome, 'pass', 'valid value: ' . $val );
+  }
+
+  my @invalid_values = (
+    'Not a breed name',
+    'Holstein,NOTABREEDNAME',
+    '((Charolais sire x Holstein dam) sire x Holstein dam) sire x Holstein dam',
+    '(Charolais,Holstein) sire x Holstein dam'
+  );
+  for my $val (@invalid_values) {
+    my $a = Bio::Metadata::Attribute->new( value => $val );
+    my $o = $v->validate_attribute( $r, $a );
+    is( $o->outcome, 'error', 'invalid value: ' . $val );
+  }
+}
 
 # tests that go beyond the written spec, but should be within the parsers capabilities
 sub what_the_heck_tests {
