@@ -157,8 +157,8 @@ sub validate_pure_or_mixed {
     if ( scalar(@breeds) == 1 ) {
       my $id = $attribute->id;
       if ( defined $id
-        && $id ne $match->obo_id
-        && $id ne $match->short_form )
+        && $id ne $match->{obo_id}
+        && $id ne $match->{short_form} )
       {
         $o->outcome('warning');
         $o->message("breed name '$b' does not seem consistent with ID '$id'");
