@@ -161,7 +161,7 @@ is_deeply( $actual_rule_set_h, $expected_rule_set_h, 'Create ruleset' );
 
 my $vo = Bio::Metadata::Validate::ValidationOutcome->new(
   rule_group => $rule_set->get_rule_group(0),
-  rule       => $rule_set->get_rule_group(0)->get_native_rule(0),
+  rule       => $rule_set->get_rule_group(0)->get_rule(0),
   outcome    => 'error',
   entity     => $sample,
   attributes => [ $sample->get_attribute(0) ],
