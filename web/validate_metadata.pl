@@ -434,9 +434,10 @@ sub validate_metadata {
       map { $summary{$_} = 0 } qw(pass error warning);
       map { $summary{$_}++ } values %$entity_status;
 
-      my $attribute_columns = $reporter->determine_attr_columns($metadata),
+      my $attribute_columns =
+        $reporter->determine_attr_columns( $metadata, $rule_set );
 
-        my %useage_warning_summary;
+      my %useage_warning_summary;
       for my $ac (@$attribute_columns) {
         for my $k ( keys %{ $ac->probable_duplicates } ) {
           if ( scalar %{ $ac->probable_duplicates->{$k} } ) {
@@ -460,7 +461,8 @@ sub validate_metadata {
         entity_rule_groups     => $entity_rule_groups,
         useage_warning_summary => \%useage_warning_summary,
       );
-
+      use Data::Dumper;
+      print STDOUT Dumper($entity_outcomes);
       $c->stash(%stash);
       $c->render( template => 'validation_output' );
 

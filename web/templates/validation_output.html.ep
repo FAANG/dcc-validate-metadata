@@ -86,7 +86,8 @@
     % for my $col (@{$attribute_columns}){
     %   my $rules = $organised_rules->{$col->name};
     %   my $name = $rules ? $rules->[0]->name : $col->name;
-    %   for my $i (0..($col->max_count - 1)) {
+    %   my $iter_max = $col->max_count ? $col->max_count - 1 : 0;
+    %   for my $i (0..$iter_max) {
           <th><%= $name %></th>
     %     if ($col->use_ref_id){
             <th>Term source REF</th>
@@ -149,7 +150,8 @@
     % for my $col (@{$attribute_columns}){
     % my $col_name = $ent->normalise_attribute_name( $col->name );
     % my $attrs = $organised_attr->{ $col_name };
-    %   for my $i (0..($col->max_count - 1)) {
+    %   my $iter_max = $col->max_count ? $col->max_count - 1 : 0;
+    %   for my $i (0..$iter_max) {
     %     my ($a,$a_status,$a_outcomes) = (undef,'',[]);
     %     if ( $attrs && $i < scalar(@$attrs) && $attrs->[$i] ) {
     %         $a = $attrs->[$i];
