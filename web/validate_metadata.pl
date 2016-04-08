@@ -461,8 +461,7 @@ sub validate_metadata {
         entity_rule_groups     => $entity_rule_groups,
         useage_warning_summary => \%useage_warning_summary,
       );
-      use Data::Dumper;
-      print STDOUT Dumper($entity_outcomes);
+
       $c->stash(%stash);
       $c->render( template => 'validation_output' );
 
