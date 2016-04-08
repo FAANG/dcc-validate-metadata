@@ -264,10 +264,9 @@ sub load_rules {
     }
 
     my $rule_set = $loader->load($loc);
-    $rules{$k}      = $rule_set;
-    $validators{$k} = Bio::Metadata::Validate::EntityValidator->new(
-      rule_set   => $rule_set
-    );
+    $rules{$k} = $rule_set;
+    $validators{$k} =
+      Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
   }
 
   return ( \%rules, \%validators );
@@ -434,9 +433,10 @@ sub validate_metadata {
       map { $summary{$_} = 0 } qw(pass error warning);
       map { $summary{$_}++ } values %$entity_status;
 
-      my $attribute_columns = $reporter->determine_attr_columns($metadata),
+      my $attribute_columns =
+        $reporter->determine_attr_columns( $metadata, $rule_set );
 
-        my %useage_warning_summary;
+      my %useage_warning_summary;
       for my $ac (@$attribute_columns) {
         for my $k ( keys %{ $ac->probable_duplicates } ) {
           if ( scalar %{ $ac->probable_duplicates->{$k} } ) {
@@ -478,7 +478,7 @@ sub validate_metadata {
         entity_outcomes    => $entity_outcomes,
         attribute_status   => $attribute_status,
         attribute_outcomes => $attribute_outcomes,
-
+        rule_set           => $rule_set,
       );
 
       $c->render_file(
