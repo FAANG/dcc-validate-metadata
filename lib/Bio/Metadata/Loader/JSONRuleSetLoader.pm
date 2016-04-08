@@ -23,7 +23,7 @@ use namespace::autoclean;
 use Bio::Metadata::Rules::RuleSet;
 use Bio::Metadata::Types;
 
-with "Bio::Metadata::Loader::JSONLoaderRole", "Bio::Metadata::Loader::RuleSetLoaderRole";
+with "Bio::Metadata::Loader::JSONLoaderRole";
 
 sub hash_to_object {
     my ( $self, $hash ) = @_;

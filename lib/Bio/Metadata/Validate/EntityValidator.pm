@@ -26,6 +26,7 @@ use Data::Dumper;
 use Bio::Metadata::Types;
 use Bio::Metadata::Validate::ValidationOutcome;
 use Bio::Metadata::Entity;
+use Bio::Metadata::Validate::Support::OlsLookup;
 
 use MooseX::Params::Validate;
 use Bio::Metadata::Validate::RequirementValidator;
@@ -95,6 +96,11 @@ has 'message_for_unexpected_attributes' => (
   isa      => 'Str',
   required => 1,
   default  => sub { 'attribute not in rule set' },
+);
+has 'ols_lookup' => (
+  is      => 'rw',
+  isa     => 'Bio::Metadata::Validate::Support::OlsLookup',
+  default => sub { return Bio::Metadata::Validate::Support::OlsLookup->new() }
 );
 
 sub check_all {
@@ -168,9 +174,7 @@ sub check {
 
   my @all_outcomes;
   my @rule_groups_used;
-  my $organised_attributes  = $entity->organised_attr;
-  my $requirement_validator = $self->requirement_validator;
-  my $unit_validator        = $self->unit_validator;
+  my $organised_attributes = $entity->organised_attr;
 
 RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
 
@@ -182,47 +186,24 @@ RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
     push @rule_groups_used, $rule_group;
 
     for my $rule ( $rule_group->all_rules ) {
-      my @r_outcomes;
-
-      my $type_validator = $self->get_type_validator( $rule->type );
-      croak( "No type validator for " . $rule->type )
-        if ( !$type_validator );
 
       my $normalised_rule_name =
         $entity->normalise_attribute_name( $rule->name );
 
       my $attrs = $organised_attributes->{$normalised_rule_name} // [];
+
+   #we delete from organised attributes to keep track of what has been validated
       delete $organised_attributes->{$normalised_rule_name};
 
-      push @r_outcomes,
-        $requirement_validator->validate_requirements( $rule, $attrs );
-
-      for my $a (@$attrs) {
-        if ( $a->allow_further_validation ) {
-          if ( $rule->count_valid_units ) {
-            push @r_outcomes, $unit_validator->validate_attribute( $rule, $a );
-          }
-          push @r_outcomes, $type_validator->validate_attribute( $rule, $a );
-        }
-      }
-
-      for my $o (@r_outcomes) {
-        $o->rule_group($rule_group);
-        $o->entity($entity);
-      }
-      push @all_outcomes, grep { $_->outcome ne 'pass' } @r_outcomes;
+      push @all_outcomes,
+        $self->validate_attributes_with_rule( $rule, $attrs, $entity,
+        $rule_group );
     }
   }
 
-  for my $unexpected_attributes ( values %$organised_attributes ) {
-    push @all_outcomes,
-      Bio::Metadata::Validate::ValidationOutcome->new(
-      attributes => $unexpected_attributes,
-      entity     => $entity,
-      outcome    => $self->outcome_for_unexpected_attributes,
-      message    => $self->message_for_unexpected_attributes,
-      );
-  }
+  push @all_outcomes,
+    $self->handle_unexpected_attributes( $organised_attributes,
+    \@rule_groups_used, $entity );
 
   my $outcome_overall = 'pass';
   for my $o (@all_outcomes) {
@@ -241,6 +222,83 @@ RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
     { isa => 'Bio::Metadata::Validate::ValidationOutcomeArrayRef' },
     { isa => 'Bio::Metadata::Rules::RuleGroupArrayRef' }
   );
+}
+
+sub handle_unexpected_attributes {
+  my ( $self, $organised_attributes, $rule_groups, $entity ) = @_;
+
+  my @outcomes;
+
+  for my $attr_name ( keys %$organised_attributes ) {
+
+    my $unexpected_attributes = $organised_attributes->{$attr_name};
+
+    my ($rule,$rule_group) = $self->find_import_match( $attr_name, $rule_groups );
+
+    if ($rule) {
+      push @outcomes,
+        $self->validate_attributes_with_rule( $rule, $unexpected_attributes,
+        $entity, $rule_group );
+    }
+    else {
+      push @outcomes,
+        Bio::Metadata::Validate::ValidationOutcome->new(
+        attributes => $unexpected_attributes,
+        entity     => $entity,
+        outcome    => $self->outcome_for_unexpected_attributes,
+        message    => $self->message_for_unexpected_attributes,
+        );
+    }
+  }
+
+  return @outcomes;
+}
+
+sub find_import_match {
+  my ( $self, $attr_name, $rule_groups ) = @_;
+
+   for my $rule_group ( @$rule_groups ){
+
+    for my $rule_import ($rule_group->all_imports){
+      my $match =
+        $self->ols_lookup->find_match( $attr_name, $rule_import->term, 1 );
+
+      if ($match){
+        return ($rule_import->create_rule($match),$rule_group);
+      }
+    }
+  }
+  return undef;
+}
+
+sub validate_attributes_with_rule {
+  my ( $self, $rule, $attrs, $entity, $rule_group ) = @_;
+
+  my @rule_outcomes;
+
+  my $type_validator = $self->get_type_validator( $rule->type );
+  croak( "No type validator for " . $rule->type )
+    if ( !$type_validator );
+
+  push @rule_outcomes,
+    $self->requirement_validator->validate_requirements( $rule, $attrs );
+
+  for my $a (@$attrs) {
+    if ( $a->allow_further_validation ) {
+      if ( $rule->count_valid_units ) {
+        push @rule_outcomes,
+          $self->unit_validator->validate_attribute( $rule, $a );
+      }
+      push @rule_outcomes, $type_validator->validate_attribute( $rule, $a );
+    }
+  }
+
+  for my $o (@rule_outcomes) {
+    $o->rule_group($rule_group);
+    $o->entity($entity);
+  }
+
+  return grep { $_->outcome ne 'pass' } @rule_outcomes;
 }
 
 __PACKAGE__->meta->make_immutable;

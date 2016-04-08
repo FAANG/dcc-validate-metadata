@@ -34,34 +34,14 @@ has 'rules' => (
   is      => 'rw',
   isa     => 'Bio::Metadata::Rules::RuleArrayRef',
   handles => {
-    all_native_rules   => 'elements',
-    add_native_rule    => 'push',
-    count_native_rules => 'count',
-    get_native_rule    => 'get',
+    all_rules   => 'elements',
+    add_rule    => 'push',
+    count_rules => 'count',
+    get_rule    => 'get',
   },
   default => sub { [] },
   coerce  => 1,
 );
-has 'imported_rules' => (
-  traits  => ['Array'],
-  is      => 'rw',
-  isa     => 'Bio::Metadata::Rules::RuleArrayRef',
-  handles => {
-    all_imported_rules   => 'elements',
-    add_imported_rule    => 'push',
-    count_imported_rules => 'count',
-    get_imported_rule    => 'get',
-  },
-  default => sub { [] },
-  coerce  => 1,
-);
-
-sub all_rules {
-  return ($_[0]->all_native_rules,$_[0]->all_imported_rules);
-}
-sub count_rules {
-  return $_[0]->count_native_rules+$_[0]->count_imported_rules
-}
 
 has 'imports' => (
   traits  => ['Array'],

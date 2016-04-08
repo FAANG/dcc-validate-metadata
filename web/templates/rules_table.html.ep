@@ -29,18 +29,7 @@
   <td><ul class="list-unstyled">
   % for my $term ($rule->all_valid_terms) {
     <li>
-      % my $on =  lc($term->ontology_name);
-      % my $iri =  b($term->term_iri)->url_escape ;
-      % my $ols_url = "http://www.ebi.ac.uk/ols/beta/ontologies/$on/terms?iri=$iri";
-      % my @path_segments = $term->term_iri->path_segments;
-      <a href="<%= url_for($ols_url) %>">
-        <%= $path_segments[-1] %>
-      </a>
-      % if ($term->allow_descendants && $term->leaf_only){
-        ( leaf node descendants only )
-      % } elsif ($term->allow_descendants){
-        (include descendants)
-      % }
+      %= include 'term_source', term => $term
     </li>
   %}
   </ul></td>
