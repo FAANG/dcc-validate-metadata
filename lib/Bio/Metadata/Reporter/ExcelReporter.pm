@@ -37,292 +37,310 @@ has 'pass_color' =>
   ( is => 'rw', isa => 'Str', required => 1, default => 'green' );
 
 has '_formats' => (
-    is      => 'rw',
-    isa     => 'HashRef[Any]',
-    traits  => ['Hash'],
-    handles => { get_format => 'get', }
+  is      => 'rw',
+  isa     => 'HashRef[Any]',
+  traits  => ['Hash'],
+  handles => { get_format => 'get', }
 );
 
 sub report {
-    my ( $self, %params ) = @_;
-    my $entities           = $params{entities};
-    my $entity_status      = $params{entity_status};
-    my $entity_outcomes    = $params{entity_outcomes};
-    my $attribute_status   = $params{attribute_status};
-    my $attribute_outcomes = $params{attribute_outcomes};
+  my ( $self, %params ) = @_;
+  my $entities           = $params{entities};
+  my $entity_status      = $params{entity_status};
+  my $entity_outcomes    = $params{entity_outcomes};
+  my $attribute_status   = $params{attribute_status};
+  my $attribute_outcomes = $params{attribute_outcomes};
+  my $rule_set           = $params{rule_set};
 
-    $self->create_workbook();
-    $self->create_formats();
+  $self->create_workbook();
+  $self->create_formats();
 
-    my $attr_columns = $self->determine_attr_columns($entities);
+  my $attr_columns = $self->determine_attr_columns( $entities, $rule_set );
 
-    #create entities report
-    my $entity_sheet = $self->new_worksheet("entities");
+  #create entities report
+  my $entity_sheet = $self->new_worksheet("entities");
 
-    $self->write_header( $entity_sheet, $attr_columns );
-    $self->write_entities( $entity_sheet, $attr_columns, $entities,
-        $entity_status, $entity_outcomes, $attribute_status,
-        $attribute_outcomes );
+  $self->write_header( $entity_sheet, $attr_columns );
+  $self->write_entities( $entity_sheet, $attr_columns, $entities,
+    $entity_status, $entity_outcomes, $attribute_status, $attribute_outcomes );
 
-    my $col            = 1;
-    my $rborder_format = $self->get_format('rborder');
-    $entity_sheet->set_column( 0, $col, 15, $rborder_format );
+  my $col            = 1;
+  my $rborder_format = $self->get_format('rborder');
+  $entity_sheet->set_column( 0, $col, 15, $rborder_format );
 
-    for my $ac (@$attr_columns) {
-        my $col_to_cover_per_attr = 1;
-        $col_to_cover_per_attr++ if ( $ac->use_units );
-        $col_to_cover_per_attr++ if ( $ac->use_uri );
-        $col_to_cover_per_attr++ if ( $ac->use_source_ref );
-        $col_to_cover_per_attr++ if ( $ac->use_id );
+  for my $ac (@$attr_columns) {
+    my $col_to_cover_per_attr = 1;
+    $col_to_cover_per_attr++ if ( $ac->use_units );
+    $col_to_cover_per_attr++ if ( $ac->use_uri );
+    $col_to_cover_per_attr++ if ( $ac->use_source_ref );
+    $col_to_cover_per_attr++ if ( $ac->use_id );
 
-        $col = $col + ( $ac->max_count * $col_to_cover_per_attr );
+    $col = $col + ( $ac->max_count * $col_to_cover_per_attr );
 
-        $entity_sheet->set_column( $col, $col, undef, $rborder_format );
-    }
+    $entity_sheet->set_column( $col, $col, undef, $rborder_format );
+  }
 
-    #create term usage reports
-    my $values_sheet = $self->new_worksheet("values");
-    $self->report_uniq_usage( $values_sheet, 'value', $attr_columns );
+  #create term usage reports
+  my $values_sheet = $self->new_worksheet("values");
+  $self->report_uniq_usage( $values_sheet, 'value', $attr_columns );
 
-    my $units_sheet = $self->new_worksheet("units");
-    $self->report_uniq_usage( $units_sheet, 'units', $attr_columns );
+  my $units_sheet = $self->new_worksheet("units");
+  $self->report_uniq_usage( $units_sheet, 'units', $attr_columns );
 
-    my $refid_sheet = $self->new_worksheet("ref+id");
-    $self->report_uniq_usage( $refid_sheet, 'ref_id', $attr_columns );
+  my $refid_sheet = $self->new_worksheet("ref+id");
+  $self->report_uniq_usage( $refid_sheet, 'ref_id', $attr_columns );
 
 }
 
 sub report_uniq_usage {
-    my ( $self, $sheet, $key, $attr_columns ) = @_;
+  my ( $self, $sheet, $key, $attr_columns ) = @_;
 
-    my $hformat = $self->get_format('header');
-    my $wformat = $self->get_format('warning');
+  my $hformat = $self->get_format('header');
+  my $wformat = $self->get_format('warning');
 
-    my $row = 0;
+  my $row = 0;
 
-    $sheet->write( $row, 0, "attribute", $hformat );
-    $sheet->write( $row, 1, $key,        $hformat );
-    $sheet->write( $row, 2, "count",     $hformat );
+  $sheet->write( $row, 0, "attribute", $hformat );
+  $sheet->write( $row, 1, $key,        $hformat );
+  $sheet->write( $row, 2, "count",     $hformat );
 
-    $row++;
+  $row++;
 
-  AC: for my $ac (@$attr_columns) {
-        my $term_count          = $ac->term_count->{$key};
-        my $probable_duplicates = $ac->probable_duplicates->{$key};
+AC: for my $ac (@$attr_columns) {
+    my $term_count          = $ac->term_count->{$key};
+    my $probable_duplicates = $ac->probable_duplicates->{$key};
 
-        if ( !keys %$term_count ) {
+    if ( !keys %$term_count ) {
 
-            #attribute column doesn't have any terms of this type, don't report
-            next AC;
-        }
-
-        $sheet->write( $row, 0, $ac->name );
-
-        for my $k ( sort { lc($a) cmp lc($b) } keys %$term_count ) {
-            $sheet->write( $row, 1, $k, );
-
-            if ( $probable_duplicates->{$k} ) {
-                $sheet->write( $row, 1, $k, $wformat );
-            }
-            else {
-                $sheet->write( $row, 1, $k );
-            }
-            $sheet->write( $row, 2, $term_count->{$k} );
-
-            $row++;
-        }
-
+      #attribute column doesn't have any terms of this type, don't report
+      next AC;
     }
 
-    my $rborder_format = $self->get_format('rborder');
-    $sheet->set_column( 0, 1, 15, $rborder_format );
+    $sheet->write( $row, 0, $ac->name );
+
+    for my $k ( sort { lc($a) cmp lc($b) } keys %$term_count ) {
+      $sheet->write( $row, 1, $k, );
+
+      if ( $probable_duplicates->{$k} ) {
+        $sheet->write( $row, 1, $k, $wformat );
+      }
+      else {
+        $sheet->write( $row, 1, $k );
+      }
+      $sheet->write( $row, 2, $term_count->{$k} );
+
+      $row++;
+    }
+
+  }
+
+  my $rborder_format = $self->get_format('rborder');
+  $sheet->set_column( 0, 1, 15, $rborder_format );
 
 }
 
 sub create_formats {
-    my ( $self, ) = @_;
+  my ( $self, ) = @_;
 
-    my $workbook = $self->_workbook;
+  my $workbook = $self->_workbook;
 
-    my %format;
-    $format{'pass'}    = $workbook->add_format();
-    $format{'warning'} = $workbook->add_format();
-    $format{'error'}   = $workbook->add_format();
-    $format{'header'}  = $workbook->add_format();
-    $format{'rborder'} = $workbook->add_format();
+  my %format;
+  $format{'pass'}    = $workbook->add_format();
+  $format{'warning'} = $workbook->add_format();
+  $format{'error'}   = $workbook->add_format();
+  $format{'header'}  = $workbook->add_format();
+  $format{'rborder'} = $workbook->add_format();
 
-    $format{'pass'}->set_bg_color( $self->pass_color );
-    $format{'warning'}->set_bg_color( $self->warning_color );
-    $format{'error'}->set_bg_color( $self->error_color );
+  $format{'pass'}->set_bg_color( $self->pass_color );
+  $format{'warning'}->set_bg_color( $self->warning_color );
+  $format{'error'}->set_bg_color( $self->error_color );
 
-    $format{'header'}->set_bold();
-    $format{'header'}->set_bottom();
+  $format{'header'}->set_bold();
+  $format{'header'}->set_bottom();
 
-    $format{'rborder'}->set_right();
+  $format{'rborder'}->set_right();
 
-    $self->_formats( \%format );
+  $self->_formats( \%format );
 }
 
 sub prep_attr_comment {
-    my ( $self, $attr_outcomes ) = @_;
+  my ( $self, $attr_outcomes ) = @_;
 
-    my $comment = '';
+  my $comment = '';
 
-    if ( $attr_outcomes && @$attr_outcomes ) {
-        $comment .= join "\n", map { $_->message } @$attr_outcomes;
-        $comment .= "\n";
-    }
+  if ( $attr_outcomes && @$attr_outcomes ) {
+    $comment .= join "\n", map { $_->message } @$attr_outcomes;
+    $comment .= "\n";
+  }
 
-    return $comment;
+  return $comment;
 }
 
 sub prep_entity_comment {
-    my ( $self, $entity_outcomes ) = @_;
+  my ( $self, $entity_outcomes ) = @_;
 
-    my @general_outcomes = grep { @{ $_->attributes } == 0 } @$entity_outcomes;
+  my @general_outcomes = grep { @{ $_->attributes } == 0 } @$entity_outcomes;
 
-    my $comment = '';
-    if (@general_outcomes) {
-        $comment .= join "\n",
-          map { $_->rule->name . ': ' . $_->message } @general_outcomes;
-        $comment .= "\n";
-    }
+  my $comment = '';
+  if (@general_outcomes) {
+    $comment .= join "\n",
+      map { $_->rule->name . ': ' . $_->message } @general_outcomes;
+    $comment .= "\n";
+  }
 
-    if ( scalar(@$entity_outcomes) > scalar(@general_outcomes) ) {
-        my $extras_count =
-          scalar(@$entity_outcomes) - scalar(@general_outcomes);
-        $comment .= "$extras_count attribute notes";
-    }
-    return $comment;
+  if ( scalar(@$entity_outcomes) > scalar(@general_outcomes) ) {
+    my $extras_count = scalar(@$entity_outcomes) - scalar(@general_outcomes);
+    $comment .= "$extras_count attribute notes";
+  }
+  return $comment;
 }
 
 sub write_entities {
-    my ( $self, $worksheet, $attr_columns, $entities, $entity_status,
-        $entity_outcomes, $attribute_status, $attribute_outcomes )
-      = @_;
+  my ( $self, $worksheet, $attr_columns, $entities, $entity_status,
+    $entity_outcomes, $attribute_status, $attribute_outcomes )
+    = @_;
 
-    my $row = 0;
+  my $row = 0;
 
-    for my $e (@$entities) {
-        $row++;
-        my $col = 0;
+  for my $e (@$entities) {
+    $row++;
+    my $col = 0;
 
-        my $entity_format = $self->get_format( $entity_status->{$e} );
+    my $entity_format = $self->get_format( $entity_status->{$e} );
 
-        $worksheet->write( $row, $col, $e->id, $entity_format );
-        my $entity_comment =
-          $self->prep_entity_comment( $entity_outcomes->{$e} );
-        if ($entity_comment) {
-            $worksheet->write_comment( $row, $col, $entity_comment );
+    $worksheet->write( $row, $col, $e->id, $entity_format );
+
+    my $ent_outcomes   = $entity_outcomes->{$e};
+    my $entity_comment = $self->prep_entity_comment($ent_outcomes);
+    if ($entity_comment) {
+      $worksheet->write_comment( $row, $col, $entity_comment );
+    }
+    $col++;
+
+    $worksheet->write( $row, $col++, $e->entity_type );
+
+    my $organised_attr = $e->organised_attr;
+
+    for my $ac (@$attr_columns) {
+      my $attrs = $organised_attr->{ $ac->name };
+
+      my @additional_errors = grep {
+             $_->rule
+          && $_->rule->name eq $ac->name
+          && $_->count_attributes == 0
+      } @$ent_outcomes;
+
+      my $max_iter = $ac->max_count || 1;
+      for ( my $i = 0 ; $i < $max_iter ; $i++ ) {
+        my $a;
+        if ( $attrs && $i < scalar(@$attrs) && $attrs->[$i] ) {
+          $a = $attrs->[$i];
         }
+
+        my $attr_outcomes = [];
+        my $attr_status   = '';
+        my $a_value       = '';
+
+        if ($a) {
+          $attr_status   = $attribute_status->{$a};
+          $attr_outcomes = $attribute_outcomes->{$a};
+          $a_value       = $a->value;
+        }
+        elsif (@additional_errors) {
+          $attr_status   = 'error';
+          $attr_outcomes = \@additional_errors;
+        }
+
+        if ( $attr_status && $self->get_format($attr_status) ) {
+          $worksheet->write( $row, $col, $a_value,
+            $self->get_format($attr_status) );
+        }
+        else {
+          $worksheet->write( $row, $col, $a_value );
+        }
+
+        my $attr_comment = $self->prep_attr_comment($attr_outcomes);
+        if ($attr_comment) {
+          $worksheet->write_comment( $row, $col, $attr_comment );
+        }
+
         $col++;
 
-        $worksheet->write( $row, $col++, $e->entity_type );
+        if ( $ac->use_units ) {
+          if ( $a && $a->units ) {
+            $worksheet->write( $row, $col, $a->units );
+          }
 
-        my $organised_attr = $e->organised_attr;
-
-        for my $ac (@$attr_columns) {
-            my $attrs = $organised_attr->{ $ac->name };
-            for ( my $i = 0 ; $i < $ac->max_count ; $i++ ) {
-                my $a;
-                if ( $attrs && $i < scalar(@$attrs) && $attrs->[$i] ) {
-                    $a = $attrs->[$i];
-                }
-
-                if ($a) {
-                    my $as = $attribute_status->{$a};
-
-                    if ( $as && $self->get_format($as) ) {
-                        $worksheet->write( $row, $col, $a->value,
-                            $self->get_format($as) );
-                    }
-                    else {
-                        $worksheet->write( $row, $col, $a->value );
-                    }
-
-                    my $attr_comment =
-                      $self->prep_attr_comment( $attribute_outcomes->{$a} );
-                    if ($attr_comment) {
-                        $worksheet->write_comment( $row, $col, $attr_comment );
-                    }
-
-                }
-                $col++;
-
-                if ( $ac->use_units ) {
-                    if ( $a && $a->units ) {
-                        $worksheet->write( $row, $col, $a->units );
-                    }
-
-                    $col++;
-                }
-                if ( $ac->use_source_ref){
-                  if ( $a && $a->source_ref ) {
-                      $worksheet->write( $row, $col, $a->source_ref );
-                  }
-
-                  $col++;
-                }
-                if ( $ac->use_id){
-                  if ( $a && $a->id ) {
-                      $worksheet->write( $row, $col, $a->id );
-                  }
-
-                  $col++;
-                }
-                if ( $ac->use_uri ) {
-                    if ( $a && $a->uri ) {
-                        $worksheet->write( $row, $col, $a->uri );
-                    }
-
-                    $col++;
-                }
-            }
+          $col++;
         }
+        if ( $ac->use_source_ref ) {
+          if ( $a && $a->source_ref ) {
+            $worksheet->write( $row, $col, $a->source_ref );
+          }
+
+          $col++;
+        }
+        if ( $ac->use_id ) {
+          if ( $a && $a->id ) {
+            $worksheet->write( $row, $col, $a->id );
+          }
+
+          $col++;
+        }
+        if ( $ac->use_uri ) {
+          if ( $a && $a->uri ) {
+            $worksheet->write( $row, $col, $a->uri );
+          }
+
+          $col++;
+        }
+      }
     }
+  }
 
 }
 
 sub write_header {
-    my ( $self, $worksheet, $attr_columns ) = @_;
+  my ( $self, $worksheet, $attr_columns ) = @_;
 
-    my $row = 0;
-    my $col = 0;
+  my $row = 0;
+  my $col = 0;
 
-    my $format = $self->get_format('header');
+  my $format = $self->get_format('header');
 
-    $worksheet->write( $row, $col++, 'ID',          $format );
-    $worksheet->write( $row, $col++, 'entity_type', $format );
+  $worksheet->write( $row, $col++, 'ID',          $format );
+  $worksheet->write( $row, $col++, 'entity_type', $format );
 
-    for my $ac (@$attr_columns) {
-        for ( my $i = 0 ; $i < $ac->max_count ; $i++ ) {
-            $worksheet->write( $row, $col++, $ac->name, $format );
-            if ( $ac->use_units ) {
-                $worksheet->write( $row, $col++, 'units', $format );
-            }
-            if ( $ac->use_source_ref){
-              $worksheet->write( $row, $col++, 'Term Source REF', $format );
-            }
-            if ( $ac->use_id){
-              $worksheet->write( $row, $col++, 'Term Source ID', $format );
-            }
-            if ( $ac->use_uri ) {
-                $worksheet->write( $row, $col++, 'URI', $format );
-            }
-        }
+  for my $ac (@$attr_columns) {
+    my $max_iter = $ac->max_count || 1;
+    for ( my $i = 0 ; $i < $max_iter ; $i++ ) {
+      $worksheet->write( $row, $col++, $ac->name, $format );
+      if ( $ac->use_units ) {
+        $worksheet->write( $row, $col++, 'units', $format );
+      }
+      if ( $ac->use_source_ref ) {
+        $worksheet->write( $row, $col++, 'Term Source REF', $format );
+      }
+      if ( $ac->use_id ) {
+        $worksheet->write( $row, $col++, 'Term Source ID', $format );
+      }
+      if ( $ac->use_uri ) {
+        $worksheet->write( $row, $col++, 'URI', $format );
+      }
     }
+  }
 }
 
 sub create_workbook {
-    my ($self) = @_;
-    my $workbook = Excel::Writer::XLSX->new( $self->file_path );
-    croak "Could not create Excel file: $!" unless ( defined $workbook );
-    $self->_workbook($workbook);
+  my ($self) = @_;
+  my $workbook = Excel::Writer::XLSX->new( $self->file_path );
+  croak "Could not create Excel file: $!" unless ( defined $workbook );
+  $self->_workbook($workbook);
 }
 
 sub new_worksheet {
-    my ( $self, $sheet_name ) = @_;
-    return $self->_workbook()->add_worksheet($sheet_name);
+  my ( $self, $sheet_name ) = @_;
+  return $self->_workbook()->add_worksheet($sheet_name);
 }
 
 __PACKAGE__->meta->make_immutable;

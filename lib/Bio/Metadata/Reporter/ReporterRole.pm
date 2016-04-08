@@ -36,6 +36,7 @@ before 'report' => sub {
       { isa => 'HashRef[Bio::Metadata::Validate::OutcomeEnum]' },
     attribute_outcomes =>
       { isa => 'HashRef[Bio::Metadata::Validate::ValidationOutcomeArrayRef]' },
+    rule_set => { isa => 'Bio::Metadata::Rules::RuleSet' },
   );
 };
 
@@ -70,7 +71,7 @@ sub determine_attr_columns {
           Bio::Metadata::Reporter::AttributeColumn->new( name => $name );
         push @columns, $column{$name};
       }
-      
+
       my $ac = $column{$name};
       $ac->consume_attrs($attrs);
     }

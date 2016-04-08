@@ -264,10 +264,9 @@ sub load_rules {
     }
 
     my $rule_set = $loader->load($loc);
-    $rules{$k}      = $rule_set;
-    $validators{$k} = Bio::Metadata::Validate::EntityValidator->new(
-      rule_set   => $rule_set
-    );
+    $rules{$k} = $rule_set;
+    $validators{$k} =
+      Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
   }
 
   return ( \%rules, \%validators );
@@ -479,7 +478,7 @@ sub validate_metadata {
         entity_outcomes    => $entity_outcomes,
         attribute_status   => $attribute_status,
         attribute_outcomes => $attribute_outcomes,
-
+        rule_set           => $rule_set,
       );
 
       $c->render_file(
