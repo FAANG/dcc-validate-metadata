@@ -36,7 +36,7 @@ before 'report' => sub {
       { isa => 'HashRef[Bio::Metadata::Validate::OutcomeEnum]' },
     attribute_outcomes =>
       { isa => 'HashRef[Bio::Metadata::Validate::ValidationOutcomeArrayRef]' },
-    rule_set => { isa => 'Bio::Metadata::Rules::RuleSet' },
+    rule_set => { isa => 'Bio::Metadata::Rules::RuleSet',optional => 1},
   );
 };
 
