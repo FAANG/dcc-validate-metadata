@@ -266,8 +266,7 @@ sub load_rules {
     my $rule_set = $loader->load($loc);
     $rules{$k}      = $rule_set;
     $validators{$k} = Bio::Metadata::Validate::EntityValidator->new(
-      rule_set   => $rule_set,
-      ols_lookup => $loader->ols_lookup
+      rule_set   => $rule_set
     );
   }
 
