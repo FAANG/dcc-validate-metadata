@@ -21,6 +21,7 @@ use Carp;
 use Moose::Role;
 use MooseX::Params::Validate;
 use Bio::Metadata::Reporter::AttributeColumn;
+use Bio::Metadata::Entity;
 
 requires 'report';
 
@@ -45,11 +46,11 @@ sub determine_attr_columns {
 
   my @columns;
   my %column;
-
+  my $entity = Bio::Metadata::Entity->new();
   if ($rule_set) {
     for my $rg ( $rule_set->all_rule_groups ) {
       for my $r ( $rg->all_rules ) {
-        my $name = $r->name;
+        my $name = $entity->normalise_attribute_name($r->name);
         if ( !$column{$name} ) {
           $column{$name} =
             Bio::Metadata::Reporter::AttributeColumn->new( name => $name );
