@@ -40,7 +40,7 @@ has 'scd' => (
 );
 
 has 'rule_set' => (
-  is => 'rw',
+  is  => 'rw',
   isa => 'Bio::Metadata::Rules::RuleSet'
 );
 
@@ -64,6 +64,16 @@ has 'msi_validator' => (
   default => sub { Bio::Metadata::BioSample::MSIValidation->new },
 );
 
+has 'term_source_ref_use' => (
+  is      => 'rw',
+  isa     => 'HashRef[Int]',
+  traits  => ['Hash'],
+  handles => {
+    'get_term_source_ref_use' => 'get',
+    'set_term_source_ref_use' => 'set',
+  }
+);
+
 #accepeted Named Attributes. For definition see: https://www.ebi.ac.uk/biosamples/help/st_scd.html
 my %named =
   map { $_ => 1 } ( "Organism", "Material", "Sex", "Sample Description" );
@@ -80,6 +90,26 @@ sub read {
 
   $self->msi( $loader->load_msi_entities($file_path) );
   $self->scd( $loader->load_scd_entities($file_path) );
+  $self->_tally_term_source_ref_use();
+}
+
+sub _increment_term_source_ref_use {
+  my ( $self, $term_source_ref ) = @_;
+  my $count = $self->get_term_source_ref_use($term_source_ref) // 0;
+  $count++;
+  $self->set_term_source_ref_use( $term_source_ref, $count );
+  return $count;
+}
+
+sub _tally_term_source_ref_use {
+  my ($self) = @_;
+
+  for my $entity ( $self->all_scd ) {
+    for my $attribute ( $entity->all_attributes ) {
+      $self->_increment_term_source_ref_use( $attribute->source_ref )
+        if ( defined $attribute->source_ref );
+    }
+  }
 }
 
 sub validate {
@@ -94,29 +124,39 @@ sub validate {
 sub report_msi {
   my ($self) = @_;
 
-  my $output;
-  $output .= "[MSI]\n";
+  my $output ="[MSI]$/";
+  my $sep = "\t";
 
-  my ( $name, $uri, $version );
-  foreach my $e ( @{ $self->msi } ) {
-    my $atts = $e->attributes;
-    foreach my $a (@$atts) {
-      next if !$a->value;
+  my @term_sources;
+
+  for my $e ( $self->all_msi ) {
+    for my $a ($e->all_attributes) {
+
+      next if ! defined $a->value;
+
       if ( $a->name =~ /Term Source/ ) {
-        $name    .= $a->value . "\t" if $a->name eq 'Term Source Name';
-        $uri     .= $a->value . "\t" if $a->name eq 'Term Source URI';
-        $version .= $a->value . "\t" if $a->name eq 'Term Source Version';
+        if ($a->name eq 'Term Source Name'){
+          push @term_sources,{name => $a->value, uri => '', version => ''};
+        }
+        if ($a->name eq 'Term Source URI' && @term_sources){
+          $term_sources[-1]->{uri} = $a->value;
+        }
+        if ($a->name eq 'Term Source Version' && @term_sources){
+          $term_sources[-1]->{version} = $a->value;
+        }
       }
       else {
-        $output .= $a->name . "\t" . $a->value . "\n";
+        $output .= $a->name . $sep . $a->value . $/;
       }
-
     }
   }
-  $output .= "Term Source Name\t$name\n"       if defined $name;
-  $output .= "Term Source URI\t$uri\n"         if defined $uri;
-  $output .= "Term Source Version\t$version\n" if defined $version;
-  $output .= "\n";
+
+  my @term_sources_used = grep {$self->get_term_source_ref_use($_->{name})} @term_sources;
+
+  $output .= join($sep,'Term Source Name',map {$_->{name} || ''} @term_sources_used).$/;
+  $output .= join($sep,'Term Source URI',map {$_->{uri} || ''} @term_sources_used).$/;
+  $output .= join($sep,'Term Source Version',map {$_->{version} || ''} @term_sources_used).$/;
+  $output .= $/;
 }
 
 sub report_scd {
@@ -135,11 +175,12 @@ sub report_scd {
     push @output_rows, \@row;
 
     my $organised_attr = $e->organised_attr;
-    #for each possible attribute
 
+    #for each possible attribute
 
     for my $ac (@$attribute_columns) {
       my $attrs = $organised_attr->{ $ac->name };
+
       #for each possible occurance of that attribute
       for ( my $i = 0 ; $i < $ac->max_count ; $i++ ) {
         my $a;
@@ -178,7 +219,7 @@ sub generate_header {
   for my $ac (@$attribute_columns) {
 
     for ( my $i = 0 ; $i < $ac->max_count ; $i++ ) {
-      my $rules = $organised_rules->{$ac->name};
+      my $rules = $organised_rules->{ $ac->name };
       my $name = $rules ? $rules->[0]->name : $ac->name;
       if ( !exists $named{$name} && !exists $relationships{$name} ) {
         $name = "Characteristic[$name]";
