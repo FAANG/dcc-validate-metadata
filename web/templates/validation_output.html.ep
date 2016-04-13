@@ -28,15 +28,15 @@
     <br/>
     % if ($outcome_summary->{error}) {
       <div class="alert alert-danger" role="alert">
-        <strong>Oh dear.</strong> The metadata did not pass validation. Please review the errors in the 'Entities' tab and update your metadata.
+        <strong>The metadata did not pass validation.</strong> Please review the errors in the 'Entities' tab and update your metadata.
       </div>
     % } elsif ($outcome_summary->{warning}) {
       <div class="alert alert-warning" role="alert">
-        <strong>Not bad.</strong> The metadata passed validation, but with some warnings. Please review the errors in the 'Entities' tab and consider updating your metadata.
+        <strong>The metadata passed validation, but with warnings.</strong> Please review the errors in the 'Entities' tab and consider updating your metadata.
       </div>
     % } elsif ($outcome_summary->{pass}) {
-      <div class="alert  alert-pass" role="alert">
-        <strong>Well done.</strong> The metadata passed validation.
+      <div class="alert  alert-success" role="alert">
+        <strong>The metadata passed validation.</strong>
       </div>
     %}
 
