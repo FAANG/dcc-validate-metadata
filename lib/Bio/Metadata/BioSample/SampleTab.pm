@@ -124,15 +124,24 @@ sub validate {
 sub report_msi {
   my ($self) = @_;
 
-  my $output ="[MSI]$/";
-  my $sep = "\t";
-
+  my $col_sep  = "\t";
+  my $line_sep = "\n";
+  my $output ="[MSI]$line_sep";
   my @term_sources;
+
+  my ($seen_submission_version, $seen_submission_ref_layer);
 
   for my $e ( $self->all_msi ) {
     for my $a ($e->all_attributes) {
 
       next if ! defined $a->value;
+
+      if ($a->name eq 'Submission Version'){
+        $seen_submission_version++;
+      }
+      if ($a->name eq 'Submission Reference Layer'){
+        $seen_submission_ref_layer++;
+      }
 
       if ( $a->name =~ /Term Source/ ) {
         if ($a->name eq 'Term Source Name'){
@@ -146,17 +155,24 @@ sub report_msi {
         }
       }
       else {
-        $output .= $a->name . $sep . $a->value . $/;
+        $output .= $a->name . $col_sep . $a->value . $line_sep;
       }
     }
   }
 
   my @term_sources_used = grep {$self->get_term_source_ref_use($_->{name})} @term_sources;
 
-  $output .= join($sep,'Term Source Name',map {$_->{name} || ''} @term_sources_used).$/;
-  $output .= join($sep,'Term Source URI',map {$_->{uri} || ''} @term_sources_used).$/;
-  $output .= join($sep,'Term Source Version',map {$_->{version} || ''} @term_sources_used).$/;
-  $output .= $/;
+  $output .= join($col_sep,'Term Source Name',map {$_->{name} || ''} @term_sources_used).$line_sep;
+  $output .= join($col_sep,'Term Source URI',map {$_->{uri} || ''} @term_sources_used).$line_sep;
+  $output .= join($col_sep,'Term Source Version',map {$_->{version} || ''} @term_sources_used).$line_sep;
+
+  if (!$seen_submission_version){
+    $output .= 'Submission Version'.$col_sep.'1.2'.$line_sep;
+  }
+  if (!$seen_submission_ref_layer){
+    $output .= 'Submission Reference Layer'.$col_sep.'false'.$line_sep;
+  }
+  $output .= $line_sep;
 }
 
 sub report_scd {

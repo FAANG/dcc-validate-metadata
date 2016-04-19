@@ -42,9 +42,10 @@ has 'submission_rule_set' => (
               type      => 'text'
             },
             {
-              name      => 'Submission Version',
-              mandatory => 'optional',
-              type      => 'number',
+              name         => 'Submission Version',
+              mandatory    => 'optional',
+              type         => 'number',
+              valid_values => [ '1.2', ]
             },
             {
               name      => 'Submission Update Date',
