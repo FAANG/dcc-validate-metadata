@@ -22,6 +22,7 @@ use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
 use Bio::Metadata::Rules::RuleGroup;
+use MooseX::Types::URI qw(Uri);
 
 has 'name'        => ( is => 'rw', isa => 'Str' );
 has 'description' => ( is => 'rw', isa => 'Str' );
@@ -38,6 +39,7 @@ has 'rule_groups' => (
     default => sub { [] },
     coerce  => 1,
 );
+has 'further_details_iri' => (is => 'rw', isa => Uri, coerce => 1);
 
 sub to_hash {
     my ($self) = @_;
@@ -47,6 +49,7 @@ sub to_hash {
     return {
         name        => $self->name,
         description => $self->description,
+        further_details_iri => $self->further_details_iri,
         rule_groups => \@rg,
     };
 }

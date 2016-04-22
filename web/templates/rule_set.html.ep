@@ -3,6 +3,13 @@
 
 <p class="description"><%= $rule_set->description%></p>
 
+% if ($rule_set->further_details_iri) {
+<p class="further_details">
+  This page provides a summary of the rules. A full description is
+  <a href="<%= $rule_set->further_details_iri %>">available</a>.
+</p>
+% }
+
 <h2>Rule groups</h2>
 % my $rg_count = 0;
 % for my $rule_group ($rule_set->all_rule_groups) {

@@ -5,10 +5,14 @@
 </p>
 <dl class="dl-horizontal">
 % for my $rule_set_key (@$rule_set_names) {
+% my $rule_set =  $rule_sets->{$rule_set_key};
   <dt>
     %= link_to $rule_set_key => '/rule_sets/'.$rule_set_key
   </dt>
-  <dd><%= $rule_sets->{$rule_set_key}->name %></dd>
-  <dd><%= $rule_sets->{$rule_set_key}->description %></dd>
+  <dd><%= $rule_set->name %></dd>
+  <dd><%= $rule_set->description %></dd>
+% if ($rule_set->further_details_iri) {
+  <dd><a href="<%= $rule_set->further_details_iri %>">Further details</a></dd>
+% }
 % }
 </dl>
