@@ -1,0 +1,84 @@
+{
+    "description": "a nerdy test checklist",
+    "name": "spacecraft checklist",
+    "rule_groups": [
+        {
+            "name": "standard",
+            "rules": [
+                {
+                    "mandatory": "mandatory",
+                    "name": "passenger_capacity",
+                    "type": "number"
+                },
+                {
+                    "mandatory": "mandatory",
+                    "name": "crew_capacity",
+                    "type": "number"
+                },
+                {
+                    "mandatory": "mandatory",
+                    "name": "class",
+                    "type": "text"
+                },
+                {
+                    "mandatory": "mandatory",
+                    "name": "role",
+                    "type": "enum",
+                    "valid_values": [
+                        "transport",
+                        "warship"
+                    ]
+                }
+            ],
+            "consistency_checks": {
+              "fubar": {}
+            }
+        },
+        {
+            "condition": {
+                "attribute_value_match": {
+                    "role": [
+                        "warship"
+                    ]
+                },
+                "dpath_condition": "/attributes/*/*[key eq 'name' && value eq 'role']/../*[key eq 'value' && value eq 'warship']"
+            },
+            "name": "warships",
+            "rules": [
+                {
+                    "allow_multiple": 1,
+                    "mandatory": "recommended",
+                    "name": "weapon",
+                    "type": "text"
+                },
+                {
+                    "allow_multiple": 1,
+                    "mandatory": "optional",
+                    "name": "carrying_ship",
+                    "type": "relationship",
+                    "condition": {
+                        "attribute_value_match": {
+                            "role": [
+                                "warship"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "condition": "/attributes/*/*[key eq 'name' && value eq 'role']/../*[key eq 'value' && value eq 'transport']",
+            "name": "transports",
+            "rules": [
+                {
+                    "mandatory": "mandatory",
+                    "name": "cargo_capacity",
+                    "type": "number",
+                    "valid_units": [
+                        "kg"
+                    ]
+                }
+            ]
+        }
+    ]
+}

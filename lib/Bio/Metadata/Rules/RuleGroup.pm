@@ -43,6 +43,19 @@ has 'rules' => (
   coerce  => 1,
 );
 
+has 'consistency_checks' => (
+  traits  => ['Hash'],
+  is      => 'rw',
+  isa     => 'HashRef[Any]',
+  handles => {
+    set_consistency_check    => 'set',
+    get_consistency_check    => 'get',
+    num_consistency_checks   => 'count',
+    consistency_check_pairs => 'kv',
+  },
+  default => sub { {} },
+);
+
 has 'imports' => (
   traits  => ['Array'],
   is      => 'rw',
@@ -77,7 +90,7 @@ sub organised_rules {
 
   my %h;
   for my $r ( $self->all_rules ) {
-    my $name = fc( $r->name);
+    my $name = fc( $r->name );
     $h{$name} //= [];
     push @{ $h{$name} }, $r;
   }
