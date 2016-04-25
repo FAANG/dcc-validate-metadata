@@ -24,6 +24,7 @@ use Bio::Metadata::Validate::Support::FaangBreedParser;
 use Bio::Metadata::Validate::Support::OlsLookup;
 use Bio::Metadata::Validate::OntologyTextAttributeValidator;
 use Bio::Metadata::Rules::PermittedTerm;
+use Bio::Metadata::Validate::OntologyIdAttributeValidator;
 
 with 'Bio::Metadata::Validate::AttributeValidatorRole';
 
@@ -38,6 +39,13 @@ has 'ols_lookup' => (
   is      => 'rw',
   isa     => 'Bio::Metadata::Validate::Support::OlsLookup',
   default => sub { return Bio::Metadata::Validate::Support::OlsLookup->new() }
+);
+
+has 'ont_id_validator' => (
+  is  => 'rw',
+  isa => 'Bio::Metadata::Validate::OntologyIdAttributeValidator',
+  default =>
+    sub { return Bio::Metadata::Validate::OntologyIdAttributeValidator->new() }
 );
 
 has 'valid_term' => (
@@ -70,121 +78,148 @@ sub validate_attribute {
   }
 
   if ( $animal_breeds->{breeds} ) {
-    #mixed or pure
-    return $self->validate_pure_or_mixed( $rule, $animal_breeds, $attribute,
-      $o );
+    my $breed_count = scalar( @{ $animal_breeds->{breeds} } );
+    if ( $breed_count == 1 ) {
+      return $self->validate_pure( $rule, $animal_breeds, $attribute, $o );
+    }
+    else {
+      return $self->validate_mixed( $rule, $animal_breeds, $attribute, $o );
+    }
   }
 
-  return $self->validate_cross($rule, $animal_breeds, $attribute,
-    $o );
-  }
+  return $self->validate_cross( $rule, $animal_breeds, $attribute, $o );
+}
 
 sub validate_cross {
   my ( $self, $rule, $animal_breeds, $attribute, $o ) = @_;
 
+  my ( $breeds, $max_depth ) =
+    $self->_check_sire_and_dam( $animal_breeds, 0, $o );
 
-  my ($breeds,$max_depth) = $self->_check_sire_and_dam($animal_breeds,0,$o);
-
-  if ($o->outcome && $o->outcome ne 'pass'){
+  if ( $o->outcome && $o->outcome ne 'pass' ) {
     return $o;
   }
 
-  if ($max_depth > 2){
+  if ( $max_depth > 2 ) {
     return $self->_parse_error($o);
   }
 
-  my %u_breeds = map {$_ => 1} @$breeds;
+  my %u_breeds = map { $_ => 1 } @$breeds;
   @$breeds = sort keys %u_breeds;
 
-  for my $b (@$breeds){
+  for my $b (@$breeds) {
     my $match = $self->lookup_breed($b);
-    if (!$match){
-      return $self->_breed_match_error($o,$b);
+    if ( !$match ) {
+      return $self->_breed_match_error( $o, $b );
     }
   }
 
-  if (scalar(@$breeds) < 2){
+  if ( scalar(@$breeds) < 2 ) {
     return $self->_parse_error($o);
   }
 
-  $o->outcome('pass');
+  $self->validate_crossbreed_ontology_id(
+    $rule,$attribute,$o
+  ) unless $o->outcome;
+
+  $o->outcome('pass') unless $o->outcome;
 
   return $o;
 }
 
 sub _check_sire_and_dam {
-  my ($self,$animal_breeds,$callers_depth, $o) = @_;
+  my ( $self, $animal_breeds, $callers_depth, $o ) = @_;
 
-  my $curr_depth = $callers_depth+1;
-  my $max_depth = $curr_depth;
+  my $curr_depth = $callers_depth + 1;
+  my $max_depth  = $curr_depth;
   my @breeds;
 
   for my $k (qw(sire dam)) {
     my $v = $animal_breeds->{$k};
 
-    if (!defined $v){
+    if ( !defined $v ) {
       $self->_parse_error($o);
     }
-    elsif (ref $v){
-        my ($b,$d) = $self->_check_sire_and_dam($v,$curr_depth,$o);
-        $max_depth = $d if ($d>$max_depth);
-        push @breeds, @$b;
+    elsif ( ref $v ) {
+      my ( $b, $d ) = $self->_check_sire_and_dam( $v, $curr_depth, $o );
+      $max_depth = $d if ( $d > $max_depth );
+      push @breeds, @$b;
     }
     else {
       push @breeds, $v;
     }
 
-    if ($o->outcome && $o->outcome ne 'pass'){
-      return (\@breeds,$max_depth);
+    if ( $o->outcome && $o->outcome ne 'pass' ) {
+      return ( \@breeds, $max_depth );
     }
   }
 
-  return (\@breeds,$max_depth);
+  return ( \@breeds, $max_depth );
 }
 
-sub validate_pure_or_mixed {
+sub validate_mixed {
   my ( $self, $rule, $animal_breeds, $attribute, $o ) = @_;
 
   my @breeds = @{ $animal_breeds->{breeds} };
-
   for my $b (@breeds) {
     my $match = $self->lookup_breed($b);
 
     if ( !$match ) {
-      return $self->_breed_match_error($o,$b);
-    }
-
-    if ( scalar(@breeds) == 1 ) {
-      my $id = $attribute->id;
-      if ( defined $id
-        && $id ne $match->{obo_id}
-        && $id ne $match->{short_form} )
-      {
-        $o->outcome('warning');
-        $o->message("breed name '$b' does not seem consistent with ID '$id'");
-        return $o;
-      }
+      return $self->_breed_match_error( $o, $b );
     }
   }
 
-  $o->outcome('pass');
+  $self->validate_crossbreed_ontology_id(
+    $rule,$attribute,$o
+  ) unless $o->outcome;
+
+  $o->outcome('pass') unless $o->outcome;
   return $o;
 }
 
+sub validate_pure {
+  my ( $self, $rule, $animal_breeds, $attribute, $o ) = @_;
+  return $self->ont_id_validator->validate_attribute( $rule, $attribute, $o );
+}
+
+sub validate_crossbreed_ontology_id {
+  my ($self,$rule,$attribute,$o)  = @_;
+
+  my $id = $attribute->id;
+  my $match = $self->lookup_breed_id($attribute->id);
+
+  if ( !$match ) {
+    return $self->_breed_match_error( $o, $id );
+  }
+
+  my $match_label = $match->{label};
+  if ( $match_label !~ m/\scrossbreed$/){
+    $o->outcome('warning');
+    $o->message("a crossbreed is expected, but breed $id ($match_label) does not match the pattern '*crossbreed'");
+    return $o;
+  }
+  return undef;
+}
+
 sub lookup_breed {
-  my ($self,$breed) = @_;
+  my ( $self, $breed, ) = @_;
   return $self->ols_lookup->find_match( $breed, $self->valid_term, 1 );
 }
 
+sub lookup_breed_id {
+  my ( $self, $breed, ) = @_;
+  return $self->ols_lookup->find_match( $breed, $self->valid_term, 0 );
+}
+
 sub _parse_error {
-  my ($self,$o) = @_;
+  my ( $self, $o ) = @_;
   $o->outcome('error');
   $o->message('could not parse breed');
   return $o;
 }
 
 sub _breed_match_error {
-  my ($self,$o,$b) = @_;
+  my ( $self, $o, $b ) = @_;
   $o->outcome('error');
   $o->message("cannot find breed '$b' in ontology");
   return $o;

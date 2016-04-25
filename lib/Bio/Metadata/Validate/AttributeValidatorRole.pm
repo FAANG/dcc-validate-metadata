@@ -21,19 +21,22 @@ use Bio::Metadata::Validate::ValidationOutcome;
 requires 'validate_attribute';
 
 around 'validate_attribute' => sub {
-    my $orig = shift;
-    my $self = shift;
-    my ( $rule, $attribute ) = pos_validated_list(
-        \@_,
-        { isa => 'Bio::Metadata::Rules::Rule' },
-        { isa => 'Bio::Metadata::Attribute' }
-    );
+  my $orig = shift;
+  my $self = shift;
+  my ( $rule, $attribute, $o ) = pos_validated_list(
+    \@_,
+    { isa => 'Bio::Metadata::Rules::Rule' },
+    { isa => 'Bio::Metadata::Attribute' },
+    { isa => 'Bio::Metadata::Validate::ValidationOutcome', optional => 1 },
+  );
 
-    my $o = Bio::Metadata::Validate::ValidationOutcome->new(
-        attributes => [$attribute],
-        rule       => $rule
+  if ( !$o ) {
+    $o = Bio::Metadata::Validate::ValidationOutcome->new(
+      attributes => [$attribute],
+      rule       => $rule
     );
-    return $self->$orig( $rule, $attribute, $o );
+  }
+  return $self->$orig( $rule, $attribute, $o );
 };
 
 1;

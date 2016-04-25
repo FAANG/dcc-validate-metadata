@@ -27,34 +27,72 @@ done_testing();
 #test the validator
 sub test_validator {
   my $v = Bio::Metadata::Validate::FaangBreedValidator->new();
-  my $r = Bio::Metadata::Rules::Rule->new( type => 'faang_breed' );
+  my $r = Bio::Metadata::Rules::Rule->new(
+    type        => 'faang_breed',
+    valid_terms => Bio::Metadata::Rules::PermittedTerm->new(
+      ontology_name     => 'LBO',
+      allow_descendants => 1,
+      leaf_only         => 1,
+      include_root      => 0,
+      term_iri          => 'http://purl.obolibrary.org/obo/LBO_0000000',
+    )
+  );
 
   my @valid_values = (
-    'Charolais',
-    'Charolais,Holstein',
-    'Charolais, Holstein',
-    'Charolais sire x Holstein dam',
-    '(Charolais sire x Holstein dam) sire x Holstein dam',
-    'Holstein sire x (Charolais sire x Holstein dam) dam',
+    [ 'Charolais',                                           'LBO_0000073' ],
+    [ 'Charolais,Holstein',                                  'LBO_0001036' ],
+    [ 'Charolais, Holstein',                                 'LBO_0001036' ],
+    [ 'Charolais sire x Holstein dam',                       'LBO_0001036' ],
+    [ '(Charolais sire x Holstein dam) sire x Holstein dam', 'LBO_0001036' ],
+    [ 'Holstein sire x (Charolais sire x Holstein dam) dam', 'LBO_0001036' ],
   );
 
   for my $val (@valid_values) {
-    my $a = Bio::Metadata::Attribute->new( value => $val );
+    my $a = Bio::Metadata::Attribute->new(
+      value      => $val->[0],
+      id         => $val->[1],
+      source_ref => 'LBO'
+    );
     my $o = $v->validate_attribute( $r, $a );
-    is( $o->outcome, 'pass', 'valid value: ' . $val );
+    is( $o->outcome, 'pass', 'valid value: ' . $val->[0] );
   }
 
   my @invalid_values = (
-    'Not a breed name', #won't match in LBO
-    'Holstein,NOTABREEDNAME', #part won't match in LBO
-    '((Charolais sire x Holstein dam) sire x Holstein dam) sire x Holstein dam', #should just be a list
-    '(Charolais,Holstein) sire x Holstein dam', #should just be a list
-    'Holstein sire x Holstein dam', #should just be a single value
+    [ 'Not a breed name',       'NOTABREEDID' ],    #won't match in LBO
+    [ 'Holstein,NOTABREEDNAME', 'LBO_0001036' ],    #part won't match in LBO
+    [
+'((Charolais sire x Holstein dam) sire x Holstein dam) sire x Holstein dam',
+      'LBO_0001036'
+    ],                                              #should just be a list
+    [ '(Charolais,Holstein) sire x Holstein dam', 'LBO_0001036' ]
+    ,                                               #should just be a list
+    [ 'Holstein sire x Holstein dam', 'LBO_0001036' ]
+    ,    #should just be a single value
   );
   for my $val (@invalid_values) {
-    my $a = Bio::Metadata::Attribute->new( value => $val );
+    my $a = Bio::Metadata::Attribute->new(
+      value      => $val->[0],
+      id         => $val->[1],
+      source_ref => 'LBO'
+    );
     my $o = $v->validate_attribute( $r, $a );
-    is( $o->outcome, 'error', 'invalid value: ' . $val );
+    is( $o->outcome, 'error', 'invalid value: ' . $val->[0] );
+  }
+
+  my @warn_values = (
+    [ 'Holstein sire x Charolais dam', 'LBO_0000073' ]
+    ,    #pure breed id and cross nomenclature
+    [ 'Holstein', 'LBO_0000073' ],    #Charolais breed id and Holstein value
+
+  );
+  for my $val (@warn_values) {
+    my $a = Bio::Metadata::Attribute->new(
+      value      => $val->[0],
+      id         => $val->[1],
+      source_ref => 'LBO'
+    );
+    my $o = $v->validate_attribute( $r, $a );
+    is( $o->outcome, 'warning', 'warned value: ' . $val->[0] );
   }
 }
 
