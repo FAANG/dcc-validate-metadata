@@ -12,7 +12,7 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Consistency::FaangBreedSpeciesCheck;
+package Bio::Metadata::Faang::FaangBreedSpeciesCheck;
 
 use strict;
 use warnings;

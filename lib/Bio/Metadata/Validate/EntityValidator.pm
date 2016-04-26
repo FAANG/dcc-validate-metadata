@@ -81,7 +81,7 @@ has 'type_validator' => (
       date      => Bio::Metadata::Validate::DateAttributeValidator->new(),
       relationship => Bio::Metadata::Validate::RelationshipValidator->new(),
       ncbi_taxon   => Bio::Metadata::Validate::NcbiTaxonomyValidator->new(),
-      faang_breed  => Bio::Metadata::Validate::FaangBreedValidator->new(),
+      faang_breed  => Bio::Metadata::Faang::FaangBreedValidator->new(),
     };
   },
 );
@@ -201,7 +201,7 @@ RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
         $rule_group );
     }
 
-    
+
     for my $cc ( $rule_group->all_consistency_checks ) {
       push @all_outcomes, @{ $cc->check_entity( $entity, $entities_by_id ) };
     }

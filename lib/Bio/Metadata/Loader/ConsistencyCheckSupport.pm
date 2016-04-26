@@ -22,7 +22,7 @@ use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
 
-use Bio::Metadata::Consistency::FaangBreedSpeciesCheck;
+use Bio::Metadata::Faang::FaangBreedSpeciesCheck;
 
 has 'consistency_check_lookup' => (
   is      => 'rw',
@@ -30,7 +30,7 @@ has 'consistency_check_lookup' => (
   traits  => ['Hash'],
   default => sub {
     return {
-      faang_breed_species_check => Bio::Metadata::Consistency::FaangBreedSpeciesCheck->new(),
+      faang_breed_species_check => Bio::Metadata::Faang::FaangBreedSpeciesCheck->new(),
     };
   },
   handles => { get_consistency_check_instance => 'get', },

@@ -46,7 +46,7 @@ sub test_good_with_cons_check {
     isa_ok(
       $rule_set->get_rule_group(1)
         ->get_consistency_check('faang_breed_species_check'),
-      'Bio::Metadata::Consistency::FaangBreedSpeciesCheck'
+      'Bio::Metadata::Faang::FaangBreedSpeciesCheck'
     );
   }
 }
