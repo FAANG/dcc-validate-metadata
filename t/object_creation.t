@@ -153,9 +153,10 @@ my $expected_rule_group_h = {
   imports => [],
 };
 my $expected_rule_set_h = {
-  name        => 'ruleset_1',
-  description => 'a test ruleset',
-  rule_groups => [ $expected_rule_group_h, ],
+  name                => 'ruleset_1',
+  description         => 'a test ruleset',
+  further_details_iri => undef,
+  rule_groups         => [ $expected_rule_group_h, ],
 };
 is_deeply( $actual_rule_set_h, $expected_rule_set_h, 'Create ruleset' );
 
