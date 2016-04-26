@@ -19,14 +19,18 @@ use warnings;
 
 use Carp;
 use Moose;
-use MooseX::Params::Validate;
+use namespace::autoclean;
+use Bio::Metadata::Types;
+
+use Bio::Metadata::Consistency::FaangBreedSpeciesCheck;
 
 has 'consistency_check_lookup' => (
   is      => 'rw',
   isa     => 'HashRef[Bio::Metadata::Consistency::ConsistencyCheckRole]',
+  traits  => ['Hash'],
   default => sub {
     return {
-
+      faang_breed_species_check => Bio::Metadata::Consistency::FaangBreedSpeciesCheck->new(),
     };
   },
   handles => { get_consistency_check_instance => 'get', },
@@ -41,12 +45,14 @@ sub load_consistecy_checks {
       my $config = $pair->[1] || {};
 
       my $example_obj = $self->get_consistency_check_instance($name);
-      die "No consistency check found for name" if (!$example_obj);
+      die "No consistency check found for name" if ( !$example_obj );
 
-      my $check_instance = (blessed $example_obj)->new($config);
-      $rg->set_consistency_check($name,$check_instance);
+      my $check_instance = ( blessed $example_obj)->new($config);
+      $rg->set_consistency_check( $name, $check_instance );
     }
   }
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;

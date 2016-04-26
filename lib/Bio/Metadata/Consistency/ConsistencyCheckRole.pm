@@ -23,7 +23,8 @@ use Moose::Role;
 use Data::Dumper;
 use MooseX::Params::Validate;
 
-requires 'check_entity', 'description';
+requires 'check_entity';
+requires 'description';
 
 around 'check_entity' => sub {
   my $orig = shift;

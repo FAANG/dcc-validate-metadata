@@ -46,12 +46,13 @@ has 'rules' => (
 has 'consistency_checks' => (
   traits  => ['Hash'],
   is      => 'rw',
-  isa     => 'HashRef[Any]',
+  isa     => 'HashRef[HashRef[Str]|Bio::Metadata::Consistency::ConsistencyCheckRole]',
   handles => {
     set_consistency_check    => 'set',
     get_consistency_check    => 'get',
     num_consistency_checks   => 'count',
-    consistency_check_pairs => 'kv',
+    consistency_check_pairs  => 'kv',
+    all_consistency_checks   => 'values',
   },
   default => sub { {} },
 );
