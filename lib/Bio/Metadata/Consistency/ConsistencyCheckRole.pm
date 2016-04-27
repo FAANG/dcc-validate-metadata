@@ -24,7 +24,7 @@ use Data::Dumper;
 use MooseX::Params::Validate;
 
 requires 'check_entity';
-requires 'description';
+requires 'description', 'name';
 
 around 'check_entity' => sub {
   my $orig = shift;
@@ -36,20 +36,6 @@ around 'check_entity' => sub {
   );
 
   return $self->$orig( $entity, $entities_by_id );;
-};
-
-around 'description' => sub {
-  my $orig = shift;
-  my $self = shift;
-
-  my @returned = $self->$orig();
-
-  my ($desc) =
-    pos_validated_list( \@returned,
-    { isa => 'Str' },
-    );
-
-  return @returned;
 };
 
 1;

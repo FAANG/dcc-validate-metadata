@@ -28,7 +28,13 @@ use Bio::Metadata::Rules::PermittedTerm;
 has description => (
   is      => 'rw',
   isa     => 'Str',
-  default => 'Check that the animal breed is consistent with it\'s species.',
+  default => 'Ensure that the animal breed is consistent with the species reported.',
+);
+
+has name => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => 'Breed/species',
 );
 
 #must consume after declaring attribute that satisfies requirement for 'description'
@@ -132,7 +138,7 @@ sub check_entity {
     $pt->term_iri('http://purl.obolibrary.org/obo/LBO_0000000');
     @mismatched_breeds = map { $self->ols_lookup->find_match( $_, $pt, 0 ) } @mismatched_breeds; #get terms
     @mismatched_breeds = map {$_->{label}.' ('.$_->{short_form}.')'} @mismatched_breeds; #make text from them
-    @mismatched_breeds = keys { map { $_ => 1 } @mismatched_breeds }; #uniq the text
+    @mismatched_breeds = sort keys { map { $_ => 1 } @mismatched_breeds }; #uniq the text
 
     my $species = $species_match->{label};
 
