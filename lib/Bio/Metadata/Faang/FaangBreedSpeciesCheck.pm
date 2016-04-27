@@ -126,9 +126,17 @@ sub check_entity {
     attributes => [ @$breed_attrs, @$species_attrs ], );
   push @outcomes, $outcome;
 
+
+
   if (@mismatched_breeds) {
-    $outcome->outcome('error');
+    $pt->term_iri('http://purl.obolibrary.org/obo/LBO_0000000');
+    @mismatched_breeds = map { $self->ols_lookup->find_match( $_, $pt, 0 ) } @mismatched_breeds; #get terms
+    @mismatched_breeds = map {$_->{label}.' ('.$_->{short_form}.')'} @mismatched_breeds; #make text from them
+    @mismatched_breeds = keys { map { $_ => 1 } @mismatched_breeds }; #uniq the text
+
     my $species = $species_match->{label};
+
+    $outcome->outcome('error');
     $outcome->message(
       "These breeds do not match the animal species ($species): "
         . join( ', ', @mismatched_breeds ) );

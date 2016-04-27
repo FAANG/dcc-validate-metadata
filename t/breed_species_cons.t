@@ -109,7 +109,7 @@ sub test_fail {
     [
       Bio::Metadata::Validate::ValidationOutcome->new(
         outcome    => 'error',
-        message    => 'These breeds do not match the animal species (Bos taurus): Corsican',
+        message    => 'These breeds do not match the animal species (Bos taurus): Corsican (LBO_0000975)',
         attributes => $e->attributes
         )
 
