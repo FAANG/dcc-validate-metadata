@@ -42,7 +42,7 @@ use Bio::Metadata::Validate::DateAttributeValidator;
 use Bio::Metadata::Validate::RelationshipValidator;
 use Bio::Metadata::Validate::NcbiTaxonomyValidator;
 use Bio::Metadata::Validate::OntologyAttrNameValidator;
-use Bio::Metadata::Validate::FaangBreedValidator;
+use Bio::Metadata::Faang::FaangBreedValidator;
 
 has 'rule_set' =>
   ( is => 'rw', isa => 'Bio::Metadata::Rules::RuleSet', required => 1 );
