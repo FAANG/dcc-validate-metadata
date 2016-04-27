@@ -26,9 +26,10 @@ use Bio::Metadata::Faang::FaangBreedParser;
 use Bio::Metadata::Rules::PermittedTerm;
 
 has description => (
-  is      => 'rw',
-  isa     => 'Str',
-  default => 'Ensure that the animal breed is consistent with the species reported.',
+  is  => 'rw',
+  isa => 'Str',
+  default =>
+    'Ensure that the animal breed is consistent with the species reported.',
 );
 
 has name => (
@@ -128,17 +129,20 @@ sub check_entity {
     grep { !$self->ols_lookup->find_match( $_, $pt, 0 ) } @breeds;
 
   my $outcome =
-    Bio::Metadata::Validate::ValidationOutcome->new(
-    attributes => [ @$breed_attrs, @$species_attrs ], );
+    Bio::Metadata::Validate::ValidationOutcome->new( attributes => $breed_attrs,
+    );
   push @outcomes, $outcome;
-
-
 
   if (@mismatched_breeds) {
     $pt->term_iri('http://purl.obolibrary.org/obo/LBO_0000000');
-    @mismatched_breeds = map { $self->ols_lookup->find_match( $_, $pt, 0 ) } @mismatched_breeds; #get terms
-    @mismatched_breeds = map {$_->{label}.' ('.$_->{short_form}.')'} @mismatched_breeds; #make text from them
-    @mismatched_breeds = sort keys { map { $_ => 1 } @mismatched_breeds }; #uniq the text
+    @mismatched_breeds =
+      map { $self->ols_lookup->find_match( $_, $pt, 0 ) }
+      @mismatched_breeds;    #get terms
+    @mismatched_breeds =
+      map { $_->{label} . ' (' . $_->{short_form} . ')' }
+      @mismatched_breeds;    #make text from them
+    @mismatched_breeds =
+      sort keys { map { $_ => 1 } @mismatched_breeds };    #uniq the text
 
     my $species = $species_match->{label};
 

@@ -44,7 +44,7 @@ sub test_pass {
     [
       Bio::Metadata::Validate::ValidationOutcome->new(
         outcome    => 'pass',
-        attributes => $e->attributes
+        attributes => $e->get_attribute(0)
         )
     ],
     'pass for goat + goat breed (Corsican)'
@@ -76,7 +76,7 @@ sub test_sub_species_pass {
     [
       Bio::Metadata::Validate::ValidationOutcome->new(
         outcome    => 'pass',
-        attributes => $e->attributes
+        attributes => $e->get_attribute(0)
         )
 
     ],
@@ -110,7 +110,7 @@ sub test_fail {
       Bio::Metadata::Validate::ValidationOutcome->new(
         outcome    => 'error',
         message    => 'These breeds do not match the animal species (Bos taurus): Corsican (LBO_0000975)',
-        attributes => $e->attributes
+        attributes => $e->get_attribute(0)
         )
 
     ],
