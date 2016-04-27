@@ -35,14 +35,7 @@ around 'check_entity' => sub {
     { isa => 'HashRef[Bio::Metadata::Entity]' },
   );
 
-  my @returned = $self->$orig( $entity, $entities_by_id );
-
-  my ($outcomes) =
-    pos_validated_list( \@returned,
-    { isa => 'ArrayRef[Bio::Metadata::Validate::ValidationOutcome]' },
-    );
-
-  return @returned;
+  return $self->$orig( $entity, $entities_by_id );;
 };
 
 around 'description' => sub {

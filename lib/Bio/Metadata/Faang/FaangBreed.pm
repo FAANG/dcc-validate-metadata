@@ -17,22 +17,24 @@ package Bio::Metadata::Faang::FaangBreed;
 use Moose;
 use namespace::autoclean;
 
-has ['sire', 'dam'] => (is => 'rw', isa => 'Str|Bio::Metadata::Faang::FaangBreed');
+has [ 'sire', 'dam' ] =>
+  ( is => 'rw', isa => 'Str|Bio::Metadata::Faang::FaangBreed' );
 has 'breeds' => (
-  is => 'rw', isa => 'ArrayRef[Str]', traits => ['Array'], handles => {
-    'add_breed' => 'push',
-  }
+  is      => 'rw',
+  isa     => 'ArrayRef[Str]',
+  traits  => ['Array'],
+  handles => { 'add_breed' => 'push', }
 );
 
 sub all_breeds {
   my ($self) = @_;
 
   my @breeds;
-  push @breeds, @{$self->breeds} if ($self->breeds);
+  push @breeds, @{ $self->breeds } if ( $self->breeds );
 
-  for my $x ($self->sire,$self->dam){
+  for my $x ( $self->sire, $self->dam ) {
     next unless $x;
-    if (ref $x){
+    if ( ref $x ) {
       push @breeds, $x->all_breeds;
     }
     else {
@@ -40,10 +42,12 @@ sub all_breeds {
     }
   }
 
-  return @breeds;
+  return uniq(@breeds);
 }
 
-
+sub uniq {
+  keys { map { $_ => 1 } @_ };
+}
 
 __PACKAGE__->meta->make_immutable;
 1;
