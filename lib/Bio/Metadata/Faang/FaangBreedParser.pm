@@ -12,13 +12,14 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Validate::Support::FaangBreedParser;
+package Bio::Metadata::Faang::FaangBreedParser;
 
 use Moose;
 use namespace::autoclean;
 use Carp;
 use Data::Dumper;
 use List::Util qw(any none);
+use Bio::Metadata::Faang::FaangBreed;
 
 my ( $sire, $dam ) = qw(sire dam);
 
@@ -50,8 +51,8 @@ sub parse {
   my ( $self, $breed_text ) = @_;
 
   my @tokens = $self->_lexer($breed_text);
-
-  return $self->_parser(@tokens);
+  my $b = $self->_parser(@tokens);
+  return $b;
 }
 
 =head1 _parser
@@ -155,7 +156,7 @@ sub _cross {
     }
   }
 
-  return \%b;
+  return Bio::Metadata::Faang::FaangBreed->new(%b);
 }
 
 sub _mixed {
@@ -172,12 +173,12 @@ sub _mixed {
     }
   }
   push @breeds, join( ' ', @b ) if @b;
-  return { breeds => \@breeds };
+  return Bio::Metadata::Faang::FaangBreed->new( breeds => \@breeds);
 }
 
 sub _pure {
   my ( $self, @tokens ) = @_;
-  return { breeds => [ join( ' ', @tokens ) ] };
+  return Bio::Metadata::Faang::FaangBreed->new( breeds => [ join( ' ', @tokens ) ]);
 }
 
 =head1 parse

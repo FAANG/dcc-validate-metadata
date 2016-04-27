@@ -22,12 +22,12 @@ use Bio::Metadata::Types;
 use Bio::Metadata::Rules::Rule;
 use MooseX::Types::URI qw(Uri);
 
-has 'ontology_name'     => ( is => 'ro', isa => 'Str' );
-has 'allow_descendants' => ( is => 'ro', isa => 'Bool', default => 1 );
-has 'leaf_only'         => ( is => 'ro', isa => 'Bool', default => 0 );
-has 'include_root'      => ( is => 'ro', isa => 'Bool', default => 1 );
+has 'ontology_name'     => ( is => 'rw', isa => 'Str' );
+has 'allow_descendants' => ( is => 'rw', isa => 'Bool', default => 1 );
+has 'leaf_only'         => ( is => 'rw', isa => 'Bool', default => 0 );
+has 'include_root'      => ( is => 'rw', isa => 'Bool', default => 1 );
 
-has 'term_iri' => ( is => 'ro', isa => Uri, required => 1, coerce => 1 );
+has 'term_iri' => ( is => 'rw', isa => Uri, required => 1, coerce => 1 );
 
 sub to_hash {
   my ($self) = @_;

@@ -42,7 +42,7 @@ use Bio::Metadata::Validate::DateAttributeValidator;
 use Bio::Metadata::Validate::RelationshipValidator;
 use Bio::Metadata::Validate::NcbiTaxonomyValidator;
 use Bio::Metadata::Validate::OntologyAttrNameValidator;
-use Bio::Metadata::Validate::FaangBreedValidator;
+use Bio::Metadata::Faang::FaangBreedValidator;
 
 has 'rule_set' =>
   ( is => 'rw', isa => 'Bio::Metadata::Rules::RuleSet', required => 1 );
@@ -81,7 +81,7 @@ has 'type_validator' => (
       date      => Bio::Metadata::Validate::DateAttributeValidator->new(),
       relationship => Bio::Metadata::Validate::RelationshipValidator->new(),
       ncbi_taxon   => Bio::Metadata::Validate::NcbiTaxonomyValidator->new(),
-      faang_breed  => Bio::Metadata::Validate::FaangBreedValidator->new(),
+      faang_breed  => Bio::Metadata::Faang::FaangBreedValidator->new(),
     };
   },
 );
@@ -125,13 +125,14 @@ sub check_all {
   $self->get_type_validator('relationship')->entities_by_id( \%entities_by_id );
 
   for my $e (@$entities) {
-    my ( $status, $outcomes, $rule_groups ) = $self->check($e);
+    my ( $status, $outcomes, $rule_groups ) =
+      $self->check( $e, \%entities_by_id );
 
     if ( scalar @{ $dupe_check{ $e->id } } > 1 ) {
       push @$outcomes,
         Bio::Metadata::Validate::ValidationOutcome->new(
         outcome => 'error',
-        message => 'multiple entities with this id found'
+        message => 'multiple entities with this ID found'
         );
       $status = 'error';
     }
@@ -170,7 +171,7 @@ sub check_all {
 }
 
 sub check {
-  my ( $self, $entity ) = @_;
+  my ( $self, $entity, $entities_by_id ) = @_;
 
   my @all_outcomes;
   my @rule_groups_used;
@@ -198,6 +199,11 @@ RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
       push @all_outcomes,
         $self->validate_attributes_with_rule( $rule, $attrs, $entity,
         $rule_group );
+    }
+
+
+    for my $cc ( $rule_group->all_consistency_checks ) {
+      push @all_outcomes, @{ $cc->check_entity( $entity, $entities_by_id ) };
     }
   }
 
@@ -233,7 +239,8 @@ sub handle_unexpected_attributes {
 
     my $unexpected_attributes = $organised_attributes->{$attr_name};
 
-    my ($rule,$rule_group) = $self->find_import_match( $attr_name, $rule_groups );
+    my ( $rule, $rule_group ) =
+      $self->find_import_match( $attr_name, $rule_groups );
 
     if ($rule) {
       push @outcomes,
@@ -257,14 +264,14 @@ sub handle_unexpected_attributes {
 sub find_import_match {
   my ( $self, $attr_name, $rule_groups ) = @_;
 
-   for my $rule_group ( @$rule_groups ){
+  for my $rule_group (@$rule_groups) {
 
-    for my $rule_import ($rule_group->all_imports){
+    for my $rule_import ( $rule_group->all_imports ) {
       my $match =
         $self->ols_lookup->find_match( $attr_name, $rule_import->term, 1 );
 
-      if ($match){
-        return ($rule_import->create_rule($match),$rule_group);
+      if ($match) {
+        return ( $rule_import->create_rule($match), $rule_group );
       }
     }
   }

@@ -74,6 +74,31 @@
 
       %}
 
+      % if ($rule_group->count_consistency_checks){
+
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            Consistency checks
+            <small>
+              <%= $rule_group->count_consistency_checks %> checks
+            </small>
+          </h3>
+        </div>
+
+        <div>
+          <p>
+            The following consistency checks will be made:
+          </p>
+          <dl class="dl-horizontal">
+            % for my $cons_check ($rule_group->all_consistency_checks) {
+              <dt><%= $cons_check->name %></dt>
+              <dd><%= $cons_check->description %></dd>            
+            %}
+          </dl>
+        </div>
+
+      %}
+
     </div>
 
 

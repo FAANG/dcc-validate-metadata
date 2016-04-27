@@ -33,6 +33,7 @@ enum 'Bio::Metadata::Validate::OutcomeEnum', \@OUTCOME_VALUES;
 role_type 'Bio::Metadata::Validate::AttributeValidatorRole';
 role_type 'Bio::Metadata::Loader::JSONLoaderRole';
 role_type 'Bio::Metadata::Loader::RuleSetLoaderRole';
+role_type 'Bio::Metadata::Consistency::ConsistencyCheckRole';
 
 #attribute
 class_type 'Bio::Metadata::Attribute';

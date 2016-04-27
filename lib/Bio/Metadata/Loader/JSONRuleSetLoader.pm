@@ -22,13 +22,22 @@ use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Rules::RuleSet;
 use Bio::Metadata::Types;
+use Bio::Metadata::Loader::ConsistencyCheckSupport;
 
 with "Bio::Metadata::Loader::JSONLoaderRole";
+
+has 'consistency_check_support' => (
+  is => 'rw',
+  isa => 'Bio::Metadata::Loader::ConsistencyCheckSupport',
+  default => sub{ Bio::Metadata::Loader::ConsistencyCheckSupport->new()},
+);
 
 sub hash_to_object {
     my ( $self, $hash ) = @_;
 
     my $o = Bio::Metadata::Rules::RuleSet->new($hash);
+
+    $self->consistency_check_support->load_consistecy_checks($o);
 
     return $o;
 }

@@ -39,7 +39,7 @@ has 'cache' => (
   is       => 'rw',
   isa      => 'Cache::LRU',
   required => 1,
-  default  => sub { Cache::LRU->new( size => 1000 ) }
+  default  => sub { Cache::LRU->new( size => 200 ) }
 );
 has 'qfields' => (
   is      => 'ro',

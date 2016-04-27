@@ -12,7 +12,7 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Validate::FaangBreedValidator;
+package Bio::Metadata::Faang::FaangBreedValidator;
 
 use strict;
 use warnings;
@@ -20,7 +20,7 @@ use warnings;
 use Moose;
 use namespace::autoclean;
 
-use Bio::Metadata::Validate::Support::FaangBreedParser;
+use Bio::Metadata::Faang::FaangBreedParser;
 use Bio::Metadata::Validate::Support::OlsLookup;
 use Bio::Metadata::Validate::OntologyTextAttributeValidator;
 use Bio::Metadata::Rules::PermittedTerm;
@@ -30,9 +30,9 @@ with 'Bio::Metadata::Validate::AttributeValidatorRole';
 
 has 'breed_parser' => (
   is  => 'ro',
-  isa => 'Bio::Metadata::Validate::Support::FaangBreedParser',
+  isa => 'Bio::Metadata::Faang::FaangBreedParser',
   default =>
-    sub { return Bio::Metadata::Validate::Support::FaangBreedParser->new() }
+    sub { return Bio::Metadata::Faang::FaangBreedParser->new() }
 );
 
 has 'ols_lookup' => (
@@ -77,8 +77,8 @@ sub validate_attribute {
     return $self->_parse_error($o);
   }
 
-  if ( $animal_breeds->{breeds} ) {
-    my $breed_count = scalar( @{ $animal_breeds->{breeds} } );
+  if ( $animal_breeds->breeds ) {
+    my $breed_count = scalar( @{ $animal_breeds->breeds } );
     if ( $breed_count == 1 ) {
       return $self->validate_pure( $rule, $animal_breeds, $attribute, $o );
     }
@@ -135,7 +135,7 @@ sub _check_sire_and_dam {
   my @breeds;
 
   for my $k (qw(sire dam)) {
-    my $v = $animal_breeds->{$k};
+    my $v = ($k eq 'dam') ? $animal_breeds->dam : $animal_breeds->sire ;
 
     if ( !defined $v ) {
       $self->_parse_error($o);
@@ -160,7 +160,7 @@ sub _check_sire_and_dam {
 sub validate_mixed {
   my ( $self, $rule, $animal_breeds, $attribute, $o ) = @_;
 
-  my @breeds = @{ $animal_breeds->{breeds} };
+  my @breeds = @{ $animal_breeds->breeds };
   for my $b (@breeds) {
     my $match = $self->lookup_breed($b);
 

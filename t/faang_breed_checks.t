@@ -9,12 +9,13 @@ use lib "$Bin/../lib";
 use Data::Dumper;
 use Test::More;
 
-use Bio::Metadata::Validate::Support::FaangBreedParser;
-use Bio::Metadata::Validate::FaangBreedValidator;
+use Bio::Metadata::Faang::FaangBreedParser;
+use Bio::Metadata::Faang::FaangBreedValidator;
+use Bio::Metadata::Faang::FaangBreed;
 use Bio::Metadata::Attribute;
 use Bio::Metadata::Rules::Rule;
 
-my $parser = Bio::Metadata::Validate::Support::FaangBreedParser->new();
+my $parser = Bio::Metadata::Faang::FaangBreedParser->new();
 
 lexer_tests();
 compliance_tests();
@@ -26,7 +27,7 @@ done_testing();
 
 #test the validator
 sub test_validator {
-  my $v = Bio::Metadata::Validate::FaangBreedValidator->new();
+  my $v = Bio::Metadata::Faang::FaangBreedValidator->new();
   my $r = Bio::Metadata::Rules::Rule->new(
     type        => 'faang_breed',
     valid_terms => Bio::Metadata::Rules::PermittedTerm->new(
@@ -102,10 +103,11 @@ sub what_the_heck_tests {
   my $quad_cross_breed_out = $parser->parse($quad_cross_breed);
   is_deeply(
     $quad_cross_breed_out,
-    {
-      sire => { sire => 'A', dam => 'B' },
-      dam  => { sire => 'C', dam => 'D' },
-    },
+      Bio::Metadata::Faang::FaangBreed->new(
+        sire => Bio::Metadata::Faang::FaangBreed->new( sire => 'A', dam => 'B' ),
+        dam  => Bio::Metadata::Faang::FaangBreed->new( sire => 'C', dam => 'D' ),
+      )
+    ,
     'quad cross'
   );
 
@@ -114,19 +116,19 @@ sub what_the_heck_tests {
   my $heavy_nesting_out = $parser->parse($heavy_nesting);
   is_deeply(
     $heavy_nesting_out,
-    {
+    Bio::Metadata::Faang::FaangBreed->new(
       sire => 'A',
-      dam  => {
+      dam  => Bio::Metadata::Faang::FaangBreed->new(
         sire => 'B',
-        dam  => {
+        dam  => Bio::Metadata::Faang::FaangBreed->new(
           sire => 'C',
-          dam  => {
+          dam  => Bio::Metadata::Faang::FaangBreed->new(
             sire => 'D',
             dam  => 'E',
-          },
-        },
-      },
-    },
+          ),
+        ),
+      ),
+    ),
     'heavily nested breed info'
   );
 }
@@ -146,16 +148,16 @@ sub compliance_tests {
   #
   my $pure_bred     = 'BreedP';
   my $pure_bred_out = $parser->parse($pure_bred);
-  is_deeply( $pure_bred_out, { breeds => ['BreedP'] }, 'pure bred' );
+  is_deeply( $pure_bred_out, Bio::Metadata::Faang::FaangBreed->new(breeds => ['BreedP'] ), 'pure bred' );
 
   my $simple_cross     = 'BreedA sire x BreedB dam';
   my $simple_cross_out = $parser->parse($simple_cross);
   is_deeply(
     $simple_cross_out,
-    {
+    Bio::Metadata::Faang::FaangBreed->new(
       sire => 'BreedA',
       dam  => 'BreedB'
-    },
+    ),
     'simple cross'
   );
 
@@ -163,27 +165,27 @@ sub compliance_tests {
   my $back_cross_out = $parser->parse($back_cross);
   is_deeply(
     $back_cross_out,
-    {
+    Bio::Metadata::Faang::FaangBreed->new(
       sire => 'BreedA',
-      dam  => {
+      dam  => Bio::Metadata::Faang::FaangBreed->new(
         sire => 'BreedA',
         dam  => 'BreedB'
-      }
-    },
+      )
+    ),
     'back cross'
   );
 
   my $mixed_breeds     = 'Breed A, BreedB, BreedC';
   my $mixed_breeds_out = $parser->parse($mixed_breeds);
   is_deeply( $mixed_breeds_out,
-    { breeds => [ 'Breed A', 'BreedB', 'BreedC' ], },
+    Bio::Metadata::Faang::FaangBreed->new( breeds => [ 'Breed A', 'BreedB', 'BreedC' ], ),
     'mixed_breeds' );
 
   my $annoying_brackets     = 'Criollo (Uruguay)';
   my $annoying_brackets_out = $parser->parse($annoying_brackets);
   is_deeply(
     $annoying_brackets_out,
-    { breeds => ['Criollo (Uruguay)'] },
+    Bio::Metadata::Faang::FaangBreed->new( breeds => ['Criollo (Uruguay)'] ),
     'pure breed with brackets in name'
   );
 
@@ -191,10 +193,10 @@ sub compliance_tests {
   my $very_annoying_brackets_out = $parser->parse($very_annoying_brackets);
   is_deeply(
     $very_annoying_brackets_out,
-    {
+    Bio::Metadata::Faang::FaangBreed->new(
       sire => 'Criollo (Uruguay)',
       dam  => 'breed b',
-    },
+    ),
     'cross breed with brackets in the name'
   );
 }
