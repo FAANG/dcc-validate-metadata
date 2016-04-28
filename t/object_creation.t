@@ -35,6 +35,7 @@ my $actural_sh  = $sample->to_hash();
 my $expected_sh = {
   id          => 'bob',
   entity_type => 'sample',
+  synonyms    => undef,
   attributes  => [
     {
       name       => 'sex',

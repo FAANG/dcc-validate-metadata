@@ -27,7 +27,6 @@ use Data::Dumper;
 
 with "Bio::Metadata::Reporter::ReporterRole";
 
-has 'file_path' => ( is => 'rw', isa => 'Str', required => 1 );
 has '_workbook' => ( is => 'rw', isa => 'Excel::Writer::XLSX' );
 has 'warning_color' =>
   ( is => 'rw', isa => 'Str', required => 1, default => 'orange' );
@@ -333,7 +332,7 @@ sub write_header {
 
 sub create_workbook {
   my ($self) = @_;
-  my $workbook = Excel::Writer::XLSX->new( $self->file_path );
+  my $workbook = Excel::Writer::XLSX->new( $self->file_path || $self->file_handle);
   croak "Could not create Excel file: $!" unless ( defined $workbook );
   $self->_workbook($workbook);
 }

@@ -22,8 +22,11 @@ use Moose;
 use autodie;
 use Bio::Metadata::Types;
 use namespace::autoclean;
+use JSON;
 
 with "Bio::Metadata::Reporter::ReporterRole";
+
+has 'pretty_print' => (is => 'rw', isa => 'Bool', default => 1);
 
 sub report {
   my ( $self, %params ) = @_;
@@ -38,6 +41,25 @@ sub report {
   $self->process_entities( $entities, $output, $entity_status,
     $entity_outcomes, $attribute_status, $attribute_outcomes );
   $self->add_term_usage( $entities, $output );
+
+  my $fh = undef;
+
+  if ($self->file_path && ! $self->file_handle) {
+    open $fh, '>', $self->file_path;
+    $self->file_handle($fh);
+  }
+
+  if ($self->file_handle){
+    my $json = JSON->new();
+
+    if ($self->pretty_print){
+      $json = $json->pretty;
+    }
+    my $ofh = $self->file_handle;
+    print $ofh $json->encode($output);
+  }
+
+  close $fh if ($fh);
 
   return $output;
 }
