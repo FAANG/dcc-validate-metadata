@@ -46,7 +46,8 @@ sub all_breeds {
 }
 
 sub uniq {
-  keys { map { $_ => 1 } @_ };
+  my %h = map { $_ => 1 } @_;
+  return keys %h;
 }
 
 __PACKAGE__->meta->make_immutable;
