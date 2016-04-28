@@ -73,6 +73,7 @@ sub _print {
       }
 
       my $attr = join( $sep, grep {$_} map { $_->name } @{ $o->attributes } );
+      $attr = $o->rule->name if (!$attr && $o->rule->name);
       my $val = join( $sep, grep {$_} map { $_->value } @{ $o->attributes } );
       my $src_ref = join( $sep, grep {$_} map { $_->source_ref } @{ $o->attributes } );
       my $term_id = join( $sep, grep {$_} map { $_->id } @{ $o->attributes } );
