@@ -26,47 +26,64 @@ use Data::Dumper;
 
 with "Bio::Metadata::Reporter::ReporterRole";
 
-has 'file_path' => ( is => 'rw', isa => 'Str', required => 1 );
-has 'max_size_msg' => (is => 'rw', isa => 'Int');
-
+has 'max_size_msg' => ( is => 'rw', isa => 'Int' );
 
 sub report {
-    my ( $self, %params ) = @_;
-    my $entities           = $params{entities};
-    my $entity_status      = $params{entity_status};
-    my $entity_outcomes    = $params{entity_outcomes};
-    my $attribute_status   = $params{attribute_status};
-    my $attribute_outcomes = $params{attribute_outcomes};
+  my ( $self, %params ) = @_;
+  my $entities           = $params{entities};
+  my $entity_status      = $params{entity_status};
+  my $entity_outcomes    = $params{entity_outcomes};
+  my $attribute_status   = $params{attribute_status};
+  my $attribute_outcomes = $params{attribute_outcomes};
 
+  if (!$self->file_path && !$self->file_handle){
+    confess "report called without file_path or file_handle";
+  }
+  my $close_fh = undef;
+  if ($self->file_path && !$self->file_handle){
+    $close_fh = 1;
+    open my $outfh, ">", $self->file_path;
+    $self->file_handle($outfh);
+  }
 
-	$self->print($entity_outcomes);
+  $self->_print($entity_outcomes);
+
+  if ($close_fh){
+    close $self->file_handle;
+  }
 }
 
-sub print {
-	my ($self,$entity_outcomes)=@_;
+sub _print {
+  my ( $self, $entity_outcomes ) = @_;
   my $sep = "\t";
-	open OUTFH,">",$self->file_path;
-	print OUTFH join($sep,'#id','status','message','value');
-	foreach my $e (keys %$entity_outcomes) {
-		my @outcomes=@{$entity_outcomes->{$e}};
-		foreach my $o (@outcomes) {
+
+  my $outfh = $self->file_handle;
+
+  print $outfh join( $sep, '#id', 'status', 'message', 'attribute','value','unit','term_source','term_source_id' ) . $/;
+
+  foreach my $e ( keys %$entity_outcomes ) {
+    my @outcomes = @{ $entity_outcomes->{$e} };
+    foreach my $o (@outcomes) {
       my $msg = $o->message;
-      if ($o->message && $self->max_size_msg && length($msg) > $self->max_size_msg){
-        $msg =substr($o->message,0,$self->max_size_msg)
+      if ( $o->message
+        && $self->max_size_msg
+        && length($msg) > $self->max_size_msg )
+      {
+        $msg = substr( $o->message, 0, $self->max_size_msg );
       }
-      my $val = join($sep, map {$_->value} @{$o->attributes}) ;
 
-      if ($o->outcome eq 'error') {
-				print OUTFH join($sep,$o->entity->id,$o->outcome,$msg,$val).$/;
-			} elsif ($o->outcome eq 'warning') {
-				print OUTFH join($sep,$o->entity->id,$o->outcome,"'".$msg."'",$val).$/;
-			}
-		}
-	}
+      my $attr = join( $sep, grep {$_} map { $_->name } @{ $o->attributes } );
+      $attr = $o->rule->name if (!$attr && $o->rule->name);
+      my $val = join( $sep, grep {$_} map { $_->value } @{ $o->attributes } );
+      my $src_ref = join( $sep, grep {$_} map { $_->source_ref } @{ $o->attributes } );
+      my $term_id = join( $sep, grep {$_} map { $_->id } @{ $o->attributes } );
+      my $units = join( $sep, grep {$_} map { $_->units } @{ $o->attributes } );
 
-	close OUTFH;
+
+      print $outfh join( $sep, $o->entity->id, $o->outcome, $msg, $attr, $val, $units, $src_ref, $term_id) . $/;
+    }
+  }
 }
-
 
 __PACKAGE__->meta->make_immutable;
 

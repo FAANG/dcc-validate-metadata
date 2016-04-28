@@ -25,6 +25,9 @@ use Bio::Metadata::Entity;
 
 requires 'report';
 
+has 'file_path'    => ( is => 'rw', isa => 'Str' );
+has 'file_handle'  => ( is => 'rw', isa => 'FileHandle' );
+
 before 'report' => sub {
   my $self = shift;
   my ( $entities, $entity_status, $entity_outcomes ) = validated_list(

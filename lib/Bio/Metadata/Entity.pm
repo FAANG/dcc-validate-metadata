@@ -24,9 +24,19 @@ use Unicode::CaseFold;
 use Bio::Metadata::Attribute;
 use Bio::Metadata::Types;
 
-has 'id'          => ( is => 'rw', isa => 'Str' );
+has 'id' => ( is => 'rw', isa => 'Str' );
+has 'synonyms' => (
+  is      => 'rw',
+  isa     => 'ArrayRef[Str]',
+  traits  => ['Array'],
+  handles => {
+    all_synonyms    => 'elements',
+    add_synonym     => 'push',
+    sorted_synonyms => 'sort',
+  },
+);
 has 'entity_type' => ( is => 'rw', isa => 'Str' );
-has 'links'       => (
+has 'links' => (
   traits  => ['Array'],
   is      => 'rw',
   isa     => 'Bio::Metadata::EntityArrayRef',
@@ -63,6 +73,7 @@ sub to_hash {
   return {
     id          => $self->id,
     entity_type => $self->entity_type,
+    synonyms    => $self->synonyms,
     attributes  => \@attr,
     links       => \@links,
   };
@@ -94,11 +105,11 @@ sub attr_names {
 
   my %names_seen;
   my @names;
-  for my $a (@{ $self->attributes }){
+  for my $a ( @{ $self->attributes } ) {
     next if ( !$a->name || !defined $a->value || $a->value eq '' );
     my $n = $self->normalise_attribute_name( $a->name );
 
-    if (!$names_seen{$n}++){
+    if ( !$names_seen{$n}++ ) {
       push @names, $n;
     }
   }

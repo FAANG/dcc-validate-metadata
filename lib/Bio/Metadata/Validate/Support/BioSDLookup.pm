@@ -26,51 +26,78 @@ use BioSD::Session;
 use Bio::Metadata::Entity;
 
 has 'biosd_session' => (
-    is       => 'rw',
-    isa      => 'BioSD::Session',
-    required => 1,
-    default  => sub { BioSD::Session->new() }
+  is       => 'rw',
+  isa      => 'BioSD::Session',
+  required => 1,
+  default  => sub { BioSD::Session->new() }
 );
 
 sub fetch_sample {
-    my ( $self, $id ) = @_;
+  my ( $self, $id ) = @_;
 
-    my $sample = $self->biosd_session->fetch_sample($id);
-    return undef if ( !$sample || !$sample->is_valid );
+  my $sample = $self->biosd_session->fetch_sample($id);
+  return undef if ( !$sample || !$sample->is_valid );
 
-    return $self->convert_biosample_to_entity($sample);
+  return $self->convert_biosample_to_entity($sample);
+}
+
+sub fetch_group_samples {
+  my ( $self, $id ) = @_;
+
+  my $group = $self->biosd_session->fetch_group($id);
+  return undef if ( !$group || !$group->id || !$group->is_valid );
+
+  my @group_samples =
+    map { $self->convert_biosample_to_entity($_) } @{ $group->samples };
+
+  return \@group_samples;
 }
 
 sub convert_biosample_to_entity {
-    my ( $self, $sample ) = @_;
+  my ( $self, $sample ) = @_;
 
-    my $entity = Bio::Metadata::Entity->new(
-        id          => $sample->id,
-        entity_type => 'sample',
-    );
+  my $entity = Bio::Metadata::Entity->new(
+    id          => $sample->id,
+    entity_type => 'sample',
+    synonyms    => [ $sample->id ],
+  );
 
-    for my $property ( @{ $sample->properties } ) {
+  for my $property ( @{ $sample->properties } ) {
+    for my $qualified_value ( @{ $property->qualified_values } ) {
+      if ( $property->class eq 'Sample Name' ) {
+        $entity->id( $qualified_value->value );
+        next;
+      }
 
-        for my $qualified_value ( @{ $property->qualified_values } ) {
-            my $attribute = Bio::Metadata::Attribute->new(
-                name  => $property->class,
-                value => $qualified_value->value,
-            );
-            $attribute->units( $qualified_value->unit )
-              if ( $qualified_value->unit );
+      my $attribute = Bio::Metadata::Attribute->new(
+        name  => $property->class,
+        value => $qualified_value->value,
+      );
+      $attribute->units( $qualified_value->unit )
+        if ( $qualified_value->unit );
 
-            my $term_source = $qualified_value->term_source;
-            if ($term_source) {
-                $attribute->uri( $term_source->uri ) if defined $term_source->uri;
-                $attribute->id( $term_source->term_source_id ) if defined $term_source->term_source_id;
-                $attribute->source_ref( $term_source->name ) if defined $term_source->name;
-            }
+      my $term_source = $qualified_value->term_source;
+      if ($term_source) {
+        $attribute->uri( $term_source->uri ) if defined $term_source->uri;
+        $attribute->id( $term_source->term_source_id )
+          if defined $term_source->term_source_id;
+        $attribute->source_ref( $term_source->name )
+          if defined $term_source->name;
+      }
 
-            $entity->add_attribute($attribute);
-        }
+      $entity->add_attribute($attribute);
     }
+  }
 
-    return $entity;
+  for my $df ( @{ $sample->derived_from } ) {
+    $entity->add_attribute(Bio::Metadata::Attribute->new(
+      name  => 'Derived from',
+      value => $df->id,
+    ));
+  }
+
+
+  return $entity;
 }
 
 __PACKAGE__->meta->make_immutable;
