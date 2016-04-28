@@ -79,14 +79,8 @@ sub _print {
       my $term_id = join( $sep, grep {$_} map { $_->id } @{ $o->attributes } );
       my $units = join( $sep, grep {$_} map { $_->units } @{ $o->attributes } );
 
-      if ( $o->outcome eq 'error' ) {
-        print $outfh join( $sep, $o->entity->id, $o->outcome, $msg, $attr, $val, $units, $src_ref, $term_id) . $/;
-      }
-      elsif ( $o->outcome eq 'warning' ) {
-        print $outfh
-          join( $sep, $o->entity->id, $o->outcome, "'" . $msg . "'", $val )
-          . $/;
-      }
+
+      print $outfh join( $sep, $o->entity->id, $o->outcome, $msg, $attr, $val, $units, $src_ref, $term_id) . $/;
     }
   }
 }
