@@ -64,9 +64,9 @@ sub convert_biosample_to_entity {
 
   for my $property ( @{ $sample->properties } ) {
     for my $qualified_value ( @{ $property->qualified_values } ) {
-      if ($property->class eq 'Sample Name'){
-          $entity->id($qualified_value->value);
-          next;
+      if ( $property->class eq 'Sample Name' ) {
+        $entity->id( $qualified_value->value );
+        next;
       }
 
       my $attribute = Bio::Metadata::Attribute->new(
@@ -88,6 +88,14 @@ sub convert_biosample_to_entity {
       $entity->add_attribute($attribute);
     }
   }
+
+  for my $df ( @{ $sample->derived_from } ) {
+    $entity->add_attribute(Bio::Metadata::Attribute->new(
+      name  => 'Derived from',
+      value => $df->id,
+    ));
+  }
+
 
   return $entity;
 }
