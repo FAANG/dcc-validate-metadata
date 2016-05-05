@@ -20,7 +20,7 @@
   Please fill out the person and organisation worksheets to show who is
   responsible for the submission. Person and organisation roles should be
   selected from one of the
-  <%= link_to "'organisation roles' in EFO" => 'http://www.ebi.ac.uk/ols/beta/ontologies/efo/terms?iri=http%3A%2F%2Fwww.ebi.ac.uk%2Fefo%2FEFO_0002012' %>.
+  <%= link_to "'organisation roles' in EFO" => 'http://www.ebi.ac.uk/ols/ontologies/efo/terms?iri=http%3A%2F%2Fwww.ebi.ac.uk%2Fefo%2FEFO_0002012' %>.
   Typical roles to use here would be biomaterial provider, submitter, curator,
   consortium member and institution. Multiple people and organisations can be
   recorded here as appropriate. At least one person and organisation should be
@@ -60,7 +60,7 @@
 </p>
 <p>
   When searching for appropriate ontology terms, we prefer to use the
-  <%= link_to 'latest version of OLS' => 'http://www.ebi.ac.uk/ols/beta/index' %>.
+  <%= link_to 'latest version of OLS' => 'http://www.ebi.ac.uk/ols/index' %>.
 </p>
 <p>
   All samples can refer to other BioSamples, to indicate parent/child
