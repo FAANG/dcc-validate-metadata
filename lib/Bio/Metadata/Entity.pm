@@ -17,7 +17,7 @@ use strict;
 use warnings;
 
 use Moose;
-use JSON;
+use JSON::MaybeXS;
 use namespace::autoclean;
 use Unicode::CaseFold;
 

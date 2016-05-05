@@ -292,6 +292,14 @@ DISTRIBUTIONS
       Scalar::Util 0
       Storable 2.15
       common::sense 0
+  Cpanel-JSON-XS-3.0213
+    pathname: R/RU/RURBAN/Cpanel-JSON-XS-3.0213.tar.gz
+    provides:
+      Cpanel::JSON::XS 3.0213
+    requirements:
+      ExtUtils::MakeMaker 0
+      Pod::Text 2.08
+      Pod::Usage 1.33
   Crypt-RC4-2.02
     pathname: S/SI/SIFUKURT/Crypt-RC4-2.02.tar.gz
     provides:
@@ -1349,6 +1357,19 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       Test::More 0
+  JSON-MaybeXS-1.003005
+    pathname: E/ET/ETHER/JSON-MaybeXS-1.003005.tar.gz
+    provides:
+      JSON::MaybeXS 1.003005
+    requirements:
+      Carp 0
+      ExtUtils::CBuilder 0.27
+      ExtUtils::MakeMaker 0
+      File::Spec 0
+      File::Temp 0
+      JSON::PP 2.27202
+      Scalar::Util 0
+      perl 5.006
   JSON-PP-2.27300
     pathname: M/MA/MAKAMAKA/JSON-PP-2.27300.tar.gz
     provides:

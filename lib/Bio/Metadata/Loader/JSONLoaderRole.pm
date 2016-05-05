@@ -20,7 +20,7 @@ use warnings;
 use Carp;
 use Moose::Role;
 
-use JSON qw(decode_json);
+use JSON::MaybeXS qw(decode_json);
 use Try::Tiny;
 use autodie;
 use Data::Dumper;

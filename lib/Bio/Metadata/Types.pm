@@ -18,6 +18,7 @@ use strict;
 use warnings;
 use Carp;
 use Moose::Util::TypeConstraints;
+use JSON::PP::Boolean;
 
 enum 'Bio::Metadata::Rules::Rule::TypeEnum', [
   qw(text number enum ontology_uri ontology_text ontology_id uri_value date
@@ -34,6 +35,11 @@ role_type 'Bio::Metadata::Validate::AttributeValidatorRole';
 role_type 'Bio::Metadata::Loader::JSONLoaderRole';
 role_type 'Bio::Metadata::Loader::RuleSetLoaderRole';
 role_type 'Bio::Metadata::Consistency::ConsistencyCheckRole';
+
+class_type 'JSON::PP::Boolean';
+
+#hack to allow JSON parser bools to be used as Bool
+union('Bio::Metadata::FlexiBool',[qw(JSON::PP::Boolean Bool)]);
 
 #attribute
 class_type 'Bio::Metadata::Attribute';

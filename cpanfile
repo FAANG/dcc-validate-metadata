@@ -1,7 +1,8 @@
 requires 'Moose';
 requires 'MooseX::Params::Validate';
+requires 'JSON::MaybeXS';
+requires 'Cpanel::JSON::XS';
 requires 'JSON';
-requires 'JSON::XS';
 requires 'JSON::Validator';
 requires 'Data::DPath';
 requires 'Scalar::Util';

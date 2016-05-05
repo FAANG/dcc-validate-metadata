@@ -29,11 +29,14 @@ has 'source_ref' => ( is => 'rw', isa => 'Str' );
 
 has 'allow_further_validation' => (
     is      => 'rw',
-    isa     => 'Bool',
+    isa     => 'Bio::Metadata::FlexiBool',
     default => 1,
-    traits  => ['Bool'],
-    handles => { block_further_validation => 'unset', }
 );
+
+sub block_further_validation {
+  my ($self) = @_;
+  $self->allow_further_validation(0);
+}
 
 sub source_ref_id {
     my ($self) = @_;

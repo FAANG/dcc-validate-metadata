@@ -22,7 +22,7 @@ use Moose;
 use autodie;
 use Bio::Metadata::Types;
 use namespace::autoclean;
-use JSON;
+use JSON::MaybeXS;
 
 with "Bio::Metadata::Reporter::ReporterRole";
 

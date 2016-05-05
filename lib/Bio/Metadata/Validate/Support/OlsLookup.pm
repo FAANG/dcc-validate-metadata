@@ -17,7 +17,7 @@ package Bio::Metadata::Validate::Support::OlsLookup;
 use Moose;
 use REST::Client;
 use URI::Escape::XS qw/uri_escape/;
-use JSON;
+use JSON::MaybeXS;
 use Try::Tiny;
 use Carp;
 use List::Util qw(none any);

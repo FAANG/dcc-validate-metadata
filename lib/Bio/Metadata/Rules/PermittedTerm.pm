@@ -23,9 +23,9 @@ use Bio::Metadata::Rules::Rule;
 use MooseX::Types::URI qw(Uri);
 
 has 'ontology_name'     => ( is => 'rw', isa => 'Str' );
-has 'allow_descendants' => ( is => 'rw', isa => 'Bool', default => 1 );
-has 'leaf_only'         => ( is => 'rw', isa => 'Bool', default => 0 );
-has 'include_root'      => ( is => 'rw', isa => 'Bool', default => 1 );
+has 'allow_descendants' => ( is => 'rw', isa => 'Bio::Metadata::FlexiBool', default => 1,  );
+has 'leaf_only'         => ( is => 'rw', isa => 'Bio::Metadata::FlexiBool', default => 0,  );
+has 'include_root'      => ( is => 'rw', isa => 'Bio::Metadata::FlexiBool', default => 1,  );
 
 has 'term_iri' => ( is => 'rw', isa => Uri, required => 1, coerce => 1 );
 
