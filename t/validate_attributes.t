@@ -8,6 +8,7 @@ use lib "$Bin/../lib";
 use Data::Dumper;
 use Test::More;
 use Test::Exception;
+use Text::Unidecode;
 
 use Bio::Metadata::Attribute;
 use Bio::Metadata::Rules::Rule;
@@ -323,6 +324,26 @@ sub ontology_id_rule {
   $outcome = $ols_id_attr_validator->validate_attribute( $ols_rule, $ols_attr );
   is( $outcome->outcome, 'warning',
     'OLS warning for term with different label/value term' );
+
+  #pass for term/label check with unicode chars
+  my $lbo_rule = Bio::Metadata::Rules::Rule->new(
+    type        => 'ontology_id',
+    valid_terms => {
+      term_iri      => 'http://purl.obolibrary.org/obo/LBO_0000000',
+      ontology_name => 'LBO'
+    },
+  );
+
+  my $lbo_attr = Bio::Metadata::Attribute->new(
+    value => 'Moxoto',
+    id    => 'LBO_0001002 '
+  );
+  $outcome = $ols_id_attr_validator->validate_attribute( $lbo_rule, $lbo_attr );
+  is( $outcome->outcome, 'pass',
+    'Pass for terms with unicode chars at OLS' );
+
+
+
 
 }
 

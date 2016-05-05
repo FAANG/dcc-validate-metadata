@@ -23,6 +23,7 @@ use namespace::autoclean;
 use Try::Tiny;
 
 use URI;
+use Text::Unidecode;
 use Bio::Metadata::Validate::Support::OlsLookup;
 
 with 'Bio::Metadata::Validate::AttributeValidatorRole';
@@ -60,11 +61,13 @@ sub validate_attribute {
 
     my $label = $matching_term->{label};
 
+    #unicode support is variable, use Unidecode to normalise for this
+    my ($normalised_label,$normalised_value) = map {unidecode($_)} ($label, $attribute->value);
 
-    if ( $label ne $attribute->value ) {
+    if ( $normalised_label ne $normalised_value ) {
         $o->outcome('warning');
         $o->message(
-            "value does not precisely match label ($label) for term ".$attribute->id);
+            "value ($normalised_value) does not precisely match label ($normalised_label) for term ".$attribute->id);
         return $o;
     }
 
