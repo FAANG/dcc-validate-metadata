@@ -6,7 +6,6 @@ use Test::More;
 
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
-use Data::Dumper;
 use Test::More;
 
 use Bio::Metadata::Entity;
@@ -20,7 +19,7 @@ test_fail_internal();
 test_fail_biosamples();
 done_testing();
 
-sub test_pass_internal {  #FIXME
+sub test_pass_internal { 
   my $e = Bio::Metadata::Entity->new(
     attributes => [
       {
@@ -129,7 +128,7 @@ sub test_fail_internal { #FIXME
         value      => 'Gallus gallus',
         id         => 'NCBITaxon_9031',
         source_ref => 'NCBITaxon'
-      },    #pig species
+      },    #chicken species
     ]
   );
 
@@ -141,7 +140,7 @@ sub test_fail_internal { #FIXME
     [
       Bio::Metadata::Validate::ValidationOutcome->new(
         outcome    => 'error',
-        message    => 'The species of the child (Sus scrofa) does not match one of the parents (Gallus gallus) in the submission',
+        message    => 'The species of the child (Sus scrofa) does not match the species of the parents: Sus scrofa, Gallus gallus',
         attributes => $e->get_attribute(0)
         )
 
@@ -177,7 +176,7 @@ sub test_fail_biosamples {
     [
       Bio::Metadata::Validate::ValidationOutcome->new(
         outcome    => 'error',
-        message    => 'The species of the child (Sus scrofa) does not match one of the parents (Gallus gallus) from BioSamples',
+        message    => 'The species of the child (Sus scrofa) does not match the species of the parents: Sus scrofa, Gallus gallus',
         attributes => $e->get_attribute(0)
         )
 

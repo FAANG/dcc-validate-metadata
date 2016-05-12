@@ -20,6 +20,7 @@ use warnings;
 use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
+use List::MoreUtils qw(uniq);
 
 use Bio::Metadata::Validate::Support::BioSDLookup;
 use Bio::Metadata::Rules::PermittedTerm;
@@ -28,22 +29,13 @@ has description => (
   is  => 'rw',
   isa => 'Str',
   default =>
-    'Ensure that the child of species is consistent with their parents reported species.',
+    'Ensure that the child species is consistent with their parents reported species listed in child of.',
 );
 
 has name => (
   is      => 'rw',
   isa     => 'Str',
-  default => 'Childofspecies/Parentsspecies',
-);
-
-with 'Bio::Metadata::Validate::AttributeValidatorRole';
-
-has 'entities_by_id' => (
-    traits  => ['Hash'],
-    is      => 'rw',
-    isa     => 'HashRef[Bio::Metadata::Entity]',
-    handles => { get_entity_by_id => 'get' },
+  default => 'Childspecies/Parentsspecies',
 );
 
 has 'biosd_lookup' => (
@@ -56,10 +48,11 @@ has 'biosd_lookup' => (
 sub check_entity {
   my ( $self, $entity, $entities_by_id ) = @_;
   my @outcomes;
-
+  
+  my @all_species;
   my $organised_attr = $entity->organised_attr;
   my $child_species_attrs  = $organised_attr->{'organism'};
-  my $parents_ids = $organised_attr->{'Child Of'};
+  my $parents_ids = $organised_attr->{'child of'};
 
   unless ( $child_species_attrs
     && scalar(@$child_species_attrs) == 1
@@ -70,45 +63,45 @@ sub check_entity {
     #not enough information for higher level checks
     return \@outcomes;
   }
-  
-  my @all_species = ($child_species_attrs{value});
-  
+
+  my $child_species = $child_species_attrs->[0]->{'value'};
+  push(@all_species, $child_species);
+  my @parent_species;
+
   foreach my $sample_identifier (@{$parents_ids}){
-    my $entity = $self->get_entity_by_id($sample_identifier);
-    if ( !defined $entity) {
-      $entity = $self->biosd_lookup->fetch_sample($sample_identifier);
+    my $parent_entity;
+    if ($entities_by_id->{$sample_identifier->{'value'}}){
+      $parent_entity = $entities_by_id->{$sample_identifier->{'value'}};
+    }
+    if ( !defined $parent_entity) {
+      $parent_entity = $self->biosd_lookup->fetch_sample($sample_identifier->{'value'});
     }
 
-    if ( !defined $entity ) {
-        $o->outcome('error');
-        $o->message('No entity found');
-        return $o;
-    }
-    my $organised_attr = $entity->organised_attr;
-
-    my $child_species_attrs  = $organised_attr->{'organism'};
-    my $species_attrs  = $organised_attr->{'organism'};
-    push(@all_species, $child_species_attrs{value})
+    my $parent_organised_attr = $parent_entity->organised_attr;
+    my $parent_species_attrs  = $parent_organised_attr->{'organism'};
+    
+    push(@parent_species, $parent_species_attrs->[0]->{'value'});
+    push(@all_species, $parent_species_attrs->[0]->{'value'});
   }
 
-  my @mismatched_species;
-  my %test_if_equal = map { $_, 1 } @test;
-  if (!keys %string == 1) {
-    @mismatched_species = values(%test_if_equal);
-  }
+  #Get unique species, should be one if parents and child match
+  my @test_if_equal = uniq @all_species;
 
   my $outcome =
-    Bio::Metadata::Validate::ValidationOutcome->new( attributes => $breed_attrs,
+    Bio::Metadata::Validate::ValidationOutcome->new( attributes => $child_species_attrs,
     );
   push @outcomes, $outcome;
 
-  if (@mismatched_species) {
+  #Test if more than one species i.e. child and parent mismatch
+  if (scalar(@test_if_equal) > 1) {
     $outcome->outcome('error');
     $outcome->message(
-      "The species of the organism does not match the species of the parents listed in 'Child Of': "
-        . join( ', ', @mismatched_breeds ) );
+      "The species of the child ($child_species) does not match the species of the parents: "
+        . join( ', ', @parent_species ) );
+    print "Made it error\n";
   }
   else {
+    print "Made it pass\n";
     $outcome->outcome('pass');
   }
 
