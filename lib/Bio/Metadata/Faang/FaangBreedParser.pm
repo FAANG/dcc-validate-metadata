@@ -111,7 +111,7 @@ sub _nested {
       }
     }
     elsif ( $tokens[$i] eq ')' && !@opener ) {
-      return {};    #unbalanced brackets
+      return undef;    #unbalanced brackets
     }
     elsif (@opener) {
       push @nested, $tokens[$i];
@@ -124,7 +124,7 @@ sub _nested {
 
   if (@opener) {
     #unbalanced brackets, must be an error
-    return {};
+    return undef;
   }
 
   return $self->_parser(@b);
@@ -145,8 +145,8 @@ sub _cross {
 
     my $k = pop @$a;                       # is this a sire or a dam?
 
-    return {} if ( $k ne $sire && $k ne $dam );
-    return {} if ( $b{$k} );               # too many parents of one sex given
+    return undef if ( $k ne $sire && $k ne $dam );
+    return undef if ( $b{$k} );               # too many parents of one sex given
 
     if ( ref $a->[0] ) {
       $b{$k} = $a->[0];
