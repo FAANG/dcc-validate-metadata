@@ -40,12 +40,13 @@ sub test_validator {
   );
 
   my @valid_values = (
-    [ 'Charolais',                                           'LBO_0000073' ],
-    [ 'Charolais,Holstein',                                  'LBO_0001036' ],
-    [ 'Charolais, Holstein',                                 'LBO_0001036' ],
-    [ 'Charolais sire x Holstein dam',                       'LBO_0001036' ],
-    [ '(Charolais sire x Holstein dam) sire x Holstein dam', 'LBO_0001036' ],
-    [ 'Holstein sire x (Charolais sire x Holstein dam) dam', 'LBO_0001036' ],
+   [ 'Charolais',                                           'LBO_0000073' ],
+   [ 'Charolais,Holstein',                                  'LBO_0001036' ],
+   [ 'Charolais, Holstein',                                 'LBO_0001036' ],
+   [ 'Charolais sire x Holstein dam',                       'LBO_0001036' ],
+   [ '(Charolais sire x Holstein dam) sire x Holstein dam', 'LBO_0001036' ],
+   [ 'Holstein sire x (Charolais sire x Holstein dam) dam', 'LBO_0001036' ],
+   [ 'Texel sire x Scottish Blackface dam',                 'LBO_0001041' ],
   );
 
   for my $val (@valid_values) {
@@ -69,6 +70,7 @@ sub test_validator {
     ,                                               #should just be a list
     [ 'Holstein sire x Holstein dam', 'LBO_0001036' ]
     ,    #should just be a single value
+    [ 'Texel Sire x Scottish Blackface Dam',                 'LBO_0001041' ] #should have 
   );
   for my $val (@invalid_values) {
     my $a = Bio::Metadata::Attribute->new(
@@ -103,11 +105,10 @@ sub what_the_heck_tests {
   my $quad_cross_breed_out = $parser->parse($quad_cross_breed);
   is_deeply(
     $quad_cross_breed_out,
-      Bio::Metadata::Faang::FaangBreed->new(
-        sire => Bio::Metadata::Faang::FaangBreed->new( sire => 'A', dam => 'B' ),
-        dam  => Bio::Metadata::Faang::FaangBreed->new( sire => 'C', dam => 'D' ),
-      )
-    ,
+    Bio::Metadata::Faang::FaangBreed->new(
+      sire => Bio::Metadata::Faang::FaangBreed->new( sire => 'A', dam => 'B' ),
+      dam  => Bio::Metadata::Faang::FaangBreed->new( sire => 'C', dam => 'D' ),
+    ),
     'quad cross'
   );
 
@@ -136,11 +137,11 @@ sub what_the_heck_tests {
 sub non_compliance_tests {
   my $l_dangle_br     = 'BreedA sire x ((BreedA sire x BreedB dam) dam';
   my $l_dangle_br_out = $parser->parse($l_dangle_br);
-  is_deeply( $l_dangle_br_out, {}, 'left dangling bracket' );
+  is_deeply( $l_dangle_br_out, undef, 'left dangling bracket' );
 
   my $r_dangle_br     = 'BreedA sire x (BreedA sire x BreedB dam)) dam';
   my $r_dangle_br_out = $parser->parse($r_dangle_br);
-  is_deeply( $r_dangle_br_out, {}, 'right dangling bracket' );
+  is_deeply( $r_dangle_br_out, undef, 'right dangling bracket' );
 }
 
 #these tests cover use cases that strictly meet the spec
@@ -148,7 +149,9 @@ sub compliance_tests {
   #
   my $pure_bred     = 'BreedP';
   my $pure_bred_out = $parser->parse($pure_bred);
-  is_deeply( $pure_bred_out, Bio::Metadata::Faang::FaangBreed->new(breeds => ['BreedP'] ), 'pure bred' );
+  is_deeply( $pure_bred_out,
+    Bio::Metadata::Faang::FaangBreed->new( breeds => ['BreedP'] ),
+    'pure bred' );
 
   my $simple_cross     = 'BreedA sire x BreedB dam';
   my $simple_cross_out = $parser->parse($simple_cross);
@@ -177,9 +180,13 @@ sub compliance_tests {
 
   my $mixed_breeds     = 'Breed A, BreedB, BreedC';
   my $mixed_breeds_out = $parser->parse($mixed_breeds);
-  is_deeply( $mixed_breeds_out,
-    Bio::Metadata::Faang::FaangBreed->new( breeds => [ 'Breed A', 'BreedB', 'BreedC' ], ),
-    'mixed_breeds' );
+  is_deeply(
+    $mixed_breeds_out,
+    Bio::Metadata::Faang::FaangBreed->new(
+      breeds => [ 'Breed A', 'BreedB', 'BreedC' ],
+    ),
+    'mixed_breeds'
+  );
 
   my $annoying_brackets     = 'Criollo (Uruguay)';
   my $annoying_brackets_out = $parser->parse($annoying_brackets);
