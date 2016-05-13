@@ -171,7 +171,8 @@
     %       $a_outcomes = $attribute_outcomes->{$a};
     %     }
     %     elsif (@additional_errors){
-    %       $a_status = 'error';
+    %       $a_status = (grep {$_->outcome eq 'error'} @additional_errors) ? 'error' : 'warning';
+    %        
     %       $a_outcomes = \@additional_errors;
     %     }
           <td>
