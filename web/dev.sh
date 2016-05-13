@@ -4,5 +4,6 @@ SCRIPTPATH=`pwd`
 popd > /dev/null
 
 APPLIBPATH=$SCRIPTPATH/../lib
-PERL5LIB=${PERL5LIB}:$APPLIBPATH
-morbo -w $SCRIPTPATH/validate_metadata.conf -w $SCRIPTPATH/public -w $SCRIPTPATH/templates -w $APPLIBPATH $SCRIPTPATH/validate_metadata.pl 
+CARTON_PATH=$SCRIPTPATH/../local/lib/perl5/
+PERL5LIB=$APPLIBPATH:$CARTON_PATH:${PERL5LIB}
+morbo -w $SCRIPTPATH/validate_metadata.conf -w $SCRIPTPATH/public -w $SCRIPTPATH/templates -w $APPLIBPATH -w $CARTON_PATH $SCRIPTPATH/validate_metadata.pl 
