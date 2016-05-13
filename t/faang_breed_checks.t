@@ -239,4 +239,13 @@ sub lexer_tests {
     [ 'Criollo', '(Uruguay)', 'sire', 'x', 'breed', 'b', 'dam' ],
     'lexer test breed with brackets in the name'
   );
+  
+  my $unbalanced_text = 'BreedA sire x ((BreedA sire x BreedB dam) dam';
+  my @unbalanced_text_out = $parser->_lexer($unbalanced_text);
+  is_deeply(
+  \@unbalanced_text_out,
+  ['BreedA','sire','x','(','(','BreedA','sire','x','BreedB', 'dam',')', 'dam'],
+  'lexer test with unbalanced brackets'
+  );
+  
 }

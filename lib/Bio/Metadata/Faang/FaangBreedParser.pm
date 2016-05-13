@@ -47,6 +47,7 @@ my ( $sire, $dam ) = qw(sire dam);
       }
     }
 =cut
+
 sub parse {
   my ( $self, $breed_text ) = @_;
 
@@ -61,6 +62,7 @@ sub parse {
   convert tokens to structured breed data, or an empty hash if it can't be
   understood
 =cut
+
 sub _parser {
   my ( $self, @tokens ) = @_;
 
@@ -87,13 +89,14 @@ sub _parser {
 
   decode nested breed information.
 =cut
+
 sub _nested {
   my ( $self, @tokens ) = @_;
 
   my @opener;
   my @b;
   my @nested;
-
+  
   for ( my $i = 0 ; $i < scalar(@tokens) ; $i++ ) {
 
     if ( $tokens[$i] eq '(' ) {
@@ -123,6 +126,7 @@ sub _nested {
   }
 
   if (@opener) {
+
     #unbalanced brackets, must be an error
     return undef;
   }
@@ -146,7 +150,7 @@ sub _cross {
     my $k = pop @$a;                       # is this a sire or a dam?
 
     return undef if ( $k ne $sire && $k ne $dam );
-    return undef if ( $b{$k} );               # too many parents of one sex given
+    return undef if ( $b{$k} );            # too many parents of one sex given
 
     if ( ref $a->[0] ) {
       $b{$k} = $a->[0];
@@ -173,12 +177,13 @@ sub _mixed {
     }
   }
   push @breeds, join( ' ', @b ) if @b;
-  return Bio::Metadata::Faang::FaangBreed->new( breeds => \@breeds);
+  return Bio::Metadata::Faang::FaangBreed->new( breeds => \@breeds );
 }
 
 sub _pure {
   my ( $self, @tokens ) = @_;
-  return Bio::Metadata::Faang::FaangBreed->new( breeds => [ join( ' ', @tokens ) ]);
+  return Bio::Metadata::Faang::FaangBreed->new(
+    breeds => [ join( ' ', @tokens ) ] );
 }
 
 =head1 parse
@@ -191,6 +196,7 @@ sub _pure {
   from the spec i.e. '(',')', 'x' or ','. The aim is to allow for breed names
   that contain brackets.
 =cut
+
 sub _lexer {
   my ( $self, $text ) = @_;
 
@@ -228,6 +234,7 @@ sub _lexer {
   enclose signifcant delimiters from the spec i.e. '(',')', 'x' or ','.
   The aim is to allow for breed names that contain brackets.
 =cut
+
 sub _lexer_cleanup {
 
   my ( $self, @tokens ) = @_;
@@ -265,12 +272,16 @@ sub _lexer_cleanup {
         push @nested, $tokens[$i];
       }
     }
+    elsif ( @opener && $i == scalar(@tokens) - 1 ) {    #last token
+      push @b, '(', @nested, $tokens[$i];
+    }
     elsif (@opener) {
       push @nested, $tokens[$i];
     }
     else {
       push @b, $tokens[$i];
     }
+
   }
 
   return @b;
