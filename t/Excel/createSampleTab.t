@@ -15,7 +15,7 @@ my $data_dir = "$Bin/../data/";
 
 my $sampletab= Bio::Metadata::BioSample::SampleTab->new();
 isa_ok($sampletab, "Bio::Metadata::BioSample::SampleTab");
-
+done_testing();
 $sampletab->read("$data_dir/Excel/sampleset.bsamples.xlsx");
 
 my $msi=$sampletab->report_msi;
@@ -24,7 +24,7 @@ my $scd=$sampletab->report_scd;
 print $msi;
 print $scd;
 
-done_testing();
+
 
 
 

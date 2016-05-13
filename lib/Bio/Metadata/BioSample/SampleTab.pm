@@ -204,10 +204,13 @@ sub report_scd {
           $a = $attrs->[$i];
         }
         if ($a) {
+          my $id = $a->id // '';
+          $id = make_id_safer($id) if $id;
+          
           push @row, $a->value      // '';
           push @row, $a->units      // '' if ( $ac->use_units );
           push @row, $a->source_ref // '' if ( $ac->use_source_ref );
-          push @row, $a->id         // '' if ( $ac->use_id );
+          push @row, $id         // '' if ( $ac->use_id );
           push @row, $a->uri        // '' if ( $ac->use_uri );
         }
         else {
@@ -224,6 +227,19 @@ sub report_scd {
   my $line_sep = "\n";
 
   return join $line_sep, map { join( $col_sep, @$_ ) } @output_rows;
+}
+
+sub make_id_safer {
+  my ($id) = @_;
+  my $nid = $id;
+  if ($nid =~ m/^NCBITaxon_\d+/){
+    $nid =~ s/^NCBITaxon_//;
+  }
+  elsif ($nid =~ m/[A-Za-z]+:\d+/) {
+    $nid =~ s/:/_/;
+  }
+  
+  return $nid;
 }
 
 sub generate_header {
