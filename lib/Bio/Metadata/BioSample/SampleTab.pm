@@ -205,7 +205,7 @@ sub report_scd {
         }
         if ($a) {
           my $id = $a->id // '';
-          $id = make_id_safer($id) if $id;
+          $id = clean_ids_for_biosamples($id) if $id;
           
           push @row, $a->value      // '';
           push @row, $a->units      // '' if ( $ac->use_units );
@@ -229,12 +229,14 @@ sub report_scd {
   return join $line_sep, map { join( $col_sep, @$_ ) } @output_rows;
 }
 
-sub make_id_safer {
+sub clean_ids_for_biosamples {
   my ($id) = @_;
   my $nid = $id;
+  #we use NCBITaxon when validating, but BioSamples just want the numeric
   if ($nid =~ m/^NCBITaxon_\d+/){
     $nid =~ s/^NCBITaxon_//;
   }
+  #ols allows : in id when we validate, but BioSamples will just stick it on the end of the URL to get a term URI
   elsif ($nid =~ m/[A-Za-z]+:\d+/) {
     $nid =~ s/:/_/;
   }
