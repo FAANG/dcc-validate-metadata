@@ -131,7 +131,7 @@ sub check_entity {
   my $outcome =
     Bio::Metadata::Validate::ValidationOutcome->new( attributes => $breed_attrs,
     );
-  push @outcomes, $outcome;
+ 
 
   if (@mismatched_breeds) {
     $pt->term_iri('http://purl.obolibrary.org/obo/LBO_0000000');
@@ -155,6 +155,9 @@ sub check_entity {
     $outcome->outcome('pass');
   }
 
+  if ($outcome->outcome ne 'pass'){
+    push @outcomes, $outcome;
+  }
   return \@outcomes;
 }
 

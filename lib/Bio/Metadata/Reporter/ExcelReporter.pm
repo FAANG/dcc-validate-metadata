@@ -168,7 +168,7 @@ sub prep_attr_comment {
   my $comment = '';
 
   if ( $attr_outcomes && @$attr_outcomes ) {
-    $comment .= join "\n", map { $_->message } @$attr_outcomes;
+    $comment .= join "\n", map { $_->message || ''} @$attr_outcomes;
     $comment .= "\n";
   }
 
