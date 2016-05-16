@@ -23,6 +23,7 @@ use namespace::autoclean;
 use Bio::Metadata::Types;
 
 use Bio::Metadata::Faang::FaangBreedSpeciesCheck;
+use Bio::Metadata::Faang::FaangChildOfSpeciesCheck;
 
 has 'consistency_check_lookup' => (
   is      => 'rw',
@@ -31,6 +32,7 @@ has 'consistency_check_lookup' => (
   default => sub {
     return {
       faang_breed_species_check => Bio::Metadata::Faang::FaangBreedSpeciesCheck->new(),
+      faang_childof_species_check => Bio::Metadata::Faang::FaangChildOfSpeciesCheck->new(),
     };
   },
   handles => { get_consistency_check_instance => 'get', },
