@@ -238,7 +238,7 @@
         % for my $col (@$attribute_columns){
         % my $loop_count = 0;
         % my $term_count = $col->term_count->{$cat};
-        %  for my $term  (sort keys %$term_count){
+        %  for my $term  (sort {lc($a) cmp lc($b)} keys %$term_count){
         %  my $cell_class = ($col->probable_duplicates()->{$cat}{$term}) ? 'bg-danger' : '';
             <tr>
               <td><%= ($loop_count++) ? '' : $col->name %></td>
