@@ -101,10 +101,8 @@ sub check_entity {
     $outcome->message(
       "The species of the child ($child_species) does not match the species of the parents: "
         . join( ', ', @parent_species ) );
-    print "Made it error\n";
   }
   else {
-    print "Made it pass\n";
     $outcome->outcome('pass');
   }
 
