@@ -66,50 +66,55 @@ sub consume_attrs {
     $self->max_count( scalar(@$attrs) );
   }
 
-  for my $a (@$attrs) {
-    $self->use_units(1)      if ( $a->units );
-    $self->use_uri(1)        if ( $a->uri );
-    $self->use_ref_id(1)     if ( $a->source_ref_id );
-    $self->use_source_ref(1) if ( $a->source_ref );
-    $self->use_id(1)         if ( $a->id );
+  my $use_units      = $self->use_units;
+  my $use_uri        = $self->use_uri;
+  my $use_ref_id     = $self->use_ref_id;
 
+
+  for my $a (@$attrs) {
     if ( defined $a->value ) {
       $self->term_count()->{value}{ $a->value }++;
     }
-    if ( $a->uri ) {
+    if ( defined $a->uri ) {
       $self->term_count()->{uri}{ $a->uri }++;
+      $use_uri = 1 if ( !defined $use_uri );
     }
-    if ( $a->units ) {
+    if ( defined $a->units ) {
       $self->term_count()->{units}{ $a->units }++;
+      $use_units = 1 if ( !defined $use_units );
     }
-    if ( $a->source_ref_id ) {
+    if ( defined $a->source_ref || defined $a->id ) {
       $self->term_count()->{ref_id}{ $a->source_ref_id }++;
+      $use_ref_id = 1 if ( !defined $use_ref_id );
     }
   }
 
+  $self->use_units($use_units) if $use_units;
+  $self->use_uri($use_uri) if $use_uri;
+  $self->use_ref_id($use_ref_id) if $use_ref_id;
+  
+  my %mashed_terms;
+  
   for my $c ( $self->categories ) {
     my %term_count = %{ $self->term_count()->{$c} };
     my %term_mash;
 
     for my $k ( keys %term_count ) {
-      my $mashed_term = _mash_term($k);
-      $term_mash{$mashed_term}++;
+      if (!exists $mashed_terms{$k}){
+        #mash term
+        $mashed_terms{$k} = lc($k);
+        $mashed_terms{$k} =~ s/\W//g;# remove anything that isn't a-z,1-0,_
+      }
+      $term_mash{ $mashed_terms{$k} }++;
     }
+    
     for my $k ( keys %term_count ) {
-      my $mashed_term = _mash_term($k);
-      if ( $term_mash{$mashed_term} > 1 ) {
+      if ( $term_mash{ $mashed_terms{$k} } > 1 ) {
         $self->probable_duplicates()->{$c}{$k} = $k;
       }
     }
 
   }
-}
-
-sub _mash_term {
-  my ($term) = @_;
-  my $mashed = lc($term);
-  $mashed =~ s/\W//g;    # remove anything that isn't a-z,1-0,_
-  return $mashed;
 }
 
 __PACKAGE__->meta->make_immutable;
