@@ -38,6 +38,9 @@ has name => (
   default => 'Childspecies/Parentsspecies',
 );
 
+#must consume after declaring attribute that satisfies requirement for 'description'
+with 'Bio::Metadata::Consistency::ConsistencyCheckRole';
+
 has 'biosd_lookup' => (
     is  => 'rw',
     isa => 'Bio::Metadata::Validate::Support::BioSDLookup',
