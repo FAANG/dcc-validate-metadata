@@ -42,12 +42,9 @@ sub test_pass {
   is_deeply(
     $outcomes,
     [
-      Bio::Metadata::Validate::ValidationOutcome->new(
-        outcome    => 'pass',
-        attributes => $e->get_attribute(0)
-        )
+
     ],
-    'pass for goat + goat breed (Corsican)'
+    'no fail or warn for goat + goat breed (Corsican)'
   );
 }
 
@@ -74,13 +71,9 @@ sub test_sub_species_pass {
   is_deeply(
     $outcomes,
     [
-      Bio::Metadata::Validate::ValidationOutcome->new(
-        outcome    => 'pass',
-        attributes => $e->get_attribute(0)
-        )
 
     ],
-    'pass for pig breed + sus scrofa domesticus'
+    'no fail or warn for pig breed + sus scrofa domesticus'
   );
 }
 
@@ -108,8 +101,9 @@ sub test_fail {
     $outcomes,
     [
       Bio::Metadata::Validate::ValidationOutcome->new(
-        outcome    => 'error',
-        message    => 'These breeds do not match the animal species (Bos taurus): Corsican (LBO_0000975)',
+        outcome => 'error',
+        message =>
+'These breeds do not match the animal species (Bos taurus): Corsican (LBO_0000975)',
         attributes => $e->get_attribute(0)
         )
 
