@@ -20,8 +20,6 @@ use warnings;
 use Moose;
 use namespace::autoclean;
 
-use MooseX::Params::Validate;
-
 my $not_applicable_term    = 'not applicable';
 my $not_collected_term     = 'not collected';
 my $not_provided_term      = 'not provided';
@@ -71,12 +69,7 @@ has 'missing_value_outcome' => (
 );
 
 sub validate_requirements {
-  my ($self) = shift;
-  my ( $rule, $attributes ) = pos_validated_list(
-    \@_,
-    { isa => 'Bio::Metadata::Rules::Rule' },
-    { isa => 'Bio::Metadata::AttributeArrayRef' }
-  );
+  my ($self,$rule, $attributes) = @_;
 
   my $o = Bio::Metadata::Validate::ValidationOutcome->new(
     attributes => $attributes,
