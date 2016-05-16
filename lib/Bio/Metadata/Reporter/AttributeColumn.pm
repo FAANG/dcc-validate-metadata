@@ -69,7 +69,8 @@ sub consume_attrs {
   my $use_units      = $self->use_units;
   my $use_uri        = $self->use_uri;
   my $use_ref_id     = $self->use_ref_id;
-
+  my $use_source_ref = $self->use_source_ref;
+  my $use_id         = $self->use_id;
 
   for my $a (@$attrs) {
     if ( defined $a->value ) {
@@ -77,37 +78,41 @@ sub consume_attrs {
     }
     if ( defined $a->uri ) {
       $self->term_count()->{uri}{ $a->uri }++;
-      $use_uri = 1 if ( !defined $use_uri );
+      $use_uri = 1;
     }
     if ( defined $a->units ) {
       $self->term_count()->{units}{ $a->units }++;
-      $use_units = 1 if ( !defined $use_units );
+      $use_units = 1;
     }
-    if ( defined $a->source_ref || defined $a->id ) {
+    if ( defined $a->id || defined $a->source_ref ) {
       $self->term_count()->{ref_id}{ $a->source_ref_id }++;
-      $use_ref_id = 1 if ( !defined $use_ref_id );
+      $use_ref_id = 1;
     }
+    $use_id         = 1 if ( defined $a->id );
+    $use_source_ref = 1 if ( defined $a->source_ref );
   }
+  $self->use_units($use_units);
+  $self->use_uri($use_uri);
+  $self->use_ref_id($use_ref_id);
+  $self->use_source_ref($use_source_ref);
+  $self->use_id($use_id);
 
-  $self->use_units($use_units) if $use_units;
-  $self->use_uri($use_uri) if $use_uri;
-  $self->use_ref_id($use_ref_id) if $use_ref_id;
-  
   my %mashed_terms;
-  
+
   for my $c ( $self->categories ) {
     my %term_count = %{ $self->term_count()->{$c} };
     my %term_mash;
 
     for my $k ( keys %term_count ) {
-      if (!exists $mashed_terms{$k}){
+      if ( !exists $mashed_terms{$k} ) {
+
         #mash term
         $mashed_terms{$k} = lc($k);
-        $mashed_terms{$k} =~ s/\W//g;# remove anything that isn't a-z,1-0,_
+        $mashed_terms{$k} =~ s/\W//g;    # remove anything that isn't a-z,1-0,_
       }
       $term_mash{ $mashed_terms{$k} }++;
     }
-    
+
     for my $k ( keys %term_count ) {
       if ( $term_mash{ $mashed_terms{$k} } > 1 ) {
         $self->probable_duplicates()->{$c}{$k} = $k;
