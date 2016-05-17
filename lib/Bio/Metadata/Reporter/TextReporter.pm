@@ -79,8 +79,9 @@ sub _print {
       my $term_id = join( $sep, grep {$_} map { $_->id } @{ $o->attributes } );
       my $units = join( $sep, grep {$_} map { $_->units } @{ $o->attributes } );
 
+      my $ent_id = ($o->entity) ? $o->entity->id : '';
 
-      print $outfh join( $sep, $o->entity->id, $o->outcome, $msg, $attr, $val, $units, $src_ref, $term_id) . $/;
+      print $outfh join( $sep, $ent_id , $o->outcome, $msg, $attr, $val, $units, $src_ref, $term_id) . $/;
     }
   }
 }
