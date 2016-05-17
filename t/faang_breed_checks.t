@@ -40,13 +40,13 @@ sub test_validator {
   );
 
   my @valid_values = (
-   [ 'Charolais',                                           'LBO_0000073' ],
-   [ 'Charolais,Holstein',                                  'LBO_0001036' ],
-   [ 'Charolais, Holstein',                                 'LBO_0001036' ],
-   [ 'Charolais sire x Holstein dam',                       'LBO_0001036' ],
-   [ '(Charolais sire x Holstein dam) sire x Holstein dam', 'LBO_0001036' ],
-   [ 'Holstein sire x (Charolais sire x Holstein dam) dam', 'LBO_0001036' ],
-   [ 'Texel sire x Scottish Blackface dam',                 'LBO_0001041' ],
+    [ 'Charolais',                                           'LBO_0000073' ],
+    [ 'Charolais,Holstein',                                  'LBO_0001036' ],
+    [ 'Charolais, Holstein',                                 'LBO_0001036' ],
+    [ 'Charolais sire x Holstein dam',                       'LBO_0001036' ],
+    [ '(Charolais sire x Holstein dam) sire x Holstein dam', 'LBO_0001036' ],
+    [ 'Holstein sire x (Charolais sire x Holstein dam) dam', 'LBO_0001036' ],
+    [ 'Texel sire x Scottish Blackface dam',                 'LBO_0001041' ],
   );
 
   for my $val (@valid_values) {
@@ -70,7 +70,8 @@ sub test_validator {
     ,                                               #should just be a list
     [ 'Holstein sire x Holstein dam', 'LBO_0001036' ]
     ,    #should just be a single value
-    [ 'Texel Sire x Scottish Blackface Dam',                 'LBO_0001041' ] #should have 
+    [ 'Texel Sire x Scottish Blackface Dam', 'LBO_0001041' ],
+    [ 'Texel sire x Scottish Blackface dam', 'LBO_1111111' ],
   );
   for my $val (@invalid_values) {
     my $a = Bio::Metadata::Attribute->new(
@@ -239,13 +240,16 @@ sub lexer_tests {
     [ 'Criollo', '(Uruguay)', 'sire', 'x', 'breed', 'b', 'dam' ],
     'lexer test breed with brackets in the name'
   );
-  
-  my $unbalanced_text = 'BreedA sire x ((BreedA sire x BreedB dam) dam';
+
+  my $unbalanced_text     = 'BreedA sire x ((BreedA sire x BreedB dam) dam';
   my @unbalanced_text_out = $parser->_lexer($unbalanced_text);
   is_deeply(
-  \@unbalanced_text_out,
-  ['BreedA','sire','x','(','(','BreedA','sire','x','BreedB', 'dam',')', 'dam'],
-  'lexer test with unbalanced brackets'
+    \@unbalanced_text_out,
+    [
+      'BreedA', 'sire', 'x',      '(',   '(', 'BreedA',
+      'sire',   'x',    'BreedB', 'dam', ')', 'dam'
+    ],
+    'lexer test with unbalanced brackets'
   );
-  
+
 }

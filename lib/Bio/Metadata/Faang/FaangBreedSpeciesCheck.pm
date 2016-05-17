@@ -131,12 +131,11 @@ sub check_entity {
   my $outcome =
     Bio::Metadata::Validate::ValidationOutcome->new( attributes => $breed_attrs,
     );
- 
 
   if (@mismatched_breeds) {
     $pt->term_iri('http://purl.obolibrary.org/obo/LBO_0000000');
     @mismatched_breeds =
-      map { $self->ols_lookup->find_match( $_, $pt, 0 ) }
+      grep {$_} map { $self->ols_lookup->find_match( $_, $pt, 0 ) }
       @mismatched_breeds;    #get terms
     @mismatched_breeds =
       map { $_->{label} . ' (' . $_->{short_form} . ')' }
@@ -155,7 +154,7 @@ sub check_entity {
     $outcome->outcome('pass');
   }
 
-  if ($outcome->outcome ne 'pass'){
+  if ( $outcome->outcome ne 'pass' ) {
     push @outcomes, $outcome;
   }
   return \@outcomes;
