@@ -35,7 +35,7 @@ has description => (
 has name => (
   is      => 'rw',
   isa     => 'Str',
-  default => 'Childspecies/Parentsspecies',
+  default => 'Child/parents species',
 );
 
 #must consume after declaring attribute that satisfies requirement for 'description'
