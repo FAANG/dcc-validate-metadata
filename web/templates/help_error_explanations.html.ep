@@ -2,7 +2,7 @@
 <h1>Help <small>Error explanations</small></h1>
 <p>This page documents the error messages produced when using the FAANG <%= link_to 'validation service' => '/validate/'%>.</p>
 <p>Please also consult the latest sample and experiment rules located on a <%= link_to 'separate page' => '/rule_sets/' %>.</p>
-<p>If you have any queries about the errors please contact the faang-dcc <a href="mailto:<%= $contact_email %>"><%= $contact_email %>.</p>
+<p>If you have any queries about the errors please contact <a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>.</p>
 <h2>
   General errors </h2>
 <p>
@@ -10,13 +10,12 @@
     "no value provided"
   </strong>
 </p>
-<p>Missing value for required field.  If you have problems supplying a value for a required field please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>).  For a list of required fields please see <%= link_to 'the rule sets' => '/rule_sets/' %>.
+<p>Missing value for required field.  If you have problems supplying a value for a required field please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>).  For a list of required fields please see the <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.
 </p>
 <p>
   <strong>"no text provided"</strong>
 </p>
-<p>This field requires you to supply text.  Please see <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p> for guidance.<strong>
-    <br/>
+<p>This field requires you to supply text.  Please see <%= link_to 'FAANG rule sets' => '/rule_sets/' %> for guidance.
   </strong>
 </p>
 <p>
@@ -102,13 +101,13 @@
       e.g. for material field: "value is not in list of valid values: 
     
   organism,tissue specimen,cell specimen,pool of specimens,cell culture"</p>
-<p>The value you have provided is not in the list of valid values, please select one of the valid values shown, or contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>) if you do not feel these are appropriate for your data.</p>
+<p>The value you have provided is not in the list of valid values, please select one of the valid values shown, or contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>) if you do not feel these are appropriate for your data.</p>
 <p>
   <strong>
     "mandatory attribute not present"
   </strong>
 </p>
-<p>Missing value for mandatory field.  If you have problems supplying a value for a mandatory field please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>).  For a list of mandatory fields please see <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
+<p>Missing value for mandatory field.  If you have problems supplying a value for a mandatory field please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>).  For a list of mandatory fields please see <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
 </p>
 <p>
   <strong>
@@ -123,7 +122,7 @@
 <p>
   <strong style="line-height: 1.42857;">"multiple entries for attribute present"</strong>
 </p>
-<p>You have supplied multiple entires for an attribute where only one is accepted.  Please only supply a single attribute, contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>) for more informaion.</p>
+<p>You have supplied multiple entires for an attribute where only one is accepted.  Please only supply a single attribute, contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>) for more informaion.</p>
 <p>
   <strong>
     "value is not a number"
@@ -231,14 +230,14 @@
     "value and ID required"
   </strong>
 </p>
-<p>It is mandatory to enter both a value and ID for these fields.  Please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index">http://www.ebi.ac.uk/ols/index' %>.
+<p>It is mandatory to enter both a value and ID for these fields.  Please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index' %>.
 </p>
 <p>
   <strong>
     "value required"
   </strong>
 </p>
-<p>Missing value for required field.  If you have problems supplying a value for a required field please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>).  For a list of required fields please see <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
+<p>Missing value for required field.  If you have problems supplying a value for a required field please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>).  For a list of required fields please see <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
 </p>
 <p>
   <strong>
@@ -254,7 +253,7 @@
     "value is not a valid term"
   </strong>
 </p>
-<p>This is not a valid ontology term, please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index">http://www.ebi.ac.uk/ols/index' %>.
+<p>This is not a valid ontology term, please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index' %>.
 </p>
 <p>
   <strong>
@@ -262,11 +261,11 @@
   </strong>
 </p>
 <p>e.g. "value (liver) does not precisely match label (kidney) for term<span style="color: rgb(0,51,102);"> UBERON_0002113"</p>
-<p>Please check the precise wording of the relevant ontology in OLS <a href="http://www.ebi.ac.uk/ols/index">http://www.ebi.ac.uk/ols/index</a>.  It is acceptable to use a shortening for the attribute name, but you should ensure that it matches the selected ontology term and there is not a more appropriate ontology available.</p>
+<p>Please check the precise wording of the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index' %>.  It is acceptable to use a shortening for the attribute name, but you should ensure that it matches the selected ontology term and there is not a more appropriate ontology available.</p>
 <p>
   <strong>"URI is not for a valid term"</strong>
 </p>
-<p>The supplied URI does not link to a valid ontology term, please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index">http://www.ebi.ac.uk/ols/index' %>.
+<p>The supplied URI does not link to a valid ontology term, please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index' %>.
 </p>
 <h2>
   Relationships (child of, derived from)
@@ -277,7 +276,7 @@
   </strong>
 </p>
 <p>
-  The supplied entity, either internal to your spreadsheet or external to the BioSamples database could not be found, please check the ID.  Please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>) for more information.
+  The supplied entity, either internal to your spreadsheet or external to the BioSamples database could not be found, please check the ID.  Please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>) for more information.
 </p>
 <p>
   <strong>
@@ -295,7 +294,7 @@
 <p>
   
     
-      The supplied entity, either internal to your spreadsheet or external to the BioSamples database does not match condition.  Please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>) for more information.
+      The supplied entity, either internal to your spreadsheet or external to the BioSamples database does not match condition.  Please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>) for more information.
     
   
   <strong>
@@ -347,9 +346,7 @@
   </strong>
 </p>
 <p>
-  <strong>
     e.g. "uri scheme is not supported. It is telnet but only http, https, ftp, mailto are accepted"
-  </strong>
 </p>
 <p>
   Please check the supplied URI as only http, https, ftp, mailto are accepted by the validator.
