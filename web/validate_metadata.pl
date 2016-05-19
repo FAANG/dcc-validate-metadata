@@ -69,6 +69,7 @@ my %help_pages = (
   'SampleTab conversion' => 'sample_tab',
   'Rule sets'            => 'rule_sets',
   'Validation'           => 'validation',
+  'Error explanations'   => 'error_explanations',
   'How to use this site' => 'how_to'
 );
 

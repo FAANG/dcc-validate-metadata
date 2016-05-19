@@ -1,7 +1,7 @@
 % layout 'layout', title => 'Help: Error explanations';
 <h1>Help <small>Error explanations</small></h1>
 <p>This page documents the error messages produced when using the FAANG <%= link_to 'validation service' => '/validate/'%>.</p>
-<p>Please also consult the latest sample and experiment rules located on a <%= link_to 'separate page' => '/rule_sets/' %>.</p>
+<p>Please also consult the latest <%= link_to 'sample and experiment rules' => '/rule_sets/' %>.</p>
 <p>If you have any queries about the errors please contact <a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>.</p>
 <h2>
   General errors </h2>
@@ -136,8 +136,7 @@
 </h2>
 <p>
   <strong>
-    "<strong>
-        Date format in units is not understood by the validator...
+    "<strong>Date format in units is not understood by the validator...
       </strong>"
   </strong>
 </p>
