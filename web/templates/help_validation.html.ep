@@ -7,10 +7,8 @@
   <%= link_to 'separate page' => '/rule_sets/' %>.
 </p>
 <p>
-  The <%= link_to 'validation' => '/validate/' %> page will provide a number
-  of different errors and warnings to investigate.  A list of the different
-  warnings and explanations on possible fixes are described on a 
-  <%= link_to 'separate page' => '/error_explanations/' %>.
+  A list of the different warnings and explanations on possible fixes are 
+  described on a <%= link_to 'separate page' => '/help/error_explanations/' %>.
 </p>
 <p>
   Select a metadata file to upload, choose the rule set to apply and choose an

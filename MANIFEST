@@ -137,6 +137,7 @@ web/templates/exception.html.ep
 web/templates/footer.html.ep
 web/templates/header.html.ep
 web/templates/help.html.ep
+web/templates/help_error_explanations.html.ep
 web/templates/help_how_to.html.ep
 web/templates/help_rest.html.ep
 web/templates/help_rule_sets.html.ep
