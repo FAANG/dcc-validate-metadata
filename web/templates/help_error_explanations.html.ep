@@ -1,0 +1,379 @@
+% layout 'layout', title => 'Help: Error explanations';
+<h1>Help <small>Error explanations</small></h1>
+<p>This page documents the error messages produced when using the FAANG <%= link_to 'validation service' => '/validate/'%>.</p>
+<p>Please also consult the latest sample and experiment rules located on a <%= link_to 'separate page' => '/rule_sets/' %>.</p>
+<p>If you have any queries about the errors please contact the faang-dcc <a href="mailto:<%= $contact_email %>"><%= $contact_email %>.</p>
+<h2>
+  General errors </h2>
+<p>
+  <strong>
+    "no value provided"
+  </strong>
+</p>
+<p>Missing value for required field.  If you have problems supplying a value for a required field please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>).  For a list of required fields please see <%= link_to 'the rule sets' => '/rule_sets/' %>.
+</p>
+<p>
+  <strong>"no text provided"</strong>
+</p>
+<p>This field requires you to supply text.  Please see <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p> for guidance.<strong>
+    <br/>
+  </strong>
+</p>
+<p>
+  <strong>
+    "no units provided"
+  </strong>
+</p>
+<p>
+  This field requires you to supply an associated value in the units field, e.g. for Birth date the Unit would be "YYYY-MM-DD" or "YYYY-MM" or "YYYY".   For a list of units for different fields please see <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
+  
+</p>
+<p>
+  <strong>
+    
+      <strong>
+        "no units provided, should be one of these..."
+      </strong>
+    
+  </strong>
+</p>
+<p>
+  
+    e.g. 
+        "no units provided, should be one of these:YYYY-MM-DD,YYYY-MM,YYYY (animal rule group)"
+</p>
+<p>
+  
+    
+      This field requires you to supply an associated value in the units field, e.g. for Birth date the Unit would be "YYYY-MM-DD" or "YYYY-MM" or "YYYY".   For a list of units for different fields please see 
+      
+        
+          <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
+        
+      
+    
+  
+</p>
+<p>
+  <strong>
+    
+      <strong>
+        "units are not in list of valid units..."
+      </strong>
+    
+  </strong>
+</p>
+<p>
+  
+    e.g. 
+        "u
+            nits are not in list of valid units
+          :YYYY-MM-DD,YYYY-MM,YYYY (animal rule group)"
+      
+    
+  
+</p>
+<p>
+  
+    
+      
+        This field requires you to supply an accepted value in the units field, e.g. for Birth date this would throw an error if you used a different date format such as "DD-MM-YY" the Unit should instead be "YYYY-MM-DD" or "YYYY-MM" or "YYYY".   For a list of units for different fields please see 
+      
+      
+        
+          <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
+        
+      
+    
+  
+</p>
+<p>
+  <strong>
+    
+      <strong>
+        "value is not in list of valid values...:"
+      </strong>
+    
+  </strong>
+</p>
+<p>
+  
+    
+      e.g. for material field: "value is not in list of valid values: 
+    
+  organism,tissue specimen,cell specimen,pool of specimens,cell culture"</p>
+<p>The value you have provided is not in the list of valid values, please select one of the valid values shown, or contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>) if you do not feel these are appropriate for your data.</p>
+<p>
+  <strong>
+    "mandatory attribute not present"
+  </strong>
+</p>
+<p>Missing value for mandatory field.  If you have problems supplying a value for a mandatory field please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>).  For a list of mandatory fields please see <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
+</p>
+<p>
+  <strong>
+    "recommended attribute not present"
+  </strong>
+</p>
+<p>
+  This is a recommended field so please supply a value if possible.  Otherwise this field can pass if one of the following terms are used 
+  <span style="line-height: 1.42857;">'not collected' (i.e. will always be missing, will still give warning), 
+  <span style="line-height: 1.42857;">'not provided' (i.e. may be added later, will still give warning), restricted access or not applicable. For a list of recommended fields please see <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
+</p>
+<p>
+  <strong style="line-height: 1.42857;">"multiple entries for attribute present"</strong>
+</p>
+<p>You have supplied multiple entires for an attribute where only one is accepted.  Please only supply a single attribute, contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>) for more informaion.</p>
+<p>
+  <strong>
+    "value is not a number"
+  </strong>
+</p>
+<p>
+  The value entered for this field must be a number.
+</p>
+<h2>
+  Dates
+</h2>
+<p>
+  <strong>
+    "<strong>
+        Date format in units is not understood by the validator...
+      </strong>"
+  </strong>
+</p>
+<p>
+  e.g. "Date format in units is not understood by the validator. Got DD, can accept:YYYY-MM-DD,YYYY-MM,"YYYY (animal rule group)
+</p>
+<p>
+  
+    
+      
+        This field requires you to supply an accepted date units field. The Unit should instead be "YYYY-MM-DD" or "YYYY-MM" or "YYYY".   For a list of units for different fields please see 
+      
+      
+        
+          <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
+        
+      
+    
+  
+</p>
+<p>
+  <strong>
+    "Date does not match the expected format..."
+  </strong>
+</p>
+<p>
+  
+    e.g. "Date 16-05-17 does not match the expected format YYYY-MM-DD"
+  
+</p>
+<p>
+  Change the supplied date to match the expected format that you have supplied in the unit column.
+</p>
+<p>
+  <strong>
+    "Date is not a valid date"
+  </strong>
+</p>
+<p>e.g. "Date 2016-13-39 is not a valid date
+</p>
+<p>Make sure your date is valid.  This error occurs if you have supplied an impossible date, invalid month or day.</p>
+<h2>
+  Breeds
+</h2>
+<p>
+  <strong>"These breeds do not match the animal species..."</strong>
+</p>
+<p>e.g. These breeds do not match the animal species (Gallus gallus): Angus, Hereford.</p>
+<p>At least one supplied breed is not associated with the supplied species, please consult the <%= link_to 'Livestock Breed Ontology' => 'http://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct associations.
+</p>
+<p>
+  <strong>
+    "a crossbreed is expected..."
+  </strong>
+</p>
+<p>"a crossbreed is expected, but breed LBO_000043 (Bluefaced Leicester) does not match the pattern '*crossbreed'"</p>
+<p>In the breed column you have written what looks like a crossbreed entry, but you have not selected one of the crossbreed ontology terms, for a list of valid crossbreed terms please see the <%= link_to 'Livestock Breed Ontology' => 'http://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %>.</p>
+</p>
+<p>
+  <strong>
+    "breed name does not seem consistent with ID"
+  </strong>
+</p>
+<p>
+  Please check the spelling of the breed term you have provided.  Please consult the <%= link_to 'Livestock Breed Ontology' => 'http://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct spellings 
+</p>
+<p>
+  <strong>
+    "could not parse breed"
+  </strong>
+</p>
+<p>Error in parsing breed field, it should look something like "Scottish Blackface" or "Texel sire x Scottish Blackface dam", please consult the <%= link_to 'Livestock Breed Ontology' => 'http://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct associations.
+</p>
+<p>
+  <strong>
+    "cannot find breed in ontology"
+  </strong>
+</p>
+<p>
+  "cannot find breed 'purple pig' in ontology"
+</p>
+<p>
+  The supplied breed could not be found in the LBO ontology.  Please consult the <%= link_to 'Livestock Breed Ontology' => 'http://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct associations.
+</p>
+<h2>
+  Ontologies
+</h2>
+<p>
+  <strong>
+    "value and ID required"
+  </strong>
+</p>
+<p>It is mandatory to enter both a value and ID for these fields.  Please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index">http://www.ebi.ac.uk/ols/index' %>.
+</p>
+<p>
+  <strong>
+    "value required"
+  </strong>
+</p>
+<p>Missing value for required field.  If you have problems supplying a value for a required field please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>).  For a list of required fields please see <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
+</p>
+<p>
+  <strong>
+    "term is not a descendent of a valid ancestor"
+  </strong>
+</p>
+<p>
+  The ontology term that you have selected is not acceptable in this instance, the ontology must be from an accepted section defined as descendants of a particular ancestral ontology term, please refer to the rules located at for guidance on the acceptable ontology sections for this field <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
+  
+</p>
+<p>
+  <strong>
+    "value is not a valid term"
+  </strong>
+</p>
+<p>This is not a valid ontology term, please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index">http://www.ebi.ac.uk/ols/index' %>.
+</p>
+<p>
+  <strong>
+    "value does not precisely match label for term..."
+  </strong>
+</p>
+<p>e.g. "value (liver) does not precisely match label (kidney) for term<span style="color: rgb(0,51,102);"> UBERON_0002113"</p>
+<p>Please check the precise wording of the relevant ontology in OLS <a href="http://www.ebi.ac.uk/ols/index">http://www.ebi.ac.uk/ols/index</a>.  It is acceptable to use a shortening for the attribute name, but you should ensure that it matches the selected ontology term and there is not a more appropriate ontology available.</p>
+<p>
+  <strong>"URI is not for a valid term"</strong>
+</p>
+<p>The supplied URI does not link to a valid ontology term, please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index">http://www.ebi.ac.uk/ols/index' %>.
+</p>
+<h2>
+  Relationships (child of, derived from)
+</h2>
+<p>
+  <strong>
+    "No entity found"
+  </strong>
+</p>
+<p>
+  The supplied entity, either internal to your spreadsheet or external to the BioSamples database could not be found, please check the ID.  Please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>) for more information.
+</p>
+<p>
+  <strong>
+    
+      <strong>
+        
+          <strong>
+            "referenced entity does not match condition"
+          </strong>
+        
+      </strong>
+    
+  </strong>
+</p>
+<p>
+  
+    
+      The supplied entity, either internal to your spreadsheet or external to the BioSamples database does not match condition.  Please contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %>) for more information.
+    
+  
+  <strong>
+    
+      <strong>
+        
+          <strong>
+            
+              <br/>
+            
+          </strong>
+        
+      </strong>
+    
+  </strong>
+</p>
+<p>
+  <strong>
+    
+      <strong>
+        "The species of the child does not match the species of the parents"
+      </strong>
+    
+  </strong>
+</p>
+<p>
+  e.g. 'The species of the child (Sus scrofa) does not match the species of the parents: Sus scrofa, Gallus gallus'
+</p>
+<p>Check the species of the entitities listed in the child of column match the species of the sample.</p>
+<h2>
+  uri schemes
+</h2>
+<p>
+  <strong>
+    "value is not a URI"
+  </strong>
+</p>
+<p>
+  e.g. "value is not a URI (Derived from the purified cells rule group)"
+  
+</p>
+<p>
+  Check that your field is correctly formed, for example it needs to start with a valid URI such as https://"
+  
+</p>
+<p>
+  <strong>
+    "uri scheme is not supported..."
+  </strong>
+</p>
+<p>
+  <strong>
+    e.g. "uri scheme is not supported. It is telnet but only http, https, ftp, mailto are accepted"
+  </strong>
+</p>
+<p>
+  Please check the supplied URI as only http, https, ftp, mailto are accepted by the validator.
+</p>
+<p>
+  <strong>
+    "value and uri required"
+  </strong>
+</p>
+<p>
+  You have not supplied a value and uri for this field, please consult the rules located at <%= link_to 'FAANG rule sets' => '/rule_sets/' %>.</p>
+  
+</p>
+<p>
+  <strong>
+    "uri is not valid"
+  </strong>
+</p>
+<p>
+  Please check the supplied URI as it does not appear to be in a valid form.
+  <strong>
+    
+      <br/>
+    
+  </strong>
+</p>
+<p> </p>

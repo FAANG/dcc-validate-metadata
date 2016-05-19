@@ -7,6 +7,12 @@
   <%= link_to 'separate page' => '/rule_sets/' %>.
 </p>
 <p>
+  The <%= link_to 'validation' => '/validate/' %> page will provide a number
+  of different errors and warnings to investigate.  A list of the different
+  warnings and explanations on possible fixes are described on a 
+  <%= link_to 'separate page' => '/error_explanations/' %>.
+</p>
+<p>
   Select a metadata file to upload, choose the rule set to apply and choose an
   output format - Web page or Excel are most likely to be useful. Either of
   these will give you a table of all the entities in your input file, with a
