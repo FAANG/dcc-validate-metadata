@@ -238,8 +238,7 @@ sub handle_unexpected_attributes {
   ATTR_NAME: for my $attr_name ( keys %$organised_attributes ) {
     
     my $unexpected_attributes = $organised_attributes->{$attr_name};
-    use Data::Dumper;
-    print STDERR Dumper($unexpected_attributes) if ($attr_name eq 'BioSamples release date');
+
     my $num_validatable_attrs = scalar (grep {$_->allow_further_validation} @$unexpected_attributes);
 
     if ($num_validatable_attrs == 0) {
@@ -293,11 +292,9 @@ sub validate_attributes_with_rule {
   my $type_validator = $self->get_type_validator( $rule->type );
   croak( "No type validator for " . $rule->type )
     if ( !$type_validator );
-
-  my @validatable_attributes = grep {$_->allow_further_validation} @$attrs;
   
   push @rule_outcomes,
-    $self->requirement_validator->validate_requirements( $rule, $attrs ) if (@validatable_attributes);
+    $self->requirement_validator->validate_requirements( $rule, $attrs );
 
   for my $a (@$attrs) {
     if ( $a->allow_further_validation ) {
