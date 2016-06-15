@@ -164,7 +164,7 @@ sub test_fail_biosamples {
       },    #pig biosamples parent
       {
         name       => 'Child Of',
-        value      => 'SAMEA4447355',
+        value      => 'SAMEA4448136',
       },    #chicken biosamples parent
     ]
   );
