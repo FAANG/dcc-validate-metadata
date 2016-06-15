@@ -54,7 +54,16 @@ my $lookup = Bio::Metadata::Validate::Support::BioSDLookup->new();
 
         'value' => 'DT40 cell, 4hr, 2ug/ml, replicate 1',
         'name'  => 'Sample_source_name',
-
+      },
+      {
+        'value' => "2011-07-05T23:00:00+00:00",
+        'name' => 'BioSamples release date',
+        'allow_further_validation' => undef,
+      },
+      {
+        'value' => "2014-02-03T19:06:04+00:00",
+        'name' => 'BioSamples update date',
+        'allow_further_validation' => undef,
       }
     ]
   );

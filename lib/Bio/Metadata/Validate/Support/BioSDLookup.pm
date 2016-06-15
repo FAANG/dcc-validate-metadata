@@ -90,12 +90,28 @@ sub convert_biosample_to_entity {
   }
 
   for my $df ( @{ $sample->derived_from } ) {
-    $entity->add_attribute(Bio::Metadata::Attribute->new(
-      name  => 'Derived from',
-      value => $df->id,
-    ));
+    $entity->add_attribute(
+      Bio::Metadata::Attribute->new(
+        name  => 'Derived from',
+        value => $df->id,
+      )
+    );
   }
 
+  $entity->add_attribute(
+    Bio::Metadata::Attribute->new(
+      name                     => 'BioSamples release date',
+      value                    => $sample->submission_release_date,
+      allow_further_validation => undef,
+    )
+  );
+  $entity->add_attribute(
+    Bio::Metadata::Attribute->new(
+      name                     => 'BioSamples update date',
+      value                    => $sample->submission_update_date,
+      allow_further_validation => undef,
+    )
+  );
 
   return $entity;
 }
