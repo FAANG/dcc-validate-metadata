@@ -229,7 +229,7 @@ sub prepare_warnings {
 			$msg=~s/^\s\///;
 			$msg=~s/\[\w+\sbranch\:\d+\][\s|\)]//;
 			my $name=$1 if $msg=~/^(\w+)\:\s.+/;
-			die("[ERROR] Attribute was not found") if !$name;
+			die("[ERROR] Attribute was not found in $msg") if !$name;
 			push @warnings,&E($name,$msg);
 		}
     } else {
