@@ -135,13 +135,12 @@ sub check_entity {
   if (@mismatched_breeds) {
     $pt->term_iri('http://purl.obolibrary.org/obo/LBO_0000000');
     @mismatched_breeds =
-      grep {$_} map { $self->ols_lookup->find_match( $_, $pt, 0 ) }
+      grep { $_ } map { $self->ols_lookup->find_match( $_, $pt, 0 ) }
       @mismatched_breeds;    #get terms
     @mismatched_breeds =
       map { $_->{label} . ' (' . $_->{short_form} . ')' }
       @mismatched_breeds;    #make text from them
-    @mismatched_breeds =
-      sort keys { map { $_ => 1 } @mismatched_breeds };    #uniq the text
+    @mismatched_breeds = uniq(@mismatched_breeds);
 
     my $species = $species_match->{label};
 
@@ -158,6 +157,11 @@ sub check_entity {
     push @outcomes, $outcome;
   }
   return \@outcomes;
+}
+
+sub uniq {
+  my %h = map { $_ => 1 } @_;
+  return sort keys %h;
 }
 
 sub choose_species_breed_tree {
