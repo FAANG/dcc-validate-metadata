@@ -222,14 +222,13 @@ sub prepare_warnings {
 
 	if ($w->path=~/SELECTOR/) {
 		foreach my $msg (@a) {
-			next if $msg=~/^oneOf failed\:/;
+			next if $msg=~/oneOf failed\:\s\(/;
 			my $branch= $1 if $msg=~/branch\:(\d+)\]/;
 			next if $branch && exists $notbranch{$branch};
 			$seen=1;
 			$msg=~s/^\s\///;
 			$msg=~s/\[\w+\sbranch\:\d+\][\s|\)]//;
 			my $name=$1 if $msg=~/^(\w+)\:\s.+/;
-      print STDERR $msg.$/;
 			die("[ERROR] Attribute was not found in '$msg'") if !$name;
 			push @warnings,&E($name,$msg);
 		}
