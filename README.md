@@ -83,7 +83,7 @@ The web application uses [Mojolicious](http://mojolicious.org/)  and should be c
 
 Installing the dependencies and running [web/dev.sh](https://github.com/FAANG/validate-metadata/blob/master/web/dev.sh) should be enough to give you a web server to test with.
 
-In production, we use an Apache2 server and Plack, with  [carton](http://search.cpan.org/~miyagawa/Carton-v1.0.28/lib/Carton.pm) to manage dependencies. The apache config looks a lot like this: 
+In production, we use an Apache2 server and Plack, with  [carton](http://search.cpan.org/~miyagawa/Carton-v1.0.28/lib/Carton.pm) to manage dependencies. The apache server config looks a lot like this: 
 
 
      PerlSwitches -I/path/to/validate-metadata/local/lib/perl5
@@ -111,7 +111,7 @@ In production, we use an Apache2 server and Plack, with  [carton](http://search.
       
       </VirtualHost>
 
-
+Application configuration is via a [mojolicious config file](https://github.com/FAANG/validate-metadata/blob/master/web/validate_metadata.conf). This controls application branding and which rule sets are available.
 
 
 
