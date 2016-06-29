@@ -54,6 +54,11 @@ At present, these types are supported:
 
 Further types can be supported by creating a validator module that fulfils the [AttributeValidatorRole](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Validate/AttributeValidatorRole.pm), adding a name for the type to the `Bio::Metadata::Rules::Rule::TypeEnum` in [Bio::Metadata::Types](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Types.pm), and updating the `type_validator` mapping in [Bio::Metadata::Validate::EntityValidator](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Validate/EntityValidator.pm)
 
+In addition to per-attribute validation, it is sometimes necessary to make [consistency checks](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Consistency/ConsistencyCheckRole.pm) across multiple attributes. We have these FAANG-specific checks:
+
+ * Ensure that an animal breed is consistent with its species ([Bio::Metadata::Faang::FaangBreedSpeciesCheck](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Faang/FaangBreedSpeciesCheck.pm))
+ * Ensure that an animals species is consistent with that of its parents ([Bio::Metadata::Faang::FaangChildOfSpeciesCheck](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Faang/FaangChildOfSpeciesCheck.pm))
+
 Rule sets should be written in JSON. JSON files can be loaded as rules sets to test validity using [scripts/load\_rule\_set.pl](https://github.com/FAANG/validate-metadata/blob/master/scripts/load_rule_set.pl). 
 
 Validating entities with a rule set produces a set of [ValidationOutcomes](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Validate/ValidationOutcome.pm). Outcomes have a status (*pass*, *warning* or *error*) and a message explaining the problem if that status is not *pass*. The overall outcome for an entity is the worst outcome produced for its attributes.
