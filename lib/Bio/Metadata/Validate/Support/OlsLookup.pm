@@ -22,6 +22,7 @@ use Try::Tiny;
 use Carp;
 use List::Util qw(none any);
 use Cache::LRU;
+use Data::Dumper;
 
 has 'base_url' => (
   is       => 'rw',
@@ -79,13 +80,20 @@ sub find_match {
     return $cache_value;
   }
   else {
+    print STDOUT join( "\t",
+      'L82', $query,
+      $permitted_term->term_iri(),
+      $permitted_term->include_root )
+      . $/;
     my $value = $self->_find_match( $query, $permitted_term, $exact );
 
-    #OLS loading of ATOL and EOL terms is currently giving IDs like owlATOL_00001
-    if ( !$value
-      && ($permitted_term->ontology_name eq 'ATOL' || $permitted_term->ontology_name eq 'EOL' )
+   #OLS loading of ATOL and EOL terms is currently giving IDs like owlATOL_00001
+    if (
+      !$value
+      && ( $permitted_term->ontology_name eq 'ATOL'
+        || $permitted_term->ontology_name eq 'EOL' )
       && begins_with( $query, $permitted_term->ontology_name )
-    )
+      )
     {
       $value = $self->_find_match( 'owl' . $query, $permitted_term, $exact );
     }
@@ -102,38 +110,101 @@ sub begins_with {
 sub _find_match {
   my ( $self, $query, $permitted_term, $exact ) = @_;
 
-  my @uri_elements = (
+  #initial search for a term
+
+  my @query_uri_elements = (
     $self->base_url,
     '/search?q=',
     uri_escape($query),
     '&exact=',
     $exact ? 'true' : 'false',
     '&groupField=true',
-    '&childrenOf=',
-    uri_escape( $permitted_term->term_iri ),
     '&ontology=',
     lc( $permitted_term->ontology_name ),
     map { '&queryFields=' . uri_escape($_) } $self->all_qfields,
   );
-  my $request_uri = join( '', @uri_elements );
-  my $search_result = $self->request_to_json($request_uri);
 
-  if ( $search_result->{response}{docs} && $search_result->{response}{docs}[0] )
-  {
-    return $search_result->{response}{docs}[0];
+  my $search_result = $self->request_to_json( join( '', @query_uri_elements ) );
+
+  #how many terms did we get back?
+  my $num_found = $search_result->{response}{numFound};
+  if ( $num_found == 0 ) {
+    return '';
   }
 
-  if ( $permitted_term->include_root ) {
-    my $terms = $self->_matching_terms( $permitted_term->ontology_name,
-      $permitted_term->term_iri, 0, 0, 1 );
+  my ($term) = @{ $search_result->{response}{docs} };
+  my $term_ok = 0;
 
-    if ( $terms->[0] && grep { $query eq $terms->[0]{$_} } $self->all_qfields )
-    {
-      return $terms->[0];
+  my @fetch_uri_elements = (
+    $self->base_url, '/ontologies/', lc( $permitted_term->ontology_name ),
+    '/terms?iri=', uri_escape( $term->{iri} )
+  );
+  my $term_records = $self->request_to_json( join( '', @fetch_uri_elements ) );
+
+  # is my term a match for the root?
+  if ( $permitted_term->include_root
+    && $term->{iri} eq $permitted_term->term_iri )
+  {
+    $term_ok = 1;
+  }
+ 
+  #first pass approach - use search to find out if the term is a child of the permitted term
+  if (!$term_ok && $permitted_term->allow_descendants){
+    print STDOUT "CHILD SEARCH$/";
+    my @child_of_search_uri_elements = (
+        $self->base_url,
+        '/search?q=',
+        uri_escape($term->{iri}),
+        '&exact=true',
+        '&groupField=true',
+        '&childrenOf=',
+        uri_escape( $permitted_term->term_iri ),
+        '&ontology=',
+        lc( $permitted_term->ontology_name ),
+        '&queryFields=iri',
+      );
+      
+    my $child_of_search_result = $self->request_to_json(join('',@child_of_search_uri_elements));
+    if ($child_of_search_result->{_embedded}{terms}[0]){
+      $term_ok = 1;
     }
   }
 
-  return '';
+  #second pass approach - scroll through the ancestors of the term you found
+  if ( !$term_ok && $permitted_term->allow_descendants ) {
+    my $ancestors_uri =
+      $term_records->{_embedded}{terms}[0]{_links}{hierarchicalAncestors}{href};
+
+      $ancestors_uri .= '?size=1000';
+
+    while (!$term_ok && defined $ancestors_uri) {
+      my $ancestors_result = $self->request_to_json($ancestors_uri);
+
+      my $ancestor_terms = $ancestors_result->{_embedded}{terms};
+      my ($matching_ancestor) = grep { $_->{iri} eq $permitted_term->term_iri() } @$ancestor_terms;
+      
+      if ($matching_ancestor){
+        $term_ok = 1;
+      }
+      else {
+        $ancestors_uri = $ancestors_result->{_links}{next}{href}; #sets up to check the next page
+      }
+    }
+  }
+
+  if ( $permitted_term->leaf_only
+    && $term_ok
+    && $term_records->{_embedded}{terms}[0]{has_children} eq 'true' )
+  {
+    $term_ok = 0;
+  }
+
+  if ($term_ok) {
+    return $term;
+  }
+  else {
+    return '';
+  }
 }
 
 sub matching_terms {
@@ -234,7 +305,7 @@ sub _uniq_terms {
 
 sub request_to_json {
   my ( $self, $request_uri ) = @_;
-
+  print STDOUT $request_uri.$/;
   my $response = $self->rest_client->GET($request_uri);
 
   if ( $response->responseCode != 200 ) {
