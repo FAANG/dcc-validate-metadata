@@ -80,11 +80,6 @@ sub find_match {
     return $cache_value;
   }
   else {
-    print STDOUT join( "\t",
-      'L82', $query,
-      $permitted_term->term_iri(),
-      $permitted_term->include_root )
-      . $/;
     my $value = $self->_find_match( $query, $permitted_term, $exact );
 
    #OLS loading of ATOL and EOL terms is currently giving IDs like owlATOL_00001
@@ -150,7 +145,7 @@ sub _find_match {
  
   #first pass approach - use search to find out if the term is a child of the permitted term
   if (!$term_ok && $permitted_term->allow_descendants){
-    print STDOUT "CHILD SEARCH$/";
+    
     my @child_of_search_uri_elements = (
         $self->base_url,
         '/search?q=',
@@ -305,7 +300,7 @@ sub _uniq_terms {
 
 sub request_to_json {
   my ( $self, $request_uri ) = @_;
-  print STDOUT $request_uri.$/;
+
   my $response = $self->rest_client->GET($request_uri);
 
   if ( $response->responseCode != 200 ) {
