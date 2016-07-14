@@ -114,7 +114,7 @@ sub test_ancestor_uri_pass {
   my $pass_uri       = 'http://purl.obolibrary.org/obo/UBERON_0002107'; # liver'
   my $expected_label = 'liver';
 
-  my $output = $ols_lookup->find_match( $pass_uri, $pt );
+  my $output = $ols_lookup->find_match( $pass_uri, $pt, 1 );
   is( $output->{label}, $expected_label, "Get match for liver under good uri" );
 }
 
@@ -130,6 +130,6 @@ sub test_ancestor_uri_fail {
   my $fail_uri       = 'http://www.bbc.co.uk/cbeebies';    # not an ontology uri
   my $expected_label = '';
 
-  my $output = $ols_lookup->find_match( $fail_uri, $pt );
+  my $output = $ols_lookup->find_match( $fail_uri, $pt, 1 );
   is( $output, $expected_label, "Get undef for liver under bogus uri" );
 }
