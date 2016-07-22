@@ -20,12 +20,12 @@ use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Types;
 
-has 'name'       => ( is => 'rw', isa => 'Str' );
-has 'value'      => ( is => 'rw', isa => 'Str' );
-has 'units'      => ( is => 'rw', isa => 'Str' );
-has 'uri'        => ( is => 'rw', isa => 'Str' );
-has 'id'         => ( is => 'rw', isa => 'Str' );
-has 'source_ref' => ( is => 'rw', isa => 'Str' );
+has 'name'       => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'value'      => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'units'      => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'uri'        => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'id'         => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'source_ref' => ( is => 'rw', isa => 'Maybe[Str]' );
 
 has 'allow_further_validation' => (
     is      => 'rw',
@@ -34,8 +34,8 @@ has 'allow_further_validation' => (
 );
 
 sub block_further_validation {
-  my ($self) = @_;
-  $self->allow_further_validation(0);
+    my ($self) = @_;
+    $self->allow_further_validation(0);
 }
 
 sub source_ref_id {
@@ -49,12 +49,13 @@ sub to_hash {
     my ($self) = @_;
 
     return {
-        name       => $self->name,
-        value      => $self->value,
-        units      => $self->units,
-        uri        => $self->uri,
-        id         => $self->id,
-        source_ref => $self->source_ref,
+        name                     => $self->name,
+        value                    => $self->value,
+        units                    => $self->units,
+        uri                      => $self->uri,
+        id                       => $self->id,
+        source_ref               => $self->source_ref,
+        allow_further_validation => $self->allow_further_validation,
     };
 }
 
