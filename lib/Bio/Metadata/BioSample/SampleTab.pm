@@ -127,8 +127,7 @@ sub report_msi {
   my $col_sep  = "\t";
   my $line_sep = "\n";
   my $output ="[MSI]$line_sep";
-  my @term_sources;
-  my @persons;
+  my (@term_sources, @persons, @organizations);
 
   my ($seen_submission_version, $seen_submission_ref_layer);
 
@@ -160,6 +159,20 @@ sub report_msi {
            $persons[-1]->{role} = $a->value;
          }
       }
+      elsif ( $a->name =~ /Organization/ ) {
+         if ($a->name eq 'Organization Name'){
+           push @organizations,{name => $a->value, address => '', URI => '', role => ''};
+         }
+         if ($a->name eq 'Organization Address' && @organizations){
+           $organizations[-1]->{address} = $a->value;
+         }
+         if ($a->name eq 'Organization URI' && @organizations){
+           $organizations[-1]->{URI} = $a->value;
+         }
+         if ($a->name eq 'Organization Role' && @organizations){
+           $organizations[-1]->{role} = $a->value;
+         }
+      }
       elsif ( $a->name =~ /Term Source/ ) {
         if ($a->name eq 'Term Source Name'){
           push @term_sources,{name => $a->value, uri => '', version => ''};
@@ -182,6 +195,11 @@ sub report_msi {
   $output .= join($col_sep,'Person First Name',map {$_->{firstname} || ''} @persons).$line_sep;
   $output .= join($col_sep,'Person Email',map {$_->{email} || ''} @persons).$line_sep;
   $output .= join($col_sep,'Person Role',map {$_->{role} || ''} @persons).$line_sep;
+
+  $output .= join($col_sep,'Organization Name',map {$_->{name} || ''} @organizations).$line_sep;
+  $output .= join($col_sep,'Organization Address',map {$_->{address} || ''} @organizations).$line_sep;
+  $output .= join($col_sep,'Organization URI',map {$_->{URI} || ''} @organizations).$line_sep;
+  $output .= join($col_sep,'Organization Role',map {$_->{role} || ''} @organizations).$line_sep;
 
   my @term_sources_used = grep {$self->get_term_source_ref_use($_->{name})} @term_sources;
 
