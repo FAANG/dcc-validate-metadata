@@ -31,7 +31,7 @@ sub validate_attribute {
     }
     elsif ( $attribute->value !~ /^GSB-\d+/ ) {
         $o->outcome('error');
-        $o->message('not a valid submission identified, should be GSB-#, where # is a number of any length');
+        $o->message('not a valid submission identifier, should be GSB-#, where # is a number of any length');
     }
     else {
         $o->outcome('pass');
