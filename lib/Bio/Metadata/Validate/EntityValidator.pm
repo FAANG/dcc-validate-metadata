@@ -42,7 +42,9 @@ use Bio::Metadata::Validate::DateAttributeValidator;
 use Bio::Metadata::Validate::RelationshipValidator;
 use Bio::Metadata::Validate::NcbiTaxonomyValidator;
 use Bio::Metadata::Validate::OntologyAttrNameValidator;
+use Bio::Metadata::Validate::SubmissionsIdentifierValidator
 use Bio::Metadata::Faang::FaangBreedValidator;
+
 
 has 'rule_set' =>
   ( is => 'rw', isa => 'Bio::Metadata::Rules::RuleSet', required => 1 );
@@ -81,6 +83,7 @@ has 'type_validator' => (
       date      => Bio::Metadata::Validate::DateAttributeValidator->new(),
       relationship => Bio::Metadata::Validate::RelationshipValidator->new(),
       ncbi_taxon   => Bio::Metadata::Validate::NcbiTaxonomyValidator->new(),
+      subid => Bio::Metadata::Validate::SubmissionsIdentifierValidator->new(),
       faang_breed  => Bio::Metadata::Faang::FaangBreedValidator->new(),
     };
   },

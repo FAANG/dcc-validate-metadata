@@ -22,7 +22,7 @@ use JSON::PP::Boolean;
 
 enum 'Bio::Metadata::Rules::Rule::TypeEnum', [
   qw(text number enum ontology_uri ontology_text ontology_id uri_value date
-    relationship ncbi_taxon ontology_attr_name faang_breed)
+    relationship ncbi_taxon ontology_attr_name faang_breed subid)
 ];
 enum 'Bio::Metadata::Rules::Rule::MandatoryEnum',
   [qw(mandatory recommended optional)];

@@ -66,7 +66,7 @@ has 'submission_rule_set' => (
             {
               name      => 'Submission Identifier',
               mandatory => 'optional',
-              type      => 'text',
+              type      => 'subid',
             }
           ],
         },
