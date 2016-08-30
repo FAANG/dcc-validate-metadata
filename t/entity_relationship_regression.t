@@ -55,8 +55,10 @@ my $rule_set = Bio::Metadata::Rules::RuleSet->new(
         }
       ],
       consistency_checks => {
-        faang_breed_species_check =>
+        faang_childof_species_check =>
           Bio::Metadata::Faang::FaangChildOfSpeciesCheck->new(),
+        faang_childof_cyclic_check =>
+          Bio::Metadata::Faang::FaangChildOfCyclicCheck->new(),
       },
     }
   ]

@@ -58,6 +58,7 @@ In addition to per-attribute validation, it is sometimes necessary to make [cons
 
  * Ensure that an animal breed is consistent with its species ([Bio::Metadata::Faang::FaangBreedSpeciesCheck](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Faang/FaangBreedSpeciesCheck.pm))
  * Ensure that an animals species is consistent with that of its parents ([Bio::Metadata::Faang::FaangChildOfSpeciesCheck](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Faang/FaangChildOfSpeciesCheck.pm))
+ * Ensure that an animals child is not cyclicly listing the animal as its own child ([Bio::Metadata::Faang::FaangChildOfCyclicCheck](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Faang/FaangChildOfCyclicCheck.pm))
 
 Rule sets should be written in JSON. JSON files can be loaded as rules sets to test validity using [scripts/load\_rule\_set.pl](https://github.com/FAANG/validate-metadata/blob/master/scripts/load_rule_set.pl). 
 

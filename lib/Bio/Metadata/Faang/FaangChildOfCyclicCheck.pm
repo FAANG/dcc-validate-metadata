@@ -12,7 +12,7 @@
    limitations under the License.
 =cut
 
-package Bio::Metadata::Faang::FaangChildOfSpeciesCheck;
+package Bio::Metadata::Faang::FaangChildOfCyclicCheck;
 
 use strict;
 use warnings;
@@ -29,13 +29,13 @@ has description => (
   is  => 'rw',
   isa => 'Str',
   default =>
-'Ensure that the child species is consistent with their parents reported species listed in child of.',
+'Ensure that the parent is not listing the child as its parent.',
 );
 
 has name => (
   is      => 'rw',
   isa     => 'Str',
-  default => 'Child/parents species',
+  default => 'Child/parents ID',
 );
 
 #must consume after declaring attribute that satisfies requirement for 'description'
@@ -52,24 +52,18 @@ sub check_entity {
   my ( $self, $entity, $entities_by_id ) = @_;
   my @outcomes;
 
-  my @all_species;
   my $organised_attr      = $entity->organised_attr;
-  my $child_species_attrs = $organised_attr->{'organism'};
+  my $child_id            = $organised_attr->{'Sample Name'}->[0]->{'value'};
   my $parents_ids         = $organised_attr->{'child of'};
 
-  unless ( $child_species_attrs
-    && scalar(@$child_species_attrs) == 1
-    && $child_species_attrs->[0]->id
-    && $parents_ids
+  unless ( $parents_ids
     && scalar(@$parents_ids) > 0 )
   {
     #not enough information for higher level checks
     return \@outcomes;
   }
 
-  my $child_species = $child_species_attrs->[0]->{'value'};
-  push( @all_species, $child_species );
-  my @parent_species;
+  my @parents_child_of;
 
   foreach my $sample_identifier ( @{$parents_ids} ) {
     my $parent_entity;
@@ -87,27 +81,27 @@ sub check_entity {
 
     if ( defined $parent_entity ) {
       my $parent_organised_attr = $parent_entity->organised_attr;
-      my $parent_species_attrs  = $parent_organised_attr->{'organism'};
+      my $parent_species_attrs  = $parent_organised_attr->{'child of'};
 
-      push( @parent_species, $parent_species_attrs->[0]->{'value'} );
-      push( @all_species,    $parent_species_attrs->[0]->{'value'} );
+      push( @parents_child_of,    $parent_species_attrs->[0]->{'value'} );
     }
   }
 
-  #Get unique species, should be one if parents and child match
-  my @test_if_equal = uniq @all_species;
+
 
   my $outcome =
     Bio::Metadata::Validate::ValidationOutcome->new(
-    attributes => $child_species_attrs, );
+    attributes => $parents_ids, );
   push @outcomes, $outcome;
 
+  my %parents_parents = map { $_ => 1 } @parents_child_of;
+
   #Test if more than one species i.e. child and parent mismatch
-  if ( exists($params{$childof} ) {
+  if ( exists($parents_parents{$child_id } ) {
     $outcome->outcome('error');
     $outcome->message(
-"The species of the child ($child_species) does not match the species of the parents: "
-        . join( ', ', @parent_species ) );
+    "The parent of child ($child_id) lists this child as its own parent: "
+        . join( ', ', @parents_child_of ) );
   }
   else {
     $outcome->outcome('pass');
