@@ -97,7 +97,7 @@ sub check_entity {
   my %parents_parents = map { $_ => 1 } @parents_child_of;
 
   #Test if more than one species i.e. child and parent mismatch
-  if ( exists($parents_parents{$child_id } ) {
+  if ( exists($parents_parents{$child_id} )) {
     $outcome->outcome('error');
     $outcome->message(
     "The parent of child ($child_id) lists this child as its own parent: "

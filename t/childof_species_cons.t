@@ -90,7 +90,7 @@ sub test_pass_biosamples {
   );
 }
 
-sub test_fail_internal { #FIXME
+sub test_fail_internal {
   my $e = Bio::Metadata::Entity->new(
     attributes => [
       {

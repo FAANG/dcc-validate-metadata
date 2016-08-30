@@ -103,7 +103,7 @@ sub check_entity {
   push @outcomes, $outcome;
 
   #Test if more than one species i.e. child and parent mismatch
-  if ( exists($params{$childof} ) {
+  if ( scalar(@test_if_equal) > 1 ) {
     $outcome->outcome('error');
     $outcome->message(
 "The species of the child ($child_species) does not match the species of the parents: "

@@ -33,7 +33,7 @@ has 'consistency_check_lookup' => (
   default => sub {
     return {
       faang_breed_species_check => Bio::Metadata::Faang::FaangBreedSpeciesCheck->new(),
-      faang_childof_species_check => Bio::Metadata::Faang::FaangChildOfSpeciesCheck->new()
+      faang_childof_species_check => Bio::Metadata::Faang::FaangChildOfSpeciesCheck->new(),
       faang_childof_species_check => Bio::Metadata::Faang::FaangChildOfCyclicCheck->new(),
     };
   },
