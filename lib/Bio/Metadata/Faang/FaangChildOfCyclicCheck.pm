@@ -53,11 +53,11 @@ sub check_entity {
   my @outcomes;
 
   my $organised_attr      = $entity->organised_attr;
-  my $child_id            = $organised_attr->{'Sample Name'}->[0]->{'value'};
+  my $child_id            = $entity->{'id'};
   my $parents_ids         = $organised_attr->{'child of'};
 
   unless ( $parents_ids
-    && scalar(@$parents_ids) > 0 )
+    && scalar(@$parents_ids) > 0)
   {
     #not enough information for higher level checks
     return \@outcomes;
@@ -86,8 +86,6 @@ sub check_entity {
       push( @parents_child_of,    $parent_species_attrs->[0]->{'value'} );
     }
   }
-
-
 
   my $outcome =
     Bio::Metadata::Validate::ValidationOutcome->new(
