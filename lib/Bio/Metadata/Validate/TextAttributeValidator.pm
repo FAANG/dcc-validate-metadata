@@ -30,10 +30,15 @@ sub validate_attribute {
         $o->message( 'no text provided, text should be one of the following:'
               . $rule->join_valid_values(',') );
     }
-    elsif ( !$rule->find_valid_value( sub {$attribute->value eq $_} ) ) {
+    elsif ($rule->count_valid_values() > 0) {
+      if ( !$rule->find_valid_value( sub {$attribute->value eq $_} ) ) {
         $o->outcome('error');
         $o->message( 'value is not in list of valid values:'
               . $rule->join_valid_values(',') );
+      }
+      else {
+        $o->outcome('pass');
+      }
     }
     else {
         $o->outcome('pass');
