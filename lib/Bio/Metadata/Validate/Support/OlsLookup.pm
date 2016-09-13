@@ -109,7 +109,7 @@ sub _find_match {
     '&exact=',
     $exact ? 'true' : 'false',
     '&groupField=true',
-    '&childrenOf=',
+    '&allchildrenOf=',
     uri_escape( $permitted_term->term_iri ),
     '&ontology=',
     lc( $permitted_term->ontology_name ),
