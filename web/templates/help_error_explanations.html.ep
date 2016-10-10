@@ -100,7 +100,7 @@
     
       e.g. for material field: "value is not in list of valid values: 
     
-  organism,tissue specimen,cell specimen,pool of specimens,cell culture"</p>
+  organism,specimen from organism,cell specimen,pool of specimens,cell culture"</p>
 <p>The value you have provided is not in the list of valid values, please select one of the valid values shown, or contact the faang-dcc (<a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>) if you do not feel these are appropriate for your data.</p>
 <p>
   <strong>
