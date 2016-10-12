@@ -95,6 +95,36 @@ sub find_match {
   }
 }
 
+sub find_matchnotall {
+  my ( $self, $query, $permitted_term, $exact ) = @_;
+
+  my $pth = $permitted_term->to_hash;
+  my $cache_key =
+    $self->_cache_key( $query, $exact // 0,
+    map { $pth->{$_} } sort keys %$pth );
+
+  my $cache_value = $self->cache->get($cache_key);
+
+  if ( defined $cache_value ) {
+    return $cache_value;
+  }
+  else {
+    my $value = $self->_find_matchnotall( $query, $permitted_term, $exact );
+
+    #OLS loading of ATOL and EOL terms is currently giving IDs like owlATOL_00001
+    if ( !$value
+      && ($permitted_term->ontology_name eq 'ATOL' || $permitted_term->ontology_name eq 'EOL' )
+      && begins_with( $query, $permitted_term->ontology_name )
+    )
+    {
+      $value = $self->_find_matchnotall( 'owl' . $query, $permitted_term, $exact );
+    }
+
+    $self->cache->set( $cache_key, $value );
+    return $value;
+  }
+}
+
 sub begins_with {
   return substr( $_[0], 0, length( $_[1] ) ) eq $_[1];
 }
@@ -110,6 +140,43 @@ sub _find_match {
     $exact ? 'true' : 'false',
     '&groupField=true',
     '&allchildrenOf=',
+    uri_escape( $permitted_term->term_iri ),
+    '&ontology=',
+    lc( $permitted_term->ontology_name ),
+    map { '&queryFields=' . uri_escape($_) } $self->all_qfields,
+  );
+  my $request_uri = join( '', @uri_elements );
+  my $search_result = $self->request_to_json($request_uri);
+
+  if ( $search_result->{response}{docs} && $search_result->{response}{docs}[0] )
+  {
+    return $search_result->{response}{docs}[0];
+  }
+
+  if ( $permitted_term->include_root ) {
+    my $terms = $self->_matching_terms( $permitted_term->ontology_name,
+      $permitted_term->term_iri, 0, 0, 1 );
+
+    if ( $terms->[0] && grep { $query eq $terms->[0]{$_} } $self->all_qfields )
+    {
+      return $terms->[0];
+    }
+  }
+
+  return '';
+}
+
+sub _find_matchnotall {
+  my ( $self, $query, $permitted_term, $exact ) = @_;
+
+  my @uri_elements = (
+    $self->base_url,
+    '/search?q=',
+    uri_escape($query),
+    '&exact=',
+    $exact ? 'true' : 'false',
+    '&groupField=true',
+    '&childrenOf=',
     uri_escape( $permitted_term->term_iri ),
     '&ontology=',
     lc( $permitted_term->ontology_name ),
