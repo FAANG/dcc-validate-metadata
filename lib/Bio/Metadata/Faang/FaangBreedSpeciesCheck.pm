@@ -110,7 +110,7 @@ sub check_entity {
   my @breeds = $b->all_breeds;
   push @breeds, $breed_attrs->[0]->id if $breed_attrs->[0]->id;
 
-  my $species_match = $self->ols_lookup->find_match( $species_attrs->[0]->id,
+  my $species_match = $self->ols_lookup->find_matchnotall( $species_attrs->[0]->id,
     $self->species_permitted_term, 0 );
   return \@outcomes if ( !$species_match );
 
