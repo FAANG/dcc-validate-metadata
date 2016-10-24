@@ -20,28 +20,26 @@ done_testing();
 
 sub test_pass { 
   my $e = Bio::Metadata::Entity->new(
+    id          => 'A',
     attributes => [
       {
-        name       => 'Organism',
-        value      => 'Sus scrofa',
-      },    #pig species
-      {
         name       => 'Child Of',
-        value      => 'PIGPARENT1',
+        value      => 'B',
       },    #pig biosamples parent
     ]
   );
 
   my $pigparent = Bio::Metadata::Entity->new(
+    id          => 'B',
     attributes => [
       {
-        name       => 'Organism',
-        value      => 'Sus scrofa',
-      },    #pig species
+        name       => 'Child Of',
+        value      => 'C',
+      },    #pig biosamples parent
     ]
   );
 
-  my $outcomes = $cons_check->check_entity( {'CHILD1' => $e}, {'PIGPARENT1' => $pigparent});
+  my $outcomes = $cons_check->check_entity( $e, {'B' => $pigparent});
 
   is_deeply(
     $outcomes,
@@ -51,50 +49,44 @@ sub test_pass {
         attributes => $e->get_attribute(0)
         )
     ],
-    'pass for pig child + pig parent internal to submission'
+    'pass for child A with parent B and grandparent C'
   );
 }
 
 sub test_fail {
   my $e = Bio::Metadata::Entity->new(
+    id          => 'A',
     attributes => [
       {
-        name       => 'Organism',
-        value      => 'Sus scrofa',
-      },    #pig species
-      {
         name       => 'Child Of',
-        value      => 'PIGPARENT1',
+        value      => 'B',
       },    #pig biosamples parent
     ]
   );
 
   my $pigparent = Bio::Metadata::Entity->new(
+    id          => 'B',
     attributes => [
       {
-        name       => 'Organism',
-        value      => 'Sus scrofa',
-      },
-      {
         name       => 'Child Of',
-        value      => 'CHILD1',
+        value      => 'A',
       },    #pig species
     ]
   );
 
 
-  my $outcomes = $cons_check->check_entity( {'CHILD1' => $e}, {'PIGPARENT1' => $pigparent});
+  my $outcomes = $cons_check->check_entity( $e, {'B' => $pigparent});
 
   is_deeply(
     $outcomes,
     [
       Bio::Metadata::Validate::ValidationOutcome->new(
         outcome    => 'error',
-        message    => 'The parent of child (CHILD1) lists this child as its own parent: CHILD1',
+        message    => 'The parent of child (A) lists this child as its own parent: A',
         attributes => $e->get_attribute(0)
         )
 
     ],
-    'error for pig with a chicken parent'
+    'error for child A with parent B whos parent is child A'
   );
 }
