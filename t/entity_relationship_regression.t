@@ -12,6 +12,7 @@ use Bio::Metadata::Entity;
 use Bio::Metadata::Rules::RuleSet;
 use Bio::Metadata::Validate::EntityValidator;
 use Bio::Metadata::Faang::FaangChildOfSpeciesCheck;
+use Bio::Metadata::Faang::FaangChildOfCyclicCheck;
 
 my $entities = [
   Bio::Metadata::Entity->new(
