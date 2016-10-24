@@ -5,7 +5,6 @@ use warnings;
 
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
-use Data::Dumper;
 use Test::More;
 
 my $data_dir = "$Bin/data";
@@ -35,7 +34,7 @@ my $actural_sh  = $sample->to_hash();
 my $expected_sh = {
   id          => 'bob',
   entity_type => 'sample',
-  synonyms    => undef,
+  synonyms    => [],
   attributes  => [
     {
       name       => 'sex',
@@ -44,6 +43,7 @@ my $expected_sh = {
       uri        => undef,
       id         => undef,
       source_ref => undef,
+      allow_further_validation => 1,
     },
     {
       name       => 'weight',
@@ -52,6 +52,7 @@ my $expected_sh = {
       uri        => undef,
       id         => undef,
       source_ref => undef,
+      allow_further_validation => 1,
     },
     {
       name       => 'tissue',
@@ -60,6 +61,7 @@ my $expected_sh = {
       uri        => 'http://purl.obolibrary.org/obo/UBERON_0002385',
       id         => undef,
       source_ref => undef,
+      allow_further_validation => 1,
     },
     {
       name       => 'weight',
@@ -68,6 +70,7 @@ my $expected_sh = {
       uri        => undef,
       id         => undef,
       source_ref => undef,
+      allow_further_validation => 1,
     },
   ],
   links => []
@@ -192,6 +195,7 @@ my $expected_vo_h = {
       uri        => undef,
       id         => undef,
       source_ref => undef,
+      allow_further_validation => 1,
     },
   ],
 };
