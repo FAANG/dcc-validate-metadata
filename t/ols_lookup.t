@@ -139,7 +139,7 @@ sub test_ancestor_uri_fail {
 
 sub test_all_children_ancestor_uri_pass {
   my $pt = Bio::Metadata::Rules::PermittedTerm->new(
-    ontology_name     => 'UBERON',
+    ontology_name     => 'BTO',
     term_iri          => 'http://purl.obolibrary.org/obo/BTO_0000042',
     allow_descendants => 1,
     leaf_only         => 0,
@@ -148,7 +148,7 @@ sub test_all_children_ancestor_uri_pass {
 
   my $ancestor_uri   = 'http://purl.obolibrary.org/obo/BTO_0000042'; # animal
   my $pass_uri       = 'http://purl.obolibrary.org/obo/BTO_0000045'; # adrenal cortex
-  my $expected_label = 'liver';
+  my $expected_label = 'adrenal cortex';
 
   my $output = $ols_lookup->find_match_all_children( $pass_uri, $pt );
   is( $output->{label}, $expected_label, "Get valid match via part of relationships using find_match_all_children" );
@@ -156,7 +156,7 @@ sub test_all_children_ancestor_uri_pass {
 
 sub test_all_children_ancestor_uri_fail {
   my $pt = Bio::Metadata::Rules::PermittedTerm->new(
-    ontology_name     => 'UBERON',
+    ontology_name     => 'BTO',
     term_iri          => 'http://purl.obolibrary.org/obo/UBERON_0002530',
     allow_descendants => 1,
     leaf_only         => 0,
