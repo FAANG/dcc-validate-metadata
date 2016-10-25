@@ -203,12 +203,12 @@ sub validate_crossbreed_ontology_id {
 
 sub lookup_breed {
   my ( $self, $breed, ) = @_;
-  return $self->ols_lookup->find_matchnotall( $breed, $self->valid_term, 1 );
+  return $self->ols_lookup->find_match( $breed, $self->valid_term, 1 );
 }
 
 sub lookup_breed_id {
   my ( $self, $breed, ) = @_;
-  return $self->ols_lookup->find_matchnotall( $breed, $self->valid_term, 0 );
+  return $self->ols_lookup->find_match( $breed, $self->valid_term, 0 );
 }
 
 sub _parse_error {

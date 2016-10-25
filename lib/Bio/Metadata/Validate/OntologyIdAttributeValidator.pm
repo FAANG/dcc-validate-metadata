@@ -46,7 +46,7 @@ sub validate_attribute {
     my $matching_term;
   ANCESTOR: for my $valid_term ( $rule->all_valid_terms ) {
         $matching_term =
-          $self->ols_lookup->find_matchnotall( $attribute->id, $valid_term, undef );
+          $self->ols_lookup->find_match( $attribute->id, $valid_term, undef );
         if ($matching_term) {
             last ANCESTOR;
         }

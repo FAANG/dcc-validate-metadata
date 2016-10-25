@@ -277,7 +277,7 @@ sub find_import_match {
 
     for my $rule_import ( $rule_group->all_imports ) {
       my $match =
-        $self->ols_lookup->find_matchnotall( $attr_name, $rule_import->term, 1 );
+        $self->ols_lookup->find_match( $attr_name, $rule_import->term, 1 );
 
       if ($match) {
         return ( $rule_import->create_rule($match), $rule_group );

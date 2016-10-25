@@ -110,7 +110,7 @@ sub check_entity {
   my @breeds = $b->all_breeds;
   push @breeds, $breed_attrs->[0]->id if $breed_attrs->[0]->id;
 
-  my $species_match = $self->ols_lookup->find_matchnotall( $species_attrs->[0]->id,
+  my $species_match = $self->ols_lookup->find_match( $species_attrs->[0]->id,
     $self->species_permitted_term, 0 );
   return \@outcomes if ( !$species_match );
 
@@ -126,7 +126,7 @@ sub check_entity {
   );
 
   my @mismatched_breeds =
-    grep { !$self->ols_lookup->find_matchnotall( $_, $pt, 0 ) } @breeds;
+    grep { !$self->ols_lookup->find_match( $_, $pt, 0 ) } @breeds;
 
   my $outcome =
     Bio::Metadata::Validate::ValidationOutcome->new( attributes => $breed_attrs,
@@ -135,7 +135,7 @@ sub check_entity {
   if (@mismatched_breeds) {
     $pt->term_iri('http://purl.obolibrary.org/obo/LBO_0000000');
     @mismatched_breeds =
-      grep { $_ } map { $self->ols_lookup->find_matchnotall( $_, $pt, 0 ) }
+      grep { $_ } map { $self->ols_lookup->find_match( $_, $pt, 0 ) }
       @mismatched_breeds;    #get terms
     @mismatched_breeds =
       map { $_->{label} . ' (' . $_->{short_form} . ')' }
@@ -180,7 +180,7 @@ sub choose_species_breed_tree {
     );
 
     my $species_match =
-      $self->ols_lookup->find_matchnotall( $species_match->{short_form}, $pt, 0 );
+      $self->ols_lookup->find_match( $species_match->{short_form}, $pt, 0 );
 
     if ($species_match) {
       return $self->get_species_to_lbo_breed_mapping($faang_species_id);

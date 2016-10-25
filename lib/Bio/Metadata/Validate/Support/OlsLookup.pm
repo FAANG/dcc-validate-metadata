@@ -95,7 +95,7 @@ sub find_match {
   }
 }
 
-sub find_matchnotall {
+sub _find_match_all_children {
   my ( $self, $query, $permitted_term, $exact ) = @_;
 
   my $pth = $permitted_term->to_hash;
@@ -109,7 +109,7 @@ sub find_matchnotall {
     return $cache_value;
   }
   else {
-    my $value = $self->_find_matchnotall( $query, $permitted_term, $exact );
+    my $value = $self->_find_match_all_children( $query, $permitted_term, $exact );
 
     #OLS loading of ATOL and EOL terms is currently giving IDs like owlATOL_00001
     if ( !$value
@@ -117,7 +117,7 @@ sub find_matchnotall {
       && begins_with( $query, $permitted_term->ontology_name )
     )
     {
-      $value = $self->_find_matchnotall( 'owl' . $query, $permitted_term, $exact );
+      $value = $self->_find_match_all_children( 'owl' . $query, $permitted_term, $exact );
     }
 
     $self->cache->set( $cache_key, $value );
@@ -139,7 +139,7 @@ sub _find_match {
     '&exact=',
     $exact ? 'true' : 'false',
     '&groupField=true',
-    '&allchildrenOf=',
+    '&childrenOf=',
     uri_escape( $permitted_term->term_iri ),
     '&ontology=',
     lc( $permitted_term->ontology_name ),
@@ -166,7 +166,7 @@ sub _find_match {
   return '';
 }
 
-sub _find_matchnotall {
+sub _find_match_all_children {
   my ( $self, $query, $permitted_term, $exact ) = @_;
 
   my @uri_elements = (
@@ -176,7 +176,7 @@ sub _find_matchnotall {
     '&exact=',
     $exact ? 'true' : 'false',
     '&groupField=true',
-    '&childrenOf=',
+    '&allchildrenOf=',
     uri_escape( $permitted_term->term_iri ),
     '&ontology=',
     lc( $permitted_term->ontology_name ),
