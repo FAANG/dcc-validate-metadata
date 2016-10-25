@@ -20,6 +20,9 @@ test_many_descendents();
 test_ancestor_uri_pass();
 test_ancestor_uri_fail();
 
+test_all_children_ancestor_uri_pass();
+test_all_children_ancestor_uri_fail();
+
 done_testing();
 
 sub test_many_descendents {
@@ -115,7 +118,7 @@ sub test_ancestor_uri_pass {
   my $expected_label = 'liver';
 
   my $output = $ols_lookup->find_match( $pass_uri, $pt );
-  is( $output->{label}, $expected_label, "Get match for liver under good uri" );
+  is( $output->{label}, $expected_label, "Get match for liver under good uri for find_match" );
 }
 
 sub test_ancestor_uri_fail {
@@ -131,5 +134,38 @@ sub test_ancestor_uri_fail {
   my $expected_label = '';
 
   my $output = $ols_lookup->find_match( $fail_uri, $pt );
-  is( $output, $expected_label, "Get undef for liver under bogus uri" );
+  is( $output, $expected_label, "Get undef for liver under bogus uri for find_match" );
+}
+
+sub test_all_children_ancestor_uri_pass {
+  my $pt = Bio::Metadata::Rules::PermittedTerm->new(
+    ontology_name     => 'UBERON',
+    term_iri          => 'http://purl.obolibrary.org/obo/BTO_0000042',
+    allow_descendants => 1,
+    leaf_only         => 0,
+    include_root      => 0,
+  );
+
+  my $ancestor_uri   = 'http://purl.obolibrary.org/obo/BTO_0000042'; # animal
+  my $pass_uri       = 'http://purl.obolibrary.org/obo/BTO_0000045'; # adrenal cortex
+  my $expected_label = 'liver';
+
+  my $output = $ols_lookup->find_match_all_children( $pass_uri, $pt );
+  is( $output->{label}, $expected_label, "Get valid match via part of relationships using find_match_all_children" );
+}
+
+sub test_all_children_ancestor_uri_fail {
+  my $pt = Bio::Metadata::Rules::PermittedTerm->new(
+    ontology_name     => 'UBERON',
+    term_iri          => 'http://purl.obolibrary.org/obo/UBERON_0002530',
+    allow_descendants => 1,
+    leaf_only         => 0,
+    include_root      => 0,
+  );
+
+  my $fail_uri       = 'http://www.bbc.co.uk/cbeebies';    # not an ontology uri
+  my $expected_label = '';
+
+  my $output = $ols_lookup->find_match_all_children( $fail_uri, $pt );
+  is( $output, $expected_label, "Get undef for liver under bogus uri for find_match_all_children" );
 }

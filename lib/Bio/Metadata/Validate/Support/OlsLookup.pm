@@ -95,7 +95,7 @@ sub find_match {
   }
 }
 
-sub _find_match_all_children {
+sub find_match_all_children {
   my ( $self, $query, $permitted_term, $exact ) = @_;
 
   my $pth = $permitted_term->to_hash;
