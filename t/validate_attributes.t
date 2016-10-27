@@ -392,8 +392,8 @@ sub ontology_uri_rule {
   my $ols_rule = Bio::Metadata::Rules::Rule->new(
     type        => 'ontology_uri',
     valid_terms => [{
-      term_iri      => 'http://purl.obolibrary.org/obo/UBERON_0002530',
-      ontology_name => 'UBERON'
+      term_iri      => 'http://purl.obolibrary.org/obo/PATO_0000047',
+      ontology_name => 'PATO'
     }],
   );
 
@@ -402,8 +402,8 @@ sub ontology_uri_rule {
 
   #valid term
   my $ols_attr = Bio::Metadata::Attribute->new(
-    value => 'liver',
-    uri   => 'http://purl.obolibrary.org/obo/UBERON_0002107'
+    value => 'male genotypic sex',
+    uri   => 'http://purl.obolibrary.org/obo/PATO_0020001'
   );
   my $outcome =
     $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
@@ -411,8 +411,8 @@ sub ontology_uri_rule {
 
   #wrong ancestor
   $ols_attr = Bio::Metadata::Attribute->new(
-    value => 'distal tarsal bone 4',
-    uri   => 'http://purl.obolibrary.org/obo/UBERON_0010737'
+    value => 'unicellular',
+    uri   => 'http://purl.obolibrary.org/obo/PATO_0001994'
   );
   $outcome =
     $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
@@ -438,8 +438,8 @@ sub ontology_uri_rule {
 
   #warn for term/label mismatch
   $ols_attr = Bio::Metadata::Attribute->new(
-    value => 'not a liver',
-    uri   => 'http://purl.obolibrary.org/obo/UBERON_0002107'
+    value => 'male',
+    uri   => 'http://purl.obolibrary.org/obo/PATO_0020001'
   );
   $outcome =
     $ols_text_attr_validator->validate_attribute( $ols_rule, $ols_attr );
