@@ -23,7 +23,8 @@ test_ancestor_uri_fail();
 test_all_children_ancestor_uri_pass();
 test_all_children_ancestor_uri_fail();
 
-test_all_children_childof();
+test_all_children_childof_fail();
+test_all_children_childof_pass();
 
 done_testing();
 
@@ -139,7 +140,7 @@ sub test_ancestor_uri_fail {
   is( $output, $expected_label, "Get undef for liver under bogus uri for find_match" );
 }
 
-sub test_all_children_childof {
+sub test_all_children_childof_fail {
   my $pt = Bio::Metadata::Rules::PermittedTerm->new(
     ontology_name     => 'PATO',
     term_iri          => 'http://purl.obolibrary.org/obo/PATO_0000047', #Biological sex
@@ -152,8 +153,23 @@ sub test_all_children_childof {
   my $expected_label = '';
 
   my $output = $ols_lookup->_find_match_all_children( $pass_uri, $pt );
-  print Dumper($output);
   is( $output, $expected_label, "Expect empty string for query that is not child of permitted term _find_match_all_children" );
+}
+
+sub test_all_children_childof_pass {
+  my $pt = Bio::Metadata::Rules::PermittedTerm->new(
+    ontology_name     => 'PATO',
+    term_iri          => 'http://purl.obolibrary.org/obo/PATO_0000047', #Biological sex
+    allow_descendants => 1,
+    leaf_only         => 0,
+    include_root      => 0,
+  );
+
+  my $pass_uri       = 'http://purl.obolibrary.org/obo/PATO_0020001'; # male genotypic sex
+  my $expected_label = 'male genotypic sex';
+
+  my $output = $ols_lookup->_find_match_all_children( $pass_uri, $pt );
+  is( $output->{label}, $expected_label, "Get valid match for child of permitted term _find_match_all_children" );
 }
 
 sub test_all_children_ancestor_uri_pass {
