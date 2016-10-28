@@ -24,7 +24,8 @@ test_all_children_ancestor_uri_pass();
 test_all_children_ancestor_uri_fail();
 
 test_all_children_childof_fail();
-test_all_children_childof_pass();
+test_all_children_childof_pass_pato();
+test_all_children_childof_pass_uberon();
 
 done_testing();
 
@@ -156,7 +157,7 @@ sub test_all_children_childof_fail {
   is( $output, $expected_label, "Expect empty string for query that is not child of permitted term _find_match_all_children" );
 }
 
-sub test_all_children_childof_pass {
+sub test_all_children_childof_pass_pato {
   my $pt = Bio::Metadata::Rules::PermittedTerm->new(
     ontology_name     => 'PATO',
     term_iri          => 'http://purl.obolibrary.org/obo/PATO_0000047', #Biological sex
@@ -169,7 +170,23 @@ sub test_all_children_childof_pass {
   my $expected_label = 'male genotypic sex';
 
   my $output = $ols_lookup->_find_match_all_children( $pass_uri, $pt );
-  is( $output->{label}, $expected_label, "Get valid match for child of permitted term _find_match_all_children" );
+  is( $output->{label}, $expected_label, "Get valid match for child of permitted term in PATO ontology _find_match_all_children" );
+}
+
+sub test_all_children_childof_pass_uberon {
+  my $pt = Bio::Metadata::Rules::PermittedTerm->new(
+    ontology_name     => 'UBERON',
+    term_iri          => 'http://purl.obolibrary.org/obo/UBERON_0002530', #gland
+    allow_descendants => 1,
+    leaf_only         => 0,
+    include_root      => 0,
+  );
+
+  my $pass_uri       = 'http://purl.obolibrary.org/obo/UBERON_0002107'; # liver
+  my $expected_label = 'liver';
+
+  my $output = $ols_lookup->_find_match_all_children( $pass_uri, $pt );
+  is( $output->{label}, $expected_label, "Get valid match for child of permitted term in UBERON ontology _find_match_all_children" );
 }
 
 sub test_all_children_ancestor_uri_pass {
