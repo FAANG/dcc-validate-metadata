@@ -176,13 +176,14 @@ sub _find_match_all_children {
     '&exact=',
     $exact ? 'true' : 'false',
     '&groupField=true',
-    '&allchildrenOf=',
+    '&allChildrenOf=',
     uri_escape( $permitted_term->term_iri ),
     '&ontology=',
     lc( $permitted_term->ontology_name ),
     map { '&queryFields=' . uri_escape($_) } $self->all_qfields,
   );
   my $request_uri = join( '', @uri_elements );
+  #print $request_uri;
   my $search_result = $self->request_to_json($request_uri);
 
   if ( $search_result->{response}{docs} && $search_result->{response}{docs}[0] )
