@@ -341,9 +341,30 @@ sub ontology_id_rule {
   $outcome = $ols_id_attr_validator->validate_attribute( $lbo_rule, $lbo_attr );
   is( $outcome->outcome, 'pass',
     'Pass for terms with unicode chars at OLS' );
+  
+  my ( $ols_attr_specimen);
+  my $ols_rule_specimen = Bio::Metadata::Rules::Rule->new(
+    type        => 'ontology_id',
+    valid_terms => {
+      term_iri      => 'http://purl.obolibrary.org/obo/OBI_0001479',
+      ontology_name => 'OBI'
+    },
+  );
 
-
-
+  #pass for specimen from organism
+  $ols_attr_specimen = Bio::Metadata::Attribute->new(
+    value => 'specimen from organism',
+    id    => 'OBI_0001479'
+  );
+  $outcome = $ols_id_attr_validator->validate_attribute( $ols_rule_specimen, $ols_attr_specimen );
+  is( $outcome->outcome, 'pass', 'OLS passed for valid material' );
+  #fail for not specimen from organism for
+  $ols_attr_specimen = Bio::Metadata::Attribute->new(
+    value => 'tissue specimen',
+    id    => 'OBI_0001479'
+  );
+  $outcome = $ols_id_attr_validator->validate_attribute( $ols_rule_specimen, $ols_attr_specimen );
+  is( $outcome->outcome, 'fail', 'OLS failed for invalid material' );
 
 }
 
