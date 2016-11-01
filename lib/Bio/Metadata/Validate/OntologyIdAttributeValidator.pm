@@ -63,12 +63,19 @@ sub validate_attribute {
 
     #unicode support is variable, use Unidecode to normalise for this
     my ($normalised_label,$normalised_value) = map {unidecode($_)} ($label, $attribute->value);
-
+    
     if ( $normalised_label ne $normalised_value ) {
+      if ($attribute->id =~ /OBI_0001479/){ #Error if not 'specimen from organism' for material
+        $o->outcome('error');
+        $o->message(
+            "value ($normalised_value) does not precisely match label ($normalised_label) for term ".$attribute->id);
+        return $o;
+      }else{
         $o->outcome('warning');
         $o->message(
             "value ($normalised_value) does not precisely match label ($normalised_label) for term ".$attribute->id);
         return $o;
+      }
     }
 
     $o->outcome('pass');

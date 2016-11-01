@@ -358,13 +358,14 @@ sub ontology_id_rule {
   );
   $outcome = $ols_id_attr_validator->validate_attribute( $ols_rule_specimen, $ols_attr_specimen );
   is( $outcome->outcome, 'pass', 'OLS passed for valid material' );
+  
   #fail for not specimen from organism for
   $ols_attr_specimen = Bio::Metadata::Attribute->new(
     value => 'tissue specimen',
     id    => 'OBI_0001479'
   );
   $outcome = $ols_id_attr_validator->validate_attribute( $ols_rule_specimen, $ols_attr_specimen );
-  is( $outcome->outcome, 'fail', 'OLS failed for invalid material' );
+  is( $outcome->outcome, 'error', 'OLS failed for invalid material' );
 
 }
 
