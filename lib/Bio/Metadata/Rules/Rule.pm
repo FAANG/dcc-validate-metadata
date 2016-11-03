@@ -22,6 +22,7 @@ use Bio::Metadata::Types;
 use Bio::Metadata::Rules::PermittedTerm;
 
 has 'name' => ( is => 'rw', isa => 'Str' );
+has 'description' => ( is => 'rw', isa => 'Str' );
 has 'type' => ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::TypeEnum', required => 1 );
 has 'mandatory' =>
   ( is => 'rw', isa => 'Bio::Metadata::Rules::Rule::MandatoryEnum' );
@@ -77,6 +78,7 @@ sub to_hash {
 
     return {
         name           => $self->name,
+        description    => $self->description,
         type           => $self->type,
         mandatory      => $self->mandatory,
         allow_multiple => $self->allow_multiple,
