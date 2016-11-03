@@ -1,6 +1,7 @@
 <table class="table table-hover table-condensed table-striped">
 <thead><tr>
   <th>Name</th>
+  <th>Description</th>
   <th>Type</th>
   <th>Required?</th>
   <th>Allow multiple?</th>
@@ -13,6 +14,7 @@
 % for my $rule (@$rules) {
   <tr>
   <td><%= $rule->name %></td>
+  <td><%= $rule->description %></td>
   <td><%= $rule->type %></td>
   <td><%= $rule->mandatory %></td>
   <td><%= $rule->allow_multiple ? 'Yes' : 'No' %></td>
