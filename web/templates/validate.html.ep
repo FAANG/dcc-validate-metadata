@@ -34,4 +34,6 @@
 
 </dl>
 %= submit_button 'Validate', class => 'btn btn-primary'
+<p></p>
+<p>The latest sample metadata Excel file templates and guidance on how to complete them can be <a href="https://www.ebi.ac.uk/seqdb/confluence/display/FAANG/Submission+of+samples+to+BioSamples">found on the FAANG wiki site</a>.</p>
 % end
