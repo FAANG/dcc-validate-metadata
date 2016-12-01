@@ -17,17 +17,21 @@ use Carp;
 use List::Util qw(none);
 
 my $rule_file     = undef;
-my $data_file      = undef;
+my $rule_type     = undef;
+my $data_file     = undef;
 my $verbose       = undef;
 my $output        = undef;
 my $summary       = undef;
 my $output_format = undef;
 
 my @valid_output_mdoes = qw(text excel json);
+my @valid_rule_types = qw(samples experiments);
 my $output_format_string = join( '|', @valid_output_mdoes );
+my $type_format_string  = join( '|', @valid_rule_types );
 
 GetOptions(
   "rules=s"         => \$rule_file,
+  "ruletype=s"      => \$rule_type,
   "data=s"          => \$data_file,
   "verbose"         => \$verbose,
   "output=s"        => \$output,
@@ -37,6 +41,7 @@ GetOptions(
 
 croak "-rules <file> is required"                unless $rule_file;
 croak "-rules <file> must exist and be readable" unless -r $rule_file;
+croak "-ruletype ($type_format_string) is required" unless $rule_type;
 croak "-data <ID> is required"                   unless $data_file;
 
 croak
@@ -48,32 +53,40 @@ croak "please specify -output <file>" if ( $output_format && !$output );
 croak
 "-output_format $output_format is invalid; should be one of $output_format_string"
   if ( $output_format && none { $_ eq $output_format } @valid_output_mdoes );
+croak
+"-ruletype $rule_type is invalid; should be one of $type_format_string"
+  if ( $rule_type && none { $_ eq $rule_type } @valid_rule_types );
 
-my $validator = create_validator( $rule_file, $verbose );
+my ($validator, $loader, $metadata, $entity_status, $entity_outcomes, $attribute_status, $attribute_outcomes, $entity_rule_groups);
 
-my $loader = Bio::Metadata::Loader::XLSXBioSampleLoader->new();
+if ($rule_type eq "samples"){
+  $validator = create_validator( $rule_file, $verbose );
 
-my $metadata = $loader->load($data_file);
+  $loader = Bio::Metadata::Loader::XLSXBioSampleLoader->new();
 
-my (
-  $entity_status,      $entity_outcomes, $attribute_status,
-  $attribute_outcomes, $entity_rule_groups,
-) = $validator->check_all($metadata);
+  $metadata = $loader->load($data_file);
 
-print_summary( $entity_status, $attribute_status ) if ($summary);
+  (
+    $entity_status,      $entity_outcomes, $attribute_status,
+    $attribute_outcomes, $entity_rule_groups,
+  ) = $validator->check_all($metadata);
 
-write_output(
-  $output,
-  $output_format,
-  {
-    entities           => $metadata,
-    entity_status      => $entity_status,
-    entity_outcomes    => $entity_outcomes,
-    attribute_status   => $attribute_status,
-    attribute_outcomes => $attribute_outcomes,
-  }
-) if ($output);
+  print_summary( $entity_status, $attribute_status ) if ($summary);
 
+  write_output(
+    $output,
+    $output_format,
+    {
+      entities           => $metadata,
+      entity_status      => $entity_status,
+      entity_outcomes    => $entity_outcomes,
+      attribute_status   => $attribute_status,
+      attribute_outcomes => $attribute_outcomes,
+    }
+  ) if ($output);
+}elsif ($rule_type eq "experiments"){
+  ;#TODO
+}
 
 sub create_validator {
   my ( $rule_file, $verbose ) = @_;
