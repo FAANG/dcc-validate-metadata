@@ -30,34 +30,34 @@ use Bio::Metadata::Types;
 requires 'hash_to_object';
 
 sub load {
-    my ( $self, $file_path ) = @_;
-
-    my ( $xml_data, $o );
-    
-    try {
-      my $xml = new XML::Simple;
-      $xml_data = $xml->XMLin($file_path,KeepRoot => 1);
-    }
-      catch {
-        croak "Failed to read from $file_path: $_";
-    };
+  my ( $self, $file_path ) = @_;
+  my ( $xml_data, $o );
+  try {
+    my $xml = new XML::Simple;
+    $xml_data = $xml->XMLin($file_path,KeepRoot => 1);
+  }
+  catch {
+    croak "Failed to read from $file_path: $_";
+  };
 
 	my $entity_type;
-    try {
-      my @root=keys(%$xml_data);
-      if ( $root[0] !~ /.*_SET/ ) {
-		  $entity_type=$root[0];
+  try {
+    my @root = keys(%$xml_data);
+    if ( $root[0] eq 'ROOT' ) {
+		  @root = keys($$xml_data{ROOT});
+      $entity_type=$root[1];
 		  $o = $self->hash_to_object($xml_data->{$root[0]},$entity_type);
-      }
-      elsif ( $root[0] =~ /(.*)_SET/ ) {
-		  $entity_type=$1;
+    }
+    elsif ( $root[0] =~ /(.*)_SET/ ) {
+      $entity_type=$1;
 		  my $entities=$xml_data->{$root[0]}->{$entity_type};
 		  $o = [ map { $self->hash_to_object($_, $entity_type) } @$entities ];
-      }
-    } catch {
-      croak "Could not convert data structure to object: $_";
-    };
-    return $o;
+    }
+  } catch {
+    croak "Could not convert data structure to object: $_";
+  };
+  exit(0);
+  return $o;
 }
 
 1;
