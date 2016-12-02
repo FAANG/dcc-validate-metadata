@@ -11,6 +11,7 @@ use Bio::Metadata::Reporter::ExcelReporter;
 use Bio::Metadata::Reporter::BasicReporter;
 use Bio::Metadata::Validate::EntityValidator;
 use Bio::Metadata::Loader::XLSXBioSampleLoader;
+use Bio::Metadata::Loader::XMLExperimentLoader;
 use Getopt::Long;
 use Data::Dumper;
 use Carp;
@@ -57,36 +58,40 @@ croak
 "-ruletype $rule_type is invalid; should be one of $type_format_string"
   if ( $rule_type && none { $_ eq $rule_type } @valid_rule_types );
 
-my ($validator, $loader, $metadata, $entity_status, $entity_outcomes, $attribute_status, $attribute_outcomes, $entity_rule_groups);
+my ($loader, $metadata, $entity_status, $entity_outcomes, $attribute_status, $attribute_outcomes, $entity_rule_groups);
+
+my $validator = create_validator( $rule_file, $verbose );
 
 if ($rule_type eq "samples"){
-  $validator = create_validator( $rule_file, $verbose );
 
   $loader = Bio::Metadata::Loader::XLSXBioSampleLoader->new();
-
   $metadata = $loader->load($data_file);
-
-  (
-    $entity_status,      $entity_outcomes, $attribute_status,
-    $attribute_outcomes, $entity_rule_groups,
-  ) = $validator->check_all($metadata);
-
-  print_summary( $entity_status, $attribute_status ) if ($summary);
-
-  write_output(
-    $output,
-    $output_format,
-    {
-      entities           => $metadata,
-      entity_status      => $entity_status,
-      entity_outcomes    => $entity_outcomes,
-      attribute_status   => $attribute_status,
-      attribute_outcomes => $attribute_outcomes,
-    }
-  ) if ($output);
+  #print Dumper($metadata), "\n";
 }elsif ($rule_type eq "experiments"){
-  ;#TODO
+  $loader = Bio::Metadata::Loader::XMLExperimentLoader->new();
+  $metadata = $loader->load($data_file);
 }
+print Dumper($metadata), "\n";
+exit(0);
+
+(
+  $entity_status,      $entity_outcomes, $attribute_status,
+  $attribute_outcomes, $entity_rule_groups,
+) = $validator->check_all($metadata);
+
+print_summary( $entity_status, $attribute_status ) if ($summary);
+
+write_output(
+  $output,
+  $output_format,
+  {
+    entities           => $metadata,
+    entity_status      => $entity_status,
+    entity_outcomes    => $entity_outcomes,
+    attribute_status   => $attribute_status,
+    attribute_outcomes => $attribute_outcomes,
+  }
+) if ($output);
 
 sub create_validator {
   my ( $rule_file, $verbose ) = @_;
