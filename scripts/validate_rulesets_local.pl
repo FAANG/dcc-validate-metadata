@@ -66,13 +66,10 @@ if ($rule_type eq "samples"){
 
   $loader = Bio::Metadata::Loader::XLSXBioSampleLoader->new();
   $metadata = $loader->load($data_file);
-  #print Dumper($metadata), "\n";
 }elsif ($rule_type eq "experiments"){
   $loader = Bio::Metadata::Loader::XMLExperimentLoader->new();
   $metadata = $loader->load($data_file);
 }
-print Dumper($metadata), "\n";
-exit(0);
 
 (
   $entity_status,      $entity_outcomes, $attribute_status,

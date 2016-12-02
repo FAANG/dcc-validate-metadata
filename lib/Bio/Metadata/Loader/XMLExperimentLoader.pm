@@ -36,7 +36,6 @@ sub hash_to_object {
   my ( $self, $hash, $type ) = @_;
 
   my $o = Bio::Metadata::Entity->new();
-
   #get id from XML
   my $id=$hash->{'accession'};
   $o->id($id);

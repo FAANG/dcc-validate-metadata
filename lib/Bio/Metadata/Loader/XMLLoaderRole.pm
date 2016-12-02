@@ -46,7 +46,7 @@ sub load {
     if ( $root[0] eq 'ROOT' ) {
 		  @root = keys($$xml_data{ROOT});
       $entity_type=$root[1];
-		  $o = $self->hash_to_object($xml_data->{$root[0]},$entity_type);
+		  $o = $self->hash_to_object($$xml_data{ROOT}{$entity_type},$entity_type);
     }
     elsif ( $root[0] =~ /(.*)_SET/ ) {
       $entity_type=$1;
@@ -56,8 +56,10 @@ sub load {
   } catch {
     croak "Could not convert data structure to object: $_";
   };
-  exit(0);
-  return $o;
+  my @entities;
+  push(@entities, $o);
+  print "[WARNING] No entities retrieved from $file_path" if !@entities;
+  return \@entities;
 }
 
 1;
