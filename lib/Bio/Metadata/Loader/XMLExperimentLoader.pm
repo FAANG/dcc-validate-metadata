@@ -22,7 +22,15 @@ use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Entity;
 
-with "Bio::Metadata::Loader::XMLLoaderRole";
+with "Bio::Metadata::Loader::XMLLoaderRole" => {
+  -alias    => { load => '_load', },
+  -excludes => ['load'],
+};
+
+sub load{
+  my ( $self, $file_path ) = @_;
+  return $self->_load($file_path);
+}
 
 sub hash_to_object {
   my ( $self, $hash, $type ) = @_;
