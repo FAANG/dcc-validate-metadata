@@ -44,7 +44,7 @@ sub load {
   try {
     my @root = keys(%$xml_data);
     if ( $root[0] eq 'ROOT' ) {
-		  @root = keys($$xml_data{ROOT});
+      @root = %{ $xml_data->{ROOT} };
       $entity_type=$root[1];
 		  $o = $self->hash_to_object($$xml_data{ROOT}{$entity_type},$entity_type);
     }
