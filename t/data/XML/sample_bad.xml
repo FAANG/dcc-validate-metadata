@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<ROOT request="download accessions">
     <SAMPLE alias="S00TXX11">
         <TITLE>S00TXX11</TITLE>
         <SAMPLE_NAME>
@@ -87,4 +88,4 @@
             </SAMPLE_ATTRIBUTE>
         </SAMPLE_ATTRIBUTES>
     </SAMPLE>
- 
+</ROOT> 
