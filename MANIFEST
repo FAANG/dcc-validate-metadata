@@ -90,6 +90,7 @@ t/data/test_out.sample.xlsx
 t/data/TSV/sample.tsv
 t/data/TSV/sampleset.tsv
 t/data/XML/experiment_good.xml
+t/data/XML/experiment_good_noroot.xml
 t/data/XML/experimentset_bad.xml
 t/data/XML/primary_cell.sampleset_bad.xml
 t/data/XML/primary_cell.sampleset_good.xml
@@ -117,6 +118,7 @@ t/validate_primarycell_good.t
 t/validate_primarytissue_bad.t
 t/validate_primarytissue_good.t
 t/validate_xml_experiment.t
+t/validate_xml_root.t
 t/validate_xml_experimentset.t
 t/validate_xml_sample.bad.t
 t/validate_xml_sample.good.t

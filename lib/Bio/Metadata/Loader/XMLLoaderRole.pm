@@ -39,30 +39,39 @@ sub load {
   catch {
     croak "Failed to read from $file_path: $_";
   };
-
 	my $entity_type;
   try {
     my @root = keys(%$xml_data);
-    if ( $root[0] eq 'ROOT' ) {
-      
-      @root = keys(%{ $xml_data->{ROOT} });
-      $entity_type=$root[1];
-      print Dumper($entity_type);
-		  $o = $self->hash_to_object($$xml_data{ROOT}{$entity_type},$entity_type);
-    }
-    elsif ( $root[0] =~ /(.*)_SET/ ) {
-      $entity_type=$1;
-		  my $entities=$xml_data->{$root[0]}->{$entity_type};
-      print Dumper(@$entities);
-		  $o = [ map { $self->hash_to_object($_, $entity_type) } @$entities ];
+    if ($root[0] eq 'ROOT'){
+      my @subroot;
+      foreach my $value (keys(%{$xml_data->{ROOT}})){
+        push (@subroot, $value) unless $value eq 'request';
+      }
+      if ( $subroot[0] =~ /(.*)_SET/ ) {
+        $entity_type=$1;
+        my $entities=$xml_data->{ROOT}->{$subroot[0]}->{$entity_type};
+        $o = [ map { $self->hash_to_object($_, $entity_type) } @$entities ];
+      }else{
+        $entity_type=$subroot[0];
+        $o = $self->hash_to_object($$xml_data{ROOT}{$entity_type},$entity_type);
+      }
+    }else{
+      if ( $root[0] =~ /(.*)_SET/ ) {
+        $entity_type=$1;
+        my $entities=$xml_data->{$root[0]}->{$entity_type};
+        $o = [ map { $self->hash_to_object($_, $entity_type) } @$entities ];
+      }else{
+        $entity_type=$root[1];
+        $o = $self->hash_to_object($$xml_data{$entity_type},$entity_type);
+      }
     }
   } catch {
     croak "Could not convert data structure to object: $_";
   };
-  my @entities;
-  push(@entities, $o);
-  print "[WARNING] No entities retrieved from $file_path" if !@entities;
-  return \@entities;
+  #my @entities;
+  #push(@entities, $o);
+  #print "[WARNING] No entities retrieved from $file_path" if !@entities;
+  return $o;
 }
 
 1;
