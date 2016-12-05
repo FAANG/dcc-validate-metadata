@@ -97,7 +97,6 @@ t/data/XML/primary_tissue.sampleset_bad.xml
 t/data/XML/primary_tissue.sampleset_good.xml
 t/data/XML/sample_bad.xml
 t/data/XML/sample_good.xml
-t/data/XML/sampleset__good.xml
 t/data/XML/sampleset_bad.xml
 t/data/XML/sampleset_good.xml
 t/Excel/createSampleTab.t
