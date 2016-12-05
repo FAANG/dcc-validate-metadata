@@ -53,7 +53,7 @@ sub load {
         $o = [ map { $self->hash_to_object($_, $entity_type) } @$entities ];
       }else{
         $entity_type=$subroot[0];
-        $o = $self->hash_to_object($$xml_data{ROOT}{$entity_type},$entity_type);
+        $o = [$self->hash_to_object($$xml_data{ROOT}{$entity_type},$entity_type)];
       }
     }else{
       if ( $root[0] =~ /(.*)_SET/ ) {
@@ -62,15 +62,12 @@ sub load {
         $o = [ map { $self->hash_to_object($_, $entity_type) } @$entities ];
       }else{
         $entity_type=$root[1];
-        $o = $self->hash_to_object($$xml_data{$entity_type},$entity_type);
+        $o = [$self->hash_to_object($$xml_data{$entity_type},$entity_type)];
       }
     }
   } catch {
     croak "Could not convert data structure to object: $_";
   };
-  #my @entities;
-  #push(@entities, $o);
-  #print "[WARNING] No entities retrieved from $file_path" if !@entities;
   return $o;
 }
 
