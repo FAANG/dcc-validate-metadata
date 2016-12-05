@@ -44,13 +44,16 @@ sub load {
   try {
     my @root = keys(%$xml_data);
     if ( $root[0] eq 'ROOT' ) {
-      @root = %{ $xml_data->{ROOT} };
+      
+      @root = keys(%{ $xml_data->{ROOT} });
       $entity_type=$root[1];
+      print Dumper($entity_type);
 		  $o = $self->hash_to_object($$xml_data{ROOT}{$entity_type},$entity_type);
     }
     elsif ( $root[0] =~ /(.*)_SET/ ) {
       $entity_type=$1;
 		  my $entities=$xml_data->{$root[0]}->{$entity_type};
+      print Dumper(@$entities);
 		  $o = [ map { $self->hash_to_object($_, $entity_type) } @$entities ];
     }
   } catch {
