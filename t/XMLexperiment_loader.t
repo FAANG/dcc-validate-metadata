@@ -17,7 +17,7 @@ my $loader = Bio::Metadata::Loader::XMLExperimentLoader->new();
 
 my $o=$loader->load("$data_dir/XML/experiment_good.xml");
 
-isa_ok($o, "Bio::Metadata::Entity");
+isa_ok($o, "ARRAY");
 
 done_testing();
 

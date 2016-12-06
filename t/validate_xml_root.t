@@ -18,24 +18,9 @@ my $schema_file="$Bin/../json_schemas/Experiment.schema.dev.json";
 
 my $loader = Bio::Metadata::Loader::XMLExperimentLoader->new();
 
-my $o=$loader->load("$data_dir/XML/experiment_good.xml");
-
-isa_ok($o, "Bio::Metadata::Entity");
-
-my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
-                    'schema' => $schema_file,
-                    'entity' => $o
-                   );
-
-isa_ok($validator, "Bio::Metadata::ValidateSchema::EntityValidator");
-
-my ( $outcome_overall, $outcomes )=$validator->validate($o);
-
-is( $outcome_overall, 'pass', 'pass outcome expected' );
-
 my $o=$loader->load("$data_dir/XML/experiment_good_noroot.xml");
 
-isa_ok($o, "Bio::Metadata::Entity");
+isa_ok($o, "ARRAY");
 
 my $validator = Bio::Metadata::ValidateSchema::EntityValidator->new(
                     'schema' => $schema_file,
