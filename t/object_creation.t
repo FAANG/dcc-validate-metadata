@@ -144,6 +144,7 @@ my $expected_rule_group_h = {
       type           => 'text',
       mandatory      => 'mandatory',
       allow_multiple => 0,
+      description    => undef,
       condition      => undef
     },
     {
@@ -151,17 +152,20 @@ my $expected_rule_group_h = {
       type           => 'enum',
       mandatory      => 'mandatory',
       allow_multiple => 1,
+      description    => undef,
       condition      => undef
     }
   ],
   imports => [],
 };
+
 my $expected_rule_set_h = {
   name                => 'ruleset_1',
   description         => 'a test ruleset',
   further_details_iri => undef,
   rule_groups         => [ $expected_rule_group_h, ],
 };
+
 is_deeply( $actual_rule_set_h, $expected_rule_set_h, 'Create ruleset' );
 
 my $vo = Bio::Metadata::Validate::ValidationOutcome->new(
@@ -181,6 +185,7 @@ my $expected_vo_h = {
     type           => 'text',
     mandatory      => 'mandatory',
     allow_multiple => 0,
+    description    => undef,
     condition      => undef
   },
   message     => "c'est n'est pas un pipe",
