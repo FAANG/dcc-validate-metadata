@@ -61,7 +61,7 @@ sub load {
         my $entities=$xml_data->{$root[0]}->{$entity_type};
         $o = [ map { $self->hash_to_object($_, $entity_type) } @$entities ];
       }else{
-        $entity_type=$root[1];
+        $entity_type=$root[0];
         $o = [$self->hash_to_object($$xml_data{$entity_type},$entity_type)];
       }
     }
