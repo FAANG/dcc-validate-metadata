@@ -38,7 +38,7 @@ has 'schema' => (
 		);
 has 'entity' => (
 		 is => 'rw',
-		 isa => 'Bio::Metadata::Entity',
+		 isa => 'ArrayRef',
 		 required => 0
 		);
 has 'entityarray' => (
@@ -63,85 +63,85 @@ has 'selector' => (
 );
 
 sub validate {
-	 my ($self,$entity)=@_;
+  my ($self,$entity)=@_;
+  $entity=@{$entity}[0] unless ref($entity) eq "Bio::Metadata::Entity";
+  my $org_attrbs=$entity->organised_attr(1);
 
-	 my $org_attrbs=$entity->organised_attr(1);
+  my $validator = JSON::Validator->new;
+  $validator->schema($self->schema());
 
-     my $validator = JSON::Validator->new;
-     $validator->schema($self->schema());
+  my $hash=$entity->to_hash();
 
-	 my $hash=$entity->to_hash();
+  my $attrbs=$self->prepare_attrs($entity);
 
-	 my $attrbs=$self->prepare_attrs($entity);
+  $hash->{'attributes'}=();
+  $hash->{'attributes'}->{'SELECTOR'}=$attrbs;
 
-	 $hash->{'attributes'}=();
-	 $hash->{'attributes'}->{'SELECTOR'}=$attrbs;
+  my @outcomes;
+  my $outcome_overall='pass';
 
-	 my @outcomes;
-	 my $outcome_overall='pass';
+  if ($self->selector) {
+   warn("[ERROR] attribute ",$self->selector," is not a valid 'selector' attribute for entity with alias:",$entity->id,
+   ".\n\tMaybe this attribute is not present in this Entity?.\n\tSkipping...\n") if !exists($org_attrbs->{$self->selector});
+   if (!exists($org_attrbs->{$self->selector})) {
+  	my $msg="attribute ".$self->selector." selector is not present";
+   	my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
+  	$v_outcome->entity($entity);
+  	$v_outcome->message($msg);
+  		$v_outcome->outcome('error');
+  	my $rule= Bio::Metadata::Rules::Rule->new (
+  		mandatory=> 'mandatory',
+  		name=> $self->selector,
+  		type=> 'text'
+  	);
+  	$v_outcome->rule($rule);
+  	push @outcomes,$v_outcome;
+  	return ('error',\@outcomes);
+   }
+  }
 
-	 if ($self->selector) {
-		 warn("[ERROR] attribute ",$self->selector," is not a valid 'selector' attribute for entity with alias:",$entity->id,
-		 ".\n\tMaybe this attribute is not present in this Entity?.\n\tSkipping...\n") if !exists($org_attrbs->{$self->selector});
-		 if (!exists($org_attrbs->{$self->selector})) {
-			my $msg="attribute ".$self->selector." selector is not present";
-		 	my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
-			$v_outcome->entity($entity);
-			$v_outcome->message($msg);
-	  		$v_outcome->outcome('error');
-			my $rule= Bio::Metadata::Rules::Rule->new (
-				mandatory=> 'mandatory',
-				name=> $self->selector,
-				type=> 'text'
-			);
-			$v_outcome->rule($rule);
-			push @outcomes,$v_outcome;
-			return ('error',\@outcomes);
-		 }
-	 }
+  my @warnings = $validator->validate($hash);
 
-	 my @warnings = $validator->validate($hash);
+  if (@warnings) {
+   my $new_warnings=$self->prepare_warnings($warnings[0]);
 
-	 if (@warnings) {
-		 my $new_warnings=$self->prepare_warnings($warnings[0]);
+       foreach my $w (@$new_warnings) {
+  	$outcome_overall='warning' unless $outcome_overall eq 'error' ;
+  	my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
+  	$v_outcome->entity($entity);
+  	$v_outcome->outcome('warning');
+   	my $attr_name = $w->path;
+  	$v_outcome->message($w->message);
+  	if (exists($org_attrbs->{$attr_name})) {
+  		my $failed_attr=$org_attrbs->{$attr_name};
+  		$v_outcome->attributes($failed_attr);
+    	} else {
+    		$v_outcome->outcome('error');
+  		my $rule= Bio::Metadata::Rules::Rule->new (
+  			mandatory=> 'mandatory',
+  			name=> $attr_name,
+  			type=> 'text'
+  		);
+  		$v_outcome->rule($rule);
+  		$outcome_overall='error';
+    	}
+  	push @outcomes,$v_outcome;
+   }
+  } else {
+  my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
+  $v_outcome->entity($entity);
+  $v_outcome->outcome('pass');
+  my $rule= Bio::Metadata::Rules::Rule->new (
+  	mandatory=> 'mandatory',
+  	name=> 'schema',
+  	type=> 'text'
+  );
+  $v_outcome->rule($rule);
+  $v_outcome->message('pass');
+  push @outcomes,$v_outcome;
+  }
 
-         foreach my $w (@$new_warnings) {
-			$outcome_overall='warning' unless $outcome_overall eq 'error' ;
-			my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
-			$v_outcome->entity($entity);
-			$v_outcome->outcome('warning');
-		 	my $attr_name = $w->path;
-			$v_outcome->message($w->message);
-			if (exists($org_attrbs->{$attr_name})) {
-				my $failed_attr=$org_attrbs->{$attr_name};
-				$v_outcome->attributes($failed_attr);
-		  	} else {
-		  		$v_outcome->outcome('error');
-				my $rule= Bio::Metadata::Rules::Rule->new (
-					mandatory=> 'mandatory',
-					name=> $attr_name,
-					type=> 'text'
-				);
-				$v_outcome->rule($rule);
-				$outcome_overall='error';
-		  	}
-			push @outcomes,$v_outcome;
-		 }
-	 } else {
-		my $v_outcome= Bio::Metadata::Validate::ValidationOutcome->new;
-		$v_outcome->entity($entity);
-		$v_outcome->outcome('pass');
-		my $rule= Bio::Metadata::Rules::Rule->new (
-			mandatory=> 'mandatory',
-			name=> 'schema',
-			type=> 'text'
-		);
-		$v_outcome->rule($rule);
-		$v_outcome->message('pass');
-		push @outcomes,$v_outcome;
-	 }
-
-	 return ($outcome_overall,\@outcomes);
+  return ($outcome_overall,\@outcomes);
 }
 
 sub validate_all {
