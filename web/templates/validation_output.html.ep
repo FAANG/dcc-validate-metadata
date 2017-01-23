@@ -256,14 +256,12 @@
 </div>
 <div class="container-fluid">
   <div class="row">
-    <div class="col-xs-6">
-      <dl class="dl-horiztonal">
-        <dt>If you are unsure why your results are wrong, or think the standard needs to be updated please contact:</dt>
-        <dd>
-          <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
-          <a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>
-        </dd>
-      </dl>
-    </div>
+    <dl class="dl-horiztonal">
+      <dt>If you are unsure why your results are wrong, or think the standard needs to be updated please contact:</dt>
+      <dd>
+        <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+        <a href="mailto:<%= $contact_email %>"><%= $contact_email %></a>
+      </dd>
+    </dl>
   </div>
 </div>
