@@ -134,6 +134,8 @@ sub check_all {
     if ( scalar @{ $dupe_check{ $e->id } } > 1 ) {
       push @$outcomes,
         Bio::Metadata::Validate::ValidationOutcome->new(
+        entity => $e,
+        attributes => {'name' => 'ID'},
         outcome => 'error',
         message => 'multiple entities with this ID found'
         );
