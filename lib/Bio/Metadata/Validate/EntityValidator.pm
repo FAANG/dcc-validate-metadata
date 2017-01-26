@@ -118,7 +118,7 @@ sub check_all {
   my %dupe_check;
   my %entities_by_id;
   for my $e (@$entities) {
-    if ( $dupe_check{ $e->id } ) {
+    if ( !$dupe_check{ $e->id } ) {
       $dupe_check{ $e->id } = [];
     }
     push @{ $dupe_check{ $e->id } }, $e;
