@@ -36,10 +36,10 @@
   %}
   </ul></td>
   <td>
-    % if ($rule->condition) {
-      <p>Must meet condition:</p>
-      %= include 'condition', condition => $rule->condition
-    % }
+  % if ($rule->condition) {
+    Must meet condition:
+    %= include 'condition', condition => $rule->condition
+  %}
   </td>
   </tr>
 %}

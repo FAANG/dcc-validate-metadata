@@ -1,15 +1,15 @@
-<dl class="dl-horizontal">
+<ul class="list-unstyled">
 
 % if ($condition->dpath_condition) {
-  <dt>Dpath rule</dt>
-  <dd><%= $condition->dpath_condition %></dd>
+  <li text-align: left;>Dpath rule</li>
+  <li text-align: left;><%= $condition->dpath_condition %></li>
 % }
 
 % for my $attr (sort $condition->attribute_value_match_keys) {
 %  my $values = $condition->get_attribute_value_match($attr);
 
-  <dt><%= $attr %></dt>
-  <dd>
+  <li text-align: left;><%= $attr %></li>
+  <li text-align: left;>
   % if (scalar(@$values) == 1) {
     is '<%= $values->[0]%>'
   % } else {
@@ -18,11 +18,11 @@
     % for my $val (@$values) {
       <li>'<%= $val%>'</li>
     % }
-    </ul>
+    </li>
 
   % }
 
-  </dd>
+  </li>
 % }
 
-</dl>
+</ul>
