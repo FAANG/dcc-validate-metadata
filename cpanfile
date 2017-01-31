@@ -3,7 +3,7 @@ requires 'MooseX::Params::Validate';
 requires 'JSON::MaybeXS';
 requires 'Cpanel::JSON::XS';
 requires 'JSON';
-requires 'JSON::Validator', '<=0.68';
+requires 'JSON::Validator', '<=0.91';
 requires 'Data::DPath';
 requires 'Scalar::Util';
 requires 'Try::Tiny';
