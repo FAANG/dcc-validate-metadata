@@ -58,7 +58,6 @@ lib/Bio/Metadata/Validate/TextAttributeValidator.pm
 lib/Bio/Metadata/Validate/UnitAttributeValidator.pm
 lib/Bio/Metadata/Validate/UriValueAttributeValidator.pm
 lib/Bio/Metadata/Validate/ValidationOutcome.pm
-lib/Bio/Metadata/ValidateSchema/EntityValidator.pm
 LICENSE
 MANIFEST			This list of files
 README.md
