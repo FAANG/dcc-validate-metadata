@@ -37,7 +37,12 @@ sub hash_to_object {
 
   my $o = Bio::Metadata::Entity->new();
   #get id from XML
-  my $id=$hash->{'accession'};
+  my $id;
+  if(exists $hash->{'accession'}){
+    $id=$hash->{'accession'};
+  }elsif(exists $hash->{'alias'}){
+    $id=$hash->{'alias'};
+  }
   $o->id($id);
   $o->entity_type($type);
 
