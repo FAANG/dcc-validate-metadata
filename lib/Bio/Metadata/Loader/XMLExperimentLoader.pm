@@ -65,11 +65,20 @@ sub hash_to_object {
   my $attrb_array=$hash->{'EXPERIMENT_ATTRIBUTES'}->{'EXPERIMENT_ATTRIBUTE'};
 
   foreach my $attrb (@$attrb_array) {
-    my $o_attrb= Bio::Metadata::Attribute->new(
-					 name => $attrb->{'TAG'},
-					 value => $attrb->{'VALUE'}
-					);
-    $o->add_attribute($o_attrb);
+    if (exists $attrb->{'UNITS'}){
+      my $o_attrb= Bio::Metadata::Attribute->new(
+           name => $attrb->{'TAG'},
+           value => $attrb->{'VALUE'},
+           units => $attrb->{'UNITS'},
+          );
+      $o->add_attribute($o_attrb);
+    }else{
+      my $o_attrb= Bio::Metadata::Attribute->new(
+           name => $attrb->{'TAG'},
+           value => $attrb->{'VALUE'}
+          );
+      $o->add_attribute($o_attrb);
+    }  
   }
 
   return $o;
