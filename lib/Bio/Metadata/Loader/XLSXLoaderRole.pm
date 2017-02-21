@@ -5,6 +5,7 @@ use warnings;
 
 use Carp;
 use Moose::Role;
+use Data::Dumper;
 use Spreadsheet::ParseXLSX;
 
 requires 'process_sheet';
@@ -36,6 +37,11 @@ sub load {
     }
     print "[WARNING] No entities retrieved from $file_path" if !@entities;
     return \@entities;
+}
+
+sub expand {
+    my ( $self, $file_path, $sheet_names, $entities ) = @_;
+    return $entities;
 }
 
 1;

@@ -27,6 +27,7 @@ use Bio::Metadata::Reporter::BasicReporter;
 use Bio::Metadata::Reporter::TextReporter;
 use Bio::Metadata::Validate::EntityValidator;
 use Bio::Metadata::Loader::XLSXBioSampleLoader;
+use Bio::Metadata::Loader::XLSXExperimentLoader;
 use Bio::Metadata::Loader::XMLExperimentLoader;
 use Bio::Metadata::BioSample::SampleTab;
 
@@ -58,6 +59,7 @@ my $loaders = {
   'JSON'               => Bio::Metadata::Loader::JSONEntityLoader->new(),
   'BioSample .xlsx'    => Bio::Metadata::Loader::XLSXBioSampleLoader->new(),
   'SRA Experiment XML' => Bio::Metadata::Loader::XMLExperimentLoader->new(),
+  'SRA Experiment .xlsx' => Bio::Metadata::Loader::XLSXExperimentLoader->new(),
 };
 
 my $rule_config    = app->config('rules');

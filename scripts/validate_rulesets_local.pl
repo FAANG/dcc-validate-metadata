@@ -11,6 +11,7 @@ use Bio::Metadata::Reporter::ExcelReporter;
 use Bio::Metadata::Reporter::BasicReporter;
 use Bio::Metadata::Validate::EntityValidator;
 use Bio::Metadata::Loader::XLSXBioSampleLoader;
+use Bio::Metadata::Loader::XLSXExperimentLoader;
 use Bio::Metadata::Loader::XMLExperimentLoader;
 use Getopt::Long;
 use Data::Dumper;
@@ -24,10 +25,13 @@ my $verbose       = undef;
 my $output        = undef;
 my $summary       = undef;
 my $output_format = undef;
+my $input_format = undef;
 
 my @valid_output_mdoes = qw(text excel json);
+my @valid_input_mdoes = qw(excel json xml);
 my @valid_rule_types = qw(samples experiments);
 my $output_format_string = join( '|', @valid_output_mdoes );
+my $input_format_string = join( '|', @valid_input_mdoes );
 my $type_format_string  = join( '|', @valid_rule_types );
 
 GetOptions(
@@ -37,6 +41,7 @@ GetOptions(
   "verbose"         => \$verbose,
   "output=s"        => \$output,
   "output_format=s" => \$output_format,
+  "input_format=s" => \$input_format,
   "summary"         => \$summary,
 );
 
@@ -50,10 +55,15 @@ croak
   unless ( $summary || $output );
 croak "please specify -output_format $output_format_string"
   if ( $output && !$output_format );
+croak "please specify -input_format $input_format_string"
+  if ( !$input_format );
 croak "please specify -output <file>" if ( $output_format && !$output );
 croak
 "-output_format $output_format is invalid; should be one of $output_format_string"
   if ( $output_format && none { $_ eq $output_format } @valid_output_mdoes );
+croak
+"-input_format $input_format is invalid; should be one of $input_format_string"
+  if ( $input_format && none { $_ eq $input_format } @valid_input_mdoes );
 croak
 "-ruletype $rule_type is invalid; should be one of $type_format_string"
   if ( $rule_type && none { $_ eq $rule_type } @valid_rule_types );
@@ -63,12 +73,20 @@ my ($loader, $metadata, $entity_status, $entity_outcomes, $attribute_status, $at
 my $validator = create_validator( $rule_file, $verbose );
 
 if ($rule_type eq "samples"){
-
   $loader = Bio::Metadata::Loader::XLSXBioSampleLoader->new();
   $metadata = $loader->load($data_file);
 }elsif ($rule_type eq "experiments"){
-  $loader = Bio::Metadata::Loader::XMLExperimentLoader->new();
-  $metadata = $loader->load($data_file);
+  if ($input_format eq "xml"){
+    $loader = Bio::Metadata::Loader::XMLExperimentLoader->new();
+    $metadata = $loader->load($data_file);
+  }elsif ($input_format eq "excel"){
+    $loader = Bio::Metadata::Loader::XLSXExperimentLoader->new();
+    $metadata = $loader->load($data_file);
+  }else{
+    croak "Combination of -ruletype $rule_type and -input_format $input_format is not supported";
+  }
+}else{
+  croak "Combination of -ruletype $rule_type and -input_format $input_format is not supported";
 }
 
 (
