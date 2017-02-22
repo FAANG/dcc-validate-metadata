@@ -41,6 +41,22 @@ sub load {
 
 sub expand {
     my ( $self, $file_path, $sheet_names, $entities ) = @_;
+    
+    my %to_process = map { $_ => 1 } @$sheet_names;
+
+    my $parser = Spreadsheet::ParseXLSX->new;
+    my $workbook = $parser->parse($file_path);
+
+    for my $sheet  ($workbook->worksheets ) {
+        if (%to_process) {
+            next unless exists( $to_process{ $sheet->get_name } );
+            $entities = $self->process_expansion_sheet($sheet, $entities);
+        }
+        else {
+            $entities = $self->process_expansion_sheet($sheet, $entities);
+        }
+    }
+
     return $entities;
 }
 

@@ -222,8 +222,8 @@ sub row_to_object {
   }elsif ( $self->find_run_sheet_name( sub { $_ eq $sheet_name } ) ) {
     $o->id( $row->[0] );
     $o->entity_type('run');
-
   }elsif ( $self->find_exprfaang_sheet_name( sub { $_ eq $sheet_name } ) ) {      
+    $index = 2;
     $o->id( $row->[1] );
     $o->entity_type('experiment');
     #set 'links' in Entity.pm
@@ -265,6 +265,83 @@ sub row_to_object {
 
   }
   return $o;
+}
+
+sub process_expansion_sheet{
+  my ( $self, $sheet, $entities ) = @_;
+  if ( !$self->find_expr_sheet_name( sub { $_ eq $sheet->get_name } ) )
+  {
+    carp( "[WARN] refusing to process worksheet with unexpected name: "
+        . $sheet->name );
+    return 0;
+  }
+
+  my ( $row_min, $row_max ) = $sheet->row_range;
+  my ( $col_min, $col_max ) = $sheet->col_range;
+
+  my @fields;
+  for ( my $r = $row_min ; $r <= $row_max ; $r++ ) {
+    my @row;
+    for ( my $c = $col_min ; $c <= $col_max ; $c++ ) {
+      my $cell = $sheet->get_cell( $r, $c );
+
+      my $v = $cell ? $cell->value() : '';
+      #get rid of accents etc, nbsp
+      $v = unidecode($v);
+      $v =~ s/([^[:ascii:]])/ /g;
+      #get rid of multiple spaces
+      $v =~ s/\s+/ /g;
+      #get rid of trailing spaces
+      $v =~ s/\s+$//g;
+      #get rid of leading spaces
+      $v =~ s/^\s+//g;
+      push @row, $v;
+    }
+    if (@fields) {
+      $entities = $self->row_to_object_expand( \@row, \@fields, $sheet->get_name, $entities );
+    }else {
+      @fields = @row;
+    }
+
+  }
+  return $entities;
+}
+
+sub row_to_object_expand {
+  my ( $self, $row, $fields, $sheet_name, $entities ) = @_;
+  return $entities unless grep { $_ } @$row;
+
+  croak("[ERROR] Number of fields in the header/rows does not match")
+    if scalar(@$fields) != scalar(@$row);
+
+  my $index = 2;
+  if ( $self->find_expr_sheet_name( sub { $_ eq $sheet_name } ) ) {
+    my $o = $$entities{$row->[1]};
+    my $pr_att;
+    for ( my $i = $index ; $i < scalar(@$row) ; $i++ ) {
+      my $name = $fields->[$i];
+
+      if ( lc($name) eq 'term source ref' ) {
+        $pr_att->source_ref( $row->[$i] );
+      }
+      elsif ( lc($name) eq 'term source id' ) {
+        $pr_att->id( $row->[$i] );
+      }
+      elsif ( lc($name) eq 'unit' || lc($name) eq 'units' ) {
+        $pr_att->units( $row->[$i] );
+      }
+      else {
+        my $o_attrb = Bio::Metadata::Attribute->new(
+          name  => $name,
+          value => $row->[$i]
+        );
+        $o->add_attribute($o_attrb);
+        $pr_att = $o_attrb;
+      }
+    }
+    $$entities{$row->[1]}=$o;
+  }
+  return $entities;
 }
 
 __PACKAGE__->meta->make_immutable;
