@@ -116,7 +116,7 @@ web/templates/help_error_explanations.html.ep
 web/templates/help_how_to.html.ep
 web/templates/help_rest.html.ep
 web/templates/help_rule_sets.html.ep
-web/templates/help_sample_tab.html.ep
+web/templates/help_convert.html.ep
 web/templates/help_validation.html.ep
 web/templates/index.html.ep
 web/templates/layouts/layout.html.ep
@@ -125,7 +125,7 @@ web/templates/page_title.html.ep
 web/templates/rule_set.html.ep
 web/templates/rule_sets.html.ep
 web/templates/rules_table.html.ep
-web/templates/sample_tab.html.ep
+web/templates/convert.html.ep
 web/templates/term_source.html.ep
 web/templates/validate.html.ep
 web/templates/validation_output.html.ep

@@ -70,7 +70,7 @@ Validation outcomes for a set of entities can be reported in [text](https://gith
 
 ## Conversion
 
-We include  a conversion tool to produce SampleTab files for submission to [BioSamples](http://www.ebi.ac.uk/biosamples) based on a template spreadsheet. This is intended to simplify submission of sample metadata for FAANG. This conversion is available through the [web application](http://www.ebi.ac.uk/vg/faang/sample_tab/).
+We include  a conversion tool to produce SampleTab files for submission to [BioSamples](http://www.ebi.ac.uk/biosamples) based on a template spreadsheet. This is intended to simplify submission of sample metadata for FAANG. This conversion is available through the [web application](http://www.ebi.ac.uk/vg/faang/convert/).
 
 ## Installation
 

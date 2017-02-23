@@ -4,6 +4,6 @@
 <ol>
   <li>Provide access to the project <%= link_to 'metadata rules' => '/rule_sets' %></li>
   <li>Allow project members to <%= link_to 'check' => '/validate' %> that their metadata complies with the specification</li>
-  <li><%= link_to 'Convert' => '/sample_tab' %> spreadsheets to SampleTab format for submission to BioSamples</li>
+  <li><%= link_to 'Convert' => '/convert' %> spreadsheets to SampleTab or XML format for submission to BioSamples or ENA</li>
 </ol>
 <p>General submission support can be found in the <a href="https://www.ebi.ac.uk/seqdb/confluence/display/FAANG/FAANG+Archive+Submission+guidelines">FAANG confluence wiki.</a></p>

@@ -12,7 +12,7 @@
             %= link_to 'Validate' => '/validate/'
           </li>
           <li>
-            %= link_to 'Convert' => '/sample_tab/'
+            %= link_to 'Convert' => '/convert/'
           </li>
           <li>
             %= link_to 'Help' => '/help/'

@@ -14,9 +14,9 @@
 </dt>
 <dd>Validate metadata against a rule set</dd>
 <dt>
-%= link_to '/sample_tab' => '/sample_tab'
+%= link_to '/convert' => '/convert'
 </dt>
-<dd>Convert from Excel to SampleTab format, ready for submission to <a href="http://www.ebi.ac.uk/biosamples/">BioSamples@EMBL-EBI</a></dd>
+<dd>Convert from Excel to Submission formats, ready for submission to <a href="http://www.ebi.ac.uk/biosamples/">BioSamples@EMBL-EBI</a> or <a href="http://www.ebi.ac.uk/ena/">ENA@EMBL-EBI</a></dd>
 </dl>
 <h2>Response types</h2>
 <p>Append <code>?format=<var>x</var></code> to the end of your query to control the format.</p>

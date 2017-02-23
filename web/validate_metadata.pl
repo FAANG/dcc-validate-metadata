@@ -70,7 +70,7 @@ my ( $rules, $validators ) = load_rules( \%rule_locations );
 
 my %help_pages = (
   'REST API'             => 'rest',
-  'SampleTab conversion' => 'sample_tab',
+  'SampleTab conversion' => 'convert',
   'Rule sets'            => 'rule_sets',
   'Validation'           => 'validation',
   'Error explanations'   => 'error_explanations',
@@ -127,7 +127,7 @@ get '/rule_sets/#name' => sub {
   );
 };
 
-get '/sample_tab' => sub {
+get '/convert' => sub {
   my $c = shift;
   my $supporting_data = { valid_rule_set_names => \@rule_names, };
 
@@ -138,7 +138,7 @@ get '/sample_tab' => sub {
     html => sub {
       $c->stash(%$supporting_data);
       $c->render(
-        template          => 'sample_tab',
+        template          => 'convert',
         conversion_errors => [],
         status_counts     => {}
       );
@@ -146,7 +146,7 @@ get '/sample_tab' => sub {
   );
 };
 
-post '/sample_tab' => sub {
+post '/convert' => sub {
   my $c = shift;
 
   my $form_validation = $c->validation;
@@ -309,7 +309,7 @@ sub sampletab_form_errors {
     html => sub {
       $c->stash(%$supporting_data);
       $c->render(
-        template          => 'sample_tab',
+        template          => 'convert',
         errors            => \%errors,
         conversion_errors => $st_errors,
         status_counts     => $status_counts,
