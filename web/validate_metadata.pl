@@ -157,36 +157,39 @@ post '/convert' => sub {
   my $metadata_file = $c->param('metadata_file');
   my $rule_set      = $rules->{$rule_set_name};
 
-  my $st_converter =
+  if ($rule_set_name eq 'FAANG Samples'){
+    my $st_converter =
     Bio::Metadata::BioSample::SampleTab->new( rule_set => $rule_set );
-  my ( $msi, $scd );
-  if ( !$form_validation->has_error ) {
-    try {
-      my ( $tmp_upload_dir, $tmp_upload_path ) = move_to_tmp($metadata_file);
-      $st_converter->read($tmp_upload_path);
+    my ( $msi, $scd );
+    if ( !$form_validation->has_error ) {
+      try {
+        my ( $tmp_upload_dir, $tmp_upload_path ) = move_to_tmp($metadata_file);
+        $st_converter->read($tmp_upload_path);
+      }
+      catch {
+        $form_validation->error( 'metadata_file' => ['could not parse file'] );
+      };
     }
-    catch {
-      $form_validation->error( 'metadata_file' => ['could not parse file'] );
-    };
+
+    my $st_errors = $st_converter->validate;
+    my $validator = $validators->{$rule_set_name};
+
+    my ($entity_status) = $validator->check_all( $st_converter->scd );
+
+    my %status_counts;
+    for ( values %$entity_status ) {
+      $status_counts{$_}++;
+    }
+
+    if ( $form_validation->has_error || @$st_errors || $status_counts{error} ) {
+      sampletab_form_errors( $c, $form_validation, $st_errors, \%status_counts );
+    }
+    else {
+      sampletab_conversion( $c, $st_converter, $rule_set );
+    }
+  }elsif($rule_set_name eq 'FAANG Samples'){
+    print $rule_set_name;
   }
-
-  my $st_errors = $st_converter->validate;
-  my $validator = $validators->{$rule_set_name};
-
-  my ($entity_status) = $validator->check_all( $st_converter->scd );
-
-  my %status_counts;
-  for ( values %$entity_status ) {
-    $status_counts{$_}++;
-  }
-
-  if ( $form_validation->has_error || @$st_errors || $status_counts{error} ) {
-    sampletab_form_errors( $c, $form_validation, $st_errors, \%status_counts );
-  }
-  else {
-    sampletab_conversion( $c, $st_converter, $rule_set );
-  }
-
 };
 
 get '/validate' => sub {
