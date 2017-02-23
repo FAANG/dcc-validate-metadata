@@ -188,7 +188,8 @@ post '/convert' => sub {
       sampletab_conversion( $c, $st_converter, $rule_set );
     }
   }elsif($rule_set_name eq 'FAANG Samples'){
-    print $rule_set_name;
+    my $st_converter =
+    Bio::Metadata::ENA::XML->new( rule_set => $rule_set );
   }
 };
 
