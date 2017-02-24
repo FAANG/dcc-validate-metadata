@@ -30,6 +30,7 @@ use Bio::Metadata::Loader::XLSXBioSampleLoader;
 use Bio::Metadata::Loader::XLSXExperimentLoader;
 use Bio::Metadata::Loader::XMLExperimentLoader;
 use Bio::Metadata::BioSample::SampleTab;
+use Bio::Metadata::ENA::XML;
 
 plugin 'Config';
 plugin 'RenderFile';
