@@ -11,7 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-package Bio::Metadata::ENS::SUBValidation;
+package Bio::Metadata::ENA::SUBValidation;
 
 use Moose;
 use namespace::autoclean;
@@ -89,23 +89,6 @@ sub validate_section {
   my ( $self, $blocks, $block_name, $rule_set, $just_one, $at_least_one ) = @_;
 
   my $entities = $blocks->{$block_name} || [];
-
-  if ( $just_one && scalar(@$entities) != 1 ) {
-    return Bio::Metadata::Validate::ValidationOutcome->new(
-      outcome => 'error',
-      message => "One $block_name block required",
-      rule =>
-        Bio::Metadata::Rules::Rule->new( name => $block_name, type => 'text' ),
-    );
-  }
-  if ( $at_least_one && scalar(@$entities) == 0 ) {
-    return Bio::Metadata::Validate::ValidationOutcome->new(
-      outcome => 'error',
-      message => "At least one $block_name required",
-      rule =>
-        Bio::Metadata::Rules::Rule->new( name => $block_name, type => 'text' ),
-    );
-  }
 
   my $v =
     Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );

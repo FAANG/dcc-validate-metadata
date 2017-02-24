@@ -23,9 +23,9 @@ use Bio::Metadata::Loader::XLSXExperimentLoader;
 use Moose::Util::TypeConstraints;
 
 use Bio::Metadata::ENA::SUBValidation;
-use Bio::Metadata::ENA::STDValidation;
-use Bio::Metadata::ENA::EXPRValidation;
-use Bio::Metadata::ENA::RUNValidation;
+#use Bio::Metadata::ENA::STDValidation;
+#use Bio::Metadata::ENA::EXPRValidation;
+#use Bio::Metadata::ENA::RUNValidation;
 use Bio::Metadata::Reporter::BasicReporter;
 
 has 'rule_set' => (
@@ -38,56 +38,56 @@ has 'sub' => (
   is      => 'rw',
   isa     => 'Bio::Metadata::EntityArrayRef',
   handles => {
-    all_scd   => 'elements',
-    add_scd   => 'push',
-    count_scd => 'count',
-    get_scd   => 'get',
+    all_sub   => 'elements',
+    add_sub   => 'push',
+    count_sub => 'count',
+    get_sub   => 'get',
   },
   default => sub { [] },
   coerce  => 1,
 );
 
-has 'std' => (
-  traits  => ['Array'],
-  is      => 'rw',
-  isa     => 'Bio::Metadata::EntityArrayRef',
-  handles => {
-    all_scd   => 'elements',
-    add_scd   => 'push',
-    count_scd => 'count',
-    get_scd   => 'get',
-  },
-  default => sub { [] },
-  coerce  => 1,
-);
+# has 'std' => (
+#   traits  => ['Array'],
+#   is      => 'rw',
+#   isa     => 'Bio::Metadata::EntityArrayRef',
+#   handles => {
+#     all_std   => 'elements',
+#     add_std   => 'push',
+#     count_std => 'count',
+#     get_std   => 'get',
+#   },
+#   default => sub { [] },
+#   coerce  => 1,
+# );
 
-has 'expr' => (
-  traits  => ['Array'],
-  is      => 'rw',
-  isa     => 'Bio::Metadata::EntityArrayRef',
-  handles => {
-    all_scd   => 'elements',
-    add_scd   => 'push',
-    count_scd => 'count',
-    get_scd   => 'get',
-  },
-  default => sub { [] },
-  coerce  => 1,
-);
+# has 'expr' => (
+#   traits  => ['Array'],
+#   is      => 'rw',
+#   isa     => 'Bio::Metadata::EntityArrayRef',
+#   handles => {
+#     all_expr   => 'elements',
+#     add_expr   => 'push',
+#     count_expr => 'count',
+#     get_expr   => 'get',
+#   },
+#   default => sub { [] },
+#   coerce  => 1,
+# );
 
-has 'run' => (
-  traits  => ['Array'],
-  is      => 'rw',
-  isa     => 'Bio::Metadata::EntityArrayRef',
-  handles => {
-    all_scd   => 'elements',
-    add_scd   => 'push',
-    count_scd => 'count',
-    get_scd   => 'get',
-  },
-  default => sub { [] },
-  coerce  => 1,
-);
+# has 'run' => (
+#   traits  => ['Array'],
+#   is      => 'rw',
+#   isa     => 'Bio::Metadata::EntityArrayRef',
+#   handles => {
+#     all_run   => 'elements',
+#     add_run   => 'push',
+#     count_run => 'count',
+#     get_run   => 'get',
+#   },
+#   default => sub { [] },
+#   coerce  => 1,
+# );
 
 has 'sub_validator' => (
   is      => 'rw',
@@ -95,23 +95,23 @@ has 'sub_validator' => (
   default => sub { Bio::Metadata::ENA::SUBValidation->new },
 );
 
-has 'std_validator' => (
-  is      => 'rw',
-  isa     => 'Bio::Metadata::ENA::STDValidation',
-  default => sub { Bio::Metadata::ENA::STDValidation->new },
-);
+# has 'std_validator' => (
+#   is      => 'rw',
+#   isa     => 'Bio::Metadata::ENA::STDValidation',
+#   default => sub { Bio::Metadata::ENA::STDValidation->new },
+# );
 
-has 'expr_validator' => (
-  is      => 'rw',
-  isa     => 'Bio::Metadata::ENA::EXPRValidation',
-  default => sub { Bio::Metadata::ENA::EXPRValidation->new },
-);
+# has 'expr_validator' => (
+#   is      => 'rw',
+#   isa     => 'Bio::Metadata::ENA::EXPRValidation',
+#   default => sub { Bio::Metadata::ENA::EXPRValidation->new },
+# );
 
-has 'run_validator' => (
-  is      => 'rw',
-  isa     => 'Bio::Metadata::ENA::RUNValidation',
-  default => sub { Bio::Metadata::ENA::RUNValidation->new },
-);
+# has 'run_validator' => (
+#   is      => 'rw',
+#   isa     => 'Bio::Metadata::ENA::RUNValidation',
+#   default => sub { Bio::Metadata::ENA::RUNValidation->new },
+# );
 
 sub read {
   my ( $self, $file_path ) = @_;
@@ -136,11 +136,11 @@ sub validate {
   my $subref_errors =
     $self->sub_validator->check_term_source_refs( $self->sub);
   #my $stdref_errors =
-    $self->std_validator->check_term_source_refs( $self->std);
+  #  $self->std_validator->check_term_source_refs( $self->std);
   #my $exprref_errors =
-    $self->expr_validator->check_term_source_refs( $self->expr);
+  #  $self->expr_validator->check_term_source_refs( $self->expr);
   #my $runref_errors =
-    $self->run_validator->check_term_source_refs( $self->run);
+  #  $self->run_validator->check_term_source_refs( $self->run);
   #push @$sub_errors, @$std_errors, @$expr_errors, @$run_errors, 
   #@$subref_errors, @$stdref_errors, @$exprref_errors, @$runref_errors;
   push @$sub_errors, @$subref_errors;
@@ -150,9 +150,9 @@ sub validate {
 sub report_sub {
   my ($self) = @_;
 
-  my $xml_header ='<?xml version="1.0" encoding="UTF-8"?>\n';
-  my $sub_header ='<SUBMISSION_SET  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd">\n'
-  my $sub_footer ='</SUBMISSION_SET>'
+  my $xml_header ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+  my $sub_header ="<SUBMISSION_SET  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd\">\n";
+  my $sub_footer ="</SUBMISSION_SET>";
 
   my $output = $xml_header.$sub_header;
 
@@ -173,7 +173,7 @@ sub report_sub {
       elsif ($a->name eq 'center_name'){
         $center_name = $a->value;
       }
-      elsif($a->name eq /"STUDY XML FILENAME"|"EXPERIMENT XML FILENAME"|"RUN XML FILENAME"/){
+      elsif($a->name eq "STUDY XML FILENAME" || $a->name eq "EXPERIMENT XML FILENAME" || $a->name eq "RUN XML FILENAME"){
         push(@actions, "\t\t\t<ACTION>\n");
         push(@actions, "\t\t\t\t<ADD source=\"".$a->value."\" schema=\"".$schema{$a->name}."\"/>\n");
         push(@actions, "\t\t\t</ACTION>\n");
@@ -192,18 +192,21 @@ sub report_sub {
     $output = $output."\t\t\t<ACTION>\n\t\t\t\t<RELEASE/>\n\t\t\t</ACTION>\n";
   }
   $output = $output."\t\t</ACTIONS>\n\t</SUBMISSION>\n".$sub_footer;
-
-sub report_std {
-  my ($self) = @_;
-
 }
 
-sub report_expr {
-  my ($self) = @_;
+#sub report_std {
+#  my ($self) = @_;
 
-}
+#}
 
-sub report_run {
-  my ($self) = @_;
+#sub report_expr {
+#  my ($self) = @_;
 
-}
+#}
+
+#sub report_run {
+#  my ($self) = @_;
+
+#}
+
+1;

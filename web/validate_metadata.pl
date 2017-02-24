@@ -40,7 +40,8 @@ app->secrets( ['nosecrets'] );
 my $xlsx_mime_type =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 my $tsv_mime_type = ' text/tab-separated-values';
-app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type );
+my $xml_mime_type = 'text/xml';
+app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type, xml => $xml_mime_type );
 
 my $brand     = app->config('brand')     || '';
 my $brand_img = app->config('brand_img') || '';
@@ -183,7 +184,7 @@ post '/convert' => sub {
     }
 
     if ( $form_validation->has_error || @$st_errors || $status_counts{error} ) {
-      sampletab_form_errors( $c, $form_validation, $st_errors, \%status_counts );
+      conversion_form_errors( $c, $form_validation, $st_errors, \%status_counts );
     }
     else {
       sampletab_conversion( $c, $st_converter, $rule_set );
@@ -204,18 +205,20 @@ post '/convert' => sub {
     my $st_errors = $st_converter->validate;
     my $validator = $validators->{$rule_set_name};
 
-    my ($entity_status) = $validator->check_all( $st_converter->expr );
+    #FIXME NOT CURRENTLY CHECKING ERRORS
+    #my ($entity_status) = $validator->check_all( $st_converter->expr );#TODO check how to validate expr
 
     my %status_counts;
-    for ( values %$entity_status ) {
-      $status_counts{$_}++;
-    }
+    #FIXME NOT CURRENTLY CHECKING ERRORS
+    #for ( values %$entity_status ) {
+    #  $status_counts{$_}++;
+    #}
 
     if ( $form_validation->has_error || @$st_errors || $status_counts{error} ) {
-      sampletab_form_errors( $c, $form_validation, $st_errors, \%status_counts );
+      conversion_form_errors( $c, $form_validation, $st_errors, \%status_counts );
     }
     else {
-      sampletab_conversion( $c, $st_converter, $rule_set );
+      ena_conversion( $c, $st_converter, $rule_set );
     }
 
   }
@@ -322,7 +325,7 @@ sub validation_supporting_data {
   };
 }
 
-sub sampletab_form_errors {
+sub conversion_form_errors {
   my ( $c, $form_validation, $st_errors, $status_counts ) = @_;
 
   my $supporting_data = { valid_rule_set_names => \@rule_names, };
@@ -433,6 +436,53 @@ sub sampletab_conversion {
       );
     }
   );
+
+}
+
+sub ena_conversion {
+  my ( $c, $st_converter, $rule_set ) = @_;
+
+  my $rule_set_name = $c->param('rule_set_name');
+  my $metadata_file = $c->param('metadata_file');
+
+  my $validator =
+    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+
+  #FIXME NOT CURRENTLY CHECKING ERRORS
+  #my (
+  #  $entity_status,      $entity_outcomes, $attribute_status,
+  #  $attribute_outcomes, $entity_rule_groups,
+  #) = $validator->check_all( $st_converter->expr ); #TODO not sure expr is correct
+  my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
+
+  $c->respond_to(
+    json => sub {
+      $c->render(
+        json => $reporter->report(
+          ena => join( "\n", #TODO changed sampletab to ena, need to check for corresponding change
+            $st_converter->report_sub)
+        )
+      );
+    },
+    html => sub {
+      my $tmp_file = File::Temp->new();
+
+      my $reporter =
+        Bio::Metadata::Reporter::TextReporter->new(
+        file_path => $tmp_file->filename ); #TODO DO WE NEED A DIFFERENT REPORTER
+
+      print $tmp_file $st_converter->report_sub;
+
+      $c->render_file(
+        filepath     => $tmp_file->filename,
+        filename     => $metadata_file->filename() . '.submission.xml',#TODO need to make this do correct filenames
+        content_type => $xml_mime_type,
+        cleanup      => 1,
+      );
+    }
+  );
+
+  #TODO need to zip up files for download
 
 }
 
