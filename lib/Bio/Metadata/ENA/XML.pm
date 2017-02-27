@@ -121,7 +121,7 @@ sub read {
   my $loader = Bio::Metadata::Loader::XLSXExperimentLoader->new();
 
   $self->sub( $loader->load_sub_entities($file_path) );
-  #$self->std( $loader->load_std_entities($file_path) );
+  $self->std( $loader->load_std_entities($file_path) );
   #$self->exprena( $loader->load_exprena_entities($file_path) );
   #$self->exprfaang( $loader->load_exprfaang_entities($file_path) );
   #$self->run( $loader->load_run_entities($file_path) );
