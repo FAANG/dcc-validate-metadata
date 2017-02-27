@@ -102,40 +102,5 @@ sub validate_section {
   return @errors;
 }
 
-sub check_term_source_refs {
-  my ( $self, $msi, $scd ) = @_;
-
-  my %known_term_source_refs;
-  for my $e (@$msi) {
-    next unless ( $e->id eq 'term source' );
-    my @attributes = grep { $_->name eq 'Term Source Name' } $e->all_attributes;
-    for $a (@attributes) {
-      $known_term_source_refs{ $a->value } = 1;
-    }
-  }
-  my %unknown_term_source_refs;
-  for my $e (@$scd) {
-    for my $a ( $e->all_attributes ) {
-      if ( $a->source_ref && !$known_term_source_refs{ $a->source_ref } ) {
-        $unknown_term_source_refs{ $a->source_ref }++;
-      }
-    }
-  }
-
-  my @errors;
-  for my $k ( keys %unknown_term_source_refs ) {
-    push @errors,
-      Bio::Metadata::Validate::ValidationOutcome->new(
-      outcome => 'error',
-      message => "Term Source REF used without being declared - $k",
-      rule    => Bio::Metadata::Rules::Rule->new(
-        name => 'term source',
-        type => 'text'
-      ),
-      );
-  }
-  return \@errors;
-}
-
 __PACKAGE__->meta->make_immutable;
 1;

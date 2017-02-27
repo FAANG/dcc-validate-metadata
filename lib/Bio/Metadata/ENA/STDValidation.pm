@@ -20,7 +20,6 @@ use Bio::Metadata::Rules::Rule;
 use Bio::Metadata::Validate::ValidationOutcome;
 use Bio::Metadata::Validate::EntityValidator;
 
-
 has 'study_rule_set' => (
   is      => 'ro',
   isa     => 'Bio::Metadata::Rules::RuleSet',

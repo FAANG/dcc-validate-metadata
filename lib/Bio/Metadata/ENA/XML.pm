@@ -47,47 +47,47 @@ has 'sub' => (
   coerce  => 1,
 );
 
- has 'std' => (
-   traits  => ['Array'],
-   is      => 'rw',
-   isa     => 'Bio::Metadata::EntityArrayRef',
-   handles => {
-     all_std   => 'elements',
-     add_std   => 'push',
-     count_std => 'count',
-     get_std   => 'get',
-   },
-   default => sub { [] },
-   coerce  => 1,
- );
+has 'std' => (
+ traits  => ['Array'],
+ is      => 'rw',
+ isa     => 'Bio::Metadata::EntityArrayRef',
+ handles => {
+   all_std   => 'elements',
+   add_std   => 'push',
+   count_std => 'count',
+   get_std   => 'get',
+ },
+ default => sub { [] },
+ coerce  => 1,
+);
 
-# has 'expr' => (
-#   traits  => ['Array'],
-#   is      => 'rw',
-#   isa     => 'Bio::Metadata::EntityArrayRef',
-#   handles => {
-#     all_expr   => 'elements',
-#     add_expr   => 'push',
-#     count_expr => 'count',
-#     get_expr   => 'get',
-#   },
-#   default => sub { [] },
-#   coerce  => 1,
-# );
+has 'expr' => (
+  traits  => ['Array'],
+  is      => 'rw',
+  isa     => 'Bio::Metadata::EntityArrayRef',
+  handles => {
+    all_expr   => 'elements',
+    add_expr   => 'push',
+    count_expr => 'count',
+    get_expr   => 'get',
+  },
+  default => sub { [] },
+  coerce  => 1,
+);
 
-# has 'run' => (
-#   traits  => ['Array'],
-#   is      => 'rw',
-#   isa     => 'Bio::Metadata::EntityArrayRef',
-#   handles => {
-#     all_run   => 'elements',
-#     add_run   => 'push',
-#     count_run => 'count',
-#     get_run   => 'get',
-#   },
-#   default => sub { [] },
-#   coerce  => 1,
-# );
+has 'run' => (
+  traits  => ['Array'],
+  is      => 'rw',
+  isa     => 'Bio::Metadata::EntityArrayRef',
+  handles => {
+    all_run   => 'elements',
+    add_run   => 'push',
+    count_run => 'count',
+    get_run   => 'get',
+  },
+  default => sub { [] },
+  coerce  => 1,
+);
 
 has 'sub_validator' => (
   is      => 'rw',
@@ -121,7 +121,7 @@ sub read {
   my $loader = Bio::Metadata::Loader::XLSXExperimentLoader->new();
 
   $self->sub( $loader->load_sub_entities($file_path) );
-  $self->std( $loader->load_std_entities($file_path) );
+  #$self->std( $loader->load_std_entities($file_path) );
   #$self->exprena( $loader->load_exprena_entities($file_path) );
   #$self->exprfaang( $loader->load_exprfaang_entities($file_path) );
   #$self->run( $loader->load_run_entities($file_path) );
@@ -130,11 +130,11 @@ sub read {
 sub validate {
   my ($self) = @_;
   my $sub_errors = $self->sub_validator->validate_sub( $self->sub );
-  my $std_errors = $self->std_validator->validate_std( $self->std );
+  #my $std_errors = $self->std_validator->validate_std( $self->std );
   #my $expr_errors = $self->expr_validator->validate_expr( $self->expr );
   #my $run_errors = $self->run_validator->validate_run( $self->run );
-  #push @$sub_errors, @$std_errors, @$expr_errors, @$run_errors;
-  push @$sub_errors, @$std_errors;
+  #push @$sub_errors, @$std_errors;
+  push @$sub_errors;
   return $sub_errors;
 }
 
