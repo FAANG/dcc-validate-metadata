@@ -130,20 +130,11 @@ sub read {
 sub validate {
   my ($self) = @_;
   my $sub_errors = $self->sub_validator->validate_sub( $self->sub );
-  #my $std_errors = $self->std_validator->validate_std( $self->std );
+  my $std_errors = $self->std_validator->validate_std( $self->std );
   #my $expr_errors = $self->expr_validator->validate_expr( $self->expr );
   #my $run_errors = $self->run_validator->validate_run( $self->run );
-  my $subref_errors =
-    $self->sub_validator->check_term_source_refs( $self->sub);
-  #my $stdref_errors =
-  #  $self->std_validator->check_term_source_refs( $self->std);
-  #my $exprref_errors =
-  #  $self->expr_validator->check_term_source_refs( $self->expr);
-  #my $runref_errors =
-  #  $self->run_validator->check_term_source_refs( $self->run);
-  #push @$sub_errors, @$std_errors, @$expr_errors, @$run_errors, 
-  #@$subref_errors, @$stdref_errors, @$exprref_errors, @$runref_errors;
-  push @$sub_errors, @$subref_errors;
+  #push @$sub_errors, @$std_errors, @$expr_errors, @$run_errors;
+  push @$sub_errors, @$std_errors;
   return $sub_errors;
 }
 
