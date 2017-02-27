@@ -23,7 +23,7 @@ use Bio::Metadata::Loader::XLSXExperimentLoader;
 use Moose::Util::TypeConstraints;
 
 use Bio::Metadata::ENA::SUBValidation;
-#use Bio::Metadata::ENA::STDValidation;
+use Bio::Metadata::ENA::STDValidation;
 #use Bio::Metadata::ENA::EXPRValidation;
 #use Bio::Metadata::ENA::RUNValidation;
 use Bio::Metadata::Reporter::BasicReporter;
@@ -47,19 +47,19 @@ has 'sub' => (
   coerce  => 1,
 );
 
-# has 'std' => (
-#   traits  => ['Array'],
-#   is      => 'rw',
-#   isa     => 'Bio::Metadata::EntityArrayRef',
-#   handles => {
-#     all_std   => 'elements',
-#     add_std   => 'push',
-#     count_std => 'count',
-#     get_std   => 'get',
-#   },
-#   default => sub { [] },
-#   coerce  => 1,
-# );
+ has 'std' => (
+   traits  => ['Array'],
+   is      => 'rw',
+   isa     => 'Bio::Metadata::EntityArrayRef',
+   handles => {
+     all_std   => 'elements',
+     add_std   => 'push',
+     count_std => 'count',
+     get_std   => 'get',
+   },
+   default => sub { [] },
+   coerce  => 1,
+ );
 
 # has 'expr' => (
 #   traits  => ['Array'],
@@ -95,11 +95,11 @@ has 'sub_validator' => (
   default => sub { Bio::Metadata::ENA::SUBValidation->new },
 );
 
-# has 'std_validator' => (
-#   is      => 'rw',
-#   isa     => 'Bio::Metadata::ENA::STDValidation',
-#   default => sub { Bio::Metadata::ENA::STDValidation->new },
-# );
+has 'std_validator' => (
+  is      => 'rw',
+  isa     => 'Bio::Metadata::ENA::STDValidation',
+  default => sub { Bio::Metadata::ENA::STDValidation->new },
+);
 
 # has 'expr_validator' => (
 #   is      => 'rw',
