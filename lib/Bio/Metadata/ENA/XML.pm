@@ -142,7 +142,7 @@ sub report_sub {
   my ($self) = @_;
 
   my $xml_header ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-  my $sub_header ="<SUBMISSION_SET  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd\">\n";
+  my $sub_header ="<SUBMISSION_SET xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd\">\n";
   my $sub_footer ="</SUBMISSION_SET>";
 
   my $output = $xml_header.$sub_header;
@@ -185,10 +185,46 @@ sub report_sub {
   $output = $output."\t\t</ACTIONS>\n\t</SUBMISSION>\n".$sub_footer;
 }
 
-#sub report_std {
-#  my ($self) = @_;
+sub report_std {
+  my ($self) = @_;
+  my $xml_header ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+  my $std_header ="<STUDY_SET xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.study.xsd\">\n";
+  my $std_footer ="</STUDY_SET>";
 
-#}
+  my ($study_alias, $center_name, $STUDY_TITLE, $STUDY_TYPE, $STUDY_DESCRIPTION);
+
+  my $output = $xml_header.$std_header;
+
+  for my $e ( $self->all_std ) {
+    for my $a ($e->all_attributes) {
+
+      next if ! defined $a->value;
+
+      if ($a->name eq 'study_alias'){
+        $study_alias = $a->value;
+      }
+      elsif ($a->name eq 'center_name'){
+        $center_name = $a->value;
+      }
+      elsif ($a->name eq 'STUDY_TITLE'){
+        $STUDY_TITLE = $a->value;
+      }
+      elsif ($a->name eq 'STUDY_TYPE'){
+        $STUDY_TYPE = $a->value;
+      }
+      elsif ($a->name eq 'STUDY_DESCRIPTION'){
+        $STUDY_DESCRIPTION = $a->value;
+      }
+    }
+  }
+  $output = $output."\t<STUDY alias=\"".$study_alias."\" center_name=\"".$center_name."\">\n";
+  $output = $output."\t\t<DESCRIPTOR>\n";
+  $output = $output."\t\t\t<STUDY_TITLE>".$STUDY_TITLE."</STUDY_TITLE>\n";
+  $output = $output."\t\t\t<STUDY_TYPE existing_study_type=\">".$STUDY_TYPE."\"/>\n";
+  $output = $output."\t\t\t<STUDY_DESCRIPTION>".$STUDY_DESCRIPTION."</STUDY_DESCRIPTION>\n";
+  $output = $output."\t\t</DESCRIPTOR>\n";
+  $output = $output.$std_footer;
+}
 
 #sub report_expr {
 #  my ($self) = @_;
