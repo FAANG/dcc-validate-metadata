@@ -46,7 +46,7 @@ has 'sub_sheet_names' => (
   default => sub { [ 'Submission' ] },
 );
 
-has 'stud_sheet_names' => (
+has 'std_sheet_names' => (
   traits  => ['Array'],
   is      => 'rw',
   isa     => 'ArrayRef[Str]',
@@ -111,9 +111,9 @@ has 'run_sheet_names' => (
   },
 );
 
-sub load_stud_entities {
+sub load_std_entities {
   my ( $self, $file_path ) = @_;
-  return $self->_load( $file_path, $self->stud_sheet_names );
+  return $self->_load( $file_path, $self->std_sheet_names );
 }
 sub load_sub_entities {
   my ( $self, $file_path ) = @_;

@@ -20,5 +20,100 @@ use Bio::Metadata::Rules::Rule;
 use Bio::Metadata::Validate::ValidationOutcome;
 use Bio::Metadata::Validate::EntityValidator;
 
+has 'ena_rule_set' => (
+  is      => 'ro',
+  isa     => 'Bio::Metadata::Rules::RuleSet',
+  coerce  => 1,
+  default => sub {
+    {
+      name        => 'ENA XML section - ena',
+      rule_groups => [
+        {
+          name  => 'ENA rules',
+          rules => [
+            {
+              name      => 'SAMPLE_DESCRIPTOR',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'EXPERIMENT alias',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'center_name',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'TITLE',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'STUDY_REF',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'LIBRARY_NAME',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'LIBRARY_STRATEGY',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'LIBRARY_SOURCE',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+                        {
+              name      => 'LIBRARY_SELECTION',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'LIBRARY_LAYOUT',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'NOMINAL_LENGTH',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+            {
+              name      => 'NOMINAL_SDEV',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+            {
+              name      => 'LIBRARY_CONSTRUCTION_PROTOCOL',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+            {
+              name      => 'PLATFORM',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'INSTRUMENT_MODEL',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+          ]
+        },
+      ]
+    };
+  }
+);
+
+
+
 __PACKAGE__->meta->make_immutable;
 1;

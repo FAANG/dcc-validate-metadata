@@ -121,7 +121,7 @@ sub read {
   my $loader = Bio::Metadata::Loader::XLSXExperimentLoader->new();
 
   $self->sub( $loader->load_sub_entities($file_path) );
-  #$self->std( $loader->load_std_entities($file_path) );
+  $self->std( $loader->load_std_entities($file_path) );
   #$self->exprena( $loader->load_exprena_entities($file_path) );
   #$self->exprfaang( $loader->load_exprfaang_entities($file_path) );
   $self->run( $loader->load_run_entities($file_path) );
@@ -130,11 +130,11 @@ sub read {
 sub validate {
   my ($self) = @_;
   my $sub_errors = $self->sub_validator->validate_sub( $self->sub );
-  #my $std_errors = $self->std_validator->validate_std( $self->std );
+  my $std_errors = $self->std_validator->validate_std( $self->std );
   #my $expr_errors = $self->expr_validator->validate_expr( $self->expr );
   my $run_errors = $self->run_validator->validate_run( $self->run );
   #push @$sub_errors, @$std_errors;
-  push @$sub_errors, @$run_errors;
+  push @$sub_errors, @$std_errors, @$run_errors;
   return $sub_errors;
 }
 
@@ -220,7 +220,7 @@ sub report_std {
   $output = $output."\t<STUDY alias=\"".$study_alias."\" center_name=\"".$center_name."\">\n";
   $output = $output."\t\t<DESCRIPTOR>\n";
   $output = $output."\t\t\t<STUDY_TITLE>".$STUDY_TITLE."</STUDY_TITLE>\n";
-  $output = $output."\t\t\t<STUDY_TYPE existing_study_type=\">".$STUDY_TYPE."\"/>\n";
+  $output = $output."\t\t\t<STUDY_TYPE existing_study_type=\"".$STUDY_TYPE."\"/>\n";
   $output = $output."\t\t\t<STUDY_DESCRIPTION>".$STUDY_DESCRIPTION."</STUDY_DESCRIPTION>\n";
   $output = $output."\t\t</DESCRIPTOR>\n";
   $output = $output.$std_footer;
@@ -298,7 +298,7 @@ sub report_run {
     push(@runs, $run);
   }
   foreach my $run (@runs){
-    $output = $output.$run."\n";
+    $output = $output.$run;
   }
   $output = $output.$run_footer;
 }
