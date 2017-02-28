@@ -53,12 +53,12 @@ has 'run_rule_set' => (
             },
             {
               name      => 'filename',
-              mandatory => 'optional',
+              mandatory => 'mandatory',
               type      => 'text'
             },
             {
               name      => 'filetype',
-              mandatory => 'optional',
+              mandatory => 'mandatory',
               type      => 'text'
             },
             {

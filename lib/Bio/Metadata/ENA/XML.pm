@@ -120,7 +120,7 @@ sub read {
 
   my $loader = Bio::Metadata::Loader::XLSXExperimentLoader->new();
 
-  #$self->sub( $loader->load_sub_entities($file_path) );
+  $self->sub( $loader->load_sub_entities($file_path) );
   #$self->std( $loader->load_std_entities($file_path) );
   #$self->exprena( $loader->load_exprena_entities($file_path) );
   #$self->exprfaang( $loader->load_exprfaang_entities($file_path) );
@@ -129,15 +129,13 @@ sub read {
 
 sub validate {
   my ($self) = @_;
-  #my $sub_errors = $self->sub_validator->validate_sub( $self->sub );
+  my $sub_errors = $self->sub_validator->validate_sub( $self->sub );
   #my $std_errors = $self->std_validator->validate_std( $self->std );
   #my $expr_errors = $self->expr_validator->validate_expr( $self->expr );
   my $run_errors = $self->run_validator->validate_run( $self->run );
   #push @$sub_errors, @$std_errors;
-  #push @$sub_errors;
-  #return $sub_errors;
-  push @$run_errors;
-  return $run_errors;
+  push @$sub_errors, @$run_errors;
+  return $sub_errors;
 }
 
 sub report_sub {
@@ -291,9 +289,9 @@ sub report_run {
     $run = $run."\t\t<EXPERIMENT_REF refname=\"".$EXPERIMENT_REF."\"/>\n";
     $run = $run."\t\t<DATA_BLOCK>\n";
     $run = $run."\t\t\t<FILES>\n";
-    $run = $run."\t\t\t\t<FILE>filename=\"".$filename."\" filetype=\"".$filetype."\""."\" checksum_method=\"".$checksum_method."\""."\" checksum=\"".$checksum."\"</FILE>\n";
+    $run = $run."\t\t\t\t<FILE filename=\"".$filename."\" filetype=\"".$filetype."\" checksum_method=\"".$checksum_method."\" checksum=\"".$checksum."\"</FILE>\n";
     if ($filename_pair){
-      $run = $run."\t\t\t\t<FILE>filename=\"".$filename_pair."\" filetype=\"".$filetype_pair."\""."\" checksum_method=\"".$checksum_method_pair."\""."\" checksum=\"".$checksum_pair."\"</FILE>\n";
+      $run = $run."\t\t\t\t<FILE filename=\"".$filename_pair."\" filetype=\"".$filetype_pair."\" checksum_method=\"".$checksum_method_pair."\" checksum=\"".$checksum_pair."\"</FILE>\n";
     }
     $run = $run."\t\t\t</FILES>\n";
     $run = $run."\t\t\t</DATA_BLOCK>\n";
