@@ -120,22 +120,24 @@ sub read {
 
   my $loader = Bio::Metadata::Loader::XLSXExperimentLoader->new();
 
-  $self->sub( $loader->load_sub_entities($file_path) );
+  #$self->sub( $loader->load_sub_entities($file_path) );
   #$self->std( $loader->load_std_entities($file_path) );
   #$self->exprena( $loader->load_exprena_entities($file_path) );
   #$self->exprfaang( $loader->load_exprfaang_entities($file_path) );
-  #$self->run( $loader->load_run_entities($file_path) );
+  $self->run( $loader->load_run_entities($file_path) );
 }
 
 sub validate {
   my ($self) = @_;
-  my $sub_errors = $self->sub_validator->validate_sub( $self->sub );
+  #my $sub_errors = $self->sub_validator->validate_sub( $self->sub );
   #my $std_errors = $self->std_validator->validate_std( $self->std );
   #my $expr_errors = $self->expr_validator->validate_expr( $self->expr );
-  #my $run_errors = $self->run_validator->validate_run( $self->run );
+  my $run_errors = $self->run_validator->validate_run( $self->run );
   #push @$sub_errors, @$std_errors;
-  push @$sub_errors;
-  return $sub_errors;
+  #push @$sub_errors;
+  #return $sub_errors;
+  push @$run_errors;
+  return $run_errors;
 }
 
 sub report_sub {
@@ -231,9 +233,76 @@ sub report_std {
 
 #}
 
-#sub report_run {
-#  my ($self) = @_;
+sub report_run {
+  my ($self) = @_;
+  my $xml_header ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+  my $run_header ="<RUN_SET xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.run.xsd\">\n";
+  my $run_footer ="</RUN_SET>";
 
-#}
+  my (@runs);
+
+  my $output = $xml_header.$run_header;
+
+  for my $e ( $self->all_run ) {
+    my ($alias, $center_name, $run_center, $run_date, $EXPERIMENT_REF, $filename, $filetype, $checksum_method, $checksum, $filename_pair, $filetype_pair, $checksum_method_pair, $checksum_pair);
+    for my $a ($e->all_attributes) {
+      next if ! defined $a->value;
+      if ($a->name eq 'alias'){
+        $alias = $a->value;
+      }
+      elsif ($a->name eq 'center_name'){
+        $center_name = $a->value;
+      }
+      elsif ($a->name eq 'run_center'){
+        $run_center = $a->value;
+      }
+      elsif ($a->name eq 'run_date'){
+        $run_date = $a->value;
+      }
+      elsif ($a->name eq 'EXPERIMENT_REF'){
+        $EXPERIMENT_REF = $a->value;
+      }
+      elsif ($a->name eq 'filename'){
+        $filename = $a->value;
+      }
+      elsif ($a->name eq 'filetype'){
+        $filetype = $a->value;
+      }
+      elsif ($a->name eq 'checksum_method'){
+        $checksum_method = $a->value;
+      }
+      elsif ($a->name eq 'checksum'){
+        $checksum = $a->value;
+      }
+      elsif ($a->name eq 'filename_pair'){
+        $filename_pair = $a->value;
+      }
+      elsif ($a->name eq 'filetype_pair'){
+        $filetype_pair = $a->value;
+      }
+      elsif ($a->name eq 'checksum_method_pair'){
+        $checksum_method_pair = $a->value;
+      }
+      elsif ($a->name eq 'checksum_pair'){
+        $checksum_pair = $a->value;
+      }
+    }
+    my $run = "\t<SUBMISSION alias=\"".$alias."\" center_name=\"".$center_name."\" run_center=\"".$run_center."\" run_date=\"".$run_date."\">\n";
+    $run = $run."\t\t<EXPERIMENT_REF refname=\"".$EXPERIMENT_REF."\"/>\n";
+    $run = $run."\t\t<DATA_BLOCK>\n";
+    $run = $run."\t\t\t<FILES>\n";
+    $run = $run."\t\t\t\t<FILE>filename=\"".$filename."\" filetype=\"".$filetype."\""."\" checksum_method=\"".$checksum_method."\""."\" checksum=\"".$checksum."\"</FILE>\n";
+    if ($filename_pair){
+      $run = $run."\t\t\t\t<FILE>filename=\"".$filename_pair."\" filetype=\"".$filetype_pair."\""."\" checksum_method=\"".$checksum_method_pair."\""."\" checksum=\"".$checksum_pair."\"</FILE>\n";
+    }
+    $run = $run."\t\t\t</FILES>\n";
+    $run = $run."\t\t\t</DATA_BLOCK>\n";
+    push(@runs, $run);
+  }
+  foreach my $run (@runs){
+    $output = $output.$run."\n";
+  }
+  $output = $output.$run_footer;
+}
 
 1;

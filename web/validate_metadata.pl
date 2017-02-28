@@ -472,21 +472,28 @@ sub ena_conversion {
         Bio::Metadata::Reporter::TextReporter->new(
         file_path => $tmp_file->filename ); #TODO DO WE NEED A DIFFERENT REPORTER
 
-      print $tmp_file $st_converter->report_sub;
+      #print $tmp_file $st_converter->report_sub;
       #print $tmp_file $st_converter->report_std;
+      print $tmp_file $st_converter->report_run;
 
-      $c->render_file(
-        filepath     => $tmp_file->filename,
-        filename     => $metadata_file->filename() . '.submission.xml',#TODO need to make this do correct filenames
-        content_type => $xml_mime_type,
-        cleanup      => 1,
-      );
+      #$c->render_file(
+      #  filepath     => $tmp_file->filename,
+      #  filename     => $metadata_file->filename() . '.submission.xml',#TODO need to make this do correct filenames
+      #  content_type => $xml_mime_type,
+      #  cleanup      => 1,
+      #);
       #$c->render_file(
       #  filepath     => $tmp_file->filename,
       #  filename     => $metadata_file->filename() . '.study.xml',#TODO need to make this do correct filenames
       #  content_type => $xml_mime_type,
       #  cleanup      => 1,
       #);
+      $c->render_file(
+        filepath     => $tmp_file->filename,
+        filename     => $metadata_file->filename() . '.run.xml',#TODO need to make this do correct filenames
+        content_type => $xml_mime_type,
+        cleanup      => 1,
+      );
     }
   );
   #TODO need to zip up files for download

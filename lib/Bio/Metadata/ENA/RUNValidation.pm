@@ -110,7 +110,7 @@ sub validate_run {
   my @errors;
   push @errors,
     $self->validate_section( \%blocks, 'run',
-    $self->submission_rule_set, 0, 1 );
+    $self->run_rule_set, 0, 1 );
 
   return \@errors;
 }
