@@ -20,5 +20,117 @@ use Bio::Metadata::Rules::Rule;
 use Bio::Metadata::Validate::ValidationOutcome;
 use Bio::Metadata::Validate::EntityValidator;
 
+has 'run_rule_set' => (
+  is      => 'ro',
+  isa     => 'Bio::Metadata::Rules::RuleSet',
+  coerce  => 1,
+  default => sub {
+    {
+      name        => 'Run XML section - run',
+      rule_groups => [
+        {
+          name  => 'Run rules',
+          rules => [
+            {
+              name      => 'alias',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'center_name',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'run_center',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'EXPERIMENT_REF',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
+              name      => 'filename',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+            {
+              name      => 'filetype',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+            {
+              name      => 'checksum_method',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+            {
+              name      => 'checksum',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+                        {
+              name      => 'filename_pair',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+            {
+              name      => 'filetype_pair',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+            {
+              name      => 'checksum_method_pair',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+            {
+              name      => 'checksum_pair',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+          ]
+        },
+      ]
+    };
+  }
+);
+
+sub validate_run {
+  my ( $self, $run_entries ) = @_;
+
+  my %blocks;
+  for my $run_entity (@$run_entries) {
+    $blocks{ $run_entity->id } //= [];
+    push @{ $blocks{ $run_entity->id } }, $run_entity;
+  }
+
+  my @errors;
+  push @errors,
+    $self->validate_section( \%blocks, 'run',
+    $self->submission_rule_set, 0, 1 );
+
+  return \@errors;
+}
+
+sub validate_section {
+  my ( $self, $blocks, $block_name, $rule_set, $just_one, $at_least_one ) = @_;
+
+  my $entities = $blocks->{$block_name} || [];
+
+  my $v =
+    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+
+  my @errors;
+  for my $e (@$entities) {
+    my ( $outcome_overall, $validation_outcomes ) = $v->check($e);
+    push @errors, grep { $_->outcome ne 'pass' } @$validation_outcomes;
+  }
+
+  return @errors;
+}
+
 __PACKAGE__->meta->make_immutable;
 1;

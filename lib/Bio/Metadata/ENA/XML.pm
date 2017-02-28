@@ -24,8 +24,8 @@ use Moose::Util::TypeConstraints;
 
 use Bio::Metadata::ENA::SUBValidation;
 use Bio::Metadata::ENA::STDValidation;
-#use Bio::Metadata::ENA::EXPRValidation;
-#use Bio::Metadata::ENA::RUNValidation;
+use Bio::Metadata::ENA::EXPRValidation;
+use Bio::Metadata::ENA::RUNValidation;
 use Bio::Metadata::Reporter::BasicReporter;
 
 has 'rule_set' => (
@@ -107,11 +107,11 @@ has 'std_validator' => (
 #   default => sub { Bio::Metadata::ENA::EXPRValidation->new },
 # );
 
-# has 'run_validator' => (
-#   is      => 'rw',
-#   isa     => 'Bio::Metadata::ENA::RUNValidation',
-#   default => sub { Bio::Metadata::ENA::RUNValidation->new },
-# );
+has 'run_validator' => (
+  is      => 'rw',
+  isa     => 'Bio::Metadata::ENA::RUNValidation',
+  default => sub { Bio::Metadata::ENA::RUNValidation->new },
+);
 
 sub read {
   my ( $self, $file_path ) = @_;
