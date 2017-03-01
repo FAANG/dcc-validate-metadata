@@ -123,7 +123,6 @@ sub read {
   $self->sub( $loader->load_sub_entities($file_path) );
   $self->std( $loader->load_std_entities($file_path) );
   $self->expr( $loader->load_exprena_entities($file_path) );
-  #$self->exprfaang( $loader->load_exprfaang_entities($file_path) );
   $self->run( $loader->load_run_entities($file_path) );
 }
 
@@ -316,7 +315,9 @@ sub report_expr {
       }
     }
     $experiment = $experiment."\t\t\t</LIBRARY_DESCRIPTOR>\n\t\t</DESIGN>\n";
-    $experiment = $experiment."\t</EXPERIMENT>\n";
+    $experiment = $experiment."\t\t<EXPERIMENT_ATTRIBUTES>\n";
+    
+    $experiment = $experiment."\t\t</EXPERIMENT_ATTRIBUTES>\n";
     push(@experiments, $experiment);
   }
   foreach my $experiment (@experiments){

@@ -218,10 +218,10 @@ post '/convert' => sub {
       conversion_form_errors( $c, $form_validation, $st_errors, \%status_counts );
     }
     else {
-      #ena_conversion_sub( $c, $st_converter, $rule_set);
+      ena_conversion_sub( $c, $st_converter, $rule_set);
       #ena_conversion_std( $c, $st_converter, $rule_set);
       #ena_conversion_run( $c, $st_converter, $rule_set);
-      ena_conversion_expr( $c, $st_converter, $rule_set);
+      #ena_conversion_expr( $c, $st_converter, $rule_set);
     }
 
   }
