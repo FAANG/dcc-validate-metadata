@@ -250,14 +250,15 @@ sub report_expr {
   my $output = $xml_header.$expr_header;
 
   for my $e ( $self->all_exprfaang ) {
-    my ($attribute, $EXPERIMENT_alias);
+    my ($attribute_block, $EXPERIMENT_alias);
     for my $a ($e->all_attributes) {
       next if ! defined $a->value;
-      if ($a->name eq 'EXPERIMENT_alias'){
-        $EXPERIMENT_alias = $a->value;
-      }
+      $attribute_block = $attribute_block."\t\t\t<EXPERIMENT_ATTRIBUTE>\n";
+      $attribute_block = $attribute_block."\t\t\t\t<TAG>".$a."</TAG>\n";
+      $attribute_block = $attribute_block."\t\t\t\t<VALUE>".$a->value."</VALUE>\n";
+      $attribute_block = $attribute_block."\t\t\t</EXPERIMENT_ATTRIBUTE>\n";
     }
-    $attributes{$e->id}="TEXT GOES HERE\n";
+    $attributes{$e->id}=$attribute_block;
   }
   for my $e ( $self->all_expr ) {
     my ($EXPERIMENT_alias, $center_name, $SAMPLE_DESCRIPTOR, $TITLE, $STUDY_REF, $LIBRARY_NAME, $LIBRARY_STRATEGY, $LIBRARY_SOURCE, $LIBRARY_SELECTION, $LIBRARY_LAYOUT, $NOMINAL_LENGTH, $NOMINAL_SDEV, $LIBRARY_CONSTRUCTION_PROTOCOL, $PLATFORM, $INSTRUMENT_MODEL);
