@@ -101,11 +101,11 @@ has 'std_validator' => (
   default => sub { Bio::Metadata::ENA::STDValidation->new },
 );
 
-# has 'expr_validator' => (
-#   is      => 'rw',
-#   isa     => 'Bio::Metadata::ENA::EXPRValidation',
-#   default => sub { Bio::Metadata::ENA::EXPRValidation->new },
-# );
+has 'expr_validator' => (
+  is      => 'rw',
+  isa     => 'Bio::Metadata::ENA::EXPRValidation',
+  default => sub { Bio::Metadata::ENA::EXPRValidation->new },
+);
 
 has 'run_validator' => (
   is      => 'rw',
@@ -122,7 +122,7 @@ sub read {
 
   $self->sub( $loader->load_sub_entities($file_path) );
   $self->std( $loader->load_std_entities($file_path) );
-  #$self->exprena( $loader->load_exprena_entities($file_path) );
+  $self->expr( $loader->load_exprena_entities($file_path) );
   #$self->exprfaang( $loader->load_exprfaang_entities($file_path) );
   $self->run( $loader->load_run_entities($file_path) );
 }
@@ -131,10 +131,9 @@ sub validate {
   my ($self) = @_;
   my $sub_errors = $self->sub_validator->validate_sub( $self->sub );
   my $std_errors = $self->std_validator->validate_std( $self->std );
-  #my $expr_errors = $self->expr_validator->validate_expr( $self->expr );
+  my $expr_errors = $self->expr_validator->validate_expr( $self->expr );
   my $run_errors = $self->run_validator->validate_run( $self->run );
-  #push @$sub_errors, @$std_errors;
-  push @$sub_errors, @$std_errors, @$run_errors;
+  push @$sub_errors, @$std_errors, @$run_errors, @$expr_errors;
   return $sub_errors;
 }
 
@@ -226,10 +225,10 @@ sub report_std {
   $output = $output.$std_footer;
 }
 
-#sub report_expr {
-#  my ($self) = @_;
+sub report_expr {
+  my ($self) = @_;
 
-#}
+}
 
 sub report_run {
   my ($self) = @_;

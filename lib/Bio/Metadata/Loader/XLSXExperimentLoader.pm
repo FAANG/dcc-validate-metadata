@@ -148,7 +148,8 @@ sub process_sheet {
   if ( !$self->find_stud_sheet_name( sub { $_ eq $sheet->get_name } )
     && !$self->find_sub_sheet_name( sub { $_ eq $sheet->get_name } )
     && !$self->find_run_sheet_name( sub { $_ eq $sheet->get_name } )
-    && !$self->find_exprfaang_sheet_name( sub { $_ eq $sheet->get_name } ) )
+    && !$self->find_exprfaang_sheet_name( sub { $_ eq $sheet->get_name } )
+    && !$self->find_exprena_sheet_name( sub { $_ eq $sheet->get_name } ) )
   {
     carp( "[WARN] refusing to process worksheet with unexpected name: "
         . $sheet->name );
@@ -222,6 +223,19 @@ sub row_to_object {
   }elsif ( $self->find_run_sheet_name( sub { $_ eq $sheet_name } ) ) {
     $o->id( $row->[0] );
     $o->entity_type('run');
+  }elsif ( $self->find_exprena_sheet_name( sub { $_ eq $sheet_name } ) ) {
+    $o->id( $row->[1] );
+    $o->entity_type('experiment');
+    my $sample_id=$row->[0];
+    my $sample = Bio::Metadata::Entity->new(
+            id          => $sample_id,
+            entity_type => 'sample');
+    $o->add_link($sample);
+    my $study_id=$row->[4];
+    my $study = Bio::Metadata::Entity->new(
+          id          => $study_id,
+          entity_type => 'study');
+    $o->add_link($study);
   }elsif ( $self->find_exprfaang_sheet_name( sub { $_ eq $sheet_name } ) ) {      
     $index = 2;
     $o->id( $row->[1] );
@@ -232,13 +246,6 @@ sub row_to_object {
             id          => $sample_id,
             entity_type => 'sample');
     $o->add_link($sample);
-    if ($sheet_name eq 'Experiment_ENA'){
-      my $study_id=$row->[4];
-      my $study = Bio::Metadata::Entity->new(
-            id          => $study_id,
-            entity_type => 'study');
-      $o->add_link($study);
-    }
   }
 
   my $pr_att;

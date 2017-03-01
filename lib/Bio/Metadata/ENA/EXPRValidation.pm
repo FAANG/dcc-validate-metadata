@@ -113,7 +113,39 @@ has 'ena_rule_set' => (
   }
 );
 
+sub validate_expr {
+  my ( $self, $expr_entries ) = @_;
 
+  my %blocks;
+  for my $expr_entity (@$expr_entries) {
+    $blocks{ $expr_entity->id } //= [];
+    push @{ $blocks{ $expr_entity->id } }, $expr_entity;
+  }
+
+  my @errors;
+  push @errors,
+    $self->validate_section( \%blocks, 'expression',
+    $self->ena_rule_set, 0, 1 );
+
+  return \@errors;
+}
+
+sub validate_section {
+  my ( $self, $blocks, $block_name, $rule_set, $just_one, $at_least_one ) = @_;
+
+  my $entities = $blocks->{$block_name} || [];
+
+  my $v =
+    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+
+  my @errors;
+  for my $e (@$entities) {
+    my ( $outcome_overall, $validation_outcomes ) = $v->check($e);
+    push @errors, grep { $_->outcome ne 'pass' } @$validation_outcomes;
+  }
+
+  return @errors;
+}
 
 __PACKAGE__->meta->make_immutable;
 1;
