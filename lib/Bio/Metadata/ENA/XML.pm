@@ -245,10 +245,20 @@ sub report_expr {
   my $expr_header ="<EXPERIMENT_SET xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.experiment.xsd\">\n";
   my $expr_footer ="</EXPERIMENT_SET>";
 
-  my @experiments;
+  my (@experiments, %attributes);
 
   my $output = $xml_header.$expr_header;
 
+  for my $e ( $self->all_exprfaang ) {
+    my ($attribute, $EXPERIMENT_alias);
+    for my $a ($e->all_attributes) {
+      next if ! defined $a->value;
+      if ($a->name eq 'EXPERIMENT_alias'){
+        $EXPERIMENT_alias = $a->value;
+      }
+    }
+    $attributes{$e->id}="TEXT GOES HERE\n";
+  }
   for my $e ( $self->all_expr ) {
     my ($EXPERIMENT_alias, $center_name, $SAMPLE_DESCRIPTOR, $TITLE, $STUDY_REF, $LIBRARY_NAME, $LIBRARY_STRATEGY, $LIBRARY_SOURCE, $LIBRARY_SELECTION, $LIBRARY_LAYOUT, $NOMINAL_LENGTH, $NOMINAL_SDEV, $LIBRARY_CONSTRUCTION_PROTOCOL, $PLATFORM, $INSTRUMENT_MODEL);
     for my $a ($e->all_attributes) {
@@ -331,7 +341,7 @@ sub report_expr {
     }
     $experiment = $experiment."\t\t\t</LIBRARY_DESCRIPTOR>\n\t\t</DESIGN>\n";
     $experiment = $experiment."\t\t<EXPERIMENT_ATTRIBUTES>\n";
-    
+    $experiment = $experiment.$attributes{$EXPERIMENT_alias};
     $experiment = $experiment."\t\t</EXPERIMENT_ATTRIBUTES>\n";
     push(@experiments, $experiment);
   }
