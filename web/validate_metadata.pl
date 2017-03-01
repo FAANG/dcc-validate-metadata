@@ -221,6 +221,7 @@ post '/convert' => sub {
       #ena_conversion_sub( $c, $st_converter, $rule_set);
       ena_conversion_std( $c, $st_converter, $rule_set);
       #ena_conversion_run( $c, $st_converter, $rule_set);
+      #ena_conversion_expr( $c, $st_converter, $rule_set);
     }
 
   }
@@ -523,6 +524,51 @@ sub ena_conversion_std {
       $c->render_file(
         filepath     => $tmp_file->filename,
         filename     => $metadata_file->filename() . '.study.xml',#TODO need to make this do correct filenames
+        content_type => $xml_mime_type,
+        cleanup      => 1,
+      );
+    }
+  );
+
+}
+
+sub ena_conversion_expr {
+  my ( $c, $st_converter, $rule_set) = @_;
+
+  my $rule_set_name = $c->param('rule_set_name');
+  my $metadata_file = $c->param('metadata_file');
+
+  my $validator =
+    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+
+  #FIXME NOT CURRENTLY CHECKING ERRORS
+  #my (
+  #  $entity_status,      $entity_outcomes, $attribute_status,
+  #  $attribute_outcomes, $entity_rule_groups,
+  #) = $validator->check_all( $st_converter->expr ); #TODO not sure expr is correct
+  my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
+
+  $c->respond_to(
+    json => sub {
+      $c->render(
+        json => $reporter->report(
+          ena => join( "\n", #TODO changed sampletab to ena, need to check for corresponding change
+            $st_converter->report_expr)
+        )
+      );
+    },
+    html => sub {
+      my $tmp_file = File::Temp->new();
+
+      my $reporter =
+        Bio::Metadata::Reporter::TextReporter->new(
+        file_path => $tmp_file->filename ); #TODO DO WE NEED A DIFFERENT REPORTER
+
+      print $tmp_file $st_converter->report_expr;
+
+      $c->render_file(
+        filepath     => $tmp_file->filename,
+        filename     => $metadata_file->filename() . '.experiment.xml',#TODO need to make this do correct filenames
         content_type => $xml_mime_type,
         cleanup      => 1,
       );
