@@ -75,6 +75,20 @@ has 'expr' => (
   coerce  => 1,
 );
 
+has 'exprfaang' => (
+  traits  => ['Array'],
+  is      => 'rw',
+  isa     => 'Bio::Metadata::EntityArrayRef',
+  handles => {
+    all_exprfaang   => 'elements',
+    add_exprfaang   => 'push',
+    count_exprfaang => 'count',
+    get_exprfaang   => 'get',
+  },
+  default => sub { [] },
+  coerce  => 1,
+);
+
 has 'run' => (
   traits  => ['Array'],
   is      => 'rw',
@@ -122,6 +136,7 @@ sub read {
 
   $self->sub( $loader->load_sub_entities($file_path) );
   $self->std( $loader->load_std_entities($file_path) );
+  $self->exprfaang( $loader->load($file_path) );
   $self->expr( $loader->load_exprena_entities($file_path) );
   $self->run( $loader->load_run_entities($file_path) );
 }

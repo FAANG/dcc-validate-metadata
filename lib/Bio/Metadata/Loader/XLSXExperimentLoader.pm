@@ -135,10 +135,6 @@ sub load_exprfaang_entities {
   my ( $self, $file_path ) = @_;
   return $self->_load( $file_path, $self->exprfaang_sheet_names );
 }
-sub expand_exprfaang_entities {
-  my ( $self, $file_path, $entities ) = @_;
-  return $self->_expand( $file_path, $self->exprfaang_sheet_names, $entities );
-}
 
 sub load {
   my ( $self, $file_path ) = @_;
@@ -186,7 +182,7 @@ sub process_sheet {
     }
     if (@fields) {
       my $e = $self->row_to_object( \@row, \@fields, $sheet->get_name );
-      if ( $self->find_exprfaang_sheet_name( sub { $_ eq $sheet->get_name } ) || $self->find_exprena_sheet_name( sub { $_ eq $sheet->get_name } )){
+      if ( $self->find_exprfaang_sheet_name( sub { $_ eq $sheet->get_name } )){
         ($expr_entities{$e->id} = $e) if $e;
       }else{
         push @entities, $e if $e;
@@ -196,21 +192,7 @@ sub process_sheet {
       @fields = @row;
     }
   }
-  #FIXME This is the broken section---------
-
-  if ( $self->find_exprena_sheet_name( sub { $_ eq $sheet->get_name } ) ){
-  #   #Add extra info to entities
-  #   my $expanded_faang_entities = $self->expand_exprfaang_entities($xlsxfilepath, \%expr_entities);
-  #   #Convert hash of entities to array of entities
-  #   foreach my $key (keys %$expanded_faang_entities){
-  #     push(@entities, $$expanded_faang_entities{$key});
-  #   }    
-    my $expanded_expr_entities = $self->expand_expr_entities($xlsxfilepath, \%expr_entities);
-    #Convert hash of entities to array of entities
-    foreach my $key (keys %$expanded_expr_entities){
-      push(@entities, $$expanded_expr_entities{$key});
-    }
-  }elsif ( $self->find_exprfaang_sheet_name( sub { $_ eq $sheet->get_name } ) ){
+  if ( $self->find_exprfaang_sheet_name( sub { $_ eq $sheet->get_name } ) ){
     #Add extra info to entities
     my $expanded_expr_entities = $self->expand_expr_entities($xlsxfilepath, \%expr_entities);
     #Convert hash of entities to array of entities
@@ -242,7 +224,6 @@ sub row_to_object {
     $o->id( $row->[0] );
     $o->entity_type('run');
   }elsif ( $self->find_exprena_sheet_name( sub { $_ eq $sheet_name } ) ) {
-    $index = 2;
     $o->id( $row->[1] );
     $o->entity_type('experiment');
     my $sample_id=$row->[0];
@@ -295,7 +276,7 @@ sub row_to_object {
 
 sub process_expansion_sheet{
   my ( $self, $sheet, $entities ) = @_;
-  if ( !$self->find_expr_sheet_name( sub { $_ eq $sheet->get_name } ) && !$self->find_exprfaang_sheet_name( sub { $_ eq $sheet->get_name } ))
+  if ( !$self->find_expr_sheet_name( sub { $_ eq $sheet->get_name } ))
   {
     carp( "[WARN] refusing to process worksheet with unexpected name: "
         . $sheet->name );
@@ -341,7 +322,7 @@ sub row_to_object_expand {
     if scalar(@$fields) != scalar(@$row);
 
   my $index = 2;
-  if ( $self->find_expr_sheet_name( sub { $_ eq $sheet_name } ) || $self->find_exprfaang_sheet_name( sub { $_ eq $sheet_name } )) {
+  if ( $self->find_expr_sheet_name( sub { $_ eq $sheet_name } )) {
     my $o = $$entities{$row->[1]};
     my $pr_att;
     for ( my $i = $index ; $i < scalar(@$row) ; $i++ ) {
