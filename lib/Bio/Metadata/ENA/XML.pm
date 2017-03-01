@@ -254,7 +254,7 @@ sub report_expr {
     for my $a ($e->all_attributes) {
       next if ! defined $a->value;
       $attribute_block = $attribute_block."\t\t\t<EXPERIMENT_ATTRIBUTE>\n";
-      $attribute_block = $attribute_block."\t\t\t\t<TAG>".$a."</TAG>\n";
+      $attribute_block = $attribute_block."\t\t\t\t<TAG>".$a->name."</TAG>\n";
       $attribute_block = $attribute_block."\t\t\t\t<VALUE>".$a->value."</VALUE>\n";
       $attribute_block = $attribute_block."\t\t\t</EXPERIMENT_ATTRIBUTE>\n";
     }
