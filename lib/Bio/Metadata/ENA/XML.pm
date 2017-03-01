@@ -239,7 +239,7 @@ sub report_expr {
     my ($EXPERIMENT_alias, $center_name, $SAMPLE_DESCRIPTOR, $TITLE, $STUDY_REF, $LIBRARY_NAME, $LIBRARY_STRATEGY, $LIBRARY_SOURCE, $LIBRARY_SELECTION, $LIBRARY_LAYOUT, $NOMINAL_LENGTH, $NOMINAL_SDEV, $LIBRARY_CONSTRUCTION_PROTOCOL, $PLATFORM, $INSTRUMENT_MODEL);
     for my $a ($e->all_attributes) {
       next if ! defined $a->value;
-      if ($a->name eq 'EXPERIMENT alias'){
+      if ($a->name eq 'EXPERIMENT_alias'){
         $EXPERIMENT_alias = $a->value;
       }
       elsif ($a->name eq 'center_name'){
@@ -310,9 +310,9 @@ sub report_expr {
     }
     if ($PLATFORM){
       if ($INSTRUMENT_MODEL){
-        $experiment = $experiment."\t\t\t\t<PLATFORM>\n\t\t\t\t\t<".$PLATFORM.">\n\t\t\t\t\t\t<INSTRUMENT_MODEL>".$INSTRUMENT_MODEL."</INSTRUMENT_MODEL>\n\t\t\t\t\t</".$PLATFORM.">\n\t\t\t\t</PLATFORM>";
+        $experiment = $experiment."\t\t\t\t<PLATFORM>\n\t\t\t\t\t<".$PLATFORM.">\n\t\t\t\t\t\t<INSTRUMENT_MODEL>".$INSTRUMENT_MODEL."</INSTRUMENT_MODEL>\n\t\t\t\t\t</".$PLATFORM.">\n\t\t\t\t</PLATFORM>\n";
       }else{
-        $experiment = $experiment."\t\t\t\t<PLATFORM>\n\t\t\t\t\t<".$PLATFORM."/>\n\t\t\t\t</PLATFORM>";
+        $experiment = $experiment."\t\t\t\t<PLATFORM>\n\t\t\t\t\t<".$PLATFORM."/>\n\t\t\t\t</PLATFORM>\n";
       }
     }
     $experiment = $experiment."\t\t\t</LIBRARY_DESCRIPTOR>\n\t\t</DESIGN>\n";
