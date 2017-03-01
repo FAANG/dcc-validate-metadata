@@ -236,11 +236,11 @@ sub report_expr {
   my $output = $xml_header.$expr_header;
 
   for my $e ( $self->all_expr ) {
-    my ($alias, $center_name, $SAMPLE_DESCRIPTOR, $TITLE, $STUDY_REF, $LIBRARY_NAME, $LIBRARY_STRATEGY, $LIBRARY_SOURCE, $LIBRARY_SELECTION, $LIBRARY_LAYOUT, $NOMINAL_LENGTH, $NOMINAL_SDEV, $LIBRARY_CONSTRUCTION_PROTOCOL, $PLATFORM, $INSTRUMENT_MODEL);
+    my ($EXPERIMENT_alias, $center_name, $SAMPLE_DESCRIPTOR, $TITLE, $STUDY_REF, $LIBRARY_NAME, $LIBRARY_STRATEGY, $LIBRARY_SOURCE, $LIBRARY_SELECTION, $LIBRARY_LAYOUT, $NOMINAL_LENGTH, $NOMINAL_SDEV, $LIBRARY_CONSTRUCTION_PROTOCOL, $PLATFORM, $INSTRUMENT_MODEL);
     for my $a ($e->all_attributes) {
       next if ! defined $a->value;
       if ($a->name eq 'EXPERIMENT alias'){
-        $alias = $a->value;
+        $EXPERIMENT_alias = $a->value;
       }
       elsif ($a->name eq 'center_name'){
         $center_name = $a->value;
@@ -285,38 +285,38 @@ sub report_expr {
         $INSTRUMENT_MODEL = $a->value;
       }
     }
-    my $experiment = "\t<EXPERIMENT alias=\"".$alias."\" center_name=\"".$center_name."\">\n";
-    $experiment = $experiemnt."\t\t<TITLE>".$TITLE."</TITLE>\n";
-    $experiment = $experiemnt."\t\t<STUDY_REF refname =\"".$STUDY_REF."\"/>\n";
-    $experiment = $experiemnt."\t\t<DESIGN>\n\t\t\t<SAMPLE_DESCRIPTOR refname =\"".$SAMPLE_DESCRIPTOR."\"/>\n";
-    $experiment = $experiemnt."\t\t\t<LIBRARY_DESCRIPTOR>\n";
-    $experiment = $experiemnt."\t\t\t\t<LIBRARY_NAME>".$LIBRARY_NAME."</LIBRARY_NAME>\n";
-    $experiment = $experiemnt."\t\t\t\t<LIBRARY_STRATEGY>".$LIBRARY_STRATEGY."</LIBRARY_STRATEGY>\n";
-    $experiment = $experiemnt."\t\t\t\t<LIBRARY_SOURCE>".$LIBRARY_SOURCE."</LIBRARY_SOURCE>\n";
-    $experiment = $experiemnt."\t\t\t\t<LIBRARY_SELECTION>".$LIBRARY_SELECTION."</LIBRARY_SELECTION>\n";
+    my $experiment = "\t<EXPERIMENT alias=\"".$EXPERIMENT_alias."\" center_name=\"".$center_name."\">\n";
+    $experiment = $experiment."\t\t<TITLE>".$TITLE."</TITLE>\n";
+    $experiment = $experiment."\t\t<STUDY_REF refname =\"".$STUDY_REF."\"/>\n";
+    $experiment = $experiment."\t\t<DESIGN>\n\t\t\t<SAMPLE_DESCRIPTOR refname =\"".$SAMPLE_DESCRIPTOR."\"/>\n";
+    $experiment = $experiment."\t\t\t<LIBRARY_DESCRIPTOR>\n";
+    $experiment = $experiment."\t\t\t\t<LIBRARY_NAME>".$LIBRARY_NAME."</LIBRARY_NAME>\n";
+    $experiment = $experiment."\t\t\t\t<LIBRARY_STRATEGY>".$LIBRARY_STRATEGY."</LIBRARY_STRATEGY>\n";
+    $experiment = $experiment."\t\t\t\t<LIBRARY_SOURCE>".$LIBRARY_SOURCE."</LIBRARY_SOURCE>\n";
+    $experiment = $experiment."\t\t\t\t<LIBRARY_SELECTION>".$LIBRARY_SELECTION."</LIBRARY_SELECTION>\n";
     if ($NOMINAL_LENGTH){
       if ($NOMINAL_SDEV){
-        $experiment = $experiemnt."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\" NOMINAL_SDEV=\"".$NOMINAL_SDEV."\">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+        $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\" NOMINAL_SDEV=\"".$NOMINAL_SDEV."\">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
       }else{
-        $experiment = $experiemnt."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+        $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
       }
-    }elsif($NOMINAL_SDEV){
-      $experiment = $experiemnt."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_SDEV=\"".$NOMINAL_SDEV."\">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+    }elsif ($NOMINAL_SDEV){
+      $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_SDEV=\"".$NOMINAL_SDEV."\">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
     }else{
-      $experiment = $experiemnt."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT.">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+      $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT.">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
     }
     if ($LIBRARY_CONSTRUCTION_PROTOCOL){
-      $experiment = $experiemnt."\t\t\t\t<LIBRARY_CONSTRUCTION_PROTOCOL>".$LIBRARY_CONSTRUCTION_PROTOCOL."</LIBRARY_CONSTRUCTION_PROTOCOL>\n";
+      $experiment = $experiment."\t\t\t\t<LIBRARY_CONSTRUCTION_PROTOCOL>".$LIBRARY_CONSTRUCTION_PROTOCOL."</LIBRARY_CONSTRUCTION_PROTOCOL>\n";
     }
     if ($PLATFORM){
       if ($INSTRUMENT_MODEL){
-        $experiment = $experiemnt."\t\t\t\t<PLATFORM>\n\t\t\t\t\t<".$PLATFORM.">\n\t\t\t\t\t\t<INSTRUMENT_MODEL>".$INSTRUMENT_MODEL."</INSTRUMENT_MODEL>\n\t\t\t\t\t</".$PLATFORM.">\n\t\t\t\t</PLATFORM>";
+        $experiment = $experiment."\t\t\t\t<PLATFORM>\n\t\t\t\t\t<".$PLATFORM.">\n\t\t\t\t\t\t<INSTRUMENT_MODEL>".$INSTRUMENT_MODEL."</INSTRUMENT_MODEL>\n\t\t\t\t\t</".$PLATFORM.">\n\t\t\t\t</PLATFORM>";
       }else{
-        $experiment = $experiemnt."\t\t\t\t<PLATFORM>\n\t\t\t\t\t<".$PLATFORM."/>\n\t\t\t\t</PLATFORM>";
+        $experiment = $experiment."\t\t\t\t<PLATFORM>\n\t\t\t\t\t<".$PLATFORM."/>\n\t\t\t\t</PLATFORM>";
       }
     }
-    $experiment = $experiemnt."\t\t\t</LIBRARY_DESCRIPTOR>\n\t\t</DESIGN>\n";
-    $experiment=$experiment."\t</EXPERIMENT>\n";
+    $experiment = $experiment."\t\t\t</LIBRARY_DESCRIPTOR>\n\t\t</DESIGN>\n";
+    $experiment = $experiment."\t</EXPERIMENT>\n";
     push(@experiments, $experiment);
   }
   foreach my $experiment (@experiments){
