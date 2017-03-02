@@ -256,6 +256,9 @@ sub report_expr {
       $attribute_block = $attribute_block."\t\t\t<EXPERIMENT_ATTRIBUTE>\n";
       $attribute_block = $attribute_block."\t\t\t\t<TAG>".$a->name."</TAG>\n";
       $attribute_block = $attribute_block."\t\t\t\t<VALUE>".$a->value."</VALUE>\n";
+      if ($a->units){
+        $attribute_block = $attribute_block."\t\t\t\t<UNITS>".$a->units."</UNITS>\n";
+      }
       $attribute_block = $attribute_block."\t\t\t</EXPERIMENT_ATTRIBUTE>\n";
     }
     $attributes{$e->id}=$attribute_block;
