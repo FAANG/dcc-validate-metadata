@@ -205,14 +205,12 @@ post '/convert' => sub {
     my $st_errors = $st_converter->validate;
     my $validator = $validators->{$rule_set_name};
 
-    #FIXME NOT CURRENTLY CHECKING ERRORS
-    #my ($entity_status) = $validator->check_all( $st_converter->expr );#TODO check how to validate expr
+    my ($entity_status) = $validator->check_all( $st_converter->exprfaang );
 
     my %status_counts;
-    #FIXME NOT CURRENTLY CHECKING ERRORS
-    #for ( values %$entity_status ) {
-    #  $status_counts{$_}++;
-    #}
+    for ( values %$entity_status ) {
+      $status_counts{$_}++;
+    }
 
     if ( $form_validation->has_error || @$st_errors || $status_counts{error} ) {
       conversion_form_errors( $c, $form_validation, $st_errors, \%status_counts );
