@@ -216,10 +216,10 @@ post '/convert' => sub {
       conversion_form_errors( $c, $form_validation, $st_errors, \%status_counts );
     }
     else {
-      #ena_conversion_sub( $c, $st_converter, $rule_set);
+      ena_conversion_sub( $c, $st_converter, $rule_set);
       #ena_conversion_std( $c, $st_converter, $rule_set);
       #ena_conversion_run( $c, $st_converter, $rule_set);
-      ena_conversion_expr( $c, $st_converter, $rule_set);
+      #ena_conversion_expr( $c, $st_converter, $rule_set);
     }
 
   }
@@ -471,7 +471,7 @@ sub ena_conversion_sub {
         Bio::Metadata::Reporter::TextReporter->new(
         file_path => $tmp_file->filename ); #TODO DO WE NEED A DIFFERENT REPORTER
 
-      print $tmp_file $st_converter->report_sub;
+      print $tmp_file $st_converter->report_sub($metadata_file->filename());
 
       $c->render_file(
         filepath     => $tmp_file->filename,
@@ -560,7 +560,6 @@ sub ena_conversion_expr {
         file_path => $tmp_file->filename ); #TODO DO WE NEED A DIFFERENT REPORTER
 
       print $tmp_file $st_converter->report_expr;
-
       $c->render_file(
         filepath     => $tmp_file->filename,
         filename     => $metadata_file->filename() . '.experiment.xml',#TODO need to make this do correct filenames

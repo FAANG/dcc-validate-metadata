@@ -42,21 +42,6 @@ has 'submission_rule_set' => (
               type      => 'text'
             },
             {
-              name      => 'STUDY XML FILENAME',
-              mandatory => 'mandatory',
-              type      => 'text'
-            },
-            {
-              name      => 'EXPERIMENT XML FILENAME',
-              mandatory => 'mandatory',
-              type      => 'text'
-            },
-            {
-              name      => 'RUN XML FILENAME',
-              mandatory => 'mandatory',
-              type      => 'text'
-            },
-            {
               name      => 'HoldUntilDate',
               mandatory => 'optional',
               type      => 'text'#TODO Should validate this in ENA data format (this is different to FAANG date format)

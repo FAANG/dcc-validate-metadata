@@ -152,7 +152,7 @@ sub validate {
 }
 
 sub report_sub {
-  my ($self) = @_;
+  my ($self, $filename ) = @_;
 
   my $xml_header ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
   my $sub_header ="<SUBMISSION_SET xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd\">\n";
@@ -161,11 +161,7 @@ sub report_sub {
   my $output = $xml_header.$sub_header;
 
   my ($alias, $center_name, @actions, $holduntil);
-  my %schema = (
-    "STUDY XML FILENAME" => "study",
-    "EXPERIMENT XML FILENAME" => "experiment",
-    "RUN XML FILENAME" => "run",
-  );
+  my @schemas = ("study", "experiment", "run");
   for my $e ( $self->all_sub ) {
     for my $a ($e->all_attributes) {
 
@@ -177,11 +173,7 @@ sub report_sub {
       elsif ($a->name eq 'center_name'){
         $center_name = $a->value;
       }
-      elsif($a->name eq "STUDY XML FILENAME" || $a->name eq "EXPERIMENT XML FILENAME" || $a->name eq "RUN XML FILENAME"){
-        push(@actions, "\t\t\t<ACTION>\n");
-        push(@actions, "\t\t\t\t<ADD source=\"".$a->value."\" schema=\"".$schema{$a->name}."\"/>\n");
-        push(@actions, "\t\t\t</ACTION>\n");
-      }elsif ($a->name eq 'HoldUntilDate'){
+      elsif ($a->name eq 'HoldUntilDate'){
         $holduntil = $a->value;
       }
     }
@@ -189,7 +181,11 @@ sub report_sub {
 
   $output = $output."\t<SUBMISSION alias=\"".$alias."\" center_name=\"".$center_name."\">\n";
   $output = $output."\t\t<ACTIONS>\n";
-  $output = $output.join("", @actions);
+  for my $schema (@schemas){
+    $output = $output."\t\t\t<ACTION>\n";
+    $output = $output."\t\t\t\t<ADD source=\"".$filename.".".$schema.".xml\" schema=\"".$schema."\"/>\n";
+    $output = $output."\t\t\t</ACTION>\n";
+  }
   if ($holduntil){
     $output = $output."\t\t\t<ACTION>\n\t\t\t\t<HOLD>\n\t\t\t\t\t<HoldUntilDate=\"".$holduntil."\"/>\n\t\t\t\t</HOLD>\n\t\t\t</ACTION>\n";
   }else{
