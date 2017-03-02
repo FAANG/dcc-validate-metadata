@@ -449,11 +449,10 @@ sub ena_conversion_sub {
   my $validator =
     Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
-  #FIXME NOT CURRENTLY CHECKING ERRORS
-  #my (
-  #  $entity_status,      $entity_outcomes, $attribute_status,
-  #  $attribute_outcomes, $entity_rule_groups,
-  #) = $validator->check_all( $st_converter->expr ); #TODO not sure expr is correct
+  my (
+    $entity_status,      $entity_outcomes, $attribute_status,
+    $attribute_outcomes, $entity_rule_groups,
+  ) = $validator->check_all( $st_converter->exprfaang );
   my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
 
   $c->respond_to(
@@ -494,11 +493,10 @@ sub ena_conversion_std {
   my $validator =
     Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
-  #FIXME NOT CURRENTLY CHECKING ERRORS
-  #my (
-  #  $entity_status,      $entity_outcomes, $attribute_status,
-  #  $attribute_outcomes, $entity_rule_groups,
-  #) = $validator->check_all( $st_converter->expr ); #TODO not sure expr is correct
+  my (
+    $entity_status,      $entity_outcomes, $attribute_status,
+    $attribute_outcomes, $entity_rule_groups,
+  ) = $validator->check_all( $st_converter->exprfaang );
   my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
 
   $c->respond_to(
@@ -539,11 +537,10 @@ sub ena_conversion_expr {
   my $validator =
     Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
-  #FIXME NOT CURRENTLY CHECKING ERRORS
-  #my (
-  #  $entity_status,      $entity_outcomes, $attribute_status,
-  #  $attribute_outcomes, $entity_rule_groups,
-  #) = $validator->check_all( $st_converter->expr ); #TODO not sure expr is correct
+  my (
+    $entity_status,      $entity_outcomes, $attribute_status,
+    $attribute_outcomes, $entity_rule_groups,
+  ) = $validator->check_all( $st_converter->exprfaang );
   my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
 
   $c->respond_to(
@@ -584,11 +581,10 @@ sub ena_conversion_run {
   my $validator =
     Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
-  #FIXME NOT CURRENTLY CHECKING ERRORS
-  #my (
-  #  $entity_status,      $entity_outcomes, $attribute_status,
-  #  $attribute_outcomes, $entity_rule_groups,
-  #) = $validator->check_all( $st_converter->expr ); #TODO not sure expr is correct
+  my (
+    $entity_status,      $entity_outcomes, $attribute_status,
+    $attribute_outcomes, $entity_rule_groups,
+  ) = $validator->check_all( $st_converter->exprfaang );
   my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
 
   $c->respond_to(
