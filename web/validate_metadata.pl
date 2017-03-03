@@ -218,19 +218,25 @@ post '/convert' => sub {
     }
     else {      
       my $tmpdir = File::Temp->newdir();
-      #ena_conversion_sub( $c, $st_converter, $rule_set, $tmpdir);
-      #ena_conversion_std( $c, $st_converter, $rule_set, $tmpdir);
-      #ena_conversion_run( $c, $st_converter, $rule_set, $tmpdir);
-      #ena_conversion_expr( $c, $st_converter, $rule_set, $tmpdir);
-      $xml_zip->addTree($tmpdir->dirname);
+      ena_conversion_sub( $c, $st_converter, $rule_set, $tmpdir);
+      ena_conversion_std( $c, $st_converter, $rule_set, $tmpdir);
+      ena_conversion_run( $c, $st_converter, $rule_set, $tmpdir);
+      ena_conversion_expr( $c, $st_converter, $rule_set, $tmpdir);
       my $xml_zip = Archive::Zip->new();
+      $xml_zip->addTree($tmpdir->dirname);
       my $zipfilename = $metadata_file->filename().'_xmls.zip';
-      #$c->respond_to(
-      #  html => sub {
-      #    $c->render(unless ( $xml_zip->writeToFileNamed($zipfilename) == AZ_OK ) {
-      #      die 'write error');
-      #  }
-      #);
+      unless ( $xml_zip->writeToFileNamed($zipfilename) == AZ_OK ) {
+            die 'write error')};
+      $c->respond_to(
+        html => sub {
+          $self->render_file(
+            'filepath' => $zipfilename,
+            'format'   => 'zip',
+            'content_disposition' => 'inline',
+            'cleanup'  => 1,
+          );
+        }
+      );
     }
   }
 };
@@ -476,13 +482,13 @@ sub ena_conversion_sub {
     },
     html => sub {
       my $filename =  $tmpdir."/".$metadata_file->filename() . '.submission.xml';
-      #open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
+      open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
 
-      #my $reporter =
-      #  Bio::Metadata::Reporter::TextReporter->new(
-      #  file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
+      my $reporter =
+        Bio::Metadata::Reporter::TextReporter->new(
+        file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
 
-      #print $fh $st_converter->report_sub($metadata_file->filename());
+      print $fh $st_converter->report_sub($metadata_file->filename());
     }
   );
 
@@ -514,13 +520,13 @@ sub ena_conversion_std {
     },
     html => sub {
       my $filename =  $tmpdir."/".$metadata_file->filename() . '.study.xml';
-      #open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
+      open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
 
-      #my $reporter =
-      #  Bio::Metadata::Reporter::TextReporter->new(
-      #  file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
+      my $reporter =
+        Bio::Metadata::Reporter::TextReporter->new(
+        file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
 
-      #print $fh $st_converter->report_std;
+      print $fh $st_converter->report_std;
     }
   );
 
@@ -552,13 +558,13 @@ sub ena_conversion_expr {
     },
     html => sub {
       my $filename =  $tmpdir."/".$metadata_file->filename() . '.expression.xml';
-      #open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
+      open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
 
-      #my $reporter =
-      #  Bio::Metadata::Reporter::TextReporter->new(
-      #  file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
+      my $reporter =
+        Bio::Metadata::Reporter::TextReporter->new(
+        file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
 
-      #print $fh $st_converter->report_expr;
+      print $fh $st_converter->report_expr;
     }
   );
 
@@ -589,14 +595,14 @@ sub ena_conversion_run {
       );
     },
     html => sub {
-      #my $filename =  $tmpdir."/".$metadata_file->filename() . '.run.xml';
-      #open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
+      my $filename =  $tmpdir."/".$metadata_file->filename() . '.run.xml';
+      open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
 
-      #my $reporter =
-      #  Bio::Metadata::Reporter::TextReporter->new(
-      #  file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
+      my $reporter =
+        Bio::Metadata::Reporter::TextReporter->new(
+        file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
 
-      #print $fh $st_converter->report_run;
+      print $fh $st_converter->report_run;
     }
   );
 }
