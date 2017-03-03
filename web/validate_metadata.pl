@@ -19,6 +19,7 @@ use File::Temp qw(tempfile tempdir);
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 use FindBin qw/$Bin/;
 use Try::Tiny;
+use File::Spec;
 use Mojolicious::Lite;
 
 use Bio::Metadata::Loader::JSONRuleSetLoader;
@@ -42,7 +43,8 @@ my $xlsx_mime_type =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 my $tsv_mime_type = ' text/tab-separated-values';
 my $xml_mime_type = 'text/xml';
-app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type, xml => $xml_mime_type );
+my $zip_mime_type = 'application/zip'; #TODO Check this is correct use
+app->types->type( xlsx => $xlsx_mime_type, tsv => $tsv_mime_type, zip => $zip_mime_type );
 
 my $brand     = app->config('brand')     || '';
 my $brand_img = app->config('brand_img') || '';
@@ -191,8 +193,7 @@ post '/convert' => sub {
       sampletab_conversion( $c, $st_converter, $rule_set );
     }
   }elsif($rule_set_name eq 'FAANG Experiments'){
-    my $st_converter =
-    Bio::Metadata::ENA::XML->new( rule_set => $rule_set );
+    my $st_converter = Bio::Metadata::ENA::XML->new( rule_set => $rule_set );
 
     if ( !$form_validation->has_error ) {
       try {
@@ -215,25 +216,38 @@ post '/convert' => sub {
 
     if ( $form_validation->has_error || @$st_errors || $status_counts{error} ) {
       conversion_form_errors( $c, $form_validation, $st_errors, \%status_counts );
-    }
-    else {      
+    }else {      
       my $tmpdir = File::Temp->newdir();
-      ena_conversion_sub( $c, $st_converter, $rule_set, $tmpdir);
-      ena_conversion_std( $c, $st_converter, $rule_set, $tmpdir);
-      ena_conversion_run( $c, $st_converter, $rule_set, $tmpdir);
-      ena_conversion_expr( $c, $st_converter, $rule_set, $tmpdir);
-      my $xml_zip = Archive::Zip->new();
-      $xml_zip->addTree($tmpdir->dirname);
-      my $zipfilename = $metadata_file->filename().'_xmls.zip';
-      unless ( $xml_zip->writeToFileNamed($zipfilename) == AZ_OK ) {
-            die 'write error')};
+      my $ziptmpdir = File::Temp->newdir();
+      my $validator = Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+      my (
+        $entity_status,      $entity_outcomes, $attribute_status,
+        $attribute_outcomes, $entity_rule_groups,
+      ) = $validator->check_all( $st_converter->exprfaang );
+      my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
+      ena_conversion_sub( $c, $st_converter, $tmpdir);
+      ena_conversion_std( $c, $st_converter, $tmpdir);
+      ena_conversion_run( $c, $st_converter, $tmpdir);
+      ena_conversion_expr( $c, $st_converter, $tmpdir);
+      my $zip = Archive::Zip->new();
+
+      opendir my $dh, $tmpdir or die $!;
+      while (readdir $dh) {
+        next if !/\.xml$/;
+        $zip->addFile(File::Spec->catfile($tmpdir, $_), $_);
+      }
+      close($dh);
+      my $zipname = $ziptmpdir."/".$metadata_file->filename().'_xmls.zip';
+      unless ( $zip->writeToFileNamed($zipname) == AZ_OK ) {
+          die 'write error';
+      }
       $c->respond_to(
         html => sub {
-          $self->render_file(
-            'filepath' => $zipfilename,
-            'format'   => 'zip',
-            'content_disposition' => 'inline',
-            'cleanup'  => 1,
+          $c->render_file(
+            filepath     => $zipname,
+            filename     => $metadata_file->filename().'_xmls.zip',
+            content_type => $zip_mime_type,
+            cleanup      => 1,
           );
         }
       );
@@ -457,75 +471,28 @@ sub sampletab_conversion {
 }
 
 sub ena_conversion_sub {
-  my ( $c, $st_converter, $rule_set, $tmpdir) = @_;
+  my ( $c, $st_converter, $tmpdir) = @_;
 
-  my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
 
-  my $validator =
-    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
-
-  my (
-    $entity_status,      $entity_outcomes, $attribute_status,
-    $attribute_outcomes, $entity_rule_groups,
-  ) = $validator->check_all( $st_converter->exprfaang );
-  my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
-
   $c->respond_to(
-    json => sub {
-      $c->render(
-        json => $reporter->report(
-          ena => join( "\n", #TODO changed sampletab to ena, need to check for corresponding change
-            $st_converter->report_sub)
-        )
-      );
-    },
     html => sub {
       my $filename =  $tmpdir."/".$metadata_file->filename() . '.submission.xml';
       open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
-
-      my $reporter =
-        Bio::Metadata::Reporter::TextReporter->new(
-        file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
-
       print $fh $st_converter->report_sub($metadata_file->filename());
     }
   );
-
 }
 
 sub ena_conversion_std {
-  my ( $c, $st_converter, $rule_set, $tmpdir) = @_;
+  my ( $c, $st_converter, $tmpdir) = @_;
 
-  my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
 
-  my $validator =
-    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
-
-  my (
-    $entity_status,      $entity_outcomes, $attribute_status,
-    $attribute_outcomes, $entity_rule_groups,
-  ) = $validator->check_all( $st_converter->exprfaang );
-  my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
-
   $c->respond_to(
-    json => sub {
-      $c->render(
-        json => $reporter->report(
-          ena => join( "\n", #TODO changed sampletab to ena, need to check for corresponding change
-            $st_converter->report_std)
-        )
-      );
-    },
     html => sub {
       my $filename =  $tmpdir."/".$metadata_file->filename() . '.study.xml';
       open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
-
-      my $reporter =
-        Bio::Metadata::Reporter::TextReporter->new(
-        file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
-
       print $fh $st_converter->report_std;
     }
   );
@@ -533,37 +500,14 @@ sub ena_conversion_std {
 }
 
 sub ena_conversion_expr {
-  my ( $c, $st_converter, $rule_set, $tmpdir) = @_;
+  my ( $c, $st_converter, $tmpdir) = @_;
 
-  my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
 
-  my $validator =
-    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
-
-  my (
-    $entity_status,      $entity_outcomes, $attribute_status,
-    $attribute_outcomes, $entity_rule_groups,
-  ) = $validator->check_all( $st_converter->exprfaang );
-  my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
-
   $c->respond_to(
-    json => sub {
-      $c->render(
-        json => $reporter->report(
-          ena => join( "\n", #TODO changed sampletab to ena, need to check for corresponding change
-            $st_converter->report_expr)
-        )
-      );
-    },
     html => sub {
       my $filename =  $tmpdir."/".$metadata_file->filename() . '.expression.xml';
       open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
-
-      my $reporter =
-        Bio::Metadata::Reporter::TextReporter->new(
-        file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
-
       print $fh $st_converter->report_expr;
     }
   );
@@ -571,37 +515,14 @@ sub ena_conversion_expr {
 }
 
 sub ena_conversion_run {
-  my ( $c, $st_converter, $rule_set, $tmpdir) = @_;
+  my ( $c, $st_converter, $tmpdir) = @_;
 
-  my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
 
-  my $validator =
-    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
-
-  my (
-    $entity_status,      $entity_outcomes, $attribute_status,
-    $attribute_outcomes, $entity_rule_groups,
-  ) = $validator->check_all( $st_converter->exprfaang );
-  my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
-
   $c->respond_to(
-    json => sub {
-      $c->render(
-        json => $reporter->report(
-          ena => join( "\n", #TODO changed sampletab to ena, need to check for corresponding change
-            $st_converter->report_run)
-        )
-      );
-    },
     html => sub {
       my $filename =  $tmpdir."/".$metadata_file->filename() . '.run.xml';
       open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
-
-      my $reporter =
-        Bio::Metadata::Reporter::TextReporter->new(
-        file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
-
       print $fh $st_converter->report_run;
     }
   );
