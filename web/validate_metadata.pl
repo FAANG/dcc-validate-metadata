@@ -15,7 +15,8 @@
 use strict;
 use warnings;
 use Carp;
-use File::Temp qw(tempfile);
+use File::Temp qw(tempfile tempdir);
+use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 use FindBin qw/$Bin/;
 use Try::Tiny;
 use Mojolicious::Lite;
@@ -215,13 +216,22 @@ post '/convert' => sub {
     if ( $form_validation->has_error || @$st_errors || $status_counts{error} ) {
       conversion_form_errors( $c, $form_validation, $st_errors, \%status_counts );
     }
-    else {
-      ena_conversion_sub( $c, $st_converter, $rule_set);
-      #ena_conversion_std( $c, $st_converter, $rule_set);
-      #ena_conversion_run( $c, $st_converter, $rule_set);
-      #ena_conversion_expr( $c, $st_converter, $rule_set);
+    else {      
+      my $tmpdir = File::Temp->newdir();
+      #ena_conversion_sub( $c, $st_converter, $rule_set, $tmpdir);
+      #ena_conversion_std( $c, $st_converter, $rule_set, $tmpdir);
+      #ena_conversion_run( $c, $st_converter, $rule_set, $tmpdir);
+      #ena_conversion_expr( $c, $st_converter, $rule_set, $tmpdir);
+      $xml_zip->addTree($tmpdir->dirname);
+      my $xml_zip = Archive::Zip->new();
+      my $zipfilename = $metadata_file->filename().'_xmls.zip';
+      #$c->respond_to(
+      #  html => sub {
+      #    $c->render(unless ( $xml_zip->writeToFileNamed($zipfilename) == AZ_OK ) {
+      #      die 'write error');
+      #  }
+      #);
     }
-
   }
 };
 
@@ -441,7 +451,7 @@ sub sampletab_conversion {
 }
 
 sub ena_conversion_sub {
-  my ( $c, $st_converter, $rule_set) = @_;
+  my ( $c, $st_converter, $rule_set, $tmpdir) = @_;
 
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
@@ -465,27 +475,21 @@ sub ena_conversion_sub {
       );
     },
     html => sub {
-      my $tmp_file = File::Temp->new();
+      my $filename =  $tmpdir."/".$metadata_file->filename() . '.submission.xml';
+      #open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
 
-      my $reporter =
-        Bio::Metadata::Reporter::TextReporter->new(
-        file_path => $tmp_file->filename ); #TODO DO WE NEED A DIFFERENT REPORTER
+      #my $reporter =
+      #  Bio::Metadata::Reporter::TextReporter->new(
+      #  file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
 
-      print $tmp_file $st_converter->report_sub($metadata_file->filename());
-
-      $c->render_file(
-        filepath     => $tmp_file->filename,
-        filename     => $metadata_file->filename() . '.submission.xml',#TODO need to make this do correct filenames
-        content_type => $xml_mime_type,
-        cleanup      => 1,
-      );
+      #print $fh $st_converter->report_sub($metadata_file->filename());
     }
   );
 
 }
 
 sub ena_conversion_std {
-  my ( $c, $st_converter, $rule_set) = @_;
+  my ( $c, $st_converter, $rule_set, $tmpdir) = @_;
 
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
@@ -509,27 +513,21 @@ sub ena_conversion_std {
       );
     },
     html => sub {
-      my $tmp_file = File::Temp->new();
+      my $filename =  $tmpdir."/".$metadata_file->filename() . '.study.xml';
+      #open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
 
-      my $reporter =
-        Bio::Metadata::Reporter::TextReporter->new(
-        file_path => $tmp_file->filename ); #TODO DO WE NEED A DIFFERENT REPORTER
+      #my $reporter =
+      #  Bio::Metadata::Reporter::TextReporter->new(
+      #  file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
 
-      print $tmp_file $st_converter->report_std;
-
-      $c->render_file(
-        filepath     => $tmp_file->filename,
-        filename     => $metadata_file->filename() . '.study.xml',#TODO need to make this do correct filenames
-        content_type => $xml_mime_type,
-        cleanup      => 1,
-      );
+      #print $fh $st_converter->report_std;
     }
   );
 
 }
 
 sub ena_conversion_expr {
-  my ( $c, $st_converter, $rule_set) = @_;
+  my ( $c, $st_converter, $rule_set, $tmpdir) = @_;
 
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
@@ -553,26 +551,21 @@ sub ena_conversion_expr {
       );
     },
     html => sub {
-      my $tmp_file = File::Temp->new();
+      my $filename =  $tmpdir."/".$metadata_file->filename() . '.expression.xml';
+      #open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
 
-      my $reporter =
-        Bio::Metadata::Reporter::TextReporter->new(
-        file_path => $tmp_file->filename ); #TODO DO WE NEED A DIFFERENT REPORTER
+      #my $reporter =
+      #  Bio::Metadata::Reporter::TextReporter->new(
+      #  file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
 
-      print $tmp_file $st_converter->report_expr;
-      $c->render_file(
-        filepath     => $tmp_file->filename,
-        filename     => $metadata_file->filename() . '.experiment.xml',#TODO need to make this do correct filenames
-        content_type => $xml_mime_type,
-        cleanup      => 1,
-      );
+      #print $fh $st_converter->report_expr;
     }
   );
 
 }
 
 sub ena_conversion_run {
-  my ( $c, $st_converter, $rule_set) = @_;
+  my ( $c, $st_converter, $rule_set, $tmpdir) = @_;
 
   my $rule_set_name = $c->param('rule_set_name');
   my $metadata_file = $c->param('metadata_file');
@@ -596,23 +589,16 @@ sub ena_conversion_run {
       );
     },
     html => sub {
-      my $tmp_file = File::Temp->new();
+      #my $filename =  $tmpdir."/".$metadata_file->filename() . '.run.xml';
+      #open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
 
-      my $reporter =
-        Bio::Metadata::Reporter::TextReporter->new(
-        file_path => $tmp_file->filename ); #TODO DO WE NEED A DIFFERENT REPORTER
+      #my $reporter =
+      #  Bio::Metadata::Reporter::TextReporter->new(
+      #  file_path => $filename ); #TODO DO WE NEED A DIFFERENT REPORTER
 
-      print $tmp_file $st_converter->report_run;
-
-      $c->render_file(
-        filepath     => $tmp_file->filename,
-        filename     => $metadata_file->filename() . '.run.xml',#TODO need to make this do correct filenames
-        content_type => $xml_mime_type,
-        cleanup      => 1,
-      );
+      #print $fh $st_converter->report_run;
     }
   );
-  #TODO need to zip up files for download
 }
 
 sub validate_metadata {
