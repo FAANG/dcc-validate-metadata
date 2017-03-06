@@ -124,7 +124,7 @@ sub validate_expr {
 
   my @errors;
   push @errors,
-    $self->validate_section( \%blocks, 'expression',
+    $self->validate_section( \%blocks, 'experiment',
     $self->ena_rule_set, 0, 1 );
 
   return \@errors;

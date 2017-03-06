@@ -147,7 +147,9 @@ sub validate {
   my $std_errors = $self->std_validator->validate_std( $self->std );
   my $expr_errors = $self->expr_validator->validate_expr( $self->expr );
   my $run_errors = $self->run_validator->validate_run( $self->run );
-  push @$sub_errors, @$std_errors, @$run_errors, @$expr_errors;
+  push @$sub_errors, @$std_errors;
+  push @$sub_errors, @$run_errors;
+  push @$sub_errors, @$expr_errors;
   return $sub_errors;
 }
 

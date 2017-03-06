@@ -74,19 +74,28 @@ sub validate_std {
 
   my @errors;
   push @errors,
-    $self->validate_section( \%blocks, 'study',
-    $self->study_rule_set, 1, 0 );
+    $self->validate_section( \%blocks, 'Study',
+    $self->study_rule_set);
 
   return \@errors;
 }
 
 sub validate_section {
-  my ( $self, $blocks, $block_name, $rule_set, $just_one, $at_least_one ) = @_;
+  my ( $self, $blocks, $block_name, $rule_set) = @_;
 
   my $entities = $blocks->{$block_name} || [];
 
   my $v =
     Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+
+  if ( scalar(@$entities) != 1 ) {
+    return Bio::Metadata::Validate::ValidationOutcome->new(
+      outcome => 'error',
+      message => "One $block_name block required",
+      rule =>
+        Bio::Metadata::Rules::Rule->new( name => $block_name, type => 'text' ),
+    );
+  }
 
   my @errors;
   for my $e (@$entities) {

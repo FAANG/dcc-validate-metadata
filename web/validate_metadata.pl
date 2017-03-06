@@ -165,7 +165,6 @@ post '/convert' => sub {
   if ($rule_set_name eq 'FAANG Samples'){
     my $st_converter =
     Bio::Metadata::BioSample::SampleTab->new( rule_set => $rule_set );
-    my ( $msi, $scd ); #Do these do anything?
     if ( !$form_validation->has_error ) {
       try {
         my ( $tmp_upload_dir, $tmp_upload_path ) = move_to_tmp($metadata_file);
@@ -219,18 +218,11 @@ post '/convert' => sub {
     }else {      
       my $tmpdir = File::Temp->newdir();
       my $ziptmpdir = File::Temp->newdir();
-      my $validator = Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
-      my (
-        $entity_status,      $entity_outcomes, $attribute_status,
-        $attribute_outcomes, $entity_rule_groups,
-      ) = $validator->check_all( $st_converter->exprfaang );
-      my $reporter = Bio::Metadata::Reporter::BasicReporter->new();
       ena_conversion_sub( $c, $st_converter, $tmpdir);
       ena_conversion_std( $c, $st_converter, $tmpdir);
       ena_conversion_run( $c, $st_converter, $tmpdir);
       ena_conversion_expr( $c, $st_converter, $tmpdir);
       my $zip = Archive::Zip->new();
-
       opendir my $dh, $tmpdir or die $!;
       while (readdir $dh) {
         next if !/\.xml$/;

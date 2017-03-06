@@ -215,17 +215,17 @@ sub row_to_object {
 
   my $index = 0;
   if ( $self->find_stud_sheet_name( sub { $_ eq $sheet_name } ) ) {  
-    $o->id( $row->[0] );
-    $o->entity_type('study');
+    $o->id( $sheet_name );
+    $o->entity_type('Study');
   }elsif ( $self->find_sub_sheet_name( sub { $_ eq $sheet_name } ) ) {
-    $o->id( $row->[0] );
-    $o->entity_type('submission');
+    $o->id( $sheet_name );
+    $o->entity_type('Submission');
   }elsif ( $self->find_run_sheet_name( sub { $_ eq $sheet_name } ) ) {
     $o->id( $row->[0] );
-    $o->entity_type('run');
+    $o->entity_type('Run');
   }elsif ( $self->find_exprena_sheet_name( sub { $_ eq $sheet_name } ) ) {
     $o->id( $row->[1] );
-    $o->entity_type('experiment');
+    $o->entity_type('Experiment_ENA');
     my $sample_id=$row->[0];
     my $sample = Bio::Metadata::Entity->new(
             id          => $sample_id,

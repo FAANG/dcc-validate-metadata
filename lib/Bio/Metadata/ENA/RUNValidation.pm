@@ -103,32 +103,41 @@ sub validate_run {
 
   my %blocks;
   for my $run_entity (@$run_entries) {
-    $blocks{ $run_entity->id } //= [];
-    push @{ $blocks{ $run_entity->id } }, $run_entity;
+    $blocks{ $run_entity->id } = $run_entity;
   }
 
   my @errors;
   push @errors,
-    $self->validate_section( \%blocks, 'run',
-    $self->run_rule_set, 0, 1 );
+    $self->validate_section( \%blocks,
+    $self->run_rule_set);
 
   return \@errors;
 }
 
 sub validate_section {
-  my ( $self, $blocks, $block_name, $rule_set, $just_one, $at_least_one ) = @_;
+  my ( $self, $blocks, $rule_set) = @_;
 
-  my $entities = $blocks->{$block_name} || [];
+  my @rows = keys(%$blocks);
 
-  my $v =
-    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
-
-  my @errors;
-  for my $e (@$entities) {
-    my ( $outcome_overall, $validation_outcomes ) = $v->check($e);
-    push @errors, grep { $_->outcome ne 'pass' } @$validation_outcomes;
+  if ( scalar(@rows) == 0 ) {
+    return Bio::Metadata::Validate::ValidationOutcome->new(
+      outcome => 'error',
+      message => "At least one run required",
+      rule =>
+        Bio::Metadata::Rules::Rule->new( name => "run", type => 'text' ),
+    );
   }
 
+  my $v = Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+
+  my @errors;
+  foreach my $row (@rows){
+    my $entities = @{$blocks->{$row}} || [];
+    for my $e (@$entities) {
+      my ( $outcome_overall, $validation_outcomes ) = $v->check($e);
+      push @errors, grep { $_->outcome ne 'pass' } @$validation_outcomes;
+    }
+  }
   return @errors;
 }
 
