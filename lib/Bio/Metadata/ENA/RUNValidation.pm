@@ -103,13 +103,13 @@ sub validate_run {
 
   my %blocks;
   for my $run_entity (@$run_entries) {
-    $blocks{ $run_entity->id } = $run_entity;
+    $blocks{ $run_entity->id } //= [];
+    push @{ $blocks{ $run_entity->id } }, $run_entity;
   }
 
   my @errors;
   push @errors,
-    $self->validate_section( \%blocks,
-    $self->run_rule_set);
+    $self->validate_section( \%blocks, $self->run_rule_set);
 
   return \@errors;
 }
@@ -132,7 +132,7 @@ sub validate_section {
 
   my @errors;
   foreach my $row (@rows){
-    my $entities = @{$blocks->{$row}} || [];
+    my $entities = $blocks->{$row} || [];
     for my $e (@$entities) {
       my ( $outcome_overall, $validation_outcomes ) = $v->check($e);
       push @errors, grep { $_->outcome ne 'pass' } @$validation_outcomes;

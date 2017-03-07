@@ -124,26 +124,35 @@ sub validate_expr {
 
   my @errors;
   push @errors,
-    $self->validate_section( \%blocks, 'experiment',
-    $self->ena_rule_set, 0, 1 );
+    $self->validate_section( \%blocks, $self->ena_rule_set);
 
   return \@errors;
 }
 
 sub validate_section {
-  my ( $self, $blocks, $block_name, $rule_set, $just_one, $at_least_one ) = @_;
+  my ( $self, $blocks, $rule_set) = @_;
 
-  my $entities = $blocks->{$block_name} || [];
+  my @rows = keys(%$blocks);
 
-  my $v =
-    Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
-
-  my @errors;
-  for my $e (@$entities) {
-    my ( $outcome_overall, $validation_outcomes ) = $v->check($e);
-    push @errors, grep { $_->outcome ne 'pass' } @$validation_outcomes;
+  if ( scalar(@rows) == 0 ) {
+    return Bio::Metadata::Validate::ValidationOutcome->new(
+      outcome => 'error',
+      message => "At least one ENA experiment row required",
+      rule =>
+        Bio::Metadata::Rules::Rule->new( name => "experiment_ena", type => 'text' ),
+    );
   }
 
+  my $v = Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
+
+  my @errors;
+  foreach my $row (@rows){
+    my $entities = $blocks->{$row} || [];
+    for my $e (@$entities) {
+      my ( $outcome_overall, $validation_outcomes ) = $v->check($e);
+      push @errors, grep { $_->outcome ne 'pass' } @$validation_outcomes;
+    }
+  }
   return @errors;
 }
 
