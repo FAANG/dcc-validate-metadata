@@ -37,7 +37,7 @@ has 'ena_rule_set' => (
               type      => 'text'
             },
             {
-              name      => 'EXPERIMENT alias',
+              name      => 'EXPERIMENT_alias',
               mandatory => 'mandatory',
               type      => 'text'
             },
