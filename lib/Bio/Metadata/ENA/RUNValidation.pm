@@ -47,6 +47,11 @@ has 'run_rule_set' => (
               type      => 'text'
             },
             {
+              name      => 'run_date',
+              mandatory => 'optional',
+              type      => 'text'
+            },
+            {
               name      => 'EXPERIMENT_REF',
               mandatory => 'mandatory',
               type      => 'text'
