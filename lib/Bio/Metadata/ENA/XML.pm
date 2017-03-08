@@ -21,6 +21,7 @@ use Moose;
 use namespace::autoclean;
 use Bio::Metadata::Loader::XLSXExperimentLoader;
 use Moose::Util::TypeConstraints;
+use Scalar::Util 'looks_like_number';
 
 use Bio::Metadata::ENA::SUBValidation;
 use Bio::Metadata::ENA::STDValidation;
@@ -297,10 +298,14 @@ sub report_expr {
         $LIBRARY_LAYOUT = $a->value;
       }
       elsif ($a->name eq 'NOMINAL_LENGTH'){
-        $NOMINAL_LENGTH = $a->value;
+        if (looks_like_number( $a->value ) && $a->value > 0){
+          $NOMINAL_LENGTH = $a->value;
+        }
       }
       elsif ($a->name eq 'NOMINAL_SDEV'){
-        $NOMINAL_SDEV = $a->value;
+        if (looks_like_number( $a->value )){
+          $NOMINAL_SDEV = $a->value
+        }
       }
       elsif ($a->name eq 'LIBRARY_CONSTRUCTION_PROTOCOL'){
         $LIBRARY_CONSTRUCTION_PROTOCOL = $a->value;
@@ -323,14 +328,14 @@ sub report_expr {
     $experiment = $experiment."\t\t\t\t<LIBRARY_SELECTION>".$LIBRARY_SELECTION."</LIBRARY_SELECTION>\n";
     if ($NOMINAL_LENGTH){
       if ($NOMINAL_SDEV){
-        $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\" NOMINAL_SDEV=\"".$NOMINAL_SDEV."\">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+        $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\" NOMINAL_SDEV=\"".$NOMINAL_SDEV."\"/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
       }else{
-        $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+        $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\"/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
       }
     }elsif ($NOMINAL_SDEV){
-      $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_SDEV=\"".$NOMINAL_SDEV."\">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+      $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_SDEV=\"".$NOMINAL_SDEV."\"/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
     }else{
-      $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT.">\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+      $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT."/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
     }
     if ($LIBRARY_CONSTRUCTION_PROTOCOL){
       $experiment = $experiment."\t\t\t\t<LIBRARY_CONSTRUCTION_PROTOCOL>".$LIBRARY_CONSTRUCTION_PROTOCOL."</LIBRARY_CONSTRUCTION_PROTOCOL>\n";
