@@ -234,6 +234,7 @@ sub report_std {
   $output = $output."\t\t\t<STUDY_TYPE existing_study_type=\"".$STUDY_TYPE."\"/>\n";
   $output = $output."\t\t\t<STUDY_DESCRIPTION>".$STUDY_DESCRIPTION."</STUDY_DESCRIPTION>\n";
   $output = $output."\t\t</DESCRIPTOR>\n";
+  $output = $output."\t</STUDY>\n";
   $output = $output.$std_footer;
 }
 
@@ -334,17 +335,18 @@ sub report_expr {
     if ($LIBRARY_CONSTRUCTION_PROTOCOL){
       $experiment = $experiment."\t\t\t\t<LIBRARY_CONSTRUCTION_PROTOCOL>".$LIBRARY_CONSTRUCTION_PROTOCOL."</LIBRARY_CONSTRUCTION_PROTOCOL>\n";
     }
+    $experiment = $experiment."\t\t\t</LIBRARY_DESCRIPTOR>\n\t\t</DESIGN>\n";
     if ($PLATFORM){
       if ($INSTRUMENT_MODEL){
-        $experiment = $experiment."\t\t\t\t<PLATFORM>\n\t\t\t\t\t<".$PLATFORM.">\n\t\t\t\t\t\t<INSTRUMENT_MODEL>".$INSTRUMENT_MODEL."</INSTRUMENT_MODEL>\n\t\t\t\t\t</".$PLATFORM.">\n\t\t\t\t</PLATFORM>\n";
+        $experiment = $experiment."\t\t\t<PLATFORM>\n\t\t\t\t<".$PLATFORM.">\n\t\t\t\t\t<INSTRUMENT_MODEL>".$INSTRUMENT_MODEL."</INSTRUMENT_MODEL>\n\t\t\t\t</".$PLATFORM.">\n\t\t\t</PLATFORM>\n";
       }else{
-        $experiment = $experiment."\t\t\t\t<PLATFORM>\n\t\t\t\t\t<".$PLATFORM."/>\n\t\t\t\t</PLATFORM>\n";
+        $experiment = $experiment."\t\t\t<PLATFORM>\n\t\t\t\t<".$PLATFORM."/>\n\t\t\t</PLATFORM>\n";
       }
     }
-    $experiment = $experiment."\t\t\t</LIBRARY_DESCRIPTOR>\n\t\t</DESIGN>\n";
     $experiment = $experiment."\t\t<EXPERIMENT_ATTRIBUTES>\n";
     $experiment = $experiment.$attributes{$EXPERIMENT_alias};
     $experiment = $experiment."\t\t</EXPERIMENT_ATTRIBUTES>\n";
+    $experiment = $experiment."\t</EXPERIMENT>\n";
     push(@experiments, $experiment);
   }
   foreach my $experiment (@experiments){
@@ -411,12 +413,13 @@ sub report_run {
     $run = $run."\t\t<EXPERIMENT_REF refname=\"".$EXPERIMENT_REF."\"/>\n";
     $run = $run."\t\t<DATA_BLOCK>\n";
     $run = $run."\t\t\t<FILES>\n";
-    $run = $run."\t\t\t\t<FILE filename=\"".$filename."\" filetype=\"".$filetype."\" checksum_method=\"".$checksum_method."\" checksum=\"".$checksum."\"</FILE>\n";
+    $run = $run."\t\t\t\t<FILE filename=\"".$filename."\" filetype=\"".$filetype."\" checksum_method=\"".$checksum_method."\" checksum=\"".$checksum."\"/>\n";
     if ($filename_pair){
-      $run = $run."\t\t\t\t<FILE filename=\"".$filename_pair."\" filetype=\"".$filetype_pair."\" checksum_method=\"".$checksum_method_pair."\" checksum=\"".$checksum_pair."\"</FILE>\n";
+      $run = $run."\t\t\t\t<FILE filename=\"".$filename_pair."\" filetype=\"".$filetype_pair."\" checksum_method=\"".$checksum_method_pair."\" checksum=\"".$checksum_pair."\"/>\n";
     }
     $run = $run."\t\t\t</FILES>\n";
-    $run = $run."\t\t\t</DATA_BLOCK>\n";
+    $run = $run."\t\t</DATA_BLOCK>\n";
+    $run = $run."\t</RUN>\n";
     push(@runs, $run);
   }
   foreach my $run (@runs){

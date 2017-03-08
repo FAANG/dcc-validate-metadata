@@ -498,7 +498,7 @@ sub ena_conversion_expr {
 
   $c->respond_to(
     html => sub {
-      my $filename =  $tmpdir."/".$metadata_file->filename() . '.expression.xml';
+      my $filename =  $tmpdir."/".$metadata_file->filename() . '.experiment.xml';
       open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
       print $fh $st_converter->report_expr;
     }
