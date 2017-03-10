@@ -471,7 +471,7 @@ sub ena_conversion_sub {
     html => sub {
       my $filename =  $tmpdir."/".$metadata_file->filename() . '.submission.xml';
       open(my $fh, "+>", $filename) or die "$0: can't create temporary file: $!\n";
-      print $fh $st_converter->report_sub($metadata_file->filename());
+      print $fh $st_converter->report_sub;
     }
   );
 }

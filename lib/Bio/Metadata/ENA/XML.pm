@@ -155,7 +155,7 @@ sub validate {
 }
 
 sub report_sub {
-  my ($self, $filename ) = @_;
+  my ($self) = @_;
 
   my $xml_header ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
   my $sub_header ="<SUBMISSION_SET xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd\">\n";
@@ -164,12 +164,9 @@ sub report_sub {
   my $output = $xml_header.$sub_header;
 
   my ($alias, @actions, $holduntil);
-  my @schemas = ("study", "experiment", "run");
   for my $e ( $self->all_sub ) {
     for my $a ($e->all_attributes) {
-
       next if ! defined $a->value;
-
       if ($a->name eq 'alias'){
         $alias = $a->value;
       }
@@ -181,11 +178,9 @@ sub report_sub {
 
   $output = $output."\t<SUBMISSION alias=\"".$alias."\">\n";
   $output = $output."\t\t<ACTIONS>\n";
-  for my $schema (@schemas){
-    $output = $output."\t\t\t<ACTION>\n";
-    $output = $output."\t\t\t\t<ADD source=\"".$filename.".".$schema.".xml\" schema=\"".$schema."\"/>\n";
-    $output = $output."\t\t\t</ACTION>\n";
-  }
+  $output = $output."\t\t\t<ACTION>\n";
+  $output = $output."\t\t\t\t<ADD/>\n";
+  $output = $output."\t\t\t</ACTION>\n";
   if ($holduntil){
     $output = $output."\t\t\t<ACTION>\n\t\t\t\t<HOLD>\n\t\t\t\t\t<HoldUntilDate=\"".$holduntil."\"/>\n\t\t\t\t</HOLD>\n\t\t\t</ACTION>\n";
   }else{
