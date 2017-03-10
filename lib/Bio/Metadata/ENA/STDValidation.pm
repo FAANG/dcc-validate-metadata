@@ -47,7 +47,7 @@ has 'study_rule_set' => (
               type      => 'text'
             },
             {
-              name      => 'STUDY_DESCRIPTION',
+              name      => 'STUDY_ABSTRACT',
               mandatory => 'optional',
               type      => 'text'
             },

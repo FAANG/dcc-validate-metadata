@@ -195,7 +195,7 @@ sub report_std {
   my $std_header ="<STUDY_SET xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.study.xsd\">\n";
   my $std_footer ="</STUDY_SET>";
 
-  my ($study_alias, $STUDY_TITLE, $STUDY_TYPE, $STUDY_DESCRIPTION);
+  my ($study_alias, $STUDY_TITLE, $STUDY_TYPE, $STUDY_ABSTRACT);
 
   my $output = $xml_header.$std_header;
 
@@ -213,7 +213,7 @@ sub report_std {
       elsif ($a->name eq 'STUDY_TYPE'){
         $STUDY_TYPE = $a->value;
       }
-      elsif ($a->name eq 'STUDY_DESCRIPTION'){
+      elsif ($a->name eq 'STUDY_ABSTRACT'){
         $STUDY_DESCRIPTION = $a->value;
       }
     }
@@ -222,7 +222,7 @@ sub report_std {
   $output = $output."\t\t<DESCRIPTOR>\n";
   $output = $output."\t\t\t<STUDY_TITLE>".$STUDY_TITLE."</STUDY_TITLE>\n";
   $output = $output."\t\t\t<STUDY_TYPE existing_study_type=\"".$STUDY_TYPE."\"/>\n";
-  $output = $output."\t\t\t<STUDY_DESCRIPTION>".$STUDY_DESCRIPTION."</STUDY_DESCRIPTION>\n";
+  $output = $output."\t\t\t<STUDY_ABSTRACT>".$STUDY_ABSTRACT."</STUDY_ABSTRACT>\n";
   $output = $output."\t\t</DESCRIPTOR>\n";
   $output = $output."\t</STUDY>\n";
   $output = $output.$std_footer;
