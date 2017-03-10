@@ -37,11 +37,6 @@ has 'study_rule_set' => (
               type      => 'text'
             },
             {
-              name      => 'center_name',
-              mandatory => 'mandatory',
-              type      => 'text'
-            },
-            {
               name      => 'STUDY_TITLE',
               mandatory => 'mandatory',
               type      => 'text'

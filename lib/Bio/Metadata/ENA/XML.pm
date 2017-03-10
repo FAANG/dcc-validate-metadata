@@ -163,7 +163,7 @@ sub report_sub {
 
   my $output = $xml_header.$sub_header;
 
-  my ($alias, $center_name, @actions, $holduntil);
+  my ($alias, @actions, $holduntil);
   my @schemas = ("study", "experiment", "run");
   for my $e ( $self->all_sub ) {
     for my $a ($e->all_attributes) {
@@ -173,16 +173,13 @@ sub report_sub {
       if ($a->name eq 'alias'){
         $alias = $a->value;
       }
-      elsif ($a->name eq 'center_name'){
-        $center_name = $a->value;
-      }
       elsif ($a->name eq 'HoldUntilDate'){
         $holduntil = $a->value;
       }
     }
   }
 
-  $output = $output."\t<SUBMISSION alias=\"".$alias."\" center_name=\"".$center_name."\">\n";
+  $output = $output."\t<SUBMISSION alias=\"".$alias."\">\n";
   $output = $output."\t\t<ACTIONS>\n";
   for my $schema (@schemas){
     $output = $output."\t\t\t<ACTION>\n";
@@ -203,7 +200,7 @@ sub report_std {
   my $std_header ="<STUDY_SET xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.study.xsd\">\n";
   my $std_footer ="</STUDY_SET>";
 
-  my ($study_alias, $center_name, $STUDY_TITLE, $STUDY_TYPE, $STUDY_DESCRIPTION);
+  my ($study_alias, $STUDY_TITLE, $STUDY_TYPE, $STUDY_DESCRIPTION);
 
   my $output = $xml_header.$std_header;
 
@@ -214,9 +211,6 @@ sub report_std {
 
       if ($a->name eq 'study_alias'){
         $study_alias = $a->value;
-      }
-      elsif ($a->name eq 'center_name'){
-        $center_name = $a->value;
       }
       elsif ($a->name eq 'STUDY_TITLE'){
         $STUDY_TITLE = $a->value;
@@ -229,7 +223,7 @@ sub report_std {
       }
     }
   }
-  $output = $output."\t<STUDY alias=\"".$study_alias."\" center_name=\"".$center_name."\">\n";
+  $output = $output."\t<STUDY alias=\"".$study_alias."\">\n";
   $output = $output."\t\t<DESCRIPTOR>\n";
   $output = $output."\t\t\t<STUDY_TITLE>".$STUDY_TITLE."</STUDY_TITLE>\n";
   $output = $output."\t\t\t<STUDY_TYPE existing_study_type=\"".$STUDY_TYPE."\"/>\n";
@@ -264,14 +258,11 @@ sub report_expr {
     $attributes{$e->id}=$attribute_block;
   }
   for my $e ( $self->all_expr ) {
-    my ($EXPERIMENT_alias, $center_name, $SAMPLE_DESCRIPTOR, $TITLE, $STUDY_REF, $LIBRARY_NAME, $LIBRARY_STRATEGY, $LIBRARY_SOURCE, $LIBRARY_SELECTION, $LIBRARY_LAYOUT, $NOMINAL_LENGTH, $NOMINAL_SDEV, $LIBRARY_CONSTRUCTION_PROTOCOL, $PLATFORM, $INSTRUMENT_MODEL);
+    my ($EXPERIMENT_alias, $SAMPLE_DESCRIPTOR, $TITLE, $STUDY_REF, $LIBRARY_NAME, $LIBRARY_STRATEGY, $LIBRARY_SOURCE, $LIBRARY_SELECTION, $LIBRARY_LAYOUT, $NOMINAL_LENGTH, $NOMINAL_SDEV, $LIBRARY_CONSTRUCTION_PROTOCOL, $PLATFORM, $INSTRUMENT_MODEL);
     for my $a ($e->all_attributes) {
       next if ! defined $a->value;
       if ($a->name eq 'EXPERIMENT_alias'){
         $EXPERIMENT_alias = $a->value;
-      }
-      elsif ($a->name eq 'center_name'){
-        $center_name = $a->value;
       }
       elsif ($a->name eq 'SAMPLE_DESCRIPTOR'){
         $SAMPLE_DESCRIPTOR = $a->value;
@@ -317,7 +308,7 @@ sub report_expr {
         $INSTRUMENT_MODEL = $a->value;
       }
     }
-    my $experiment = "\t<EXPERIMENT alias=\"".$EXPERIMENT_alias."\" center_name=\"".$center_name."\">\n";
+    my $experiment = "\t<EXPERIMENT alias=\"".$EXPERIMENT_alias."\">\n";
     $experiment = $experiment."\t\t<TITLE>".$TITLE."</TITLE>\n";
     $experiment = $experiment."\t\t<STUDY_REF refname =\"".$STUDY_REF."\"/>\n";
     $experiment = $experiment."\t\t<DESIGN>\n\t\t\t<SAMPLE_DESCRIPTOR refname =\"".$SAMPLE_DESCRIPTOR."\"/>\n";
@@ -371,14 +362,11 @@ sub report_run {
   my $output = $xml_header.$run_header;
 
   for my $e ( $self->all_run ) {
-    my ($alias, $center_name, $run_center, $run_date, $EXPERIMENT_REF, $filename, $filetype, $checksum_method, $checksum, $filename_pair, $filetype_pair, $checksum_method_pair, $checksum_pair);
+    my ($alias, $run_center, $run_date, $EXPERIMENT_REF, $filename, $filetype, $checksum_method, $checksum, $filename_pair, $filetype_pair, $checksum_method_pair, $checksum_pair);
     for my $a ($e->all_attributes) {
       next if ! defined $a->value;
       if ($a->name eq 'alias'){
         $alias = $a->value;
-      }
-      elsif ($a->name eq 'center_name'){
-        $center_name = $a->value;
       }
       elsif ($a->name eq 'run_center'){
         $run_center = $a->value;
@@ -414,7 +402,7 @@ sub report_run {
         $checksum_pair = $a->value;
       }
     }
-    my $run = "\t<SUBMISSION alias=\"".$alias."\" center_name=\"".$center_name."\" run_center=\"".$run_center."\" run_date=\"".$run_date."\">\n";
+    my $run = "\t<SUBMISSION alias=\"".$alias."\" run_center=\"".$run_center."\" run_date=\"".$run_date."\">\n";
     $run = $run."\t\t<EXPERIMENT_REF refname=\"".$EXPERIMENT_REF."\"/>\n";
     $run = $run."\t\t<DATA_BLOCK>\n";
     $run = $run."\t\t\t<FILES>\n";

@@ -37,11 +37,6 @@ has 'submission_rule_set' => (
               type      => 'text'
             },
             {
-              name      => 'center_name',
-              mandatory => 'mandatory',
-              type      => 'text'
-            },
-            {
               name      => 'HoldUntilDate',
               mandatory => 'optional',
               type      => 'text'#TODO Should validate this in ENA data format (this is different to FAANG date format)

@@ -37,11 +37,6 @@ has 'run_rule_set' => (
               type      => 'text'
             },
             {
-              name      => 'center_name',
-              mandatory => 'mandatory',
-              type      => 'text'
-            },
-            {
               name      => 'run_center',
               mandatory => 'mandatory',
               type      => 'text'

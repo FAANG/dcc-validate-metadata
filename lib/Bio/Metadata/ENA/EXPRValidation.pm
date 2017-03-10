@@ -42,11 +42,6 @@ has 'ena_rule_set' => (
               type      => 'text'
             },
             {
-              name      => 'center_name',
-              mandatory => 'mandatory',
-              type      => 'text'
-            },
-            {
               name      => 'TITLE',
               mandatory => 'mandatory',
               type      => 'text'
