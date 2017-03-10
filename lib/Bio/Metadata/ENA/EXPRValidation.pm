@@ -52,6 +52,11 @@ has 'ena_rule_set' => (
               type      => 'text'
             },
             {
+              name      => 'DESIGN_DESCRIPTION',
+              mandatory => 'mandatory',
+              type      => 'text'
+            },
+            {
               name      => 'LIBRARY_NAME',
               mandatory => 'mandatory',
               type      => 'text'

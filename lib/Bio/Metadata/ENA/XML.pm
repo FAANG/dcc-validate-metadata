@@ -253,7 +253,7 @@ sub report_expr {
     $attributes{$e->id}=$attribute_block;
   }
   for my $e ( $self->all_expr ) {
-    my ($EXPERIMENT_alias, $SAMPLE_DESCRIPTOR, $TITLE, $STUDY_REF, $LIBRARY_NAME, $LIBRARY_STRATEGY, $LIBRARY_SOURCE, $LIBRARY_SELECTION, $LIBRARY_LAYOUT, $NOMINAL_LENGTH, $NOMINAL_SDEV, $LIBRARY_CONSTRUCTION_PROTOCOL, $PLATFORM, $INSTRUMENT_MODEL);
+    my ($EXPERIMENT_alias, $SAMPLE_DESCRIPTOR, $TITLE, $STUDY_REF, $DESIGN_DESCRIPTION, $LIBRARY_NAME, $LIBRARY_STRATEGY, $LIBRARY_SOURCE, $LIBRARY_SELECTION, $LIBRARY_LAYOUT, $NOMINAL_LENGTH, $NOMINAL_SDEV, $LIBRARY_CONSTRUCTION_PROTOCOL, $PLATFORM, $INSTRUMENT_MODEL);
     for my $a ($e->all_attributes) {
       next if ! defined $a->value;
       if ($a->name eq 'EXPERIMENT_alias'){
@@ -268,6 +268,9 @@ sub report_expr {
       elsif ($a->name eq 'STUDY_REF'){
         $STUDY_REF = $a->value;
       }
+      elsif ($a->name eq 'DESIGN_DESCRIPTION'){
+        $DESIGN_DESCRIPTION = $a->value;
+      }      
       elsif ($a->name eq 'LIBRARY_NAME'){
         $LIBRARY_NAME = $a->value;
       }
@@ -306,7 +309,9 @@ sub report_expr {
     my $experiment = "\t<EXPERIMENT alias=\"".$EXPERIMENT_alias."\">\n";
     $experiment = $experiment."\t\t<TITLE>".$TITLE."</TITLE>\n";
     $experiment = $experiment."\t\t<STUDY_REF refname =\"".$STUDY_REF."\"/>\n";
-    $experiment = $experiment."\t\t<DESIGN>\n\t\t\t<SAMPLE_DESCRIPTOR refname =\"".$SAMPLE_DESCRIPTOR."\"/>\n";
+    $experiment = $experiment."\t\t<DESIGN>\n";
+    $experiment = $experiment."\t\t\t<DESIGN_DESCRIPTION>".$DESIGN_DESCRIPTION."</DESIGN_DESCRIPTION>\n";
+    $experiment = $experiment."\t\t\t<SAMPLE_DESCRIPTOR refname =\"".$SAMPLE_DESCRIPTOR."\"/>\n";
     $experiment = $experiment."\t\t\t<LIBRARY_DESCRIPTOR>\n";
     $experiment = $experiment."\t\t\t\t<LIBRARY_NAME>".$LIBRARY_NAME."</LIBRARY_NAME>\n";
     $experiment = $experiment."\t\t\t\t<LIBRARY_STRATEGY>".$LIBRARY_STRATEGY."</LIBRARY_STRATEGY>\n";
