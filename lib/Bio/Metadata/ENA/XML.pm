@@ -311,7 +311,7 @@ sub report_expr {
     $experiment = $experiment."\t\t<STUDY_REF refname =\"".$STUDY_REF."\"/>\n";
     $experiment = $experiment."\t\t<DESIGN>\n";
     $experiment = $experiment."\t\t\t<DESIGN_DESCRIPTION>".$DESIGN_DESCRIPTION."</DESIGN_DESCRIPTION>\n";
-    $experiment = $experiment."\t\t\t<SAMPLE_DESCRIPTOR refname =\"".$SAMPLE_DESCRIPTOR."\"/>\n";
+    $experiment = $experiment."\t\t\t<SAMPLE_DESCRIPTOR refname=\"".$SAMPLE_DESCRIPTOR."\"/>\n";
     $experiment = $experiment."\t\t\t<LIBRARY_DESCRIPTOR>\n";
     $experiment = $experiment."\t\t\t\t<LIBRARY_NAME>".$LIBRARY_NAME."</LIBRARY_NAME>\n";
     $experiment = $experiment."\t\t\t\t<LIBRARY_STRATEGY>".$LIBRARY_STRATEGY."</LIBRARY_STRATEGY>\n";
