@@ -402,7 +402,7 @@ sub report_run {
         $checksum_pair = $a->value;
       }
     }
-    my $run = "\t<SUBMISSION alias=\"".$alias."\" run_center=\"".$run_center."\" run_date=\"".$run_date."\">\n";
+    my $run = "\t<RUN alias=\"".$alias."\" run_center=\"".$run_center."\" run_date=\"".$run_date."\">\n";
     $run = $run."\t\t<EXPERIMENT_REF refname=\"".$EXPERIMENT_REF."\"/>\n";
     $run = $run."\t\t<DATA_BLOCK>\n";
     $run = $run."\t\t\t<FILES>\n";
