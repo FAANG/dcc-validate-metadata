@@ -163,7 +163,7 @@ sub report_sub {
 
   my $output = $xml_header.$sub_header;
 
-  my ($alias, @actions, $holduntil);
+  my ($alias, $holduntil);
   for my $e ( $self->all_sub ) {
     for my $a ($e->all_attributes) {
       next if ! defined $a->value;
@@ -214,7 +214,7 @@ sub report_std {
         $STUDY_TYPE = $a->value;
       }
       elsif ($a->name eq 'STUDY_ABSTRACT'){
-        $STUDY_DESCRIPTION = $a->value;
+        $STUDY_ABSTRACT = $a->value;
       }
     }
   }
