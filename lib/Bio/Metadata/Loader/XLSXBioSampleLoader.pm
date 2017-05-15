@@ -41,7 +41,7 @@ has 'scd_sheet_names' => (
     all_scd_sheet_names => 'elements',
     find_scd_sheet_name => 'first',
   },
-  default => sub { [ 'animal', 'specimen', 'purified cells', 'cell culture', 'cell line' ] },
+  default => sub { [ 'animal', 'specimen', 'pool of specimens', 'purified cells', 'cell culture', 'cell line' ] },
 );
 
 has 'msi_sheet_names' => (
