@@ -1459,7 +1459,7 @@ DISTRIBUTIONS
       File::Basename 0
       File::Path 0
       File::Temp 0
-      Module::Build 0.38
+      Module::Build 0.4222
       Module::Load 0
       Test::SharedFork 0
       parent 0
@@ -1473,7 +1473,7 @@ DISTRIBUTIONS
       CPAN::Meta::Prereqs 0
       ExtUtils::CBuilder 0
       List::Util 1.14
-      Module::Build 0.38
+      Module::Build 0.4222
       Module::Build::Pluggable 0.05
       Module::CPANfile 0.9010
       parent 0
@@ -2634,7 +2634,7 @@ DISTRIBUTIONS
       Test::MockModule 0.11
     requirements:
       Carp 0
-      Module::Build 0.38
+      Module::Build 0.4222
       SUPER 0
       Scalar::Util 0
       Test::More 0.45

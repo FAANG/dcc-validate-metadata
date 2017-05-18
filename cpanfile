@@ -26,12 +26,6 @@ requires 'XML::LibXML';
 requires 'Text::Unidecode';
 requires 'Unicode::CaseFold';
 requires 'MooseX::Types::URI';
-
-on 'build' => sub {
-  requires 'Module::Build::Pluggable';
-  requires 'Module::Build::Pluggable::CPANfile';
-};
-
-on 'test' => sub {
-  requires 'Test::More';
-};
+requires 'Module::Build::Pluggable';
+requires 'Module::Build::Pluggable::CPANfile';
+requires 'Test::More';
