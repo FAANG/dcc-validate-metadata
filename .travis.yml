@@ -21,4 +21,4 @@ env:
     -PERL5LIB=$PERL5LIB:/home/travis/build/FAANG/validate-metadata/local/lib/perl5
 
 script:
-  perl Build.PL && ./Build build && cover -test -report coveralls
+  perl Build.PL && ./Build build && cover -ignore local -test -report coveralls
