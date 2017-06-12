@@ -92,9 +92,8 @@ has 'expr_sheet_names' => (
     find_expr_sheet_name => 'first',
   },
   default => sub { [ 
-  'WGBS', 'ChIP-seq', 
-  'ChIP-seq histone modifications', 'ChIP-seq input', 'RNA-Seq', 
-  'DNase-seq', 'ATAC-seq', 'HiC'
+  'ATAC-seq', 'BS-seq', 'ChIP-seq', 'ChIP-seq histone modifications', 'ChIP-seq input',
+  'DNase-seq', 'HiC', 'RNA-Seq', 'WGS'
   ] },
 );
 
