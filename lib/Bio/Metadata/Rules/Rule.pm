@@ -83,6 +83,9 @@ sub to_hash {
         mandatory      => $self->mandatory,
         allow_multiple => $self->allow_multiple,
         condition      => $self->condition,
+        valid_values   => $self->valid_values,
+        valid_units    => $self->valid_units,
+        valid_terms    => $self->valid_terms
     };
 }
 
