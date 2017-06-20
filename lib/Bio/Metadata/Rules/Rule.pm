@@ -76,13 +76,23 @@ has 'condition' =>
 sub to_hash {
     my ($self) = @_;
 
+    my @vv = $self->all_valid_values;
+    my @vu = $self->all_valid_units;
+    my @vt = map { $_->to_hash } $self->all_valid_terms;
+  
+  
+    my $condition = $self->condition ? $self->condition->to_hash : undef;
+
     return {
         name           => $self->name,
         description    => $self->description,
         type           => $self->type,
         mandatory      => $self->mandatory,
         allow_multiple => $self->allow_multiple,
-        condition      => $self->condition,
+        condition      => $condition,
+        valid_values   => \@vv,
+        valid_units    => \@vu,
+        valid_terms    => \@vt
     };
 }
 

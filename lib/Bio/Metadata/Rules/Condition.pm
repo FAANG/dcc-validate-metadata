@@ -83,5 +83,14 @@ sub check_attribute_condition {
     return ( $attr_match_count == $self->num_attribute_value_matches );
 }
 
+sub to_hash {
+  my ($self) = @_;
+  
+  return {
+    dpath_condition => $self->dpath_condition,
+    attribute_value_match => $self->attribute_value_match
+  }
+}
+
 __PACKAGE__->meta->make_immutable;
 1;
