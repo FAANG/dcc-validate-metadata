@@ -78,10 +78,13 @@ sub to_hash {
   my @r = map { $_->to_hash } $self->all_rules;
   my @i = map { $_->to_hash } $self->all_imports;
 
+
+  my $condition = $self->condition ? $self->condition->to_hash : undef;
+
   return {
     name        => $self->name,
     description => $self->description,
-    condition   => $self->condition,
+    condition   => $condition,
     rules       => \@r,
     imports     => \@i,
   };
