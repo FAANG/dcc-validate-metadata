@@ -145,7 +145,11 @@ my $expected_rule_group_h = {
       mandatory      => 'mandatory',
       allow_multiple => 0,
       description    => undef,
-      condition      => undef
+      condition      => undef,
+      valid_values   => [], 
+      valid_units    => [],
+      valid_terms    => []
+      
     },
     {
       name           => 'r2',
@@ -153,7 +157,10 @@ my $expected_rule_group_h = {
       mandatory      => 'mandatory',
       allow_multiple => 1,
       description    => undef,
-      condition      => undef
+      condition      => undef,
+      valid_values   => [], 
+      valid_units    => [],
+      valid_terms    => []
     }
   ],
   imports => [],
@@ -186,7 +193,10 @@ my $expected_vo_h = {
     mandatory      => 'mandatory',
     allow_multiple => 0,
     description    => undef,
-    condition      => undef
+    condition      => undef,
+    valid_values   => [], 
+    valid_units    => [],
+    valid_terms    => []
   },
   message     => "c'est n'est pas un pipe",
   outcome     => 'error',
