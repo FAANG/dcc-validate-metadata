@@ -26,7 +26,7 @@
   % if ($rule_group->condition) {
     % if ($rule_group->condition->dpath_condition) {
       <p>Applied under these conditions:</p>
-      <p>assay type<br />is 'ChIP-seq'<br />experiment target<br />is leaf node descendent of <a href="http://www.ebi.ac.uk/ols/ontologies/so/terms?iri=http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FSO_0001700">SO_0001700</a></p>
+      <p>assay type<br />is 'ChIP-seq'<br />experiment target<br />is leaf node descendant of <a href="http://www.ebi.ac.uk/ols/ontologies/so/terms?iri=http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FSO_0001700">SO_0001700</a></p>
     % } else {
       <p>Applied under these conditions:</p>
       %= include 'condition', condition => $rule_group->condition
