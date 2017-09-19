@@ -204,7 +204,7 @@ sub report_std {
 
       next if ! defined $a->value;
 
-      if ($a->name eq 'study_alias'){
+      if ($a->name eq 'Study_alias'){
         $study_alias = $a->value;
       }
       elsif ($a->name eq 'STUDY_TITLE'){
