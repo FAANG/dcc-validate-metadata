@@ -377,7 +377,7 @@ sub uri_rules {
   my ( $attr, $outcome );
 
   #valid url
-  $attr = Bio::Metadata::Attribute->new( value => 'http://www.ebi.ac.uk' );
+  $attr = Bio::Metadata::Attribute->new( value => 'https://www.ebi.ac.uk' );
   $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
   is( $outcome->outcome, 'pass', 'Valid url passed' );
 

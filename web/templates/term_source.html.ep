@@ -1,6 +1,6 @@
 % my $on =  lc($term->ontology_name);
 % my $iri =  b($term->term_iri)->url_escape ;
-% my $ols_url = "http://www.ebi.ac.uk/ols/ontologies/$on/terms?iri=$iri";
+% my $ols_url = "https://www.ebi.ac.uk/ols/ontologies/$on/terms?iri=$iri";
 % my @path_segments = $term->term_iri->path_segments;
 <a href="<%= url_for($ols_url) %>">
   <%= $path_segments[-1] %>

@@ -2,7 +2,7 @@
 
 This is a library, web application and set of scripts to test whether or not metadata conforms to a set of rules. It has been developed to support the [FAANG](http://www.faang.org/) project. 
 
-FAANG validation tools are available at [http://www.ebi.ac.uk/vg/faang](http://www.ebi.ac.uk/vg/faang).
+FAANG validation tools are available at [https://www.ebi.ac.uk/vg/faang](https://www.ebi.ac.uk/vg/faang).
 
 The expected use of this software is to
 
@@ -32,7 +32,7 @@ The central class for the metadata model is [Bio::Metadata::Entity](https://gith
 
 ## Rules
 
-The central class for defining rules is [Bio::Metadata::Rules::RuleSet](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Rules/RuleSet.pm). The web app produces pages describing the rules in a rule set; this may prove useful in understanding how the rules are structured - see the [FAANG sample metadata rule set](http://www.ebi.ac.uk/vg/faang/rule_sets/FAANG%20Samples) as an example.
+The central class for defining rules is [Bio::Metadata::Rules::RuleSet](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Rules/RuleSet.pm). The web app produces pages describing the rules in a rule set; this may prove useful in understanding how the rules are structured - see the [FAANG sample metadata rule set](https://www.ebi.ac.uk/vg/faang/rule_sets/FAANG%20Samples) as an example.
 
 A rule set is comprised of one or more rule groups. Each [rule group](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Rules/RuleGroup.pm) contains a list of [rules](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Rules/Rule.pm). A rule group can have [conditions](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Rules/Condition.pm) that control which entities the group is applied to. This allows you to apply different rules for differet types of data. For example, the FAANG sample metadata rule set contains different rules for tissue and cell line samples applied depending on the value of the 'biomaterial type' attribute.
 
@@ -43,7 +43,7 @@ At present, these types are supported:
  * [text](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Validate/TextAttributeValidator.pm) 
  * [number](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Validate/NumberAttributeValidator.pm)
  * [controlled list of values](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Validate/EnumAttributeValidator.pm)
- * entries from specified ontologies, identified either by ID or by term name. Ontology validation uses [OLS](http://www.ebi.ac.uk/ols). 
+ * entries from specified ontologies, identified either by ID or by term name. Ontology validation uses [OLS](https://www.ebi.ac.uk/ols). 
   * [by ID](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Validate/OntologyIdAttributeValidator.pm) 
   * [by term name](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Validate/OntologyTextAttributeValidator.pm)
  * [URL](https://github.com/FAANG/validate-metadata/blob/master/lib/Bio/Metadata/Validate/UriValueAttributeValidator.pm)
@@ -70,7 +70,7 @@ Validation outcomes for a set of entities can be reported in [text](https://gith
 
 ## Conversion
 
-We include  a conversion tool to produce SampleTab files for submission to [BioSamples](http://www.ebi.ac.uk/biosamples) based on a template spreadsheet. This is intended to simplify submission of sample metadata for FAANG. This conversion is available through the [web application](http://www.ebi.ac.uk/vg/faang/convert/).
+We include  a conversion tool to produce SampleTab files for submission to [BioSamples](https://www.ebi.ac.uk/biosamples) based on a template spreadsheet. This is intended to simplify submission of sample metadata for FAANG. This conversion is available through the [web application](https://www.ebi.ac.uk/vg/faang/convert/).
 
 ## Installation
 

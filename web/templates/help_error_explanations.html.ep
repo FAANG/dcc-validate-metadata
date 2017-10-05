@@ -185,7 +185,7 @@
   <strong>"These breeds do not match the animal species..."</strong>
 </p>
 <p>e.g. These breeds do not match the animal species (Gallus gallus): Angus, Hereford.</p>
-<p>At least one supplied breed is not associated with the supplied species, please consult the <%= link_to 'Livestock Breed Ontology' => 'http://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct associations.
+<p>At least one supplied breed is not associated with the supplied species, please consult the <%= link_to 'Livestock Breed Ontology' => 'https://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct associations.
 </p>
 <p>
   <strong>
@@ -193,7 +193,7 @@
   </strong>
 </p>
 <p>"a crossbreed is expected, but breed LBO_000043 (Bluefaced Leicester) does not match the pattern '*crossbreed'"</p>
-<p>In the breed column you have written what looks like a crossbreed entry, but you have not selected one of the crossbreed ontology terms, for a list of valid crossbreed terms please see the <%= link_to 'Livestock Breed Ontology' => 'http://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %>.</p>
+<p>In the breed column you have written what looks like a crossbreed entry, but you have not selected one of the crossbreed ontology terms, for a list of valid crossbreed terms please see the <%= link_to 'Livestock Breed Ontology' => 'https://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %>.</p>
 </p>
 <p>
   <strong>
@@ -201,14 +201,14 @@
   </strong>
 </p>
 <p>
-  Please check the spelling of the breed term you have provided.  Please consult the <%= link_to 'Livestock Breed Ontology' => 'http://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct spellings 
+  Please check the spelling of the breed term you have provided.  Please consult the <%= link_to 'Livestock Breed Ontology' => 'https://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct spellings 
 </p>
 <p>
   <strong>
     "could not parse breed"
   </strong>
 </p>
-<p>Error in parsing breed field, it should look something like "Scottish Blackface" or "Texel sire x Scottish Blackface dam", please consult the <%= link_to 'Livestock Breed Ontology' => 'http://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct associations.
+<p>Error in parsing breed field, it should look something like "Scottish Blackface" or "Texel sire x Scottish Blackface dam", please consult the <%= link_to 'Livestock Breed Ontology' => 'https://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct associations.
 </p>
 <p>
   <strong>
@@ -219,7 +219,7 @@
   "cannot find breed 'purple pig' in ontology"
 </p>
 <p>
-  The supplied breed could not be found in the LBO ontology.  Please consult the <%= link_to 'Livestock Breed Ontology' => 'http://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct associations.
+  The supplied breed could not be found in the LBO ontology.  Please consult the <%= link_to 'Livestock Breed Ontology' => 'https://www.ebi.ac.uk/ols/search?q=crossbreed&amp;ontology=lbo' %> for correct associations.
 </p>
 <h2>
   Ontologies
@@ -229,7 +229,7 @@
     "value and ID required"
   </strong>
 </p>
-<p>It is mandatory to enter both a value and ID for these fields.  Please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index' %>.
+<p>It is mandatory to enter both a value and ID for these fields.  Please consult the relevant ontology in <%= link_to 'OLS' => 'https://www.ebi.ac.uk/ols/index' %>.
 </p>
 <p>
   <strong>
@@ -252,7 +252,7 @@
     "value is not a valid term"
   </strong>
 </p>
-<p>This is not a valid ontology term, please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index' %>.
+<p>This is not a valid ontology term, please consult the relevant ontology in <%= link_to 'OLS' => 'https://www.ebi.ac.uk/ols/index' %>.
 </p>
 <p>
   <strong>
@@ -260,11 +260,11 @@
   </strong>
 </p>
 <p>e.g. "value (liver) does not precisely match label (kidney) for term<span style="color: rgb(0,51,102);"> UBERON_0002113"</p>
-<p>Please check the precise wording of the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index' %>.  It is acceptable to use a shortening for the attribute name, but you should ensure that it matches the selected ontology term and there is not a more appropriate ontology available.</p>
+<p>Please check the precise wording of the relevant ontology in <%= link_to 'OLS' => 'https://www.ebi.ac.uk/ols/index' %>.  It is acceptable to use a shortening for the attribute name, but you should ensure that it matches the selected ontology term and there is not a more appropriate ontology available.</p>
 <p>
   <strong>"URI is not for a valid term"</strong>
 </p>
-<p>The supplied URI does not link to a valid ontology term, please consult the relevant ontology in <%= link_to 'OLS' => 'http://www.ebi.ac.uk/ols/index' %>.
+<p>The supplied URI does not link to a valid ontology term, please consult the relevant ontology in <%= link_to 'OLS' => 'https://www.ebi.ac.uk/ols/index' %>.
 </p>
 <h2>
   Relationships (child of, derived from)

@@ -27,7 +27,7 @@ has 'base_url' => (
   is       => 'rw',
   isa      => 'Str',
   required => 1,
-  default  => 'http://www.ebi.ac.uk/ols/api'
+  default  => 'https://www.ebi.ac.uk/ols/api'
 );
 has 'rest_client' => (
   is       => 'rw',

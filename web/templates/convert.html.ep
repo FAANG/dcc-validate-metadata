@@ -2,7 +2,7 @@
 %= form_for convert => (enctype => 'multipart/form-data', method => 'POST') => begin
 
 %= include 'page_title', title => 'Excel to Submission format conversion tool',help => 'convert'
-<p>Convert an Excel file, based on the sample or experiment template, to either <a href="http://www.ebi.ac.uk/biosamples/help/st.html">SampleTab</a> or <a href="http://www.ebi.ac.uk/ena/submit/programmatic-submission">ENA XMLs</a>, ready for submission to <a href="http://www.ebi.ac.uk/biosamples">BioSamples@EMBL-EBI</a> or <a href="http://www.ebi.ac.uk/ena">ENA@EMBL-EBI</a>.</p>
+<p>Convert an Excel file, based on the sample or experiment template, to either <a href="https://www.ebi.ac.uk/biosamples/help/st.html">SampleTab</a> or <a href="https://www.ebi.ac.uk/ena/submit/programmatic-submission">ENA XMLs</a>, ready for submission to <a href="https://www.ebi.ac.uk/biosamples">BioSamples@EMBL-EBI</a> or <a href="https://www.ebi.ac.uk/ena">ENA@EMBL-EBI</a>.</p>
 <dl class="dl-horizontal">
   <dt>
     %= label_for metadata_file => 'Metadata file'
