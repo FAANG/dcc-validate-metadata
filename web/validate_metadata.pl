@@ -72,6 +72,11 @@ my $loaders = {
 my $rule_config    = app->config('rules'); #read rules field from the mojolicious config file 
 my %rule_locations = map { %$_ } @$rule_config;
 my @rule_names     = map { keys %$_ } @$rule_config;
+my @rule_names_without_legacy;
+foreach my $rule_name(@rule_names){
+  push (@rule_names_without_legacy,$rule_name) unless (index(lc($rule_name),"legacy")>-1);
+}
+
 
 my ( $rules, $validators ) = load_rules( \%rule_locations );
 
@@ -108,10 +113,10 @@ get '/rule_sets' => sub {
 
   $c->respond_to(
     json => sub {
-      $c->render( json => { rule_set_names => &remove_legacy_ruleset(@rule_names), } );
+      $c->render( json => { rule_set_names => \@rule_names_without_legacy, } );
     },
     html => sub {
-      $c->stash( rule_sets => $rules, rule_set_names => &remove_legacy_ruleset(@rule_names) );
+      $c->stash( rule_sets => $rules, rule_set_names => \@rule_names_without_legacy);
       $c->render( template => 'rule_sets' );
     }
   );
@@ -138,7 +143,7 @@ get '/rule_sets/#name' => sub {
 
 get '/convert' => sub {
   my $c = shift;
-  my $supporting_data = { valid_rule_set_names => &remove_legacy_ruleset(@rule_names) };
+  my $supporting_data = { valid_rule_set_names => \@rule_names_without_legacy };
 
   $c->respond_to(
     json => sub {
@@ -651,12 +656,4 @@ sub validate_metadata {
       );
     }
   );
-}
-
-sub remove_legacy_ruleset(){
-  my @result;
-  foreach my $rule_name(@_){
-    push (@result,$_) unless (index(lc($rule_name),"legacy")>-1);
-  }
-  return \@result;
 }
