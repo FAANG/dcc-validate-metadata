@@ -12,6 +12,8 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+
+# this is based on mojolicious platform
 use strict;
 use warnings;
 use Carp;
@@ -67,7 +69,7 @@ my $loaders = {
   'SRA Experiment .xlsx' => Bio::Metadata::Loader::XLSXExperimentLoader->new(),
 };
 
-my $rule_config    = app->config('rules');
+my $rule_config    = app->config('rules'); #read rules field from the mojolicious config file 
 my %rule_locations = map { %$_ } @$rule_config;
 my @rule_names     = map { keys %$_ } @$rule_config;
 
@@ -82,20 +84,22 @@ my %help_pages = (
   'How to use this site' => 'how_to'
 );
 
+#The first argument passed to all actions ($c) is a Mojolicious::Controller object, containing both the HTTP request and response
 get '/' => sub {
   my $c = shift;
   $c->render( template => 'index' );
 };
 
+#A few stash values like json, template, text and data are reserved and will be used by "render" in Mojolicious::Controller to decide how a response should be generated.
 get '/help' => sub {
   my $c = shift;
-  $c->stash( 'help_pages', \%help_pages );
+  $c->stash( 'help_pages', \%help_pages );#The "stash" in Mojolicious::Controller is used to pass data to templates
   $c->render( template => 'help' );
 };
 
 get '/help/#name' => sub {
   my $c    = shift;
-  my $name = $c->param('name');
+  my $name = $c->param('name');#All GET and POST parameters sent with the request are accessible via "param" in Mojolicious::Controller
   $c->render( template => 'help_' . $name );
 };
 
@@ -246,7 +250,7 @@ post '/convert' => sub {
     }
   }
 };
-
+#the validate interface by GET method
 get '/validate' => sub {
   my $c = shift;
 
@@ -257,12 +261,12 @@ get '/validate' => sub {
       $c->render( json => $supporting_data );
     },
     html => sub {
-      $c->stash(%$supporting_data);
-      $c->render( template => 'validate' );
+      $c->stash(%$supporting_data); #pass value to template
+      $c->render( template => 'validate' ); #use validate template
     }
   );
 };
-
+#the validation result page
 post '/validate' => sub {
   my $c = shift;
 
@@ -298,6 +302,7 @@ post '/validate' => sub {
 };
 
 # Start the Mojolicious command system
+# should be the last expression in your application
 app->start;
 
 sub form_validate_metadata_file {
@@ -334,13 +339,26 @@ sub load_rules {
 
   return ( \%rules, \%validators );
 }
-
+#the elements of the form which will be populated into molijious html template file validate.html.ep or convert.html.ep (embedded perl)
+#to use advanced select field check http://mojolicious.org/perldoc/Mojolicious/Plugin/TagHelpers#select_field
+#each option is an array with paired values
 sub validation_supporting_data {
+  my @rule_names_with_options;
+  foreach my $rule_name(@rule_names){
+    my @tmp;
+    push (@tmp,$rule_name); #option display, check 11 lines down in the comment of return statement for valid_output_formats
+    push (@tmp,$rule_name); #option value
+    if(index(lc($rule_name),"legacy")>-1){ #if it is the legacy rule set, hide from the option list
+      push (@tmp,"hidden");
+      push (@tmp,"true");
+    }
+    push (@rule_names_with_options,\@tmp);
+  }
   return {
     valid_file_formats   => [ sort keys %$loaders ],
-    valid_rule_set_names => \@rule_names,
+    valid_rule_set_names => \@rule_names_with_options,
     valid_output_formats => [
-      [ 'Web page' => 'html' ],
+      [ 'Web page' => 'html' ], #same as ['Web page','html']
       [ 'Excel'    => 'xlsx' ],
       [ 'JSON'     => 'json' ],
       [ 'Text'     => 'txt' ]
