@@ -108,10 +108,10 @@ get '/rule_sets' => sub {
 
   $c->respond_to(
     json => sub {
-      $c->render( json => { rule_set_names => \@rule_names, } );
+      $c->render( json => { rule_set_names => &remove_legacy_ruleset(@rule_names), } );
     },
     html => sub {
-      $c->stash( rule_sets => $rules, rule_set_names => \@rule_names );
+      $c->stash( rule_sets => $rules, rule_set_names => &remove_legacy_ruleset(@rule_names) );
       $c->render( template => 'rule_sets' );
     }
   );
@@ -138,7 +138,7 @@ get '/rule_sets/#name' => sub {
 
 get '/convert' => sub {
   my $c = shift;
-  my $supporting_data = { valid_rule_set_names => \@rule_names, };
+  my $supporting_data = { valid_rule_set_names => &remove_legacy_ruleset(@rule_names) };
 
   $c->respond_to(
     json => sub {
@@ -651,4 +651,12 @@ sub validate_metadata {
       );
     }
   );
+}
+
+sub remove_legacy_ruleset(){
+  my @result;
+  foreach my $rule_name(@_){
+    push (@result,$_) unless (index(lc($rule_name),"legacy")>-1);
+  }
+  return \@result;
 }
