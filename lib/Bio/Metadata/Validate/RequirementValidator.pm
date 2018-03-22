@@ -59,10 +59,10 @@ has 'missing_value_outcome' => (
         $restricted_access_term => 'pass',
       },
       optional => {
-        $not_applicable_term    => 'pass',
-        $not_collected_term     => 'pass',
-        $not_provided_term      => 'pass',
-        $restricted_access_term => 'pass',
+        $not_applicable_term    => 'error',
+        $not_collected_term     => 'error',
+        $not_provided_term      => 'error',
+        $restricted_access_term => 'error',
       },
     };
   },
@@ -102,7 +102,12 @@ sub check_missing_values {
 
       $outcome->outcome($outcome_type);
       if ( $outcome_type ne 'pass' ) {
-        $outcome->message( 'attribute is ' . $rule->mandatory );
+        if ( $rule->mandatory eq 'optional'){
+          $outcome->message('This field is optional, so if not providing real data please leave it blank');
+        }else{
+          $outcome->message( 'attribute is ' . $rule->mandatory );
+        }
+        
       }
 
     }
