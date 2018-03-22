@@ -103,7 +103,7 @@ sub check_missing_values {
       $outcome->outcome($outcome_type);
       if ( $outcome_type ne 'pass' ) {
         if ( $rule->mandatory eq 'optional'){
-          $outcome->message('This field is optional, so if not providing real data please leave it blank');
+          $outcome->message('This field is optional, so if not providing real data please leave the field blank');
         }else{
           $outcome->message( 'attribute is ' . $rule->mandatory );
         }
