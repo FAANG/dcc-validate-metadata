@@ -25,46 +25,47 @@ my $lookup = Bio::Metadata::Validate::Support::BioSDLookup->new();
 {
   my $id     = 'SAMEA676028';
   my $sample = $lookup->fetch_sample($id);
-
   my $expected = Bio::Metadata::Entity->new(
     id          => 'source GSM754269 1',
     synonyms    => [$id],
     entity_type => 'sample',
     attributes  => [
       {
-        'value' =>
-          'Gene expression after 4hr in 2ug/ml BSP-II-treated DT40 cell',
+        'source_ref' => '',
+        'value' => 'Gallus gallus',
+        'name' => 'Organism',
+        'id' => 'http://purl.obolibrary.org/obo/NCBITaxon_9031',
+        'allow_further_validation' => 1,
+        'uri' => ''
+      },
+      {
+        'value' => 'Gene expression after 4hr in 2ug/ml BSP-II-treated DT40 cell',
         'name' => 'Sample Description',
-
+        'allow_further_validation' => 1
       },
       {
-        'source_ref' => 'NCBI Taxonomy',
-        'value'      => 'Gallus gallus',
-        'name'       => 'Organism',
-        'id'         => '9031',
-        'uri'        => 'http://www.ncbi.nlm.nih.gov/taxonomy/',
-      },
-      {
-
-        'value' => 'DT40',
-        'name'  => 'strain',
-
-      },
-      {
-
         'value' => 'DT40 cell, 4hr, 2ug/ml, replicate 1',
-        'name'  => 'Sample_source_name',
+        'name' => 'Sample_source_name',
+        'allow_further_validation' => 1
       },
       {
-        'value' => "2011-07-05T23:00:00+00:00",
+        'source_ref' => '',
+        'value' => 'DT40',
+        'name' => 'strain',
+        'id' => 'http://www.ebi.ac.uk/efo/EFO_0006274',
+        'allow_further_validation' => 1,
+        'uri' => ''
+      },
+      {
+        'value' => '2011-07-05T23:00:00+00:00',
         'name' => 'BioSamples release date',
-        'allow_further_validation' => undef,
+        'allow_further_validation' => undef
       },
       {
-        'value' => "2014-02-03T19:06:04+00:00",
+        'value' => '2018-01-21T17:01:00.562+00:00',
         'name' => 'BioSamples update date',
-        'allow_further_validation' => undef,
-      }
+        'allow_further_validation' => undef
+      },
     ]
   );
 
