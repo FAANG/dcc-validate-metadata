@@ -70,7 +70,6 @@ has 'missing_value_outcome' => (
 
 sub validate_requirements {
   my ($self,$rule, $attributes) = @_;
-
   my $o = Bio::Metadata::Validate::ValidationOutcome->new(
     attributes => $attributes,
     rule       => $rule,
@@ -83,7 +82,6 @@ sub validate_requirements {
   if ( !defined $o->outcome ) {
     $o->outcome('pass');
   }
-
   return $o;
 }
 
@@ -106,15 +104,13 @@ sub check_missing_values {
           $outcome->message('This field is optional, so if not providing real data please leave the field blank');
         }elsif($a->name eq 'Derived from' and $a->value eq 'restricted access'){
           $outcome->message('This field cannot be restricted access and must be a valid BioSample');
+          $outcome->outcome('error');
         }else{
           $outcome->message( 'attribute is ' . $rule->mandatory );
-        }
-        
+        }    
       }
-
     }
   }
-
 }
 
 sub validate_by_count {
@@ -143,7 +139,6 @@ sub validate_by_count {
     }
     $o->message( $o->message );
   }
-
 }
 
 __PACKAGE__->meta->make_immutable;
