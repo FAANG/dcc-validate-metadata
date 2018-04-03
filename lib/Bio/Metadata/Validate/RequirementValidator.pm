@@ -104,6 +104,8 @@ sub check_missing_values {
       if ( $outcome_type ne 'pass' ) {
         if ( $rule->mandatory eq 'optional'){
           $outcome->message('This field is optional, so if not providing real data please leave the field blank');
+        }elsif($a->name eq 'Derived from' and $a->value eq 'restricted access'){
+          $outcome->message('This field cannot be restricted access and must be a valid BioSample');
         }else{
           $outcome->message( 'attribute is ' . $rule->mandatory );
         }
