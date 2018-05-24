@@ -2,6 +2,17 @@
 <html>
   <head>
  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script type="text/javascript">
+       var localFrameworkVersion = 'compliance'; // 1.1 or 1.2 or compliance or other
+       // if you select compliance or other we will add some helpful
+       // CSS styling, but you may need to add some CSS yourself
+       var newDataProtectionNotificationBanner = document.createElement('script');
+       newDataProtectionNotificationBanner.src = 'https://ebi.emblstatic.net/web_guidelines/EBI-Framework/v1.3/js/ebi-global-includes/script/5_ebiFrameworkNotificationBanner.js?legacyRequest='+localFrameworkVersion;
+       document.head.appendChild(newDataProtectionNotificationBanner);
+       newDataProtectionNotificationBanner.onload = function() {
+           ebiFrameworkRunDataProtectionBanner(); // invoke the banner
+       };
+</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-111382191-1"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
