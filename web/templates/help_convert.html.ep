@@ -1,7 +1,7 @@
 % layout 'layout', title => 'Help: Conversion';
 <h1>Help <small>Excel to Submission format Conversion</small></h1>
 <p><a href="https://www.ebi.ac.uk/biosamples">BioSamples@EMBL-EBI</a> accept
-  submissions in the <a href="https://www.ebi.ac.uk/biosamples/help/st.html">SampleTab</a>
+  submissions in the <a href="https://www.ebi.ac.uk/biosamples/docs/guides/submit">BioSample SampleTab</a>
 format. <a href="https://www.ebi.ac.uk/ena">ENA@EMBL-EBI</a> accept
   submissions in <a href="https://www.ebi.ac.uk/ena/submit/programmatic-submission">XML format</a>
 format. This tool converts files based on excel templates into either SampleTab or XML files.</p>
