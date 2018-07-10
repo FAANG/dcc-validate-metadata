@@ -317,7 +317,7 @@ sub request_to_json {
     $result = decode_json( $response->responseContent );
   }
   catch {
-    croak "Could not convert response content to JSON from $request_uri: $_";
+    croak "Could not convert response content to JSON from $request_uri: $_\n\nResponse content:<".$response->responseContent.">\n";
   };
 
   return $result;

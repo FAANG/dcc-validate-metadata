@@ -116,18 +116,19 @@ sub check_missing_values {
 sub validate_by_count {
   my ( $self, $o, $attributes, $rule ) = @_;
   my $num_attrs = scalar(@$attributes);
+  my $rule_name = $rule->name;
 
   if ( $rule->mandatory eq 'mandatory' && $num_attrs == 0 ) {
     $o->outcome('error');
-    $o->message('mandatory attribute not present');
+    $o->message("(${rule_name})mandatory attribute not present");
   }
   elsif ( $rule->mandatory eq 'recommended' && $num_attrs == 0 ) {
     $o->outcome('warning');
-    $o->message('recommended attribute not present');
+    $o->message("(${rule_name})recommended attribute not present");
   }
   elsif ( !$rule->allow_multiple && $num_attrs > 1 ) {
     $o->outcome('error');
-    $o->message('multiple entries for attribute present');
+    $o->message("(${rule_name})multiple entries for attribute present");
   }
   if ( $o->message ) {
     my $new_message = $o->message . ' - ';

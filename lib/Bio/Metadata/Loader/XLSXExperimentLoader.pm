@@ -246,7 +246,10 @@ sub row_to_object {
             entity_type => 'sample');
     $o->add_link($sample);
   }
-
+  #read through lines in each Excel sheet
+  #save into attributes list
+  #each attribute could have keywords name, value, id (ontology id), source_ref (ontology library) and units
+  #$pr_att save the previous processed attribute, the purpose of which is to allow reading in the ontology information provided in the excel
   my $pr_att;
   for ( my $i = $index ; $i < scalar(@$row) ; $i++ ) {
     my $name = $fields->[$i];
