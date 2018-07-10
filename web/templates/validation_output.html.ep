@@ -131,7 +131,7 @@
               <li class="bg-<%= $class_lookup{$o->outcome} %>">
                 <%= $o->message %>
     %            if ($o->rule) {
-                 (<b><%= $o->rule->name %></b> from the <b><%= $o->rule_group->name %></b> rule group)
+                 (from the <b><%= $o->rule_group->name %></b> rule group)
     %           }else{
                  (<b><%= $o->get_attribute(0)->name %></b>)
     %           }
