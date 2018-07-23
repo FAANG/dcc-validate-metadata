@@ -117,7 +117,7 @@ sub validate_by_count {
   my ( $self, $o, $attributes, $rule ) = @_;
   my $num_attrs = scalar(@$attributes);
   my $rule_name = "";
-  $rule_name = $rule->name if (exists $rule{name});
+  $rule_name = $rule->name if ($rule->name);
 
   if ( $rule->mandatory eq 'mandatory' && $num_attrs == 0 ) {
     $o->outcome('error');
