@@ -527,7 +527,7 @@ sub mandatory_rules {
 
   my %expected_error_outcome = (
     %base_outcome_h,
-    message => 'mandatory attribute not present',
+    message => ':mandatory attribute not present',
     outcome => 'error',
   );
   my %expected_multiple_error_outcome = (
