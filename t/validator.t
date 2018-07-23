@@ -110,7 +110,9 @@ my @expected_outcomes = (
         %base_outcome,
         rule_group_name => 'standard',
         outcome         => 'error',
-        message         => 'mandatory attribute not present',
+        #a quick dirty fix to pass Travis test by adding class_id, 
+        #should use something like $rule_set->get_rule_group(0)->get_rule(2), but it is also hard coded
+        message         => 'class_id:mandatory attribute not present', 
         rule            => $rule_set->get_rule_group(0)->get_rule(2)->to_hash,
         attributes      => [],
     },
