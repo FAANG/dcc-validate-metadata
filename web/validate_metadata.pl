@@ -550,7 +550,7 @@ sub validate_metadata {
   my $metadata_file = $c->param('metadata_file');
 
   my $validator = $validators->{$rule_set_name};
-
+  #do the actual validation work by invoking check_all method in Bio::Metadata::Validate::EntityValidator
   my (
     $entity_status,      $entity_outcomes, $attribute_status,
     $attribute_outcomes, $entity_rule_groups,
