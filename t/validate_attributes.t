@@ -532,12 +532,12 @@ sub mandatory_rules {
   );
   my %expected_multiple_error_outcome = (
     %base_outcome_h,
-    message => 'multiple entries for attribute present',
+    message => ':multiple entries for attribute present',
     outcome => 'error',
   );
   my %expected_warning_outcome = (
     %base_outcome_h,
-    message => 'recommended attribute not present',
+    message => ':recommended attribute not present',
     outcome => 'warning',
   );
   my %expected_pass_outcome = (
