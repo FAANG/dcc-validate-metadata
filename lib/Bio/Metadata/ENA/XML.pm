@@ -241,7 +241,9 @@ sub report_expr {
   for my $e ( $self->all_exprfaang ) {
     my ($attribute_block, $EXPERIMENT_alias);
     for my $a ($e->all_attributes) {
-      next if ! defined $a->value;
+      #length condition is necessary as $a may points to an empty cell in an empty column the value is not null ""
+      #so it would generate several empty <experiment_attricute> elements
+      next unless (defined $a->value && length($a->value)>0);
       $attribute_block = $attribute_block."\t\t\t<EXPERIMENT_ATTRIBUTE>\n";
       $attribute_block = $attribute_block."\t\t\t\t<TAG>".$a->name."</TAG>\n";
       $attribute_block = $attribute_block."\t\t\t\t<VALUE>".$a->value."</VALUE>\n";
