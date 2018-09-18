@@ -220,9 +220,9 @@ sub report_std {
   }
   $output = $output."\t<STUDY alias=\"".$study_alias."\">\n";
   $output = $output."\t\t<DESCRIPTOR>\n";
-  $output = $output."\t\t\t<STUDY_TITLE>".$STUDY_TITLE."</STUDY_TITLE>\n";
+  $output = $output."\t\t\t<STUDY_TITLE>".&convertXMLconservedChar($STUDY_TITLE)."</STUDY_TITLE>\n";
   $output = $output."\t\t\t<STUDY_TYPE existing_study_type=\"".$STUDY_TYPE."\"/>\n";
-  $output = $output."\t\t\t<STUDY_ABSTRACT>".$STUDY_ABSTRACT."</STUDY_ABSTRACT>\n";
+  $output = $output."\t\t\t<STUDY_ABSTRACT>".&convertXMLconservedChar($STUDY_ABSTRACT)."</STUDY_ABSTRACT>\n";
   $output = $output."\t\t</DESCRIPTOR>\n";
   $output = $output."\t</STUDY>\n";
   $output = $output.$std_footer;
@@ -246,7 +246,7 @@ sub report_expr {
       next unless (defined $a->value && length($a->value)>0);
       $attribute_block = $attribute_block."\t\t\t<EXPERIMENT_ATTRIBUTE>\n";
       $attribute_block = $attribute_block."\t\t\t\t<TAG>".$a->name."</TAG>\n";
-      $attribute_block = $attribute_block."\t\t\t\t<VALUE>".$a->value."</VALUE>\n";
+      $attribute_block = $attribute_block."\t\t\t\t<VALUE>".&convertXMLconservedChar($a->value)."</VALUE>\n";
       if ($a->units){
         $attribute_block = $attribute_block."\t\t\t\t<UNITS>".$a->units."</UNITS>\n";
       }
@@ -426,6 +426,14 @@ sub report_run {
     $output = $output.$run;
   }
   $output = $output.$run_footer;
+}
+
+sub convertXMLconservedChar(){
+  my ($in) = @_;
+  $in =~ s/&/&amp;/g; #& must be replaced first
+  $in =~ s/</&lt;/g;
+  $in =~ s/>/&gt;/g;
+  return $in;
 }
 
 1;
