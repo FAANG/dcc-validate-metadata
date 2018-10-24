@@ -13,6 +13,7 @@
            ebiFrameworkRunDataProtectionBanner(); // invoke the banner
        };
 </script>
+<div id="data-protection-message-configuration" data-message="This website requires cookies, and the limited processing of your personal data in order to function. By using the site you are agreeing to this as outlined in our <a class='white-color' href='https://www.ebi.ac.uk/data-protection/privacy-notice/faang-metadata-validation'>Privacy Notice</a> and <a class='white-color' href='https://www.ebi.ac.uk/about/terms-of-use'>Terms Of Use</a>." data-service-id="faang-metadata-validation" data-data-protection-version="1"></div>
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-111382191-1"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
