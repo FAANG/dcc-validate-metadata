@@ -14,7 +14,7 @@
       <div class="col-xs-6">
         <p class="text"><%= $resource_description %></p>
         <li><a href="http://www.ebi.ac.uk/about/terms-of-use"> Terms of Use</a></li>
-        <li><a href="https://www.ebi.ac.uk/data-protection/privacy-notice/embl-ebi-public-website"> Privacy Policy</a></li>
+        <li><a href="https://www.ebi.ac.uk/data-protection/privacy-notice/faang-metadata-validation"> Privacy Policy</a></li>
       </div>
     </div>
   </div>
