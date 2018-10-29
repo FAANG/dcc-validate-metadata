@@ -33,7 +33,11 @@
   </dd>
 
 </dl>
-%= submit_button 'Validate', class => 'btn btn-primary'
+<p>
+<input type="checkbox"  onchange="document.getElementById('submit').disabled = !this.checked;" />
+I have read and accepted the <a href="https://www.ebi.ac.uk/data-protection/privacy-notice/faang-metadata-validation">privacy notice for FAANG validation service</a>
+</p>
+%= submit_button 'Validate', disabled=>1,id => 'submit', class => 'btn btn-primary'
 <p></p>
 <p>The latest sample metadata Excel file templates and guidance on how to complete them can be <a href="https://www.ebi.ac.uk/seqdb/confluence/display/FAANG/Submission+of+samples+to+BioSamples">found on the FAANG wiki site</a>.</p>
 % end

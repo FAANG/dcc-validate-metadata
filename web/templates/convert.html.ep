@@ -17,7 +17,11 @@
     %= select_field rule_set_name => $valid_rule_set_names
   </dd>
 </dl>
-%= submit_button 'Convert', class => 'btn btn-primary'
+<p>
+<input type="checkbox"  onchange="document.getElementById('submit').disabled = !this.checked;" />
+I have read and accepted the <a href="https://www.ebi.ac.uk/data-protection/privacy-notice/faang-metadata-validation">privacy notice for FAANG validation service</a>
+</p>
+%= submit_button 'Convert', disabled=>1,id => 'submit', class => 'btn btn-primary'
 % if ($status_counts && %$status_counts){
   <h2>Validation outcome summary</h2>
   <p>The following list shows how many of the entities (e.g. samples) submitted hit each validation status.
