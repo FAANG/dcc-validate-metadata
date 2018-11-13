@@ -164,13 +164,14 @@ sub checkLimitedValues(){
   my $entity = $_[0];
   my @errorMsgs;
   foreach my $attr(@{$entity->attributes}){
+    my $value = $attr->value;
     if($attr->name eq "checksum_method"){
       unless ($attr->value eq "MD5" || $attr->value eq "SHA-256"){
-        push @errorMsgs,"Wrong checksum_method value $attr->value, which can only be either MD5 or SHA-256 according to ENA rule";
+        push @errorMsgs,"Wrong checksum_method value $value, which can only be either MD5 or SHA-256 according to ENA rule";
       }
     }
     if($attr->name eq "filetype"){
-      push @errorMsgs, "Wrong filetype value $attr->value, only could be one of @filetypes" unless (exists $filetypes{$attr->value});
+      push @errorMsgs, "Wrong filetype value $value, only could be one of @filetypes" unless (exists $filetypes{$attr->value});
     }
   }
   return @errorMsgs;
