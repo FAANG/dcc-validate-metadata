@@ -131,33 +131,40 @@ sub validate_section {
   my $v = Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
   my @errors;
+  my %errors;
   foreach my $row (@rows){
     my $entities = $blocks->{$row} || [];
     for my $e (@$entities) {
       my ( $outcome_overall, $validation_outcomes ) = $v->check($e);
       push @errors, grep { $_->outcome ne 'pass' } @$validation_outcomes;
-      push @errors, &checkLimitedValues($e); 
+      my @limitedErrors = &checkLimitedValues($e);
+      foreach my $limitedError(@limitedErrors){
+        $errors{$limitedError}++;
+      } 
     }
+  }
+  foreach my $limitedError(keys %errors){
+    push @errors, Bio::Metadata::Validate::ValidationOutcome->new(
+      outcome => 'error',
+      message => "$limitedError: occuring $errors{$limitedError} times",
+      rule =>
+        Bio::Metadata::Rules::Rule->new( name => "run", type => 'text' ),
+    );
   }
   return @errors;
 }
 
 sub checkLimitedValues(){
   my $entity = $_[0];
-  my @errors;
+  my @errorMsgs;
   foreach my $attr(@{$entity->attributes}){
     if($attr->name eq "checksum_method"){
       unless ($attr->value eq "MD5" || $attr->value eq "SHA-256"){
-        push @errors, Bio::Metadata::Validate::ValidationOutcome->new(
-          outcome => 'error',
-          message => "checksum_method value can only be MD5 or SHA-256 according to ENA rule",
-          rule =>
-            Bio::Metadata::Rules::Rule->new( name => "run", type => 'text' ),
-        );
+        push @errorMsgs,"checksum_method value can only be MD5 or SHA-256 according to ENA rule";
       }
     }
   }
-  return @errors;
+  return @errorMsgs;
 }
 
 __PACKAGE__->meta->make_immutable;
