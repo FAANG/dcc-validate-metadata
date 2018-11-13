@@ -98,6 +98,12 @@ has 'run_rule_set' => (
   }
 );
 
+my @filetypes = qw/sra srf sff fastq fasta tab 454_native  454_native_seq  454_native_qual Helicos_native  Illumina_native Illumina_native_seq Illumina_native_prb Illumina_native_int Illumina_native_qseq  Illumina_native_scarf SOLiD_native  SOLiD_native_csfasta  SOLiD_native_qual PacBio_HDF5 bam cram  CompleteGenomics_native OxfordNanopore_native/;
+my %filetypes;
+foreach (@filetypes){
+  $filetypes{$_} = 1;
+}
+
 sub validate_run {
   my ( $self, $run_entries ) = @_;
 
@@ -160,8 +166,11 @@ sub checkLimitedValues(){
   foreach my $attr(@{$entity->attributes}){
     if($attr->name eq "checksum_method"){
       unless ($attr->value eq "MD5" || $attr->value eq "SHA-256"){
-        push @errorMsgs,"checksum_method value can only be MD5 or SHA-256 according to ENA rule";
+        push @errorMsgs,"Wrong checksum_method value $attr->value, which can only be either MD5 or SHA-256 according to ENA rule";
       }
+    }
+    if($attr->name eq "filetype"){
+      push @errorMsgs, "Wrong filetype value $attr->value, only could be one of @filetypes" unless (exists $filetypes{$attr->value});
     }
   }
   return @errorMsgs;
