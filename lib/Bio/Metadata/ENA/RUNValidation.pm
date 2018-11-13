@@ -63,12 +63,12 @@ has 'run_rule_set' => (
             },
             {
               name      => 'checksum_method',
-              mandatory => 'optional',
+              mandatory => 'mandatory',
               type      => 'text'
             },
             {
               name      => 'checksum',
-              mandatory => 'optional',
+              mandatory => 'mandatory',
               type      => 'text'
             },
                         {
@@ -136,6 +136,25 @@ sub validate_section {
     for my $e (@$entities) {
       my ( $outcome_overall, $validation_outcomes ) = $v->check($e);
       push @errors, grep { $_->outcome ne 'pass' } @$validation_outcomes;
+      push @errors, &checkLimitedValues($e); 
+    }
+  }
+  return @errors;
+}
+
+sub checkLimitedValues(){
+  my $entity = $_[0];
+  my @errors;
+  foreach my $attr(@{$entity->attributes}){
+    if($attr->name eq "checksum_method"){
+      unless ($attr->value eq "MD5" || $attr->value eq "SHA-256"){
+        push @errors, Bio::Metadata::Validate::ValidationOutcome->new(
+          outcome => 'error',
+          message => "checksum_method value can only be MD5 or SHA-256 according to ENA rule",
+          rule =>
+            Bio::Metadata::Rules::Rule->new( name => "run", type => 'text' ),
+        );
+      }
     }
   }
   return @errors;
