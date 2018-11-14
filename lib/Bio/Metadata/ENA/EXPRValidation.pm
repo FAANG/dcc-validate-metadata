@@ -117,10 +117,12 @@ my @typeLibraryStrategy = qw/WGS WGA WXS RNA-Seq ssRNA-seq miRNA-Seq ncRNA-Seq F
 my @typeLibrarySource = qw/GENOMIC GENOMIC SINGLE CELL TRANSCRIPTOMIC  TRANSCRIPTOMIC SINGLE CELL  METAGENOMIC METATRANSCRIPTOMIC  SYNTHETIC VIRAL RNA OTHER/;
 my @typeLibrarySelection = qw/RANDOM  PCR RANDOM PCR  RT-PCR  HMPR  MF  repeat fractionation  size fractionation  MSLL  cDNA  cDNA_randomPriming  cDNA_oligo_dT PolyA Oligo-dT  Inverse rRNA  Inverse rRNA selection  ChIP  ChIP-Seq  MNase DNase Hybrid Selection  Reduced Representation  Restriction Digest  5-methylcytidine antibody MBD2 protein methyl-CpG binding domain  CAGE  RACE  MDA padlock probes capture method other unspecified/;
 my @libraryLayout = qw/PAIRED  SINGLE/;
+my @platformType = qw/ION_TORRENT BGISEQ  CAPILLARY OXFORD_NANOPORE ILLUMINA  COMPLETE_GENOMICS ABI_SOLID HELICOS LS454 PACBIO_SMRT/;
 my %typeLibraryStrategy = &convertArrayToHash(\@typeLibraryStrategy);
 my %typeLibrarySource = &convertArrayToHash(\@typeLibrarySource);
 my %typeLibrarySelection = &convertArrayToHash(\@typeLibrarySelection);
 my %libraryLayout = &convertArrayToHash(\@libraryLayout);
+my %platformType = &convertArrayToHash(\@platformType);
 
 sub convertArrayToHash(){
   my @in = @{$_[0]};
@@ -190,6 +192,8 @@ sub validate_section {
 sub checkLimitedValues(){
   my $entity = $_[0];
   my @errorMsgs;
+  my $platform = "";
+  my $model = "";
   foreach my $attr(@{$entity->attributes}){
     my $value = $attr->value;
     if($attr->name eq "LIBRARY_STRATEGY"){
@@ -202,10 +206,64 @@ sub checkLimitedValues(){
       push @errorMsgs, "Wrong library selection value $value, only could be one of @typeLibrarySelection" unless (exists $typeLibrarySelection{$value});
     }
     if($attr->name eq "LIBRARY_LAYOUT"){
+      $model = $value;
       push @errorMsgs, "Wrong library layout value $value, only could be one of @libraryLayout" unless (exists $libraryLayout{$value});
     }
+    if($attr->name eq "PLATFORM"){
+      push @errorMsgs, "Wrong library layout value $value, only could be one of @libraryLayout" unless (exists $libraryLayout{$value});
+    }
+    $model = $value if($attr->name eq "INSTRUMENT_MODEL");
   }
+  my $modelCheck = &checkModel($platform,$model);
+  push @errorMsgs,$modelCheck unless (length($modelCheck) == 0);
   return @errorMsgs;
+}
+
+sub checkModel(){
+  my $result = "";
+  my @type454Model = ('454 GS', '454 GS 20', '454 GS FLX', '454 GS FLX+', '454 GS FLX Titanium', '454 GS Junior', 'unspecified');
+  my @typeIlluminaModel = ('HiSeq X Five', 'HiSeq X Ten', 'Illumina Genome Analyzer', 'Illumina Genome Analyzer II', 'Illumina Genome Analyzer IIx', 'Illumina HiScanSQ', 'Illumina HiSeq 1000', 'Illumina HiSeq 1500', 'Illumina HiSeq 2000', 'Illumina HiSeq 2500', 'Illumina HiSeq 3000', 'Illumina HiSeq 4000', 'Illumina MiSeq', 'Illumina MiniSeq', 'Illumina NovaSeq 6000', 'NextSeq 500', 'NextSeq 550', 'unspecified');
+  my @typeHelicosModel = ('Helicos HeliScope', 'unspecified');
+  my @typeAbiSolidModel = ('AB SOLiD System', 'AB SOLiD System 2.0', 'AB SOLiD System 3.0', 'AB SOLiD 3 Plus System', 'AB SOLiD 4 System', 'AB SOLiD 4hq System', 'AB SOLiD PI System', 'AB 5500 Genetic Analyzer', 'AB 5500xl Genetic Analyzer', 'AB 5500xl-W Genetic Analysis System', 'unspecified');
+  my @typeCGModel = ('Complete Genomics', 'unspecified');
+  my @typeBGISEQModel = ('BGISEQ-500');
+  my @typePacBioModel = ('PacBio RS', 'PacBio RS II', 'Sequel', 'unspecified');
+  my @typeIontorrentModel = ('Ion Torrent PGM', 'Ion Torrent Proton', 'Ion Torrent S5', 'Ion Torrent S5 XL', 'unspecified');
+  my @typeCapillaryModel = ('AB 3730xL Genetic Analyzer', 'AB 3730 Genetic Analyzer', 'AB 3500xL Genetic Analyzer', 'AB 3500 Genetic Analyzer', 'AB 3130xL Genetic Analyzer', 'AB 3130 Genetic Analyzer', 'AB 310 Genetic Analyzer', 'unspecified');
+  my @typeOxfordNanoporeModel = ('MinION', 'GridION', 'PromethION', 'unspecified');
+  my %type454Model = &convertArrayToHash(\@type454Model);
+  my %typeIlluminaModel = &convertArrayToHash(\@typeIlluminaModel);
+  my %typeHelicosModel = &convertArrayToHash(\@typeHelicosModel);
+  my %typeAbiSolidModel = &convertArrayToHash(\@typeAbiSolidModel);
+  my %typeCGModel = &convertArrayToHash(\@typeCGModel);
+  my %typeBGISEQModel = &convertArrayToHash(\@typeBGISEQModel);
+  my %typePacBioModel = &convertArrayToHash(\@typePacBioModel);
+  my %typeIontorrentModel = &convertArrayToHash(\@typeIontorrentModel);
+  my %typeCapillaryModel = &convertArrayToHash(\@typeCapillaryModel);
+  my %typeOxfordNanoporeModel = &convertArrayToHash(\@typeOxfordNanoporeModel);
+  my ($platform,$model) = @_;
+  if ($platform eq "ION_TORRENT"){
+    $result = "Wrong model ($model) for given platform $platform, should be one of @typeIontorrentModel" unless (exists $typeIontorrentModel{$model});
+  }elsif ($platform eq "BGISEQ"){
+    $result = "Wrong model ($model) for given platform $platform, should be one of @typeBGISEQModel" unless (exists $typeBGISEQModel{$model});
+  }elsif ($platform eq "CAPILLARY"){
+    $result = "Wrong model ($model) for given platform $platform, should be one of @typeCapillaryModel" unless (exists $typeCapillaryModel{$model});
+  }elsif ($platform eq "OXFORD_NANOPORE"){
+    $result = "Wrong model ($model) for given platform $platform, should be one of @typeOxfordNanoporeModel" unless (exists $typeOxfordNanoporeModel{$model});
+  }elsif ($platform eq "ILLUMINA"){
+    $result = "Wrong model ($model) for given platform $platform, should be one of @typeIlluminaModel" unless (exists $typeIlluminaModel{$model});
+  }elsif ($platform eq "COMPLETE_GENOMICS"){
+    $result = "Wrong model ($model) for given platform $platform, should be one of @typeCGModel" unless (exists $typeCGModel{$model});
+  }elsif ($platform eq "ABI_SOLID"){
+    $result = "Wrong model ($model) for given platform $platform, should be one of @typeAbiSolidModel" unless (exists $typeAbiSolidModel{$model});
+  }elsif ($platform eq "HELICOS"){
+    $result = "Wrong model ($model) for given platform $platform, should be one of @typeHelicosModel" unless (exists $typeHelicosModel{$model});
+  }elsif ($platform eq "PACBIO_SMRT"){
+    $result = "Wrong model ($model) for given platform $platform, should be one of @typePacBioModel" unless (exists $typePacBioModel{$model});
+  }elsif ($platform eq "LS454"){
+    $result = "Wrong model ($model) for given platform $platform, should be one of @type454Model" unless (exists $type454Model{$model});
+  }
+  return $result;
 }
 
 __PACKAGE__->meta->make_immutable;
