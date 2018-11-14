@@ -207,11 +207,11 @@ sub checkLimitedValues(){
       push @errorMsgs, "Wrong library selection value $value, only could be one of @typeLibrarySelection" unless (exists $typeLibrarySelection{$value});
     }
     if($attr->name eq "LIBRARY_LAYOUT"){
-      $model = $value;
       push @errorMsgs, "Wrong library layout value $value, only could be one of @libraryLayout" unless (exists $libraryLayout{$value});
     }
     if($attr->name eq "PLATFORM"){
-      push @errorMsgs, "Wrong library layout value $value, only could be one of @libraryLayout" unless (exists $libraryLayout{$value});
+      $platform = $value;
+      push @errorMsgs, "Wrong platform value $value, only could be one of @platformType" unless (exists $platformType{$value});
     }
     $model = $value if($attr->name eq "INSTRUMENT_MODEL");
   }
