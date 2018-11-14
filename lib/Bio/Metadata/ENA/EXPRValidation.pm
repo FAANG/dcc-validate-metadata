@@ -113,16 +113,17 @@ has 'ena_rule_set' => (
   }
 );
 
-my @typeLibraryStrategy = qw/WGS WGA WXS RNA-Seq ssRNA-seq miRNA-Seq ncRNA-Seq FL-cDNA EST Hi-C  ATAC-seq  WCS RAD-Seq CLONE POOLCLONE AMPLICON  CLONEEND  FINISHING ChIP-Seq  MNase-Seq DNase-Hypersensitivity  Bisulfite-Seq CTS MRE-Seq MeDIP-Seq MBD-Seq Tn-Seq  VALIDATION  FAIRE-seq SELEX RIP-Seq ChIA-PET  Synthetic-Long-Read Targeted-Capture  Tethered Chromatin Conformation Capture OTHER/;
-my @typeLibrarySource = qw/GENOMIC GENOMIC SINGLE CELL TRANSCRIPTOMIC  TRANSCRIPTOMIC SINGLE CELL  METAGENOMIC METATRANSCRIPTOMIC  SYNTHETIC VIRAL RNA OTHER/;
-my @typeLibrarySelection = qw/RANDOM  PCR RANDOM PCR  RT-PCR  HMPR  MF  repeat fractionation  size fractionation  MSLL  cDNA  cDNA_randomPriming  cDNA_oligo_dT PolyA Oligo-dT  Inverse rRNA  Inverse rRNA selection  ChIP  ChIP-Seq  MNase DNase Hybrid Selection  Reduced Representation  Restriction Digest  5-methylcytidine antibody MBD2 protein methyl-CpG binding domain  CAGE  RACE  MDA padlock probes capture method other unspecified/;
-my @libraryLayout = qw/PAIRED  SINGLE/;
-my @platformType = qw/ION_TORRENT BGISEQ  CAPILLARY OXFORD_NANOPORE ILLUMINA  COMPLETE_GENOMICS ABI_SOLID HELICOS LS454 PACBIO_SMRT/;
+my @typeLibraryStrategy = ('WGS', 'WGA', 'WXS', 'RNA-Seq', 'ssRNA-seq', 'miRNA-Seq', 'ncRNA-Seq', 'FL-cDNA', 'EST', 'Hi-C', 'ATAC-seq', 'WCS', 'RAD-Seq', 'CLONE', 'POOLCLONE', 'AMPLICON', 'CLONEEND', 'FINISHING', 'ChIP-Seq', 'MNase-Seq', 'DNase-Hypersensitivity', 'Bisulfite-Seq', 'CTS', 'MRE-Seq', 'MeDIP-Seq', 'MBD-Seq', 'Tn-Seq', 'VALIDATION', 'FAIRE-seq', 'SELEX', 'RIP-Seq', 'ChIA-PET', 'Synthetic-Long-Read', 'Targeted-Capture', 'Tethered Chromatin Conformation Capture', 'OTHER');
+my @typeLibrarySource = ('GENOMIC', 'GENOMIC SINGLE CELL', 'TRANSCRIPTOMIC', 'TRANSCRIPTOMIC SINGLE CELL', 'METAGENOMIC', 'METATRANSCRIPTOMIC', 'SYNTHETIC', 'VIRAL RNA', 'OTHER');
+my @typeLibrarySelection = ('RANDOM', 'PCR', 'RANDOM PCR', 'RT-PCR', 'HMPR', 'MF', 'repeat fractionation', 'size fractionation', 'MSLL', 'cDNA', 'cDNA_randomPriming', 'cDNA_oligo_dT', 'PolyA', 'Oligo-dT', 'Inverse rRNA', 'Inverse rRNA selection', 'ChIP', 'ChIP-Seq', 'MNase', 'DNase', 'Hybrid Selection', 'Reduced Representation', 'Restriction Digest', '5-methylcytidine antibody', 'MBD2 protein methyl-CpG binding domain', 'CAGE', 'RACE', 'MDA', 'padlock probes capture method', 'other', 'unspecified');
+my @libraryLayout = qw/PAIRED  SINGLE/; 
+my @platformType = qw/ION_TORRENT BGISEQ  CAPILLARY OXFORD_NANOPORE ILLUMINA COMPLETE_GENOMICS ABI_SOLID HELICOS LS454 PACBIO_SMRT/;
 my %typeLibraryStrategy = &convertArrayToHash(\@typeLibraryStrategy);
 my %typeLibrarySource = &convertArrayToHash(\@typeLibrarySource);
 my %typeLibrarySelection = &convertArrayToHash(\@typeLibrarySelection);
 my %libraryLayout = &convertArrayToHash(\@libraryLayout);
 my %platformType = &convertArrayToHash(\@platformType);
+$"=",";
 
 sub convertArrayToHash(){
   my @in = @{$_[0]};
@@ -183,7 +184,7 @@ sub validate_section {
       outcome => 'error',
       message => "$limitedError: occuring $errors{$limitedError} times",
       rule =>
-        Bio::Metadata::Rules::Rule->new( name => "run", type => 'text' ),
+        Bio::Metadata::Rules::Rule->new( name => "experiment_ena", type => 'text' ),
     );
   }
   return @errors;
