@@ -113,6 +113,24 @@ has 'ena_rule_set' => (
   }
 );
 
+my @typeLibraryStrategy = qw/WGS WGA WXS RNA-Seq ssRNA-seq miRNA-Seq ncRNA-Seq FL-cDNA EST Hi-C  ATAC-seq  WCS RAD-Seq CLONE POOLCLONE AMPLICON  CLONEEND  FINISHING ChIP-Seq  MNase-Seq DNase-Hypersensitivity  Bisulfite-Seq CTS MRE-Seq MeDIP-Seq MBD-Seq Tn-Seq  VALIDATION  FAIRE-seq SELEX RIP-Seq ChIA-PET  Synthetic-Long-Read Targeted-Capture  Tethered Chromatin Conformation Capture OTHER/;
+my @typeLibrarySource = qw/GENOMIC GENOMIC SINGLE CELL TRANSCRIPTOMIC  TRANSCRIPTOMIC SINGLE CELL  METAGENOMIC METATRANSCRIPTOMIC  SYNTHETIC VIRAL RNA OTHER/;
+my @typeLibrarySelection = qw/RANDOM  PCR RANDOM PCR  RT-PCR  HMPR  MF  repeat fractionation  size fractionation  MSLL  cDNA  cDNA_randomPriming  cDNA_oligo_dT PolyA Oligo-dT  Inverse rRNA  Inverse rRNA selection  ChIP  ChIP-Seq  MNase DNase Hybrid Selection  Reduced Representation  Restriction Digest  5-methylcytidine antibody MBD2 protein methyl-CpG binding domain  CAGE  RACE  MDA padlock probes capture method other unspecified/;
+my @libraryLayout = qw/PAIRED  SINGLE/;
+my %typeLibraryStrategy = &convertArrayToHash(\@typeLibraryStrategy);
+my %typeLibrarySource = &convertArrayToHash(\@typeLibrarySource);
+my %typeLibrarySelection = &convertArrayToHash(\@typeLibrarySelection);
+my %libraryLayout = &convertArrayToHash(\@libraryLayout);
+
+sub convertArrayToHash(){
+  my @in = @{$_[0]};
+  my %result;
+  foreach (@in){
+    $result{$_} = 1;
+  }
+  return %result;
+}
+
 sub validate_expr {
   my ( $self, $expr_entries ) = @_;
 
@@ -146,14 +164,48 @@ sub validate_section {
   my $v = Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
   my @errors;
+  my %errors;
   foreach my $row (@rows){
     my $entities = $blocks->{$row} || [];
     for my $e (@$entities) {
       my ( $outcome_overall, $validation_outcomes ) = $v->check($e);
       push @errors, grep { $_->outcome ne 'pass' } @$validation_outcomes;
+      my @limitedErrors = &checkLimitedValues($e);
+      foreach my $limitedError(@limitedErrors){
+        $errors{$limitedError}++;
+      } 
     }
   }
+  foreach my $limitedError(keys %errors){
+    push @errors, Bio::Metadata::Validate::ValidationOutcome->new(
+      outcome => 'error',
+      message => "$limitedError: occuring $errors{$limitedError} times",
+      rule =>
+        Bio::Metadata::Rules::Rule->new( name => "run", type => 'text' ),
+    );
+  }
   return @errors;
+}
+
+sub checkLimitedValues(){
+  my $entity = $_[0];
+  my @errorMsgs;
+  foreach my $attr(@{$entity->attributes}){
+    my $value = $attr->value;
+    if($attr->name eq "LIBRARY_STRATEGY"){
+      push @errorMsgs,"Wrong library strategy value $value, only could be one of @typeLibraryStrategy" unless (exists $typeLibraryStrategy{$value});
+    }
+    if($attr->name eq "LIBRARY_SOURCE"){
+      push @errorMsgs, "Wrong library source value $value, only could be one of @typeLibrarySource" unless (exists $typeLibrarySource{$value});
+    }
+    if($attr->name eq "LIBRARY_SELECTION"){
+      push @errorMsgs, "Wrong library selection value $value, only could be one of @typeLibrarySelection" unless (exists $typeLibrarySelection{$value});
+    }
+    if($attr->name eq "LIBRARY_LAYOUT"){
+      push @errorMsgs, "Wrong library layout value $value, only could be one of @libraryLayout" unless (exists $libraryLayout{$value});
+    }
+  }
+  return @errorMsgs;
 }
 
 __PACKAGE__->meta->make_immutable;
