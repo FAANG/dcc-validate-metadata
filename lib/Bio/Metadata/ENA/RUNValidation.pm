@@ -181,9 +181,38 @@ sub checkLimitedValues(){
     if($attr->name eq "filetype_pair"){
       push @errorMsgs, "Wrong filetype_pair value $value, only could be one of @filetypes" unless (exists $filetypes{$value} || $value eq "");
     }
+    if($attr->name eq "run_date"){
+      my $err = &checkDate($value);
+      push @errorMsgs, $err unless ((length $err) == 0);
+    }
   }
   return @errorMsgs;
 }
+
+sub checkDate(){
+  my $isoStr = $_[0];
+  unless ($isoStr =~/^\d.+\d$/){
+    return "Error: wrong date value $isoStr";
+  }
+  my @elem = split ("-",$isoStr);
+  my $len = scalar @elem;
+  return "Input date not in the YYYY-MM-DD or YYYY-MM or YYYY format" if ($len > 3);
+  unless ($elem[0]=~/^\d{4,4}$/){
+    return "Error: unrecognized year value $elem[0]";
+  }
+  if ($len > 1){
+    unless ($elem[1]=~/^\d{2,2}$/){
+      return "Error: unrecognized month value $elem[1]";
+    }
+  }
+  if ($len == 3){
+    unless ($elem[2]=~/^\d{2,2}$/){
+      return "Error: unrecognized day value $elem[2]";
+    }
+  }
+  return "";
+}
+
 
 __PACKAGE__->meta->make_immutable;
 1;
