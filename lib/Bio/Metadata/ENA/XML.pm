@@ -374,7 +374,7 @@ sub report_run {
         $run_center = $a->value;
       }
       elsif ($a->name eq 'run_date'){
-        $run_date = $a->value;
+        $run_date = convertToDateTime($a->value);#the value has been validated in RUNValidation.pm
       }
       elsif ($a->name eq 'EXPERIMENT_REF'){
         $EXPERIMENT_REF = $a->value;
@@ -427,6 +427,16 @@ sub report_run {
   }
   $output = $output.$run_footer;
 }
+
+sub convertToDateTime(){
+  my $isoStr = $_[0];
+  my @elem = split ("-",$isoStr);
+  my $len = scalar @elem;
+  return DateTime->new(year => $elem[0]) if ($len == 1);
+  return DateTime->new(year => $elem[0], month => $elem[1]) if ($len == 2);
+  return DateTime->new(year => $elem[0], month => $elem[1], day => $elem[2]) if ($len == 3);
+}
+
 
 sub convertXMLconservedChar(){
   my ($in) = @_;
