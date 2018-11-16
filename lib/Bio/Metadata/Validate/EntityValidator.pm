@@ -44,6 +44,9 @@ use Bio::Metadata::Validate::NcbiTaxonomyValidator;
 use Bio::Metadata::Validate::OntologyAttrNameValidator;
 use Bio::Metadata::Validate::SubmissionsIdentifierValidator;
 use Bio::Metadata::Faang::FaangBreedValidator;
+use JSON;
+use LWP::UserAgent;
+use WWW::Mechanize;
 
 
 has 'rule_set' =>
@@ -210,11 +213,16 @@ RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
     for my $cc ( $rule_group->all_consistency_checks ) {
       push @all_outcomes, @{ $cc->check_entity( $entity, $entities_by_id ) };
     }
-  }
+  }# end of loop rule_groups
 
   push @all_outcomes,
     $self->handle_unexpected_attributes( $organised_attributes,
     \@rule_groups_used, $entity );
+
+  if ($entity->entity_type eq "experiment"){
+    push @all_outcomes,
+      $self->validate_sample_in_experiment ($entity);
+  }
 
   my $outcome_overall = 'pass';
   for my $o (@all_outcomes) {
@@ -234,6 +242,69 @@ RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
     { isa => 'Bio::Metadata::Rules::RuleGroupArrayRef' }
   );
 }
+
+sub validate_sample_in_experiment {
+  my ($self, $entity) = @_;
+  my @outcomes;
+
+  my @links = @{$entity->links};
+  my $sample = $links[0];
+  return @outcomes unless ($sample->entity_type eq "sample");
+  my $accession = $sample->id;
+  my $url = "https://www.ebi.ac.uk/biosamples/samples/$accession.json?curationdomain=self.FAANG_DCC_curation";
+
+  my $browser = WWW::Mechanize->new();
+  eval {
+    $browser->get( $url );
+  };
+  if ($@) {
+    push @outcomes,
+      Bio::Metadata::Validate::ValidationOutcome->new(
+        entity => $entity,
+        attributes => {'name' => 'ID'},
+        outcome => 'error',
+        message => 'Fail to retrieve the sample record $accession'
+      );
+    return @outcomes;
+  }
+  my $content = $browser->content();
+  my $json = new JSON;
+  my $json_text = $json->decode($content);
+  my $faang_flag = 0;
+  if (exists $$json_text{characteristics} && exists $$json_text{characteristics}{project}){
+    my @tmp = @{$$json_text{characteristics}{project}};
+    foreach my $tmp(@tmp){
+      if (exists $$tmp{text} && lc($$tmp{text}) eq "faang"){
+        $faang_flag = 1;
+        last;
+      }
+    }
+  }
+  if ($faang_flag == 0) {
+    push @outcomes,
+      Bio::Metadata::Validate::ValidationOutcome->new(
+        entity => $entity,
+        attributes => {'name' => 'ID'},
+        outcome => 'error',
+        message => 'The sample record $accession is not labelled with FAANG'
+      );
+    return @outcomes;
+  }
+  my $material = $json_text{characteristics}{Material}[0]{text};
+
+  if($material eq "organism"){
+    push @outcomes,
+      Bio::Metadata::Validate::ValidationOutcome->new(
+        entity => $entity,
+        attributes => {'name' => 'ID'},
+        outcome => 'error',
+        message => 'The sample record $accession is an animal which actually expects to be a specimen'
+      );
+    return @outcomes;
+  }
+  return @outcomes;
+}
+
 
 sub handle_unexpected_attributes {
   my ( $self, $organised_attributes, $rule_groups, $entity ) = @_;
