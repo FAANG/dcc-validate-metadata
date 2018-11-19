@@ -284,21 +284,21 @@ sub validate_sample_in_experiment {
     push @outcomes,
       Bio::Metadata::Validate::ValidationOutcome->new(
         entity => $entity,
-        attributes => {'name' => 'ID'},
+        attributes => {'name' => 'Extra check'},
         outcome => 'error',
-        message => 'The sample record $accession is not labelled with FAANG'
+        message => "The sample record $accession is not labelled with FAANG"
       );
     return @outcomes;
   }
-  my $material = $json_text{characteristics}{Material}[0]{text};
+  my $material = $$json_text{characteristics}{Material}[0]{text};
 
   if($material eq "organism"){
     push @outcomes,
       Bio::Metadata::Validate::ValidationOutcome->new(
         entity => $entity,
-        attributes => {'name' => 'ID'},
+        attributes => {'name' => 'Extra check'},
         outcome => 'error',
-        message => 'The sample record $accession is an animal which actually expects to be a specimen'
+        message => "The sample record $accession is an animal which actually expects to be a specimen"
       );
     return @outcomes;
   }

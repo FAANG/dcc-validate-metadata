@@ -1,3 +1,4 @@
+requires 'WWW::Mechanize';
 requires 'Moose';
 requires 'MooseX::Params::Validate';
 requires 'JSON::MaybeXS';
