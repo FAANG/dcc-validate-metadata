@@ -109,6 +109,8 @@ has 'ols_lookup' => (
   default => sub { return Bio::Metadata::Validate::Support::OlsLookup->new() }
 );
 
+my %checked_samples;
+
 sub check_all {
   my ( $self, $entities ) = @_;
 
@@ -251,6 +253,7 @@ sub validate_sample_in_experiment {
   my $sample = $links[0];
   return @outcomes unless ($sample->entity_type eq "sample");
   my $accession = $sample->id;
+  return @{$checked_samples{$accession}} if (exists $checked_samples{$accession});
   my $url = "https://www.ebi.ac.uk/biosamples/samples/$accession.json?curationdomain=self.FAANG_DCC_curation";
 
   my $browser = WWW::Mechanize->new();
@@ -265,6 +268,7 @@ sub validate_sample_in_experiment {
         outcome => 'error',
         message => 'Fail to retrieve the sample record $accession'
       );
+    @{$checked_samples{$accession}} = @outcomes;
     return @outcomes;
   }
   my $content = $browser->content();
@@ -288,6 +292,7 @@ sub validate_sample_in_experiment {
         outcome => 'error',
         message => "The sample record $accession is not labelled with FAANG"
       );
+    @{$checked_samples{$accession}} = @outcomes;
     return @outcomes;
   }
   my $material = $$json_text{characteristics}{Material}[0]{text};
@@ -300,8 +305,10 @@ sub validate_sample_in_experiment {
         outcome => 'error',
         message => "The sample record $accession is an animal which actually expects to be a specimen"
       );
+    @{$checked_samples{$accession}} = @outcomes;
     return @outcomes;
   }
+  @{$checked_samples{$accession}} = @outcomes;
   return @outcomes;
 }
 
