@@ -159,20 +159,6 @@ DISTRIBUTIONS
       Canary::Stability 2006
     requirements:
       ExtUtils::MakeMaker 0
-  Carp-1.38
-    pathname: R/RJ/RJBS/Carp-1.38.tar.gz
-    provides:
-      Carp 1.38
-      Carp::Heavy 1.38
-    requirements:
-      Config 0
-      Exporter 0
-      ExtUtils::MakeMaker 0
-      IPC::Open3 1.0103
-      Test::More 0.47
-      overload 0
-      strict 0
-      warnings 0
   Carp-Clan-6.04
     pathname: S/ST/STBEY/Carp-Clan-6.04.tar.gz
     provides:
@@ -1184,6 +1170,26 @@ DISTRIBUTIONS
       Guard 1.023
     requirements:
       ExtUtils::MakeMaker 0
+  HTML-Form-6.03
+    pathname: G/GA/GAAS/HTML-Form-6.03.tar.gz
+    provides:
+      HTML::Form 6.03
+      HTML::Form::FileInput 6.03
+      HTML::Form::IgnoreInput 6.03
+      HTML::Form::ImageInput 6.03
+      HTML::Form::Input 6.03
+      HTML::Form::KeygenInput 6.03
+      HTML::Form::ListInput 6.03
+      HTML::Form::SubmitInput 6.03
+      HTML::Form::TextInput 6.03
+    requirements:
+      Encode 2
+      ExtUtils::MakeMaker 0
+      HTML::TokeParser 0
+      HTTP::Request 6
+      HTTP::Request::Common 6.03
+      URI 1.10
+      perl 5.008001
   HTML-Parser-3.72
     pathname: G/GA/GAAS/HTML-Parser-3.72.tar.gz
     provides:
@@ -1205,6 +1211,29 @@ DISTRIBUTIONS
       HTML::Tagset 3.20
     requirements:
       ExtUtils::MakeMaker 0
+  HTML-Tree-5.07
+    pathname: K/KE/KENTNL/HTML-Tree-5.07.tar.gz
+    provides:
+      HTML::AsSubs 5.07
+      HTML::Element 5.07
+      HTML::Element::traverse 5.07
+      HTML::Parse 5.07
+      HTML::Tree 5.07
+      HTML::TreeBuilder 5.07
+    requirements:
+      Carp 0
+      Encode 0
+      Exporter 0
+      HTML::Entities 0
+      HTML::Parser 3.46
+      HTML::Tagset 3.02
+      Module::Build 0.2808
+      Scalar::Util 0
+      Test::Fatal 0
+      Test::More 0
+      base 0
+      integer 0
+      perl 5.008
   HTTP-Cookies-6.01
     pathname: G/GA/GAAS/HTTP-Cookies-6.01.tar.gz
     provides:
@@ -1459,7 +1488,7 @@ DISTRIBUTIONS
       File::Basename 0
       File::Path 0
       File::Temp 0
-      Module::Build 0.4222
+      Module::Build 0.38
       Module::Load 0
       Test::SharedFork 0
       parent 0
@@ -1473,7 +1502,7 @@ DISTRIBUTIONS
       CPAN::Meta::Prereqs 0
       ExtUtils::CBuilder 0
       List::Util 1.14
-      Module::Build 0.4222
+      Module::Build 0.38
       Module::Build::Pluggable 0.05
       Module::CPANfile 0.9010
       parent 0
@@ -2378,12 +2407,6 @@ DISTRIBUTIONS
       Sub::Identify 0.03
       Test::Simple 0.61
       perl v5.6.2
-  Safe-2.35
-    pathname: R/RG/RGARCIA/Safe-2.35.tar.gz
-    provides:
-      Safe 2.35
-    requirements:
-      ExtUtils::MakeMaker 0
   Scalar-List-Utils-1.43
     pathname: P/PE/PEVANS/Scalar-List-Utils-1.43.tar.gz
     provides:
@@ -2395,15 +2418,6 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       Test::More 0
       perl 5.006
-  Socket-2.021
-    pathname: P/PE/PEVANS/Socket-2.021.tar.gz
-    provides:
-      Socket 2.021
-    requirements:
-      ExtUtils::CBuilder 0
-      ExtUtils::Constant 0.23
-      ExtUtils::MakeMaker 0
-      perl 5.006001
   Spreadsheet-ParseExcel-0.65
     pathname: D/DO/DOUGW/Spreadsheet-ParseExcel-0.65.tar.gz
     provides:
@@ -2574,6 +2588,18 @@ DISTRIBUTIONS
       perl 5.006001
       strict 0
       warnings 0
+  Test-Fatal-0.014
+    pathname: R/RJ/RJBS/Test-Fatal-0.014.tar.gz
+    provides:
+      Test::Fatal 0.014
+    requirements:
+      Carp 0
+      Exporter 5.57
+      ExtUtils::MakeMaker 0
+      Test::Builder 0
+      Try::Tiny 0.07
+      strict 0
+      warnings 0
   Test-Harness-3.36
     pathname: L/LE/LEONT/Test-Harness-3.36.tar.gz
     provides:
@@ -2634,7 +2660,7 @@ DISTRIBUTIONS
       Test::MockModule 0.11
     requirements:
       Carp 0
-      Module::Build 0.4222
+      Module::Build 0.38
       SUPER 0
       Scalar::Util 0
       Test::More 0.45
@@ -2852,6 +2878,33 @@ DISTRIBUTIONS
       base 0
       lib 0
       perl 5.008
+  WWW-Mechanize-1.90
+    pathname: O/OA/OALDERS/WWW-Mechanize-1.90.tar.gz
+    provides:
+      WWW::Mechanize 1.90
+      WWW::Mechanize::Image 1.90
+      WWW::Mechanize::Link 1.90
+    requirements:
+      Carp 0
+      ExtUtils::MakeMaker 0
+      Getopt::Long 0
+      HTML::Form 1.00
+      HTML::HeadParser 0
+      HTML::TokeParser 0
+      HTML::TreeBuilder 5
+      HTTP::Cookies 0
+      HTTP::Request 1.30
+      HTTP::Request::Common 0
+      LWP::UserAgent 5.827
+      Pod::Usage 0
+      Scalar::Util 1.14
+      Tie::RefHash 0
+      URI::URL 0
+      URI::file 0
+      base 0
+      perl 5.006
+      strict 0
+      warnings 0
   WWW-RobotRules-6.02
     pathname: G/GA/GAAS/WWW-RobotRules-6.02.tar.gz
     provides:
@@ -3095,16 +3148,3 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       Package::Stash 0.23
       perl 5.008001
-  version-0.9914
-    pathname: J/JP/JPEACOCK/version-0.9914.tar.gz
-    provides:
-      version 0.9914
-      version::regex 0.9914
-      version::vpp 0.9914
-      version::vxs 0.9914
-    requirements:
-      ExtUtils::MakeMaker 6.17
-      File::Temp 0.13
-      Test::More 0.45
-      parent 0.221
-      perl 5.006002

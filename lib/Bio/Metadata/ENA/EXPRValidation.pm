@@ -123,7 +123,6 @@ my %typeLibrarySource = &convertArrayToHash(\@typeLibrarySource);
 my %typeLibrarySelection = &convertArrayToHash(\@typeLibrarySelection);
 my %libraryLayout = &convertArrayToHash(\@libraryLayout);
 my %platformType = &convertArrayToHash(\@platformType);
-$"=",";
 
 sub convertArrayToHash(){
   my @in = @{$_[0]};
@@ -198,20 +197,20 @@ sub checkLimitedValues(){
   foreach my $attr(@{$entity->attributes}){
     my $value = $attr->value;
     if($attr->name eq "LIBRARY_STRATEGY"){
-      push @errorMsgs,"Wrong library strategy value $value, only could be one of @typeLibraryStrategy" unless (exists $typeLibraryStrategy{$value});
+      push @errorMsgs,"Wrong library strategy value \"$value\", only could be one of @typeLibraryStrategy" unless (exists $typeLibraryStrategy{$value});
     }
     if($attr->name eq "LIBRARY_SOURCE"){
-      push @errorMsgs, "Wrong library source value $value, only could be one of @typeLibrarySource" unless (exists $typeLibrarySource{$value});
+      push @errorMsgs, "Wrong library source value \"$value\", only could be one of @typeLibrarySource" unless (exists $typeLibrarySource{$value});
     }
     if($attr->name eq "LIBRARY_SELECTION"){
-      push @errorMsgs, "Wrong library selection value $value, only could be one of @typeLibrarySelection" unless (exists $typeLibrarySelection{$value});
+      push @errorMsgs, "Wrong library selection value \"$value\", only could be one of @typeLibrarySelection" unless (exists $typeLibrarySelection{$value});
     }
     if($attr->name eq "LIBRARY_LAYOUT"){
-      push @errorMsgs, "Wrong library layout value $value, only could be one of @libraryLayout" unless (exists $libraryLayout{$value});
+      push @errorMsgs, "Wrong library layout value \"$value\", only could be one of @libraryLayout" unless (exists $libraryLayout{$value});
     }
     if($attr->name eq "PLATFORM"){
       $platform = $value;
-      push @errorMsgs, "Wrong platform value $value, only could be one of @platformType" unless (exists $platformType{$value});
+      push @errorMsgs, "Wrong platform value \"$value\", only could be one of @platformType" unless (exists $platformType{$value});
     }
     $model = $value if($attr->name eq "INSTRUMENT_MODEL");
   }
@@ -244,25 +243,25 @@ sub checkModel(){
   my %typeOxfordNanoporeModel = &convertArrayToHash(\@typeOxfordNanoporeModel);
   my ($platform,$model) = @_;
   if ($platform eq "ION_TORRENT"){
-    $result = "Wrong model ($model) for given platform $platform, should be one of @typeIontorrentModel" unless (exists $typeIontorrentModel{$model});
+    $result = "Wrong model ($model) for given platform \"$platform\", should be one of @typeIontorrentModel" unless (exists $typeIontorrentModel{$model});
   }elsif ($platform eq "BGISEQ"){
-    $result = "Wrong model ($model) for given platform $platform, should be one of @typeBGISEQModel" unless (exists $typeBGISEQModel{$model});
+    $result = "Wrong model ($model) for given platform \"$platform\", should be one of @typeBGISEQModel" unless (exists $typeBGISEQModel{$model});
   }elsif ($platform eq "CAPILLARY"){
-    $result = "Wrong model ($model) for given platform $platform, should be one of @typeCapillaryModel" unless (exists $typeCapillaryModel{$model});
+    $result = "Wrong model ($model) for given platform \"$platform\", should be one of @typeCapillaryModel" unless (exists $typeCapillaryModel{$model});
   }elsif ($platform eq "OXFORD_NANOPORE"){
-    $result = "Wrong model ($model) for given platform $platform, should be one of @typeOxfordNanoporeModel" unless (exists $typeOxfordNanoporeModel{$model});
+    $result = "Wrong model ($model) for given platform \"$platform\", should be one of @typeOxfordNanoporeModel" unless (exists $typeOxfordNanoporeModel{$model});
   }elsif ($platform eq "ILLUMINA"){
-    $result = "Wrong model ($model) for given platform $platform, should be one of @typeIlluminaModel" unless (exists $typeIlluminaModel{$model});
+    $result = "Wrong model ($model) for given platform \"$platform\", should be one of @typeIlluminaModel" unless (exists $typeIlluminaModel{$model});
   }elsif ($platform eq "COMPLETE_GENOMICS"){
-    $result = "Wrong model ($model) for given platform $platform, should be one of @typeCGModel" unless (exists $typeCGModel{$model});
+    $result = "Wrong model ($model) for given platform \"$platform\", should be one of @typeCGModel" unless (exists $typeCGModel{$model});
   }elsif ($platform eq "ABI_SOLID"){
-    $result = "Wrong model ($model) for given platform $platform, should be one of @typeAbiSolidModel" unless (exists $typeAbiSolidModel{$model});
+    $result = "Wrong model ($model) for given platform \"$platform\", should be one of @typeAbiSolidModel" unless (exists $typeAbiSolidModel{$model});
   }elsif ($platform eq "HELICOS"){
-    $result = "Wrong model ($model) for given platform $platform, should be one of @typeHelicosModel" unless (exists $typeHelicosModel{$model});
+    $result = "Wrong model ($model) for given platform \"$platform\", should be one of @typeHelicosModel" unless (exists $typeHelicosModel{$model});
   }elsif ($platform eq "PACBIO_SMRT"){
-    $result = "Wrong model ($model) for given platform $platform, should be one of @typePacBioModel" unless (exists $typePacBioModel{$model});
+    $result = "Wrong model ($model) for given platform \"$platform\", should be one of @typePacBioModel" unless (exists $typePacBioModel{$model});
   }elsif ($platform eq "LS454"){
-    $result = "Wrong model ($model) for given platform $platform, should be one of @type454Model" unless (exists $type454Model{$model});
+    $result = "Wrong model ($model) for given platform \"$platform\", should be one of @type454Model" unless (exists $type454Model{$model});
   }
   return $result;
 }

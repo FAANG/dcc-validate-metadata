@@ -1,4 +1,3 @@
-requires 'WWW::Mechanize';
 requires 'Moose';
 requires 'MooseX::Params::Validate';
 requires 'JSON::MaybeXS';
@@ -30,3 +29,5 @@ requires 'MooseX::Types::URI';
 requires 'Module::Build::Pluggable';
 requires 'Module::Build::Pluggable::CPANfile';
 requires 'Test::More';
+requires 'WWW::Mechanize';
+

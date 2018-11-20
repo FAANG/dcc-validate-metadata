@@ -40,6 +40,7 @@ plugin 'Config';
 plugin 'RenderFile';
 
 app->secrets( ['nosecrets'] );
+$"=", ";
 
 my $xlsx_mime_type =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';

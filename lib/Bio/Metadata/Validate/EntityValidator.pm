@@ -289,7 +289,7 @@ sub validate_sample_in_experiment {
       Bio::Metadata::Validate::ValidationOutcome->new(
         entity => $entity,
         attributes => {'name' => 'Extra check'},
-        outcome => 'error',
+        outcome => 'warning',
         message => "The sample record $accession is not labelled with FAANG"
       );
     @{$checked_samples{$accession}} = @outcomes;
@@ -303,7 +303,7 @@ sub validate_sample_in_experiment {
         entity => $entity,
         attributes => {'name' => 'Extra check'},
         outcome => 'error',
-        message => "The sample record $accession is an animal which actually expects to be a specimen"
+        message => "Sample records are expected to be specimen from organism in FAANG experiments while the provided sample $accession is an animal"
       );
     @{$checked_samples{$accession}} = @outcomes;
     return @outcomes;
