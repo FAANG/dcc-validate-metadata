@@ -221,7 +221,7 @@ RULE_GROUP: for my $rule_group ( $self->rule_set->all_rule_groups ) {
     $self->handle_unexpected_attributes( $organised_attributes,
     \@rule_groups_used, $entity );
 
-  if ($entity->entity_type eq "experiment"){
+  if ($entity->entity_type && $entity->entity_type eq "experiment"){
     push @all_outcomes,
       $self->validate_sample_in_experiment ($entity);
   }
