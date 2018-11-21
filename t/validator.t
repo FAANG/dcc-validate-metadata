@@ -129,7 +129,9 @@ my @expected_outcomes = (
 is_deeply( \@actual_outcomes, \@expected_outcomes,
     'validation outcomes match expectation' );
 
-
+print Dumper(\@actual_outcomes);
+diag("would it work?");
+diag(Dumper(\@actual_outcomes));
 is( scalar(@actual_outcomes), 2, "got expected number of validation outcomes" );
 
 $entity->get_attribute(2)->name('class_id');
