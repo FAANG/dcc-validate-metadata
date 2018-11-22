@@ -194,6 +194,10 @@ sub checkDate(){
   unless ($isoStr =~/^\d.+\d$/){
     return "Error: wrong date value $isoStr";
   }
+  #already xs:dateTime format
+  if ($isoStr =~/^\d{4,4}-\d{2,2}-\d{2,2}T\d{2,2}:\d{2,2}:\d{2,2}$/){
+    return "";
+  }
   my @elem = split ("-",$isoStr);
   my $len = scalar @elem;
   return "Input date not in the YYYY-MM-DD or YYYY-MM or YYYY format" if ($len > 3);
