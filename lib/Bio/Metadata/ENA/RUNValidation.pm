@@ -137,16 +137,35 @@ sub validate_section {
   my $v = Bio::Metadata::Validate::EntityValidator->new( rule_set => $rule_set );
 
   my @errors;
+  my @tmpErrors;
   my %errors;
   foreach my $row (@rows){
     my $entities = $blocks->{$row} || [];
     for my $e (@$entities) {
       my ( $outcome_overall, $validation_outcomes ) = $v->check($e);
-      push @errors, grep { $_->outcome ne 'pass' } @$validation_outcomes;
+      push @tmpErrors, grep { $_->outcome ne 'pass' } @$validation_outcomes;
       my @limitedErrors = &checkLimitedValues($e);
       foreach my $limitedError(@limitedErrors){
         $errors{$limitedError}++;
       } 
+    }
+  }
+  my %hash;
+  foreach my $validationOutcome(@tmpErrors){
+    my $outcome = $validationOutcome->outcome;
+    my $message = $validationOutcome->message;
+    my $rule_name = $validationOutcome->rule->name;
+    my $type = $validationOutcome->rule->type;
+    my $key = "outcome($outcome)-message($message)-ruleName($rule_name)-type($type)";
+    $hash{$key}++;
+  }
+  foreach my $key(keys %hash){
+    if ($key=~/^outcome\((.+)\)-message\((.+)\)-ruleName\((.+)\)-type\((.+)\)$/){
+      push @errors, Bio::Metadata::Validate::ValidationOutcome->new(
+        outcome => $1,
+        message => "$2: occuring $hash{$key} times",
+        rule => Bio::Metadata::Rules::Rule->new(name => $3, type => $4)
+      );
     }
   }
   foreach my $limitedError(keys %errors){
