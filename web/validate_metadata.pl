@@ -358,6 +358,8 @@ sub validation_supporting_data {
       push (@tmp,"hidden");
       push (@tmp,"true");
     }
+    push (@tmp,"id");
+    push (@tmp,$rule_name);
     push (@rule_names_with_options,\@tmp);
   }
   return {

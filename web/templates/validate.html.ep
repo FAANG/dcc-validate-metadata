@@ -8,7 +8,7 @@
    %= label_for rule_set_name => 'Rule set'
   </dt>
   <dd>
-    %= select_field rule_set_name => $valid_rule_set_names
+    %= select_field rule_set_name => $valid_rule_set_names, onchange=>'change()', id => 'ruleset'
   </dd>
 
   <dt>
@@ -22,7 +22,7 @@
    %= label_for file_format => 'File format'
   </dt>
   <dd>
-    %= select_field file_format => $valid_file_formats
+    %= select_field file_format => $valid_file_formats, id => 'format'
   </dd>
 
   <dt>
@@ -41,4 +41,17 @@ I have read and accepted the <a href="https://www.ebi.ac.uk/data-protection/priv
 <p></p>
 <p>The latest <a href="https://www.ebi.ac.uk/seqdb/confluence/display/FAANG/Submission+of+samples+to+BioSamples">sample</a> and <a href="https://www.ebi.ac.uk/seqdb/confluence/display/FAANG/Submission+of+sequencing+data">experiment</a> metadata Excel templates and guidance on how to complete them can be found on the FAANG wiki site.</p>
 <p><b>Note:</b> for experiment data, this validation tool only validate the FAANG standard, the extra validation on ENA requirements is provided through <a href="../convert/">Convert</a> tool.</p> 
+
+<script>
+function change() {
+    var x = document.getElementById("FAANG Samples").selected;
+    var formatSelect = document.getElementById("format");
+    if(x){
+      formatSelect.value="BioSample .xlsx";
+    }else{
+      formatSelect.value="SRA Experiment .xlsx";
+    }
+}
+</script>
+
 % end
