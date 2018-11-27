@@ -251,7 +251,7 @@ sub validate_sample_in_experiment {
 
   my @links = @{$entity->links};
   my $sample = $links[0];
-  return @outcomes unless ($sample->entity_type eq "sample");
+  return @outcomes unless ($sample && $sample->entity_type && $sample->entity_type eq "sample");
   my $accession = $sample->id;
   return @{$checked_samples{$accession}} if (exists $checked_samples{$accession});
   my $url = "https://www.ebi.ac.uk/biosamples/samples/$accession.json?curationdomain=self.FAANG_DCC_curation";
