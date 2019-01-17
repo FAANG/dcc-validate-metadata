@@ -374,7 +374,12 @@ sub report_run {
         $run_center = $a->value;
       }
       elsif ($a->name eq 'run_date'){
-        $run_date = convertToDateTime($a->value);#the value has been validated in RUNValidation.pm
+        #if already in DateTime format, no need to convert
+        if ($a->value =~/^\d{4,4}-\d{2,2}-\d{2,2}T\d{2,2}:\d{2,2}:\d{2,2}$/){
+          $run_date = $a->value;
+        }else{
+          $run_date = convertToDateTime($a->value);
+        }
       }
       elsif ($a->name eq 'EXPERIMENT_REF'){
         $EXPERIMENT_REF = $a->value;
