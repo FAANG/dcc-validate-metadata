@@ -1,0 +1,1624 @@
+here
+
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'standard',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [
+                                                           'ATAC-seq',
+                                                           'ChIP-seq',
+                                                           'DNase-Hypersensitivity seq',
+                                                           'Hi-C',
+                                                           'methylation profiling by high throughput sequencing',
+                                                           'microRNA profiling by high throughput sequencing',
+                                                           'RNA-seq of total RNA',
+                                                           'RNA-seq of coding RNA',
+                                                           'RNA-seq of non coding RNA',
+                                                           'transcription profiling by high throughput sequencing',
+                                                           'whole genome sequencing assay'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'assay type',
+                                       'description' => 'The type of experiment performed',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [
+                                                           'ambient temperature',
+                                                           'cut slide',
+                                                           'fresh',
+                                                           'frozen, -70 freezer',
+                                                           'frozen, -150 freezer',
+                                                           'frozen, liquid nitrogen',
+                                                           'frozen, vapor phase',
+                                                           'paraffin block',
+                                                           'RNAlater, frozen',
+                                                           'TRIzol, frozen'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sample storage',
+                                       'description' => 'How the sample was stored. Temperatures are in celsius. \'Frozen, vapor phase\' refers to storing samples above liquid nitrogen in the vapor',
+                                       'valid_units' => [],
+                                       'mandatory' => 'optional',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [
+                                                           'cryopreservation in liquid nitrogen (dead tissue)',
+                                                           'cryopreservation in dry ice (dead tissue)',
+                                                           'cryopreservation of live cells in liquid nitrogen',
+                                                           'cryopreservation, other',
+                                                           'formalin fixed, unbuffered',
+                                                           'formalin fixed, buffered',
+                                                           'formalin fixed and paraffin embedded',
+                                                           'fresh'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sample storage processing',
+                                       'description' => 'How the sample was prepared for storage',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sampling to preparation interval',
+                                       'description' => 'How long between the sample being taken and the assay experiment preperations commencing. If sample preperations were then left in intermediate stages after preperation commenced, for example as sheared chromatin, then this should be made clear in your protocols',
+                                       'valid_units' => [
+                                                          'minutes',
+                                                          'hours',
+                                                          'days',
+                                                          'weeks',
+                                                          'months',
+                                                          'years',
+                                                          'minute',
+                                                          'hour',
+                                                          'day',
+                                                          'week',
+                                                          'month',
+                                                          'year'
+                                                        ],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'experimental protocol',
+                                       'description' => 'Link to the description of the experiment protocol, an overview of the full experiment, that can refer to the order in which other protocols were performed and any intermediate steps not covered by the extraction or assay specific protocols',
+                                       'valid_units' => [],
+                                       'mandatory' => 'optional',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'extraction protocol',
+                                       'description' => 'Link to the protocol used to isolate the extract material',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library preparation location',
+                                       'description' => 'Location where library preperation was performed',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library preparation location longitude',
+                                       'description' => 'Longitude of the library prep location in decimal degrees',
+                                       'valid_units' => [
+                                                          'decimal degrees'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library preparation location latitude',
+                                       'description' => 'Latitude of the library prep location in decimal degrees',
+                                       'valid_units' => [
+                                                          'decimal degrees'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library preparation date',
+                                       'description' => 'Date on which the library was prepared',
+                                       'valid_units' => [
+                                                          'YYYY-MM-DD',
+                                                          'YYYY-MM',
+                                                          'YYYY'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'date'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sequencing location',
+                                       'description' => 'Location of where the sequencing was performed',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sequencing location longitude',
+                                       'description' => 'Longitude of the sequencing location in decimal degrees',
+                                       'valid_units' => [
+                                                          'decimal degrees'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sequencing location latitude',
+                                       'description' => 'Latitude of the sequencing location in decimal degrees',
+                                       'valid_units' => [
+                                                          'decimal degrees'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sequencing date',
+                                       'description' => 'Date sequencing was performed',
+                                       'valid_units' => [
+                                                          'YYYY-MM-DD',
+                                                          'YYYY-MM',
+                                                          'YYYY'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'date'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ]
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'ATAC-seq',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/SO_0001747')}, 'URI::http' ),
+                                                                   'ontology_name' => 'SO',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, please use \'open_chromatin_region\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'transposase protocol',
+                                       'description' => 'Link to the protocol used for transposase treatment',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'ATAC-seq'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'BS-seq',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/GO_0006306')}, 'URI::http' ),
+                                                                   'ontology_name' => 'OBI',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, please use \'DNA methylation\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [
+                                                           'RRBS',
+                                                           'WGBS'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library selection',
+                                       'description' => 'Library selection is Whole Genome Bisulfite Sequencing or Reduced Representation Bisulfite Sequencing',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'bisulfite conversion protocol',
+                                       'description' => 'Link to bisulfite conversion protocol',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'pcr product isolation protocol',
+                                       'description' => 'Link to the protocol for isolating PCR products used for library generation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'bisulfite conversion percent',
+                                       'description' => 'Bisulfite conversion percentage',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'restriction enzyme',
+                                       'description' => 'Restriction enzyme used for Reduced representation bisulfite sequencing',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'max fragment size selection range',
+                                       'description' => 'The maximum fragment size of the fragment selection range',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'min fragment size selection range',
+                                       'description' => 'The minimum fragment size of the fragment selection range',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'methylation profiling by high throughput sequencing'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'ChIP-seq standard rules for both histone modifications and input DNA',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => bless( do{\(my $o = 1)}, 'JSON::PP::Boolean' ),
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/SO_0001700')}, 'URI::http' ),
+                                                                   'ontology_name' => 'SO',
+                                                                   'allow_descendants' => 1
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' ),
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://www.ebi.ac.uk/efo/EFO_0005031')}, 'URI::http' ),
+                                                                   'ontology_name' => 'EFO',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link e.g. \'input DNA\'. ChIP-seq histone modifications: use child term of SO_0001700. ChIP-seq input: use \'input DNA\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'chip protocol',
+                                       'description' => 'Link to the ChIP protocol used',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'ChIP-seq'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'ChIP-seq histone modifications',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'chip antibody provider',
+                                       'description' => 'The name of the company, laboratory or person that provided the antibody e.g. Diagneode',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'chip antibody catalog',
+                                       'description' => 'The catalog from which the antibody was purchased e.g. pAb-003-050',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'chip antibody lot',
+                                       'description' => 'The lot identifier of the antibody e.g. A5051-001P',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation max fragment size range',
+                                       'description' => 'The maximum fragment size range of the preparation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation min fragment size range',
+                                       'description' => 'The minimum fragment size range of the preparation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'dpath_condition' => '/attributes/*/*[key eq \'name\' && value eq \'experiment target\']/../*[key eq \'value\' && value ne \'Input DNA\']',
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'ChIP-seq'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'ChIP-seq input DNA',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation max fragment size range',
+                                       'description' => 'The maximum fragment size range of the preparation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation min fragment size range',
+                                       'description' => 'The minimum fragment size range of the preparation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'experiment target' => [
+                                                                                               'Input DNA'
+                                                                                             ],
+                                                                      'assay type' => [
+                                                                                        'ChIP-seq'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'DNase-seq',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/SO_0001747')}, 'URI::http' ),
+                                                                   'ontology_name' => 'SO',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, please use \'open_chromatin_region\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'dnase protocol',
+                                       'description' => 'Link to the protocol used for DNase treatment',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'DNase-Hypersensitivity seq'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'Hi-C',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/GO_0000785')}, 'URI::http' ),
+                                                                   'ontology_name' => 'GO',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, please use \'chromatin\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'restriction enzyme',
+                                       'description' => 'Restriction enzyme used',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'restriction site',
+                                       'description' => 'Restriction site targeted',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'Hi-C protocol',
+                                       'description' => 'Link to the protocol used for Hi-C experiment',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'Hi-C'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'RNA-seq',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/CHEBI_33697')}, 'URI::http' ),
+                                                                   'ontology_name' => 'EFO',
+                                                                   'allow_descendants' => 1
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, for example \'polyA RNA\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'rna preparation 3\' adapter ligation protocol',
+                                       'description' => "Link to the protocol for 3\x{2019} adapter ligation used in preparation",
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'rna preparation 5\' adapter ligation protocol',
+                                       'description' => "Link to the protocol for 5\x{2019} adapter ligation used in preparation",
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation pcr product isolation protocol',
+                                       'description' => 'Link to the protocol for isolating pcr products used for library generation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'preparation reverse transcription protocol',
+                                       'description' => 'Link to the protocol for reverse transcription used in preparation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation protocol',
+                                       'description' => 'Link to the protocol used to generate the library',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [
+                                                           'not applicable',
+                                                           'sense',
+                                                           'antisense',
+                                                           'mate 1 sense',
+                                                           'mate 2 sense',
+                                                           'non-stranded'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'read strand',
+                                       'description' => 'For strand specific protocol, specify which mate pair maps to the transcribed strand or Report \'non-stranded\' if the protocol is not strand specific. For single-ended sequencing: use \'sense\' if the reads should be on the same strand as the transcript, \'antisense\' if on opposite strand. For paired-end sequencing: \'mate 1 sense\' if mate 1 should be on the same strand as the transcript, \'mate 2 sense\' if mate 2 should be on the same strand as the transcript',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'rna purity - 260:280 ratio',
+                                       'description' => 'Sample purity assesed with fluoresence ratio at 260 and 280nm, informative for protein contamination',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'rna purity - 260:230 ratio',
+                                       'description' => 'Sample purity assesed with fluoresence ratio at 260 and 230nm, informative for contamination by phenolate ion, thiocyanates, and other organic compounds',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'rna integrity number',
+                                       'description' => 'It is important to obtain this value, but if you are unable to supply this number (e.g. due to machine failure) then by submitting you are asserting the quality by visual inspection of traces and agreeing that the samples were suitable for sequencing. For more information on RNA Integrity Numbers see Schroeder et al. (2006) http://bmcmolbiol.biomedcentral.com/articles/10.1186/1471-2199-7-3',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'microRNA profiling by high throughput sequencing',
+                                                                                        'RNA-seq of total RNA',
+                                                                                        'RNA-seq of coding RNA',
+                                                                                        'RNA-seq of non coding RNA',
+                                                                                        'transcription profiling by high throughput sequencing'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'WGS',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://www.ebi.ac.uk/efo/EFO_0005031')}, 'URI::http' ),
+                                                                   'ontology_name' => 'EFO',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, please use \'input DNA\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation pcr product isolation protocol',
+                                       'description' => 'Link to the protocol for isolating PCR products used for library generation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation protocol',
+                                       'description' => 'Link to the protocol used to generate the library',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [
+                                                           'reduced representation',
+                                                           'none'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library selection',
+                                       'description' => 'State whether reduced representation was used in the protocol',
+                                       'valid_units' => [],
+                                       'mandatory' => 'optional',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'whole genome sequencing assay'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'standard',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [
+                                                           'ATAC-seq',
+                                                           'ChIP-seq',
+                                                           'DNase-Hypersensitivity seq',
+                                                           'Hi-C',
+                                                           'methylation profiling by high throughput sequencing',
+                                                           'microRNA profiling by high throughput sequencing',
+                                                           'RNA-seq of total RNA',
+                                                           'RNA-seq of coding RNA',
+                                                           'RNA-seq of non coding RNA',
+                                                           'transcription profiling by high throughput sequencing',
+                                                           'whole genome sequencing assay'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'assay type',
+                                       'description' => 'The type of experiment performed',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [
+                                                           'ambient temperature',
+                                                           'cut slide',
+                                                           'fresh',
+                                                           'frozen, -70 freezer',
+                                                           'frozen, -150 freezer',
+                                                           'frozen, liquid nitrogen',
+                                                           'frozen, vapor phase',
+                                                           'paraffin block',
+                                                           'RNAlater, frozen',
+                                                           'TRIzol, frozen'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sample storage',
+                                       'description' => 'How the sample was stored. Temperatures are in celsius. \'Frozen, vapor phase\' refers to storing samples above liquid nitrogen in the vapor',
+                                       'valid_units' => [],
+                                       'mandatory' => 'optional',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [
+                                                           'cryopreservation in liquid nitrogen (dead tissue)',
+                                                           'cryopreservation in dry ice (dead tissue)',
+                                                           'cryopreservation of live cells in liquid nitrogen',
+                                                           'cryopreservation, other',
+                                                           'formalin fixed, unbuffered',
+                                                           'formalin fixed, buffered',
+                                                           'formalin fixed and paraffin embedded',
+                                                           'fresh'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sample storage processing',
+                                       'description' => 'How the sample was prepared for storage',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sampling to preparation interval',
+                                       'description' => 'How long between the sample being taken and the assay experiment preperations commencing. If sample preperations were then left in intermediate stages after preperation commenced, for example as sheared chromatin, then this should be made clear in your protocols',
+                                       'valid_units' => [
+                                                          'minutes',
+                                                          'hours',
+                                                          'days',
+                                                          'weeks',
+                                                          'months',
+                                                          'years',
+                                                          'minute',
+                                                          'hour',
+                                                          'day',
+                                                          'week',
+                                                          'month',
+                                                          'year'
+                                                        ],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'experimental protocol',
+                                       'description' => 'Link to the description of the experiment protocol, an overview of the full experiment, that can refer to the order in which other protocols were performed and any intermediate steps not covered by the extraction or assay specific protocols',
+                                       'valid_units' => [],
+                                       'mandatory' => 'optional',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'extraction protocol',
+                                       'description' => 'Link to the protocol used to isolate the extract material',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library preparation location',
+                                       'description' => 'Location where library preperation was performed',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library preparation location longitude',
+                                       'description' => 'Longitude of the library prep location in decimal degrees',
+                                       'valid_units' => [
+                                                          'decimal degrees'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library preparation location latitude',
+                                       'description' => 'Latitude of the library prep location in decimal degrees',
+                                       'valid_units' => [
+                                                          'decimal degrees'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library preparation date',
+                                       'description' => 'Date on which the library was prepared',
+                                       'valid_units' => [
+                                                          'YYYY-MM-DD',
+                                                          'YYYY-MM',
+                                                          'YYYY'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'date'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sequencing location',
+                                       'description' => 'Location of where the sequencing was performed',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sequencing location longitude',
+                                       'description' => 'Longitude of the sequencing location in decimal degrees',
+                                       'valid_units' => [
+                                                          'decimal degrees'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sequencing location latitude',
+                                       'description' => 'Latitude of the sequencing location in decimal degrees',
+                                       'valid_units' => [
+                                                          'decimal degrees'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'sequencing date',
+                                       'description' => 'Date sequencing was performed',
+                                       'valid_units' => [
+                                                          'YYYY-MM-DD',
+                                                          'YYYY-MM',
+                                                          'YYYY'
+                                                        ],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'date'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ]
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'ATAC-seq',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/SO_0001747')}, 'URI::http' ),
+                                                                   'ontology_name' => 'SO',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, please use \'open_chromatin_region\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'transposase protocol',
+                                       'description' => 'Link to the protocol used for transposase treatment',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'ATAC-seq'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'BS-seq',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/GO_0006306')}, 'URI::http' ),
+                                                                   'ontology_name' => 'OBI',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, please use \'DNA methylation\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [
+                                                           'RRBS',
+                                                           'WGBS'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library selection',
+                                       'description' => 'Library selection is Whole Genome Bisulfite Sequencing or Reduced Representation Bisulfite Sequencing',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'bisulfite conversion protocol',
+                                       'description' => 'Link to bisulfite conversion protocol',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'pcr product isolation protocol',
+                                       'description' => 'Link to the protocol for isolating PCR products used for library generation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'bisulfite conversion percent',
+                                       'description' => 'Bisulfite conversion percentage',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'restriction enzyme',
+                                       'description' => 'Restriction enzyme used for Reduced representation bisulfite sequencing',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'max fragment size selection range',
+                                       'description' => 'The maximum fragment size of the fragment selection range',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'min fragment size selection range',
+                                       'description' => 'The minimum fragment size of the fragment selection range',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'methylation profiling by high throughput sequencing'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'ChIP-seq standard rules for both histone modifications and input DNA',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => bless( do{\(my $o = 1)}, 'JSON::PP::Boolean' ),
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/SO_0001700')}, 'URI::http' ),
+                                                                   'ontology_name' => 'SO',
+                                                                   'allow_descendants' => 1
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' ),
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://www.ebi.ac.uk/efo/EFO_0005031')}, 'URI::http' ),
+                                                                   'ontology_name' => 'EFO',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link e.g. \'input DNA\'. ChIP-seq histone modifications: use child term of SO_0001700. ChIP-seq input: use \'input DNA\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'chip protocol',
+                                       'description' => 'Link to the ChIP protocol used',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'ChIP-seq'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'ChIP-seq histone modifications',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'chip antibody provider',
+                                       'description' => 'The name of the company, laboratory or person that provided the antibody e.g. Diagneode',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'chip antibody catalog',
+                                       'description' => 'The catalog from which the antibody was purchased e.g. pAb-003-050',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'chip antibody lot',
+                                       'description' => 'The lot identifier of the antibody e.g. A5051-001P',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation max fragment size range',
+                                       'description' => 'The maximum fragment size range of the preparation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation min fragment size range',
+                                       'description' => 'The minimum fragment size range of the preparation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'dpath_condition' => '/attributes/*/*[key eq \'name\' && value eq \'experiment target\']/../*[key eq \'value\' && value ne \'Input DNA\']',
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'ChIP-seq'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'ChIP-seq input DNA',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation max fragment size range',
+                                       'description' => 'The maximum fragment size range of the preparation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation min fragment size range',
+                                       'description' => 'The minimum fragment size range of the preparation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'experiment target' => [
+                                                                                               'Input DNA'
+                                                                                             ],
+                                                                      'assay type' => [
+                                                                                        'ChIP-seq'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'DNase-seq',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/SO_0001747')}, 'URI::http' ),
+                                                                   'ontology_name' => 'SO',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, please use \'open_chromatin_region\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'dnase protocol',
+                                       'description' => 'Link to the protocol used for DNase treatment',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'DNase-Hypersensitivity seq'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'Hi-C',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/GO_0000785')}, 'URI::http' ),
+                                                                   'ontology_name' => 'GO',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, please use \'chromatin\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'restriction enzyme',
+                                       'description' => 'Restriction enzyme used',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'restriction site',
+                                       'description' => 'Restriction site targeted',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'Hi-C protocol',
+                                       'description' => 'Link to the protocol used for Hi-C experiment',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'Hi-C'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'RNA-seq',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://purl.obolibrary.org/obo/CHEBI_33697')}, 'URI::http' ),
+                                                                   'ontology_name' => 'EFO',
+                                                                   'allow_descendants' => 1
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, for example \'polyA RNA\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'rna preparation 3\' adapter ligation protocol',
+                                       'description' => "Link to the protocol for 3\x{2019} adapter ligation used in preparation",
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'rna preparation 5\' adapter ligation protocol',
+                                       'description' => "Link to the protocol for 5\x{2019} adapter ligation used in preparation",
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation pcr product isolation protocol',
+                                       'description' => 'Link to the protocol for isolating pcr products used for library generation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'preparation reverse transcription protocol',
+                                       'description' => 'Link to the protocol for reverse transcription used in preparation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation protocol',
+                                       'description' => 'Link to the protocol used to generate the library',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [
+                                                           'not applicable',
+                                                           'sense',
+                                                           'antisense',
+                                                           'mate 1 sense',
+                                                           'mate 2 sense',
+                                                           'non-stranded'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'read strand',
+                                       'description' => 'For strand specific protocol, specify which mate pair maps to the transcribed strand or Report \'non-stranded\' if the protocol is not strand specific. For single-ended sequencing: use \'sense\' if the reads should be on the same strand as the transcript, \'antisense\' if on opposite strand. For paired-end sequencing: \'mate 1 sense\' if mate 1 should be on the same strand as the transcript, \'mate 2 sense\' if mate 2 should be on the same strand as the transcript',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'rna purity - 260:280 ratio',
+                                       'description' => 'Sample purity assesed with fluoresence ratio at 260 and 280nm, informative for protein contamination',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'rna purity - 260:230 ratio',
+                                       'description' => 'Sample purity assesed with fluoresence ratio at 260 and 230nm, informative for contamination by phenolate ion, thiocyanates, and other organic compounds',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'rna integrity number',
+                                       'description' => 'It is important to obtain this value, but if you are unable to supply this number (e.g. due to machine failure) then by submitting you are asserting the quality by visual inspection of traces and agreeing that the samples were suitable for sequencing. For more information on RNA Integrity Numbers see Schroeder et al. (2006) http://bmcmolbiol.biomedcentral.com/articles/10.1186/1471-2199-7-3',
+                                       'valid_units' => [],
+                                       'mandatory' => 'recommended',
+                                       'type' => 'number'
+                                     }, 'Bio::Metadata::Rules::Rule' )
+                            ],
+                 'condition' => bless( {
+                                         'attribute_value_match' => {
+                                                                      'assay type' => [
+                                                                                        'microRNA profiling by high throughput sequencing',
+                                                                                        'RNA-seq of total RNA',
+                                                                                        'RNA-seq of coding RNA',
+                                                                                        'RNA-seq of non coding RNA',
+                                                                                        'transcription profiling by high throughput sequencing'
+                                                                                      ]
+                                                                    }
+                                       }, 'Bio::Metadata::Rules::Condition' )
+               }, 'Bio::Metadata::Rules::RuleGroup' );
+Rule group:
+$VAR1 = bless( {
+                 'consistency_checks' => {},
+                 'imports' => [],
+                 'name' => 'WGS',
+                 'rules' => [
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [
+                                                          bless( {
+                                                                   'leaf_only' => 0,
+                                                                   'include_root' => 1,
+                                                                   'term_iri' => bless( do{\(my $o = 'http://www.ebi.ac.uk/efo/EFO_0005031')}, 'URI::http' ),
+                                                                   'ontology_name' => 'EFO',
+                                                                   'allow_descendants' => bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' )
+                                                                 }, 'Bio::Metadata::Rules::PermittedTerm' )
+                                                        ],
+                                       'name' => 'experiment target',
+                                       'description' => 'What the experiment was trying to find, list the text rather than ontology link, please use \'input DNA\'',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'ontology_text'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation pcr product isolation protocol',
+                                       'description' => 'Link to the protocol for isolating PCR products used for library generation',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+                                       'name' => 'library generation protocol',
+                                       'description' => 'Link to the protocol used to generate the library',
+                                       'valid_units' => [],
+                                       'mandatory' => 'mandatory',
+                                       'type' => 'uri_value'
+                                     }, 'Bio::Metadata::Rules::Rule' ),
+                              bless( {
+                                       'valid_values' => [
+                                                           'reduced representation',
+                                                           'none'
+                                                         ],
+                                       'allow_multiple' => 0,
+                                       'valid_terms' => [],
+     
