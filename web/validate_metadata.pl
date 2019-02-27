@@ -144,7 +144,9 @@ get '/rule_sets/#name' => sub {
 
 get '/convert' => sub {
   my $c = shift;
-  my $supporting_data = { valid_rule_set_names => \@rule_names_without_legacy };
+  my @tmp = @rule_names_without_legacy;
+  pop(@tmp);
+  my $supporting_data = { valid_rule_set_names => \@tmp};
 
   $c->respond_to(
     json => sub {
@@ -355,6 +357,9 @@ sub validation_supporting_data {
     push (@tmp,$rule_name); #option display, check 11 lines down in the comment of return statement for valid_output_formats
     push (@tmp,$rule_name); #option value
     if(index(lc($rule_name),"legacy")>-1){ #if it is the legacy rule set, hide from the option list
+      push (@tmp,"hidden");
+      push (@tmp,"true");
+    }elsif(index(lc($rule_name),"analyses")>-1){ #if it is the analyses rule set, temporarily hide from the option list
       push (@tmp,"hidden");
       push (@tmp,"true");
     }
