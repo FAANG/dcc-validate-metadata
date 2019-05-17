@@ -334,7 +334,17 @@ sub report_expr {
     if (lc($LIBRARY_LAYOUT) eq "single"){
       $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<SINGLE/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
     }else{ # attributes are mandatory
-      $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\" NOMINAL_SDEV=\"".$NOMINAL_SDEV."\"/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+      if ($NOMINAL_LENGTH){
+        if ($NOMINAL_SDEV){
+          $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\" NOMINAL_SDEV=\"".$NOMINAL_SDEV."\"/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+        }else{
+          $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\"/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+        }
+      }elsif ($NOMINAL_SDEV){
+        $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_SDEV=\"".$NOMINAL_SDEV."\"/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+      }else{
+        $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT."/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+      }
     }    
     if ($LIBRARY_CONSTRUCTION_PROTOCOL){
       $experiment = $experiment."\t\t\t\t<LIBRARY_CONSTRUCTION_PROTOCOL>".$LIBRARY_CONSTRUCTION_PROTOCOL."</LIBRARY_CONSTRUCTION_PROTOCOL>\n";
