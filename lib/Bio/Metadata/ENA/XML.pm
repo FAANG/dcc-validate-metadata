@@ -319,17 +319,23 @@ sub report_expr {
     $experiment = $experiment."\t\t\t\t<LIBRARY_STRATEGY>".$LIBRARY_STRATEGY."</LIBRARY_STRATEGY>\n";
     $experiment = $experiment."\t\t\t\t<LIBRARY_SOURCE>".$LIBRARY_SOURCE."</LIBRARY_SOURCE>\n";
     $experiment = $experiment."\t\t\t\t<LIBRARY_SELECTION>".$LIBRARY_SELECTION."</LIBRARY_SELECTION>\n";
-    if ($NOMINAL_LENGTH){
-      if ($NOMINAL_SDEV){
-        $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\" NOMINAL_SDEV=\"".$NOMINAL_SDEV."\"/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
-      }else{
-        $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\"/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
-      }
-    }elsif ($NOMINAL_SDEV){
-      $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_SDEV=\"".$NOMINAL_SDEV."\"/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
-    }else{
-      $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT."/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
-    }
+    # experiment.xsd
+    # <xs:choice>
+    #   <xs:element name="SINGLE">
+    #     <xs:complexType></xs:complexType>
+    #   </xs:element>
+    #   <xs:element name="PAIRED">
+    #     <xs:complexType>
+    #       <xs:attribute name="NOMINAL_LENGTH" type="xs:nonNegativeInteger"/>
+    #       <xs:attribute name="NOMINAL_SDEV" type="xs:double"/>
+    #     </xs:complexType>
+    #   </xs:element>
+    # </xs:choice>
+    if (lc($LIBRARY_LAYOUT) eq "single"){
+      $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<SINGLE/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+    }else{ # attributes are mandatory
+      $experiment = $experiment."\t\t\t\t<LIBRARY_LAYOUT>\n\t\t\t\t\t<".$LIBRARY_LAYOUT." NOMINAL_LENGTH=\"".$NOMINAL_LENGTH."\" NOMINAL_SDEV=\"".$NOMINAL_SDEV."\"/>\n\t\t\t\t</LIBRARY_LAYOUT>\n";
+    }    
     if ($LIBRARY_CONSTRUCTION_PROTOCOL){
       $experiment = $experiment."\t\t\t\t<LIBRARY_CONSTRUCTION_PROTOCOL>".$LIBRARY_CONSTRUCTION_PROTOCOL."</LIBRARY_CONSTRUCTION_PROTOCOL>\n";
     }
