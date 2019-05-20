@@ -1,4 +1,4 @@
-# Validate metadata [![Build Status](https://travis-ci.org/FAANG/validate-metadata.svg?branch=master)](https://travis-ci.org/FAANG/validate-metadata) [![Coverage Status](https://coveralls.io/repos/github/FAANG/validate/badge.svg?branch=master)](https://coveralls.io/github/FAANG/validate?branch=master)
+# Validate metadata [![Build Status](https://travis-ci.org/FAANG/dcc-validate-metadata.svg?branch=master)](https://travis-ci.org/FAANG/dcc-validate-metadata) [![Coverage Status](https://coveralls.io/repos/github/FAANG/validate/badge.svg?branch=master)](https://coveralls.io/github/FAANG/validate?branch=master)
 
 This is a library, web application and set of scripts to test whether or not metadata conforms to a set of rules. It has been developed to support the [FAANG](http://www.faang.org/) project. 
 
@@ -77,7 +77,7 @@ We include  a conversion tool to produce SampleTab files for submission to [BioS
 If you want to use the scripts or code against the libraries, the simplest thing to do is to use cpanm:
 
     cpanm git@github.com:EMBL-EBI-GCA/BioSD.git
-    cpanm git@github.com:FAANG/validate-metadata.git
+    cpanm git@github.com:FAANG/dcc-validate-metadata.git
 
 This will install the library and its dependencies.
 
