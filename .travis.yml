@@ -17,7 +17,7 @@ install:
 env:
   global:
     -PERL5LIB=$PERL5LIB:~/BioSD/lib
-    -PERL5LIB=$PERL5LIB:/home/travis/build/FAANG/validate-metadata/local/lib/perl5
+    -PERL5LIB=$PERL5LIB:/home/travis/build/FAANG/dcc-validate-metadata/local/lib/perl5
 
 script:
   perl Build.PL && ./Build build && cover -ignore local -test -report coveralls
