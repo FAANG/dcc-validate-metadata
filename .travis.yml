@@ -9,10 +9,9 @@ before_install:
     - "cpanm Module::Build::Pluggable Module::Build::Pluggable::CPANfile"
     - "git clone --branch master --depth 1 https://github.com/EMBL-EBI-GCA/BioSD.git ~/BioSD"
     - "cpanm --installdeps ~/BioSD"
-    - "cpanm Carton"
 
 install:
-  - "carton install --deployment"
+    - cpanm --installdeps .
 
 env:
   global:
