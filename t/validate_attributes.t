@@ -381,6 +381,11 @@ sub uri_rules {
   $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
   is( $outcome->outcome, 'pass', 'Valid url passed' );
 
+  #valid url without protocol
+  $attr = Bio::Metadata::Attribute->new( value => 'www.ebi.ac.uk' );
+  $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+  is( $outcome->outcome, 'pass', 'Valid url passed' );
+
   #valid mailto
   $attr = Bio::Metadata::Attribute->new( value => 'mailto:bob@example.org' );
   $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
@@ -388,6 +393,11 @@ sub uri_rules {
 
   #vaild ftp
   $attr = Bio::Metadata::Attribute->new( value => 'ftp://ftp.ebi.ac.uk' );
+  $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+  is( $outcome->outcome, 'pass', 'Valid ftp passed' );
+
+  #vaild ftp with username
+  $attr = Bio::Metadata::Attribute->new( value => 'user:pass@ftp.ebi.ac.uk' );
   $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
   is( $outcome->outcome, 'pass', 'Valid ftp passed' );
 
