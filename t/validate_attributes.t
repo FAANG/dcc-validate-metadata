@@ -397,6 +397,12 @@ sub uri_rules {
   $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
   is( $outcome->outcome, 'error', 'Invalid url failed' );
 
+  #two valid URLs separated by ";" which is not a valid URL
+  $attr =
+    Bio::Metadata::Attribute->new( value => 'https://www.ebi.ac.uk;ftp://ftp.ebi.ac.uk' );
+  $outcome = $uri_value_validator->validate_attribute( $uri_rule, $attr );
+  is( $outcome->outcome, 'error', 'Invalid url' );
+
   #unsupported uri type
   $attr =
     Bio::Metadata::Attribute->new(
