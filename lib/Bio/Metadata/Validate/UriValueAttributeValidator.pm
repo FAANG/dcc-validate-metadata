@@ -70,6 +70,14 @@ sub validate_attribute {
         return $o;
     }
 
+    if ($uri->scheme ne "mailto"){
+        unless ($attribute->value =~ /^((http|ftp)s?:\/\/)?(www\.)?[-a-zA-Z0-9\@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9\@:%_\+.~#?&\/=]*)$/) {
+            $o->outcome('error');
+            $o->message('Invalid URL');
+            return $o;
+        }
+    }
+
     $o->outcome('pass');
     return $o;
 }
