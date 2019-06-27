@@ -1,4 +1,4 @@
-# Validate metadata [![Build Status](https://travis-ci.org/FAANG/dcc-validate-metadata.svg?branch=master)](https://travis-ci.org/FAANG/dcc-validate-metadata) [![Coverage Status](https://coveralls.io/github/FAANG/dcc-validate-metadata)](https://coveralls.io/github/FAANG/dcc-validate-metadata)
+# Validate metadata [![Build Status](https://travis-ci.org/FAANG/dcc-validate-metadata.svg?branch=master)](https://travis-ci.org/FAANG/dcc-validate-metadata) [![Coverage Status](https://coveralls.io/repos/github/FAANG/dcc-validate-metadata/badge.svg?branch=master)](https://coveralls.io/github/FAANG/dcc-validate-metadata?branch=master)
 
 This is a library, web application and set of scripts to test whether or not metadata conforms to a set of rules. It has been developed to support the [FAANG](http://www.faang.org/) project. 
 
