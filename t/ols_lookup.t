@@ -221,3 +221,15 @@ sub test_all_children_ancestor_uri_fail {
   my $output = $ols_lookup->find_match_all_children( $fail_uri, $pt );
   is( $output, $expected_label, "Get undef for liver under bogus uri for find_match_all_children" );
 }
+
+sub test_is_child {
+  my $parent_iri = "http://purl.obolibrary.org/obo/NCBITaxon_9443"; # primates
+  my $child_iri_true = "http://purl.obolibrary.org/obo/NCBITaxon_9606"; # human
+  my $child_iri_false = "http://purl.obolibrary.org/obo/NCBITaxon_9913"; # cattle, bos taurus
+  my $output_pass = $ols_lookup->is_child ($child_iri_true, $parent_iri);
+  is ($output_pass, 1, "Human is a child of primates");
+  my $output_fail_reverse = $ols_lookup->is_child ($parent_iri, $child_iri_true);
+  is ($output_fail_reverse, 0, "Human is not a parent of primates");
+  my $output_fail = $ols_lookup->is_child ($child_iri_false, $parent_iri);
+  is ($output_fail, 0, "Cow is not a child of primates");
+}

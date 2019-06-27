@@ -242,6 +242,14 @@ sub _reduce_terms {
   return \@terms;
 }
 
+sub is_child {
+  my ($self,$child_iri,$parent_iri) = @_;
+  my $uri = $self->base_url."/search?q=${child_iri}&queryFields=iri&childrenOf=$parent_iri";
+  my $root_term_json = $self->request_to_json($uri);
+  my $numFound = $root_term_json->{'response'}{'numFound'};
+  return $numFound;
+}
+
 sub _matching_terms {
   my (
     $self,              $ontology_name, $term_iri,
