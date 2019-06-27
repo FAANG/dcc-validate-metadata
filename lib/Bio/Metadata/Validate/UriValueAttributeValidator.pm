@@ -55,9 +55,14 @@ sub validate_attribute {
     };
 
     if ( !$uri->has_recognized_scheme ) {
-        $o->outcome('error');
-        $o->message('value is not a URI');
-        return $o;
+        unless ($attribute->value =~ /^((http|ftp)s?:\/\/)?(www\.)?[-a-zA-Z0-9\@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9\@:%_\+.~#?&\/=]*)$/) {
+            $o->outcome('error');
+            $o->message('Unrecognized scheme');
+            return $o;
+        }else{
+          my $new_value = "http://".$attribute->value;
+          $uri = URI->new ($new_value);
+        }
     }
 
     if ( !$self->find_supported_schema( sub { $uri->scheme eq $_ } ) ) {
