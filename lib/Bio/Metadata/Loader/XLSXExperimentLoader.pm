@@ -92,7 +92,7 @@ has 'expr_sheet_names' => (
     find_expr_sheet_name => 'first',
   },
   default => sub { [ 
-  'ATAC-seq', 'BS-seq', 'ChIP-seq', 'ChIP-seq histone modifications', 'ChIP-seq input',
+  'ATAC-seq', 'BS-seq', 'ChIP-seq', 'ChIP-seq DNA-binding proteins', 'ChIP-seq input',
   'DNase-seq', 'HiC', 'RNA-Seq', 'WGS'
   ] },
 );
