@@ -203,6 +203,7 @@ sub process_sheet {
 }
 
 sub row_to_object {
+  #deal with common sheets
   my ( $self, $row, $fields, $sheet_name ) = @_;
 
   return 0 unless grep { $_ } @$row;
@@ -317,6 +318,10 @@ sub process_expansion_sheet{
 }
 
 sub row_to_object_expand {
+  #deal with technology specific sheets
+  #$row : ref of arrays of values in one row
+  #$fields ref of array of column names
+  #$entities: ref of hash of processed rows
   my ( $self, $row, $fields, $sheet_name, $entities ) = @_;
   return $entities unless grep { $_ } @$row;
 
