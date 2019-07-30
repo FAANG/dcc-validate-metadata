@@ -47,6 +47,14 @@ sub validate_attribute {
       $entity = $self->biosd_lookup->fetch_sample($sample_identifier);
     }
 
+    foreach my $attr(@{$entity->attributes}){
+      my $value = $attr->value;
+      if($attr->name eq "material"){
+        $attr->name("Material");
+        last;
+      }
+    }
+
     if ( !defined $entity ) {
         $o->outcome('error');
         $o->message('No entity found');
