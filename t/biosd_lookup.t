@@ -25,6 +25,7 @@ my $lookup = Bio::Metadata::Validate::Support::BioSDLookup->new();
 {
   my $id     = 'SAMEA676028';
   my $sample = $lookup->fetch_sample($id);
+  diag($sample);
   my $expected = Bio::Metadata::Entity->new(
     id          => 'source GSM754269 1',
     synonyms    => [$id],
