@@ -31,7 +31,12 @@ my $lookup = Bio::Metadata::Validate::Support::BioSDLookup->new();
     entity_type => 'sample',
     attributes  => [
       {
-        'source_ref' => 'o_ref',
+        'value' => 'Gene expression after 4hr in 2ug/ml BSP-II-treated DT40 cell',
+        'name' => 'Sample Description',
+        'allow_further_validation' => 1
+      },
+      {
+        'source_ref' => '',
         'value' => 'Gallus gallus',
         'name' => 'organism',
         'id' => 'http://purl.obolibrary.org/obo/NCBITaxon_9031',
@@ -39,17 +44,12 @@ my $lookup = Bio::Metadata::Validate::Support::BioSDLookup->new();
         'uri' => ''
       },
       {
-        'value' => 'Gene expression after 4hr in 2ug/ml BSP-II-treated DT40 cell',
-        'name' => 'Sample Description',
-        'allow_further_validation' => 1
-      },
-      {
         'value' => 'DT40 cell, 4hr, 2ug/ml, replicate 1',
         'name' => 'sample source name',
         'allow_further_validation' => 1
       },
       {
-        'source_ref' => 's_ref',
+        'source_ref' => '',
         'value' => 'DT40',
         'name' => 'strain',
         'id' => 'http://www.ebi.ac.uk/efo/EFO_0006274',
@@ -62,7 +62,7 @@ my $lookup = Bio::Metadata::Validate::Support::BioSDLookup->new();
         'allow_further_validation' => undef
       },
       {
-        'value' => '2018-01-21T17:01:00.562+00:00',
+        'value' => '2019-07-26T21:22:37.824+00:00',
         'name' => 'BioSamples update date',
         'allow_further_validation' => undef
       },
