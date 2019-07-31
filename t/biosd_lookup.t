@@ -25,16 +25,15 @@ my $lookup = Bio::Metadata::Validate::Support::BioSDLookup->new();
 {
   my $id     = 'SAMEA676028';
   my $sample = $lookup->fetch_sample($id);
-  diag($sample);
   my $expected = Bio::Metadata::Entity->new(
     id          => 'source GSM754269 1',
     synonyms    => [$id],
     entity_type => 'sample',
     attributes  => [
       {
-        'source_ref' => '',
+        'source_ref' => 'o_ref',
         'value' => 'Gallus gallus',
-        'name' => 'Organism',
+        'name' => 'organism',
         'id' => 'http://purl.obolibrary.org/obo/NCBITaxon_9031',
         'allow_further_validation' => 1,
         'uri' => ''
@@ -46,11 +45,11 @@ my $lookup = Bio::Metadata::Validate::Support::BioSDLookup->new();
       },
       {
         'value' => 'DT40 cell, 4hr, 2ug/ml, replicate 1',
-        'name' => 'Sample_source_name',
+        'name' => 'sample source name',
         'allow_further_validation' => 1
       },
       {
-        'source_ref' => '',
+        'source_ref' => 's_ref',
         'value' => 'DT40',
         'name' => 'strain',
         'id' => 'http://www.ebi.ac.uk/efo/EFO_0006274',
