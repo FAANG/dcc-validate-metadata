@@ -359,9 +359,9 @@ sub validation_supporting_data {
     if(index(lc($rule_name),"legacy")>-1){ #if it is the legacy rule set, hide from the option list
       push (@tmp,"hidden");
       push (@tmp,"true");
-    }elsif(index(lc($rule_name),"analyses")>-1){ #if it is the analyses rule set, temporarily hide from the option list
-      push (@tmp,"hidden");
-      push (@tmp,"true");
+#    }elsif(index(lc($rule_name),"analyses")>-1){ #if it is the analyses rule set, temporarily hide from the option list
+#      push (@tmp,"hidden");
+#      push (@tmp,"true");
     }
     push (@tmp,"id");
     push (@tmp,$rule_name);

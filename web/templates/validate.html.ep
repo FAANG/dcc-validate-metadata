@@ -44,12 +44,17 @@ I have read and accepted the <a href="https://www.ebi.ac.uk/data-protection/priv
 
 <script>
 function change() {
-    var x = document.getElementById("FAANG Samples").selected;
     var formatSelect = document.getElementById("format");
+    var x = document.getElementById("FAANG Samples").selected;
+    var y = document.getElementById("FAANG Experiments").selected;
     if(x){
       formatSelect.value="BioSample .xlsx";
     }else{
-      formatSelect.value="SRA Experiment .xlsx";
+      if(y){
+        formatSelect.value="SRA Experiment .xlsx";
+      }else{
+        formatSelect.value="JSON";
+      }
     }
 }
 </script>
