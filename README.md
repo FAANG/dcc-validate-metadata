@@ -119,6 +119,9 @@ In production, we use an Apache2 server and Plack, with  [carton](http://search.
 
 Application configuration is via a mojolicious config file. The example of expected content of the config file is available [here](https://github.com/FAANG/validate-metadata/blob/master/web/validate_metadata.conf). This controls application branding and which rule sets are available.
 
+## Funding
+The FAANG Data Coordination Centre has received funding from the [European Union’s Horizon 2020](https://ec.europa.eu/programmes/horizon2020/) research and innovation program under 
+Grant Agreement Nos. 815668, 817923 and 817998, and also form the Biotechnology and [Biological Sciences Research Council](https://bbsrc.ukri.org/) under Grant Agreement No. BB/N019563/1.
 
 
 
