@@ -1,4 +1,6 @@
-# TODO get field_names and field_indexes from file
+
+
+
 def get_samples_core_data(input_data):
     """
     This function will fetch information about core sample
