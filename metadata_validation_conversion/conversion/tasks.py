@@ -1,7 +1,7 @@
 import xlrd
 import json
 
-from .helpers import get_field_names_indexes, get_organism_data
+from .helpers import get_field_names, get_organism_data, convert_to_snake_case
 from metadata_validation_conversion.celery import app
 
 
@@ -12,9 +12,12 @@ def read_excel_file():
                             'organism.xlsx')
     sh = wb.sheet_by_index(0)
     data = list()
-    field_names_indexes = get_field_names_indexes()
-    for row_number in range(1, sh.nrows):
-        data.append(get_organism_data(sh.row_values(row_number),
-                                      field_names_indexes))
-    print(json.dumps(data))
+    field_names = get_field_names()
+    headers = [convert_to_snake_case(item) for item in sh.row_values(0)]
+    # for row_number in range(1, sh.nrows):
+    #     data.append(get_organism_data(sh.row_values(row_number),
+    #                                   field_names_indexes))
+    # print(json.dumps(data))
+    print(json.dumps(field_names))
+    print(headers)
     return 'Success!!!'

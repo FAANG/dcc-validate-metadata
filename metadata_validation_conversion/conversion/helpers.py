@@ -1,5 +1,5 @@
 import requests
-from .constants import BASE_URL, ORGANISM_URL
+from .constants import BASE_URL, ORGANISM_URL, SKIP_PROPERTIES
 
 
 def get_samples_json(url):
@@ -14,37 +14,35 @@ def get_samples_json(url):
     return samples_type_json, samples_core_json
 
 
-def parse_json(json_to_parse, template_index):
+def parse_json(json_to_parse):
     """
     This function will parse json and return field names with positions
     :param json_to_parse: json file that should be parsed
-    :param template_index: index in template
-    :return: index in template when it stops
+    :return: dict with field_names as keys and field sub_names as values
     """
-    data_to_return = dict()
-    for index, value in enumerate(json_to_parse['properties'].items()):
-        if 'properties' in value[1]:
-            if template_index == 0:
-                template_index = index - 2
-            for name in value[1]['required']:
-                template_index += 1
-                data_to_return.setdefault(value[0], {})
-                data_to_return[value[0]][name] = template_index
-    return template_index, data_to_return
+    required_fields = dict()
+    for pr_property, value in json_to_parse['properties'].items():
+        if pr_property not in SKIP_PROPERTIES and value['type'] == 'object':
+            required_fields.setdefault(pr_property, [])
+            for sc_property in value['required']:
+                required_fields[pr_property].append(sc_property)
+        elif pr_property not in SKIP_PROPERTIES and value['type'] == 'array':
+            required_fields.setdefault(pr_property, [])
+            for sc_property in value['items']['required']:
+                required_fields[pr_property].append(sc_property)
+    return required_fields
 
 
-def get_field_names_indexes():
+def get_field_names():
     """
     This function will create dict with field_names as keys and field sub_names
-    with template indexes as value
+    as values
     :return dict with core and type field_names and indexes
     """
     organisms_type_json, organisms_core_json = get_samples_json(ORGANISM_URL)
-    template_index = 0
     data_to_return = dict()
-    template_index, data_to_return['core'] = parse_json(organisms_core_json,
-                                                        template_index)
-    _, data_to_return['type'] = parse_json(organisms_type_json, template_index)
+    data_to_return['core'] = parse_json(organisms_core_json)
+    data_to_return['type'] = parse_json(organisms_type_json)
     return data_to_return
 
 
@@ -77,7 +75,7 @@ def get_organism_data(input_data, field_names_indexes):
         check_existence(field_name, organism_to_validate,
                         get_data(input_data, **indexes))
 
-    # TODO add child_of and health_status
+    # TODO add child_of, health_status and custom_data
     # get child_of
     # parent1 = get_data(input_data, **{'value': 10})
     # parent2 = get_data(input_data, **{'value': 11})
@@ -117,3 +115,24 @@ def check_existence(field_name, data_to_validate, template_data):
     """
     if template_data is not None:
         data_to_validate[field_name] = template_data
+
+
+def convert_to_snake_case(my_string):
+    """
+    This function will convert any string to camel_case string
+    :param my_string: string to convert
+    :return: string in camel_case format
+    """
+    return '_'.join(my_string.lower().split(" "))
+
+
+def return_all_indexes(array_to_check, item_to_check):
+    """
+    This function will return array of all indexes of iterm in array
+    :param array_to_check: array to look into
+    :param item_to_check: item to search
+    :return:
+    """
+    return [index for index, value in enumerate(array_to_check) if value ==
+            item_to_check]
+
