@@ -21,16 +21,18 @@ def parse_json(json_to_parse):
     :return: dict with field_names as keys and field sub_names as values
     """
     required_fields = dict()
+    array_fields = list()
     for pr_property, value in json_to_parse['properties'].items():
         if pr_property not in SKIP_PROPERTIES and value['type'] == 'object':
             required_fields.setdefault(pr_property, [])
             for sc_property in value['required']:
                 required_fields[pr_property].append(sc_property)
         elif pr_property not in SKIP_PROPERTIES and value['type'] == 'array':
+            array_fields.append(pr_property)
             required_fields.setdefault(pr_property, [])
             for sc_property in value['items']['required']:
                 required_fields[pr_property].append(sc_property)
-    return required_fields
+    return required_fields, array_fields
 
 
 def return_all_indexes(array_to_check, item_to_check):
@@ -66,45 +68,53 @@ def check_field_existence(index, headers, field, first_subfield,
         return {first_subfield: index, second_subfield: index + 1}
 
 
-def get_indices(field_name, field_types, headers):
+def get_indices(field_name, field_types, headers, array_fields):
     """
     This function will return position of fields in template
     :param field_name: name of the field
     :param field_types: types that this field has
     :param headers: template header
+    :param array_fields: list with names of fields that has array type
     :return: dict with positions of types of field
     """
     if field_name not in headers:
         print(f"Can't find this property: {field_name} in headers")
     if len(field_types) == 1 and 'value' in field_types:
         indices = return_all_indexes(headers, field_name)
-        if len(indices) == 1:
+        if len(indices) == 1 and field_name not in array_fields:
             return {'value': indices[0]}
-        else:
+        elif (len(indices) > 1 and field_name in array_fields) or \
+                (field_name in array_fields):
             indices_list = list()
             for index in indices:
                 indices_list.append({'value': index})
             return indices_list
+        else:
+            print("Template is broken!")
     else:
         if field_types == ['value', 'units']:
             value_indices = return_all_indexes(headers, field_name)
-            if len(value_indices) == 1:
+            if len(value_indices) == 1 and field_name not in array_fields:
                 return check_field_existence(value_indices[0], headers,
                                              field_name, 'value', 'unit')
-            else:
+            elif (len(value_indices) > 1 and field_name in array_fields) or \
+                    (field_name in array_fields):
                 indices_list = list()
                 for index in value_indices:
                     indices_list.append(check_field_existence(index, headers,
                                                               field_name,
                                                               'value', 'unit'))
                 return indices_list
+            else:
+                print("Template is broken!")
         elif field_types == ['text', 'term']:
             text_indices = return_all_indexes(headers, field_name)
-            if len(text_indices) == 1:
+            if len(text_indices) == 1 and field_name not in array_fields:
                 return check_field_existence(text_indices[0], headers,
                                              field_name, 'text',
                                              'term_source_id')
-            else:
+            elif (len(text_indices) > 1 and field_name in array_fields) or \
+                    (field_name in array_fields):
                 indices_list = list()
                 for index in text_indices:
                     indices_list.append(check_field_existence(index, headers,
@@ -112,6 +122,8 @@ def get_indices(field_name, field_types, headers):
                                                               'text',
                                                               'term_source_id'))
                 return indices_list
+            else:
+                print("Template is broken")
         else:
             print("Template is broken!")
 
@@ -123,17 +135,21 @@ def get_field_names_and_indexes(headers):
     :return dict with core and type field_names and indexes
     """
     field_names = dict()
+    array_fields = list()
     field_names_and_indexes = dict()
     organisms_type_json, organisms_core_json = get_samples_json(ORGANISM_URL)
-    field_names['core'] = parse_json(organisms_core_json)
-    field_names['type'] = parse_json(organisms_type_json)
+    field_names['core'], tmp = parse_json(organisms_core_json)
+    array_fields.extend(tmp)
+    field_names['type'], tmp = parse_json(organisms_type_json)
+    array_fields.extend(tmp)
 
     for core_property, data_property in field_names.items():
         subtype_name_and_indexes = dict()
         for field_name, field_types in data_property.items():
             subtype_name_and_indexes[field_name] = get_indices(field_name,
                                                                field_types,
-                                                               headers)
+                                                               headers,
+                                                               array_fields)
         field_names_and_indexes[core_property] = subtype_name_and_indexes
     return field_names_and_indexes
 
