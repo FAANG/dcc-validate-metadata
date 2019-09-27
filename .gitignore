@@ -22,3 +22,6 @@ nytprof.out
 /local/
 .DS_Store
 *pyc
+*sqlite3
+*xlsx
+.idea
