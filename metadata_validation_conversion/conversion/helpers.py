@@ -33,17 +33,109 @@ def parse_json(json_to_parse):
     return required_fields
 
 
-def get_field_names():
+def return_all_indexes(array_to_check, item_to_check):
+    """
+    This function will return array of all indexes of iterm in array
+    :param array_to_check: array to look into
+    :param item_to_check: item to search
+    :return:
+    """
+    return [index for index, value in enumerate(array_to_check) if value ==
+            item_to_check]
+
+
+def check_field_existence(index, headers, field, first_subfield,
+                          second_subfield):
+    """
+    This function will check whether table has all required fields
+    :param index: index to check in table
+    :param headers: list with header names
+    :param field: field name
+    :param first_subfield: first subfield name
+    :param second_subfield: second subfield name
+    :return: dict with subfield indexes
+    """
+    if headers[index + 1] != second_subfield:
+        print(f"This property {field} doesn't have {second_subfield} provided "
+              f"in template!")
+    else:
+        if second_subfield == 'unit':
+            second_subfield = 'units'
+        elif second_subfield == 'term_source_id':
+            second_subfield = 'term'
+        return {first_subfield: index, second_subfield: index + 1}
+
+
+def get_indices(field_name, field_types, headers):
+    """
+    This function will return position of fields in template
+    :param field_name: name of the field
+    :param field_types: types that this field has
+    :param headers: template header
+    :return: dict with positions of types of field
+    """
+    if field_name not in headers:
+        print(f"Can't find this property: {field_name} in headers")
+    if len(field_types) == 1 and 'value' in field_types:
+        indices = return_all_indexes(headers, field_name)
+        if len(indices) == 1:
+            return {'value': indices[0]}
+        else:
+            indices_list = list()
+            for index in indices:
+                indices_list.append({'value': index})
+            return indices_list
+    else:
+        if field_types == ['value', 'units']:
+            value_indices = return_all_indexes(headers, field_name)
+            if len(value_indices) == 1:
+                return check_field_existence(value_indices[0], headers,
+                                             field_name, 'value', 'unit')
+            else:
+                indices_list = list()
+                for index in value_indices:
+                    indices_list.append(check_field_existence(index, headers,
+                                                              field_name,
+                                                              'value', 'unit'))
+                return indices_list
+        elif field_types == ['text', 'term']:
+            text_indices = return_all_indexes(headers, field_name)
+            if len(text_indices) == 1:
+                return check_field_existence(text_indices[0], headers,
+                                             field_name, 'text',
+                                             'term_source_id')
+            else:
+                indices_list = list()
+                for index in text_indices:
+                    indices_list.append(check_field_existence(index, headers,
+                                                              field_name,
+                                                              'text',
+                                                              'term_source_id'))
+                return indices_list
+        else:
+            print("Template is broken!")
+
+
+def get_field_names_and_indexes(headers):
     """
     This function will create dict with field_names as keys and field sub_names
-    as values
+    with its indices inside template as values
     :return dict with core and type field_names and indexes
     """
+    field_names = dict()
+    field_names_and_indexes = dict()
     organisms_type_json, organisms_core_json = get_samples_json(ORGANISM_URL)
-    data_to_return = dict()
-    data_to_return['core'] = parse_json(organisms_core_json)
-    data_to_return['type'] = parse_json(organisms_type_json)
-    return data_to_return
+    field_names['core'] = parse_json(organisms_core_json)
+    field_names['type'] = parse_json(organisms_type_json)
+
+    for core_property, data_property in field_names.items():
+        subtype_name_and_indexes = dict()
+        for field_name, field_types in data_property.items():
+            subtype_name_and_indexes[field_name] = get_indices(field_name,
+                                                               field_types,
+                                                               headers)
+        field_names_and_indexes[core_property] = subtype_name_and_indexes
+    return field_names_and_indexes
 
 
 def get_samples_core_data(input_data, field_names_indexes):
@@ -72,21 +164,17 @@ def get_organism_data(input_data, field_names_indexes):
         input_data, field_names_indexes['core'])
 
     for field_name, indexes in field_names_indexes['type'].items():
-        check_existence(field_name, organism_to_validate,
-                        get_data(input_data, **indexes))
-
-    # TODO add child_of, health_status and custom_data
-    # get child_of
-    # parent1 = get_data(input_data, **{'value': 10})
-    # parent2 = get_data(input_data, **{'value': 11})
-    # parents = list()
-    # if parent1 is not None:
-    #     parents.append(parent1)
-    # if parent2 is not None:
-    #     parents.append(parent2)
-    # if len(parents) > 0:
-    #     organism_to_validate['child_of'] = parents
-
+        if isinstance(indexes, list):
+            tmp_list = list()
+            for index in indexes:
+                tmp_data = get_data(input_data, **index)
+                if tmp_data is not None:
+                    tmp_list.append(tmp_data)
+            if len(tmp_list) != 0:
+                organism_to_validate[field_name] = tmp_list
+        else:
+            check_existence(field_name, organism_to_validate,
+                            get_data(input_data, **indexes))
     return organism_to_validate
 
 
@@ -124,15 +212,4 @@ def convert_to_snake_case(my_string):
     :return: string in camel_case format
     """
     return '_'.join(my_string.lower().split(" "))
-
-
-def return_all_indexes(array_to_check, item_to_check):
-    """
-    This function will return array of all indexes of iterm in array
-    :param array_to_check: array to look into
-    :param item_to_check: item to search
-    :return:
-    """
-    return [index for index, value in enumerate(array_to_check) if value ==
-            item_to_check]
 
