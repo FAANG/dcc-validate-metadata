@@ -8,7 +8,7 @@ from metadata_validation_conversion.celery import app
 
 
 @app.task
-def read_excel_file():
+def read_excel_file(conversion_type):
     wb = xlrd.open_workbook('/Users/alexey/ebi_projects/dcc-validate-metadata/'
                             'metadata_validation_conversion/conversion/'
                             'organism.xlsx')
@@ -26,5 +26,5 @@ def read_excel_file():
                 tmp.append(get_organism_data(sh.row_values(row_number),
                                              field_names_indexes))
             data[convert_to_snake_case(sh.name)] = tmp
-    print(json.dumps(data['cell_line']))
+    print(conversion_type)
     return 'Success!'
