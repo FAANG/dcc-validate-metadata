@@ -1,6 +1,6 @@
 import requests
 from .constants import BASE_URL, ORGANISM_URL, SKIP_PROPERTIES, \
-    SPECIAL_PROPERTIES
+    SPECIAL_PROPERTIES, JSON_TYPES
 
 
 def get_samples_json(url):
@@ -91,7 +91,7 @@ def get_indices(field_name, field_types, headers, array_fields):
                 indices_list.append({'value': index})
             return indices_list
         else:
-            print("Template is broken!")
+            print(f"1. Template is broken for this field: {field_name}")
     else:
         if field_types == ['value', 'units']:
             value_indices = return_all_indexes(headers, field_name)
@@ -107,7 +107,7 @@ def get_indices(field_name, field_types, headers, array_fields):
                                                               'value', 'unit'))
                 return indices_list
             else:
-                print("Template is broken!")
+                print(f"2. Template is broken for this field: {field_name}")
         elif field_types == ['text', 'term']:
             text_indices = return_all_indexes(headers, field_name)
             if len(text_indices) == 1 and field_name not in array_fields:
@@ -124,9 +124,9 @@ def get_indices(field_name, field_types, headers, array_fields):
                                                               'term_source_id'))
                 return indices_list
             else:
-                print("Template is broken")
+                print(f"3. Template is broken for this field: {field_name}")
         else:
-            print("Template is broken!")
+            print(f"4. Template is broken for this field types: {field_types}")
 
 
 def get_custom_data_fields(headers, field_names):
@@ -148,7 +148,7 @@ def get_custom_data_fields(headers, field_names):
     return custom_data_fields_indexes, array_fields
 
 
-def get_field_names_and_indexes(headers):
+def get_field_names_and_indexes(headers, url):
     """
     This function will create dict with field_names as keys and field sub_names
     with its indices inside template as values
@@ -157,7 +157,7 @@ def get_field_names_and_indexes(headers):
     field_names = dict()
     array_fields = list()
     field_names_and_indexes = dict()
-    organisms_type_json, organisms_core_json = get_samples_json(ORGANISM_URL)
+    organisms_type_json, organisms_core_json = get_samples_json(url)
     field_names['core'], tmp = parse_json(organisms_core_json)
     array_fields.extend(tmp)
     field_names['type'], tmp = parse_json(organisms_type_json)
@@ -174,20 +174,6 @@ def get_field_names_and_indexes(headers):
                                                                array_fields)
         field_names_and_indexes[core_property] = subtype_name_and_indexes
     return field_names_and_indexes
-
-
-def get_samples_core_data(input_data, field_names_indexes):
-    """
-    This function will fetch information about core sample
-    :param input_data: row from template to fetch information from
-    :param field_names_indexes: dict with field names and indexes from json
-    :return: dict with required information
-    """
-    samples_core = dict()
-    for field_name, indexes in field_names_indexes.items():
-        check_existence(field_name, samples_core,
-                        get_data(input_data, **indexes))
-    return samples_core
 
 
 def get_data(input_data, **fields):
@@ -217,6 +203,20 @@ def check_existence(field_name, data_to_validate, template_data):
         data_to_validate[field_name] = template_data
 
 
+def add_row(field_name, indexes, organism_to_validate, input_data):
+    if isinstance(indexes, list):
+        tmp_list = list()
+        for index in indexes:
+            tmp_data = get_data(input_data, **index)
+            if tmp_data is not None:
+                tmp_list.append(tmp_data)
+        if len(tmp_list) != 0:
+            organism_to_validate[field_name] = tmp_list
+    else:
+        check_existence(field_name, organism_to_validate,
+                        get_data(input_data, **indexes))
+
+
 def get_organism_data(input_data, field_names_indexes):
     """
     This function will fetch information about organism
@@ -224,38 +224,16 @@ def get_organism_data(input_data, field_names_indexes):
     :param field_names_indexes: dict with field names and indexes from json
     :return: dict with required information
     """
-    # TODO refactoring, should be same method for core, type and custom
-    #  (should not be there if data is empty)
     organism_to_validate = dict()
-    organism_to_validate['samples_core'] = get_samples_core_data(
-        input_data, field_names_indexes['core'])
-
-    for field_name, indexes in field_names_indexes['type'].items():
-        if isinstance(indexes, list):
-            tmp_list = list()
-            for index in indexes:
-                tmp_data = get_data(input_data, **index)
-                if tmp_data is not None:
-                    tmp_list.append(tmp_data)
-            if len(tmp_list) != 0:
-                organism_to_validate[field_name] = tmp_list
+    for k, v in JSON_TYPES.items():
+        if v is not None:
+            organism_to_validate.setdefault(v, dict())
+            for field_name, indexes in field_names_indexes[k].items():
+                add_row(field_name, indexes, organism_to_validate[v],
+                        input_data)
         else:
-            check_existence(field_name, organism_to_validate,
-                            get_data(input_data, **indexes))
-
-    for field_name, indexes in field_names_indexes['custom'].items():
-        organism_to_validate.setdefault('custom', dict())
-        if isinstance(indexes, list):
-            tmp_list = list()
-            for index in indexes:
-                tmp_data = get_data(input_data, **index)
-                if tmp_data is not None:
-                    tmp_list.append(tmp_data)
-            if len(tmp_list) != 0:
-                organism_to_validate['custom'][field_name] = tmp_list
-        else:
-            check_existence(field_name, organism_to_validate['custom'],
-                            get_data(input_data, **indexes))
+            for field_name, indexes in field_names_indexes[k].items():
+                add_row(field_name, indexes, organism_to_validate, input_data)
     return organism_to_validate
 
 
