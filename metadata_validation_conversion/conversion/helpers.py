@@ -157,10 +157,10 @@ def get_field_names_and_indexes(headers, url):
     field_names = dict()
     array_fields = list()
     field_names_and_indexes = dict()
-    organisms_type_json, organisms_core_json = get_samples_json(url)
-    field_names['core'], tmp = parse_json(organisms_core_json)
+    samples_type_json, samples_core_json = get_samples_json(url)
+    field_names['core'], tmp = parse_json(samples_core_json)
     array_fields.extend(tmp)
-    field_names['type'], tmp = parse_json(organisms_type_json)
+    field_names['type'], tmp = parse_json(samples_type_json)
     array_fields.extend(tmp)
     field_names['custom'], tmp = get_custom_data_fields(headers, field_names)
     array_fields.extend(tmp)
@@ -217,7 +217,7 @@ def add_row(field_name, indexes, organism_to_validate, input_data):
                         get_data(input_data, **indexes))
 
 
-def get_organism_data(input_data, field_names_indexes):
+def get_sample_data(input_data, field_names_indexes):
     """
     This function will fetch information about organism
     :param input_data: row from template to fetch information from
