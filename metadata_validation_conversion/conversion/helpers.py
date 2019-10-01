@@ -188,6 +188,10 @@ def get_data(input_data, **fields):
         if input_data[field_index] == '':
             return None
         else:
+            # Convert all "_" in term ids to ":" as required by validator
+            if field_name == 'term' and "_" in input_data[field_index]:
+                input_data[field_index] = input_data[field_index].replace(
+                    "_", ":")
             data_to_return[field_name] = input_data[field_index]
     return data_to_return
 
