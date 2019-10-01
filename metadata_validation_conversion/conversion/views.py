@@ -3,8 +3,8 @@ from .tasks import read_excel_file
 
 
 def convert_samples(request):
-    read_excel_file.delay('samples')
-    return HttpResponse("This is conversion app for samples!")
+    res = read_excel_file.delay('samples')
+    return HttpResponse(f"Started task: {res.id}")
 
 
 def convert_experiments(request):
