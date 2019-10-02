@@ -29,7 +29,6 @@ def read_excel_file(conversion_type):
                     tmp.append(get_sample_data(sh.row_values(row_number),
                                                field_names_indexes))
                 data[convert_to_snake_case(sh.name)] = tmp
-        print(json.dumps(data['organism'][0]['samples_core']))
-        return 'Success!'
+        return data
     else:
         return 'Failure!'
