@@ -24,9 +24,14 @@ ALLOWED_SHEET_NAMES = {
     'cell line': CELL_LINE_URL
 }
 
-ALLOWED_RECORD_TYPES = ['organism', 'specimen_from_organism',
-                        'pool_of_specimens', 'cell_specimen', 'cell_culture',
-                        'cell_line']
+ALLOWED_RECORD_TYPES = {
+    'organism': ORGANISM_URL,
+    'specimen_from_organism': SPECIMEN_FROM_ORGANISM_URL,
+    'pool_of_specimens': POOL_OF_SPECIMENS_URL,
+    'cell_specimen': CELL_SPECIMEN_URL,
+    'cell_culture': CELL_CULTURE_URL,
+    'cell_line': CELL_LINE_URL
+}
 
 SKIP_PROPERTIES = ['describedBy', 'schema_version', 'samples_core']
 
