@@ -1,9 +1,8 @@
 import xlrd
-import json
 
 from .helpers import get_field_names_and_indexes, get_sample_data, \
     convert_to_snake_case
-from .constants import ALLOWED_SHEET_NAMES
+from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES
 from metadata_validation_conversion.celery import app
 
 
