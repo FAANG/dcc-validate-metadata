@@ -1,5 +1,7 @@
 BASE_URL = "https://raw.githubusercontent.com/FAANG/dcc-metadata/" \
            "switch_to_json-schema/json_schema/"
+SAMPLE_CORE_URL = f"{BASE_URL}core/samples/" \
+                  f"faang_samples_core.metadata_rules.json"
 ORGANISM_URL = f"{BASE_URL}type/samples/" \
                f"faang_samples_organism.metadata_rules.json"
 SPECIMEN_FROM_ORGANISM_URL = f"{BASE_URL}type/samples/" \
@@ -21,6 +23,10 @@ ALLOWED_SHEET_NAMES = {
     'cell culture': CELL_CULTURE_URL,
     'cell line': CELL_LINE_URL
 }
+
+ALLOWED_RECORD_TYPES = ['organism', 'specimen_from_organism',
+                        'pool_of_specimens', 'cell_specimen', 'cell_culture',
+                        'cell_line']
 
 SKIP_PROPERTIES = ['describedBy', 'schema_version', 'samples_core']
 

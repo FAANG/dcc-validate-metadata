@@ -1,6 +1,6 @@
 import requests
-from .constants import BASE_URL, ORGANISM_URL, SKIP_PROPERTIES, \
-    SPECIAL_PROPERTIES, JSON_TYPES
+from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
+    SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES
 
 
 def get_samples_json(url):
@@ -10,8 +10,7 @@ def get_samples_json(url):
     :return: type and core json
     """
     samples_type_json = requests.get(url).json()
-    samples_core_ref = samples_type_json['properties']['samples_core']['$ref']
-    samples_core_json = requests.get(f"{BASE_URL}{samples_core_ref}").json()
+    samples_core_json = requests.get(SAMPLE_CORE_URL).json()
     return samples_type_json, samples_core_json
 
 
