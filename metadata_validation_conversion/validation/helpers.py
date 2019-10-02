@@ -8,4 +8,7 @@ def validate(data, schema):
     }
     response = requests.post(
         'http://localhost:3020/validate', json=json_to_send).json()
-    print(response['validationState'])
+    if 'validationState' in response and response['validationState'] == 'VALID':
+        return response['validationState']
+    else:
+        return response

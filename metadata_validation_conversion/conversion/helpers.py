@@ -1,4 +1,5 @@
 import requests
+import xlrd
 from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES
 
@@ -175,23 +176,30 @@ def get_field_names_and_indexes(headers, url):
     return field_names_and_indexes
 
 
-def get_data(input_data, **fields):
+def get_data(input_data, date_field, wb_datemode, **fields):
     """
     This function will create dict with required fields and required information
     :param input_data: row from template
+    :param date_field: boolean value is this data is date data
+    :param wb_datemode: reference to datemode of current workbook
     :param fields: dict with field name as key and field index as value
     :return: dict with required information
     """
     data_to_return = dict()
     for field_name, field_index in fields.items():
-        if input_data[field_index] == '':
+        cell_value = input_data[field_index]
+        if cell_value == '':
             return None
         else:
             # Convert all "_" in term ids to ":" as required by validator
-            if field_name == 'term' and "_" in input_data[field_index]:
-                input_data[field_index] = input_data[field_index].replace(
-                    "_", ":")
-            data_to_return[field_name] = input_data[field_index]
+            if field_name == 'term' and "_" in cell_value:
+                cell_value = cell_value.replace("_", ":")
+
+            # Convert date data to string (as Excel stores date in float format)
+            if date_field is True and isinstance(cell_value, float):
+                y, m, d, _, _, _ = xlrd.xldate_as_tuple(cell_value, wb_datemode)
+                cell_value = f"{y}-{m}-{d}"
+            data_to_return[field_name] = cell_value
     return data_to_return
 
 
@@ -206,25 +214,40 @@ def check_existence(field_name, data_to_validate, template_data):
         data_to_validate[field_name] = template_data
 
 
-def add_row(field_name, indexes, organism_to_validate, input_data):
+def add_row(field_name, indexes, organism_to_validate, input_data, date_field,
+            wb_datemode):
     if isinstance(indexes, list):
         tmp_list = list()
         for index in indexes:
-            tmp_data = get_data(input_data, **index)
+            tmp_data = get_data(input_data, date_field, wb_datemode, **index)
             if tmp_data is not None:
                 tmp_list.append(tmp_data)
         if len(tmp_list) != 0:
             organism_to_validate[field_name] = tmp_list
     else:
         check_existence(field_name, organism_to_validate,
-                        get_data(input_data, **indexes))
+                        get_data(input_data, date_field, wb_datemode,
+                                 **indexes))
 
 
-def get_sample_data(input_data, field_names_indexes):
+def check_cell_is_date(field_name):
+    """
+    This function will check that current column is date field
+    :param field_name: name of column
+    :return: True if column is date and False otherwise
+    """
+    if 'date' in field_name:
+        return True
+    else:
+        return False
+
+
+def get_sample_data(input_data, field_names_indexes, wb_datemode):
     """
     This function will fetch information about organism
     :param input_data: row from template to fetch information from
     :param field_names_indexes: dict with field names and indexes from json
+    :param wb_datemode: reference to datemode of current workbook
     :return: dict with required information
     """
     organism_to_validate = dict()
@@ -232,11 +255,14 @@ def get_sample_data(input_data, field_names_indexes):
         if v is not None:
             organism_to_validate.setdefault(v, dict())
             for field_name, indexes in field_names_indexes[k].items():
+                date_field = check_cell_is_date(field_name)
                 add_row(field_name, indexes, organism_to_validate[v],
-                        input_data)
+                        input_data, date_field, wb_datemode)
         else:
             for field_name, indexes in field_names_indexes[k].items():
-                add_row(field_name, indexes, organism_to_validate, input_data)
+                date_field = check_cell_is_date(field_name)
+                add_row(field_name, indexes, organism_to_validate, input_data,
+                        date_field, wb_datemode)
     return organism_to_validate
 
 
