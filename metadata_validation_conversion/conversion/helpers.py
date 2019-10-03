@@ -176,6 +176,13 @@ def get_field_names_and_indexes(headers, url):
     return field_names_and_indexes
 
 
+def add_leading_zero(date_item):
+    if date_item < 10:
+        return f"0{date_item}"
+    else:
+        return date_item
+
+
 def get_data(input_data, date_field, wb_datemode, **fields):
     """
     This function will create dict with required fields and required information
@@ -188,9 +195,7 @@ def get_data(input_data, date_field, wb_datemode, **fields):
     data_to_return = dict()
     for field_name, field_index in fields.items():
         cell_value = input_data[field_index]
-        if cell_value == '':
-            return None
-        else:
+        if cell_value != '':
             # Convert all "_" in term ids to ":" as required by validator
             if field_name == 'term' and "_" in cell_value:
                 cell_value = cell_value.replace("_", ":")
@@ -198,6 +203,8 @@ def get_data(input_data, date_field, wb_datemode, **fields):
             # Convert date data to string (as Excel stores date in float format)
             if date_field is True and isinstance(cell_value, float):
                 y, m, d, _, _, _ = xlrd.xldate_as_tuple(cell_value, wb_datemode)
+                m = add_leading_zero(m)
+                d = add_leading_zero(d)
                 cell_value = f"{y}-{m}-{d}"
             data_to_return[field_name] = cell_value
     return data_to_return
@@ -210,7 +217,7 @@ def check_existence(field_name, data_to_validate, template_data):
     :param data_to_validate: data dict for validation
     :param template_data: template data to check
     """
-    if template_data is not None:
+    if len(template_data) != 0:
         data_to_validate[field_name] = template_data
 
 
@@ -220,7 +227,7 @@ def add_row(field_name, indexes, organism_to_validate, input_data, date_field,
         tmp_list = list()
         for index in indexes:
             tmp_data = get_data(input_data, date_field, wb_datemode, **index)
-            if tmp_data is not None:
+            if len(tmp_data) != 0:
                 tmp_list.append(tmp_data)
         if len(tmp_list) != 0:
             organism_to_validate[field_name] = tmp_list
