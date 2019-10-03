@@ -11,4 +11,6 @@ def validate(data, schema):
     if 'validationState' in response and response['validationState'] == 'VALID':
         return response['validationState']
     else:
-        return response
+        for error in response['validationErrors']:
+            print(error['userFriendlyMessage'])
+        return response['validationErrors']

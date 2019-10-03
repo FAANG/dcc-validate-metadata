@@ -27,4 +27,5 @@ def validate_against_schema(json_to_test):
 @app.task
 def collect_warnings_and_additional_checks(json_to_test):
     warnings_and_additional_checks_results = dict()
+    # print(json.dumps(json_to_test))
     return warnings_and_additional_checks_results
