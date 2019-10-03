@@ -1,18 +1,7 @@
-import requests
 import xlrd
-from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
-    SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES
-
-
-def get_samples_json(url):
-    """
-    This function will fetch json from url and then fetch core json from $ref
-    :param url: url for type json fiel
-    :return: type and core json
-    """
-    samples_type_json = requests.get(url).json()
-    samples_core_json = requests.get(SAMPLE_CORE_URL).json()
-    return samples_type_json, samples_core_json
+from metadata_validation_conversion.constants import SKIP_PROPERTIES, \
+    SPECIAL_PROPERTIES, JSON_TYPES
+from metadata_validation_conversion.helpers import get_samples_json
 
 
 def parse_json(json_to_parse):
