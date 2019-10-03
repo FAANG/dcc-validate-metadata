@@ -79,7 +79,8 @@ def get_indices(field_name, field_types, headers, array_fields):
     :return: dict with positions of types of field
     """
     if field_name not in headers:
-        print(f"Can't find this property: {field_name} in headers")
+        raise ValueError(f"Error: can't find this property '{field_name}' in "
+                         f"headers")
     if len(field_types) == 1 and 'value' in field_types:
         indices = return_all_indexes(headers, field_name)
         if len(indices) == 1 and field_name not in array_fields:
@@ -91,7 +92,8 @@ def get_indices(field_name, field_types, headers, array_fields):
                 indices_list.append({'value': index})
             return indices_list
         else:
-            print(f"1. Template is broken for this field: {field_name}")
+            raise ValueError(f"Error: multiple entries for attribute "
+                             f"'{field_name}' present")
     else:
         if field_types == ['value', 'units']:
             value_indices = return_all_indexes(headers, field_name)
@@ -107,7 +109,8 @@ def get_indices(field_name, field_types, headers, array_fields):
                                                               'value', 'unit'))
                 return indices_list
             else:
-                print(f"2. Template is broken for this field: {field_name}")
+                raise ValueError(f"Error: multiple entries for attribute "
+                                 f"'{field_name}' present")
         elif field_types == ['text', 'term']:
             text_indices = return_all_indexes(headers, field_name)
             if len(text_indices) == 1 and field_name not in array_fields:
@@ -124,9 +127,11 @@ def get_indices(field_name, field_types, headers, array_fields):
                                                               'term_source_id'))
                 return indices_list
             else:
-                print(f"3. Template is broken for this field: {field_name}")
+                raise ValueError(f"Error: multiple entries for attribute "
+                                 f"'{field_name}' present")
         else:
-            print(f"4. Template is broken for this field types: {field_types}")
+            raise ValueError(f"Error: unknown types present for attribute "
+                             f"'{field_types}' present")
 
 
 def get_custom_data_fields(headers, field_names):
