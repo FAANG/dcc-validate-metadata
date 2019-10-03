@@ -18,14 +18,18 @@ def read_excel_file(conversion_type):
         data = dict()
         for sh in wb.sheets():
             if sh.name not in ALLOWED_SHEET_NAMES:
-                print(f"There are no rules for {sh.name} type!!!")
-                return 'Failure!'
+                return f"Error: there are no rules for {sh.name} type!"
             else:
                 tmp = list()
                 headers = [convert_to_snake_case(item) for item in
                            sh.row_values(0)]
-                field_names_indexes = get_field_names_and_indexes(
-                    headers, ALLOWED_SHEET_NAMES[sh.name])
+                try:
+                    field_names_indexes = \
+                        get_field_names_and_indexes(headers,
+                                                    ALLOWED_SHEET_NAMES[
+                                                        sh.name])
+                except ValueError as err:
+                    return err.args[0]
                 for row_number in range(1, sh.nrows):
                     tmp.append(get_sample_data(sh.row_values(row_number),
                                                field_names_indexes,
@@ -33,4 +37,4 @@ def read_excel_file(conversion_type):
                 data[convert_to_snake_case(sh.name)] = tmp
         return data
     else:
-        return 'Failure!'
+        return 'Error: only samples are accepted now!'
