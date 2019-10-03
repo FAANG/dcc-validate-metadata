@@ -8,7 +8,7 @@ def index(request):
 
 
 def convert_samples(request):
-    res = read_excel_file.delay('samples')
+    res = read_excel_file.apply_async(('samples',), queue='conversion')
     return render(request, 'conversion/conversion.html', {'task_id': res.id})
 
 
