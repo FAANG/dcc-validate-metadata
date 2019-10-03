@@ -21,5 +21,10 @@ def validate_against_schema(json_to_test):
                 validate(record['samples_core'], core_schema))
             validation_results[name]['type'].append(
                 validate(record, type_schema))
-    print(json.dumps(validation_results))
-    return "Success!!!"
+    return validation_results
+
+
+@app.task
+def collect_warnings_and_additional_checks(json_to_test):
+    warnings_and_additional_checks_results = dict()
+    return warnings_and_additional_checks_results
