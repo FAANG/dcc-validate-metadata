@@ -35,7 +35,7 @@ ALLOWED_RECORD_TYPES = {
 
 SKIP_PROPERTIES = ['describedBy', 'schema_version', 'samples_core']
 
-SPECIAL_PROPERTIES = ['sample_name', 'unit', 'term_source_id']
+SPECIAL_PROPERTIES = ['unit', 'term_source_id']
 
 JSON_TYPES = {
     'core': 'samples_core',
