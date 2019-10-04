@@ -70,7 +70,11 @@ def check_recommended_fields_are_present(records, url, name):
                                               recommended_core_fields)
         type_warnings = check_item_is_present(record, recommended_type_fields)
         if len(core_warnings) > 0:
-            warnings_to_return.append(f"{name} records doesn't have these recommended fields in core part: {', '.join(core_warnings)}")
+            warnings_to_return.append(f"{name} records doesn't have these "
+                                      f"recommended fields in core part: "
+                                      f"{', '.join(core_warnings)}")
         if len(type_warnings) > 0:
-            warnings_to_return.append(f"{name} records doesn't have these recommended fields in main part: {', '.join(type_warnings)}")
+            warnings_to_return.append(f"{name} records doesn't have these "
+                                      f"recommended fields in main part: "
+                                      f"{', '.join(type_warnings)}")
     return warnings_to_return
