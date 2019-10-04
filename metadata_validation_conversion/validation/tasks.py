@@ -60,5 +60,4 @@ def join_validation_results(results):
             tmp = get_validation_results_structure(first_record['name'])
             tmp = join_issues(tmp, first_record, second_record)
             joined_results[record_type].append(tmp)
-    print(json.dumps(joined_results))
     return joined_results
