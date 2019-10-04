@@ -51,7 +51,35 @@ def check_item_is_present(dict_to_check, list_of_items):
     return warnings
 
 
-def check_recommended_fields_are_present(records, url, name):
+def check_ontology_text():
+    pass
+
+
+def check_date_units():
+    pass
+
+
+def check_breeds():
+    pass
+
+
+def check_relationships():
+    pass
+
+
+def check_custom_fields():
+    pass
+
+
+def check_recommended_fields(record, recommended_fields):
+    warnings = check_item_is_present(record, recommended_fields)
+    if len(warnings) > 0:
+        return f"Couldn't find these recommended fields: {', '.join(warnings)}"
+    else:
+        return None
+
+
+def do_additional_checks(records, url, name):
     """
     This function will return warning if recommended fields is not present in
     record
@@ -60,26 +88,44 @@ def check_recommended_fields_are_present(records, url, name):
     :param name: name of the item to check
     :return: warnings
     """
-    warnings_to_return = list()
+    issues_to_return = list()
     samples_type_json, samples_core_json = get_samples_json(url)
+
+    # Collect list of recommended fields
     recommended_type_fields = collect_recommended_fields(samples_type_json)
     recommended_core_fields = collect_recommended_fields(samples_core_json)
     for index, record in enumerate(records):
+        # Get inner issues structure
         record_name = get_record_name(record['custom'], index)
         tmp = get_validation_results_structure(record_name)
-        core_warnings = check_item_is_present(record['samples_core'],
-                                              recommended_core_fields)
-        type_warnings = check_item_is_present(record, recommended_type_fields)
-        if len(core_warnings) > 0:
-            tmp['core']['warnings'].append(f"{name} records doesn't have these "
-                                           f"recommended fields in core part: "
-                                           f"{', '.join(core_warnings)}")
-        if len(type_warnings) > 0:
-            tmp['type']['warnings'].append(f"{name} records doesn't have these "
-                                           f"recommended fields in main part: "
-                                           f"{', '.join(type_warnings)}")
-        warnings_to_return.append(tmp)
-    return warnings_to_return
+
+        # Check that recommended fields are present
+        core_warnings = check_recommended_fields(record['samples_core'],
+                                                 recommended_core_fields)
+        type_warnings = check_recommended_fields(record,
+                                                 recommended_type_fields)
+        if core_warnings is not None:
+            tmp['core']['warnings'].append(core_warnings)
+        if type_warnings is not None:
+            tmp['type']['warnings'].append(type_warnings)
+
+        # TODO: Check that ontology text is consistent with ontology term
+        check_ontology_text()
+
+        # TODO: Check that date value is consistent with date units
+        check_date_units()
+
+        # TODO: Check breeds
+        check_breeds()
+
+        # TODO: Check relationships
+        check_relationships()
+
+        # TODO: Check custom fields
+        check_custom_fields()
+
+        issues_to_return.append(tmp)
+    return issues_to_return
 
 
 def get_validation_results_structure(record_name):

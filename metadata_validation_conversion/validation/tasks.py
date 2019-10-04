@@ -3,7 +3,7 @@ import json
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     ALLOWED_RECORD_TYPES
-from .helpers import validate, check_recommended_fields_are_present, \
+from .helpers import validate, do_additional_checks, \
     get_validation_results_structure, get_record_name, join_issues
 
 
@@ -41,7 +41,7 @@ def collect_warnings_and_additional_checks(json_to_test):
     for name, url in ALLOWED_RECORD_TYPES.items():
         warnings_and_additional_checks_results.setdefault(name, list())
         warnings_and_additional_checks_results[name] = \
-            check_recommended_fields_are_present(json_to_test[name], url, name)
+            do_additional_checks(json_to_test[name], url, name)
     return warnings_and_additional_checks_results
 
 
