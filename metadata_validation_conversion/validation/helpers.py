@@ -116,3 +116,21 @@ def get_record_name(record, index):
         return f"record_{index + 1}"
     else:
         return record['sample_name']['value']
+
+
+def join_issues(to_join_to, first_record, second_record):
+    """
+    This function will join all issues from first and second record into one
+    place
+    :param to_join_to: holder that will store merged issues
+    :param first_record: first record to get issues from
+    :param second_record: second record to get issues from
+    :return: merged results
+    """
+    for issue_type in ['core', 'type', 'custom']:
+        for issue in ['errors', 'warnings']:
+            to_join_to[issue_type][issue].extend(
+                first_record[issue_type][issue])
+            to_join_to[issue_type][issue].extend(
+                second_record[issue_type][issue])
+    return to_join_to

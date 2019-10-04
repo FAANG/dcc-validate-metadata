@@ -124,6 +124,13 @@ def get_indices(field_name, field_types, headers, array_fields):
 
 
 def get_custom_data_fields(headers, field_names):
+    """
+    This function will go through headers and find all remaining names that
+    are not in field_names
+    :param headers: table header to check for additional names
+    :param field_names: names from json-schema
+    :return: rules for custom fields in dict and all array fields
+    """
     custom_data_fields_indexes = dict()
     array_fields = list()
     for header in headers:
@@ -171,6 +178,11 @@ def get_field_names_and_indexes(headers, url):
 
 
 def add_leading_zero(date_item):
+    """
+    This function will add leading zero if date is just one number
+    :param date_item: item to check
+    :return: date item in proper format (01, 02, etc...)
+    """
     if date_item < 10:
         return f"0{date_item}"
     else:
@@ -217,6 +229,15 @@ def check_existence(field_name, data_to_validate, template_data):
 
 def add_row(field_name, indexes, organism_to_validate, input_data, date_field,
             wb_datemode):
+    """
+    High-level function to get data from table
+    :param field_name: name of the field to add
+    :param indexes: subfields of this field
+    :param organism_to_validate: results holder
+    :param input_data: row from table
+    :param date_field: date field to check
+    :param wb_datemode: whether workbook cell in datemode or not
+    """
     if isinstance(indexes, list):
         tmp_list = list()
         for index in indexes:

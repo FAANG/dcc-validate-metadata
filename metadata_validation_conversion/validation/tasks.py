@@ -4,11 +4,16 @@ from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     ALLOWED_RECORD_TYPES
 from .helpers import validate, check_recommended_fields_are_present, \
-    get_validation_results_structure, get_record_name
+    get_validation_results_structure, get_record_name, join_issues
 
 
 @app.task
 def validate_against_schema(json_to_test):
+    """
+    Task to send json data to elixir-validator
+    :param json_to_test: json to test against schema
+    :return: all issues in dict
+    """
     core_schema = requests.get(SAMPLE_CORE_URL).json()
     validation_results = dict()
     for name, url in ALLOWED_RECORD_TYPES.items():
@@ -27,6 +32,11 @@ def validate_against_schema(json_to_test):
 
 @app.task
 def collect_warnings_and_additional_checks(json_to_test):
+    """
+    Task to do additional checks inside python app
+    :param json_to_test: json to test against additional checks
+    :return: all issues in dict
+    """
     warnings_and_additional_checks_results = dict()
     for name, url in ALLOWED_RECORD_TYPES.items():
         warnings_and_additional_checks_results.setdefault(name, list())
@@ -37,5 +47,18 @@ def collect_warnings_and_additional_checks(json_to_test):
 
 @app.task
 def join_validation_results(results):
-    print(len(results))
-    return 'Success!'
+    """
+    This task will join results from previous two tasks
+    :param results: list with results of previous two tasks
+    :return: joined issues in dict
+    """
+    joined_results = dict()
+    for record_type in results[0]:
+        joined_results.setdefault(record_type, list())
+        for index, first_record in enumerate(results[0][record_type]):
+            second_record = results[1][record_type][index]
+            tmp = get_validation_results_structure(first_record['name'])
+            tmp = join_issues(tmp, first_record, second_record)
+            joined_results[record_type].append(tmp)
+    print(json.dumps(joined_results))
+    return joined_results
