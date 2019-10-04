@@ -3,33 +3,8 @@ import json
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     ALLOWED_RECORD_TYPES
-from .helpers import validate, check_recommended_fields_are_present
-
-
-def get_record_name(record, index):
-    if 'sample_name' not in record:
-        return f"record_{index}"
-    else:
-        return record['sample_name']['value']
-
-
-def get_validation_results_structure(record_name):
-    return {
-        "name": record_name,
-        "core": {
-            "errors": list(),
-            "warnings": list()
-        },
-        "type": {
-            "errors": list(),
-            "warnings": list()
-        },
-        "custom": {
-            "errors": list(),
-            "warnings": list()
-        }
-    }
-
+from .helpers import validate, check_recommended_fields_are_present, \
+    get_validation_results_structure, get_record_name
 
 @app.task
 def validate_against_schema(json_to_test):
@@ -53,8 +28,8 @@ def validate_against_schema(json_to_test):
 @app.task
 def collect_warnings_and_additional_checks(json_to_test):
     warnings_and_additional_checks_results = dict()
-
     for name, url in ALLOWED_RECORD_TYPES.items():
+        warnings_and_additional_checks_results.setdefault(name, list())
         warnings = check_recommended_fields_are_present(
             json_to_test[name], url, name)
         if len(warnings) > 0:
