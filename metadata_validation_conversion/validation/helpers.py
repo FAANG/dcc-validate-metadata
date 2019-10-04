@@ -77,3 +77,39 @@ def check_recommended_fields_are_present(records, url, name):
                                       f"recommended fields in main part: "
                                       f"{', '.join(type_warnings)}")
     return warnings_to_return
+
+
+def get_validation_results_structure(record_name):
+    """
+    This function will create inner validation results structure
+    :param record_name: name of the record
+    :return: inner validation results structure
+    """
+    return {
+        "name": record_name,
+        "core": {
+            "errors": list(),
+            "warnings": list()
+        },
+        "type": {
+            "errors": list(),
+            "warnings": list()
+        },
+        "custom": {
+            "errors": list(),
+            "warnings": list()
+        }
+    }
+
+
+def get_record_name(record, index):
+    """
+    This function will return name of the current record or create it
+    :param record: record to search name in
+    :param index: index for new name creation
+    :return: name of the record
+    """
+    if 'sample_name' not in record:
+        return f"record_{index + 1}"
+    else:
+        return record['sample_name']['value']
