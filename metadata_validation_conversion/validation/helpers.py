@@ -64,18 +64,21 @@ def check_recommended_fields_are_present(records, url, name):
     samples_type_json, samples_core_json = get_samples_json(url)
     recommended_type_fields = collect_recommended_fields(samples_type_json)
     recommended_core_fields = collect_recommended_fields(samples_core_json)
-    for record in records:
+    for index, record in enumerate(records):
+        record_name = get_record_name(record['custom'], index)
+        tmp = get_validation_results_structure(record_name)
         core_warnings = check_item_is_present(record['samples_core'],
                                               recommended_core_fields)
         type_warnings = check_item_is_present(record, recommended_type_fields)
         if len(core_warnings) > 0:
-            warnings_to_return.append(f"{name} records doesn't have these "
-                                      f"recommended fields in core part: "
-                                      f"{', '.join(core_warnings)}")
+            tmp['core']['warnings'].append(f"{name} records doesn't have these "
+                                           f"recommended fields in core part: "
+                                           f"{', '.join(core_warnings)}")
         if len(type_warnings) > 0:
-            warnings_to_return.append(f"{name} records doesn't have these "
-                                      f"recommended fields in main part: "
-                                      f"{', '.join(type_warnings)}")
+            tmp['type']['warnings'].append(f"{name} records doesn't have these "
+                                           f"recommended fields in main part: "
+                                           f"{', '.join(type_warnings)}")
+        warnings_to_return.append(tmp)
     return warnings_to_return
 
 

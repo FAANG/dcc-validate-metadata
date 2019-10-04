@@ -6,6 +6,7 @@ from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
 from .helpers import validate, check_recommended_fields_are_present, \
     get_validation_results_structure, get_record_name
 
+
 @app.task
 def validate_against_schema(json_to_test):
     core_schema = requests.get(SAMPLE_CORE_URL).json()
@@ -21,7 +22,6 @@ def validate_against_schema(json_to_test):
                                              core_schema)
             tmp['type']['errors'] = validate(record, type_schema)
             validation_results[name].append(tmp)
-    print(json.dumps(validation_results))
     return validation_results
 
 
@@ -30,9 +30,12 @@ def collect_warnings_and_additional_checks(json_to_test):
     warnings_and_additional_checks_results = dict()
     for name, url in ALLOWED_RECORD_TYPES.items():
         warnings_and_additional_checks_results.setdefault(name, list())
-        warnings = check_recommended_fields_are_present(
-            json_to_test[name], url, name)
-        if len(warnings) > 0:
-            print(warnings)
-            print(len(warnings))
+        warnings_and_additional_checks_results[name] = \
+            check_recommended_fields_are_present(json_to_test[name], url, name)
     return warnings_and_additional_checks_results
+
+
+@app.task
+def join_validation_results(results):
+    print(len(results))
+    return 'Success!'
