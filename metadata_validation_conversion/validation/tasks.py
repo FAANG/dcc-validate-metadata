@@ -6,21 +6,47 @@ from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
 from .helpers import validate, check_recommended_fields_are_present
 
 
+def get_record_name(record, index):
+    if 'sample_name' not in record:
+        return f"record_{index}"
+    else:
+        return record['sample_name']['value']
+
+
+def get_validation_results_structure(record_name):
+    return {
+        "name": record_name,
+        "core": {
+            "errors": list(),
+            "warnings": list()
+        },
+        "type": {
+            "errors": list(),
+            "warnings": list()
+        },
+        "custom": {
+            "errors": list(),
+            "warnings": list()
+        }
+    }
+
+
 @app.task
 def validate_against_schema(json_to_test):
     core_schema = requests.get(SAMPLE_CORE_URL).json()
     validation_results = dict()
     for name, url in ALLOWED_RECORD_TYPES.items():
+        validation_results.setdefault(name, list())
         type_schema = requests.get(url).json()
         del type_schema['properties']['samples_core']
-        validation_results.setdefault(name, dict())
-        validation_results[name].setdefault('core', list())
-        validation_results[name].setdefault('type', list())
-        for record in json_to_test[name]:
-            validation_results[name]['core'].append(
-                validate(record['samples_core'], core_schema))
-            validation_results[name]['type'].append(
-                validate(record, type_schema))
+        for index, record in enumerate(json_to_test[name]):
+            record_name = get_record_name(record['custom'], index)
+            tmp = get_validation_results_structure(record_name)
+            tmp['core']['errors'] = validate(record['samples_core'],
+                                             core_schema)
+            tmp['type']['errors'] = validate(record, type_schema)
+            validation_results[name].append(tmp)
+    print(json.dumps(validation_results))
     return validation_results
 
 

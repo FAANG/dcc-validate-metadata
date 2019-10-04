@@ -34,6 +34,7 @@ def read_excel_file(conversion_type):
                     tmp.append(get_sample_data(sh.row_values(row_number),
                                                field_names_indexes,
                                                wb_datemode))
+                data[convert_to_snake_case(sh.name)] = tmp
         return data
     else:
         return 'Error: only samples are accepted now!'
