@@ -9,6 +9,11 @@ from metadata_validation_conversion.celery import app
 
 @app.task
 def read_excel_file(conversion_type):
+    """
+    This task will convert excel file to proper json format
+    :param conversion_type: could be 'samples' or 'experiments'
+    :return: converted data
+    """
     if conversion_type == 'samples':
         wb = xlrd.open_workbook(
             '/Users/alexey/ebi_projects/dcc-validate-metadata/'
