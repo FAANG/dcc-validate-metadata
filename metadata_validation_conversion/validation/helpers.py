@@ -8,7 +8,7 @@ def validate(data, schema):
     This function will send data to elixir-validator and collect all errors
     :param data: data to validate in JSON format
     :param schema: schema to validate against
-    :return: 'VALID' if everything is OK or error message
+    :return: list of error messages
     """
     json_to_send = {
         'schema': schema,
@@ -16,12 +16,11 @@ def validate(data, schema):
     }
     response = requests.post(
         'http://localhost:3020/validate', json=json_to_send).json()
-    if 'validationState' in response and response['validationState'] == 'VALID':
-        return response['validationState']
-    else:
+    validation_errors = list()
+    if 'validationErrors' in response and len(response['validationErrors']) > 0:
         for error in response['validationErrors']:
-            print(error['userFriendlyMessage'])
-        return response['validationErrors']
+            validation_errors.append(error['userFriendlyMessage'])
+    return validation_errors
 
 
 def collect_recommended_fields(json_to_check):
