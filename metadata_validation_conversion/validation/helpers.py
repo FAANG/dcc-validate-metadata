@@ -69,10 +69,13 @@ def check_ols(field_value, ontology_names, field_name):
         term_labels = requests.get(
             f"http://www.ebi.ac.uk/ols/api/search?q={field_value['term']}"
         ).json()['response']['docs']
-        term_label = list()
+        term_label = set()
         for label in term_labels:
-            if label['ontology_name'].lower() in ontology_names[field_name]:
-                term_label.append(label['label'].lower())
+            if ontology_names is not None and label['ontology_name'].lower() \
+                    in ontology_names[field_name]:
+                term_label.add(label['label'].lower())
+            elif ontology_names is None:
+                term_label.add(label['label'].lower())
         if len(term_label) == 0:
             return f"Couldn't find label in OLS with these ontology names: " \
                    f"{ontology_names[field_name]}"
@@ -84,7 +87,7 @@ def check_ols(field_value, ontology_names, field_name):
     return None
 
 
-def check_ontology_text(record, ontology_names):
+def check_ontology_text(record, ontology_names=None):
     """
     This function will check record for ols consistence
     :param record: record to check
@@ -115,10 +118,6 @@ def check_breeds():
 
 
 def check_relationships():
-    pass
-
-
-def check_custom_fields():
     pass
 
 
@@ -181,13 +180,12 @@ def collect_ontology_names(json_to_parse):
     return ontology_names_to_return
 
 
-def do_additional_checks(records, url, name):
+def do_additional_checks(records, url):
     """
     This function will return warning if recommended fields is not present in
     record
     :param records: record to check
     :param url: schema url for this record
-    :param name: name of the item to check
     :return: warnings
     """
     issues_to_return = list()
@@ -214,7 +212,7 @@ def do_additional_checks(records, url, name):
         if type_warnings is not None:
             tmp['type']['warnings'].append(type_warnings)
 
-        # TODO: Check that ontology text is consistent with ontology term
+        # Check that ontology text is consistent with ontology term
         tmp['core']['warnings'].extend(
             check_ontology_text(record['samples_core'], ontology_names_core))
         tmp['type']['warnings'].extend(
@@ -229,8 +227,10 @@ def do_additional_checks(records, url, name):
         # TODO: Check relationships
         check_relationships()
 
-        # TODO: Check custom fields
-        check_custom_fields()
+        # Check custom fields for ontology consistence
+        tmp['custom']['warnings'].extend(
+            check_ontology_text(record['custom'])
+        )
 
         issues_to_return.append(tmp)
     return issues_to_return
