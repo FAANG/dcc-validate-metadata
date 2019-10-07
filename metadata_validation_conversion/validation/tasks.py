@@ -41,7 +41,7 @@ def collect_warnings_and_additional_checks(json_to_test):
     for name, url in ALLOWED_RECORD_TYPES.items():
         warnings_and_additional_checks_results.setdefault(name, list())
         warnings_and_additional_checks_results[name] = \
-            do_additional_checks(json_to_test[name], url, name)
+            do_additional_checks(json_to_test[name], url)
     return warnings_and_additional_checks_results
 
 
@@ -60,4 +60,5 @@ def join_validation_results(results):
             tmp = get_validation_results_structure(first_record['name'])
             tmp = join_issues(tmp, first_record, second_record)
             joined_results[record_type].append(tmp)
+    print(json.dumps(joined_results))
     return joined_results
