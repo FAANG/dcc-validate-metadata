@@ -1,4 +1,5 @@
 import requests
+import datetime
 from metadata_validation_conversion.helpers import get_samples_json
 from metadata_validation_conversion.constants import SKIP_PROPERTIES
 
@@ -109,8 +110,27 @@ def check_ontology_text(record, ontology_names=None):
     return ontology_warnings
 
 
-def check_date_units():
-    pass
+def check_date_units(record):
+    date_units_warnings = list()
+    for field_name, field_value in record.items():
+        if 'date' in field_name and 'value' in field_value and 'units' in \
+                field_value:
+            if field_value['units'] == 'YYYY-MM-DD':
+                units = '%Y-%m-%d'
+            elif field_value['units'] == 'YYYY-MM':
+                units = '%Y-%m'
+            elif field_value['units'] == 'YYYY':
+                units = '%Y'
+            else:
+                continue
+            try:
+                datetime.datetime.strptime(field_value['value'], units)
+            except ValueError:
+                date_units_warnings.append(f"Date units: "
+                                           f"{field_value['units']} should be "
+                                           f"consistent with date value: "
+                                           f"{field_value['value']}")
+    return date_units_warnings
 
 
 def check_breeds():
@@ -218,8 +238,13 @@ def do_additional_checks(records, url):
         tmp['type']['warnings'].extend(
             check_ontology_text(record, ontology_names_type))
 
-        # TODO: Check that date value is consistent with date units
-        check_date_units()
+        # Check that date value is consistent with date units
+        tmp['core']['warnings'].extend(
+            check_date_units(record['samples_core'])
+        )
+        tmp['type']['warnings'].extend(
+            check_date_units(record)
+        )
 
         # TODO: Check breeds
         check_breeds()
