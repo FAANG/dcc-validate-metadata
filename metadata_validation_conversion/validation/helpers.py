@@ -57,21 +57,53 @@ def check_item_is_present(dict_to_check, list_of_items):
     return warnings
 
 
+def check_ols(field_value, ontology_names, field_name):
+    """
+    This function will check ols for label existence
+    :param field_value: dict to check
+    :param ontology_names: name to use for check
+    :param field_name: name of the field to check
+    :return: warnings in str format
+    """
+    if 'text' in field_value and 'term' in field_value:
+        term_labels = requests.get(
+            f"http://www.ebi.ac.uk/ols/api/search?q={field_value['term']}"
+        ).json()['response']['docs']
+        term_label = list()
+        for label in term_labels:
+            if label['ontology_name'].lower() in ontology_names[field_name]:
+                term_label.append(label['label'].lower())
+        if len(term_label) == 0:
+            return f"Couldn't find label in OLS with these ontology names: " \
+                   f"{ontology_names[field_name]}"
+
+        if field_value['text'].lower() not in term_label:
+            return f"Provided value '{field_value['text']}' doesn't " \
+                   f"precisely match '{' or '.join(term_label)}' " \
+                   f"for term '{field_value['term']}'"
+    return None
+
+
 def check_ontology_text(record, ontology_names):
+    """
+    This function will check record for ols consistence
+    :param record: record to check
+    :param ontology_names: dict of ontology names to use
+    :return: list of warnings related to ontology inconsistence
+    """
+    ontology_warnings = list()
     for field_name, field_value in record.items():
-        if 'text' in field_value and 'term' in field_value:
-            term_labels = requests.get(
-                f"http://www.ebi.ac.uk/ols/api/terms?id={field_value['term']}"
-            ).json()['_embedded']['terms']
-            term_label = ''
-            for label in term_labels:
-                if label['ontology_name'].lower() == ontology_names[field_name].lower():
-                    term_label = label['label']
-            print(f"{term_label}\t{field_value['text']}")
-            # if term_label == '':
-            #     print(f"Error!")
-            # if field_value['text'].lower() != term_label:
-            #     print(f"Provided value '{field_value['text']}' doesn't precisely match label '{term_label}' for term '{field_value['term']}'")
+        if isinstance(field_value, list):
+            for sub_value in field_value:
+                ols_results = check_ols(sub_value, ontology_names, field_name)
+                if ols_results is not None:
+                    ontology_warnings.append(ols_results)
+        else:
+            ols_results = check_ols(field_value, ontology_names, field_name)
+            if ols_results is not None:
+                ontology_warnings.append(ols_results)
+
+    return ontology_warnings
 
 
 def check_date_units():
@@ -91,6 +123,12 @@ def check_custom_fields():
 
 
 def check_recommended_fields(record, recommended_fields):
+    """
+    This function will return warnings when recommended field is not present
+    :param record: record to check
+    :param recommended_fields: list of recommended fields to check
+    :return: warning message
+    """
     warnings = check_item_is_present(record, recommended_fields)
     if len(warnings) > 0:
         return f"Couldn't find these recommended fields: {', '.join(warnings)}"
@@ -98,15 +136,48 @@ def check_recommended_fields(record, recommended_fields):
         return None
 
 
+def check_ontology_field(dict_to_check, label_to_check):
+    """
+    This function will test that this dict has ontology terms to check
+    :param dict_to_check: dict to check
+    :param label_to_check: label to check
+    :return: True if this is ontology field and False otherwise
+    """
+    if 'text' in dict_to_check and 'term' in dict_to_check and \
+            label_to_check in dict_to_check['ontology_name']:
+        return True
+    return False
+
+
 def collect_ontology_names(json_to_parse):
+    """
+    This function will parse json-schema to get all ontology_names
+    :param json_to_parse: json-schema to parse
+    :return: dict with field name as key and ontology_name as value
+    """
     ontology_names_to_return = dict()
     for field_name, field_value in json_to_parse['properties'].items():
-        if field_name not in SKIP_PROPERTIES and field_value['type'] == 'object':
-            if 'text' in field_value['properties'] and 'term' in field_value['properties']:
-                ontology_names_to_return[field_name] = field_value['properties']['ontology_name']['const']
-        elif field_name not in SKIP_PROPERTIES and field_value['type'] == 'array':
-            if 'text' in field_value['items']['properties'] and 'term' in field_value['items']['properties']:
-                ontology_names_to_return[field_name] = field_value['items']['properties']['ontology_name']['const']
+        if field_name not in SKIP_PROPERTIES \
+                and field_value['type'] == 'object':
+            if check_ontology_field(field_value['properties'], 'const'):
+                ontology_names_to_return[field_name] = [
+                    field_value['properties']['ontology_name']['const'].lower()]
+            elif check_ontology_field(field_value['properties'], 'enum'):
+                ontology_names_to_return[field_name] = [
+                    term.lower() for term in
+                    field_value['properties']['ontology_name']['enum']]
+        elif field_name not in SKIP_PROPERTIES \
+                and field_value['type'] == 'array':
+            if check_ontology_field(
+                    field_value['items']['properties'], 'const'):
+                ontology_names_to_return[field_name] = [
+                    field_value['items']['properties']['ontology_name'][
+                        'const'].lower()]
+            elif check_ontology_field(
+                    field_value['items']['properties'], 'enum'):
+                ontology_names_to_return[field_name] = [
+                    term.lower() for term in
+                    field_value['items']['properties']['ontology_name']['enum']]
     return ontology_names_to_return
 
 
@@ -125,7 +196,7 @@ def do_additional_checks(records, url, name):
     # Collect list of recommended fields
     recommended_type_fields = collect_recommended_fields(samples_type_json)
     recommended_core_fields = collect_recommended_fields(samples_core_json)
-    # ontology_names_type = collect_ontology_names(samples_type_json)
+    ontology_names_type = collect_ontology_names(samples_type_json)
     ontology_names_core = collect_ontology_names(samples_core_json)
 
     for index, record in enumerate(records):
@@ -144,7 +215,10 @@ def do_additional_checks(records, url, name):
             tmp['type']['warnings'].append(type_warnings)
 
         # TODO: Check that ontology text is consistent with ontology term
-        check_ontology_text(record['samples_core'], ontology_names_core)
+        tmp['core']['warnings'].extend(
+            check_ontology_text(record['samples_core'], ontology_names_core))
+        tmp['type']['warnings'].extend(
+            check_ontology_text(record, ontology_names_type))
 
         # TODO: Check that date value is consistent with date units
         check_date_units()
