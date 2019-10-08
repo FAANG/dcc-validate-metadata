@@ -50,11 +50,16 @@ def collect_warnings_and_additional_checks(json_to_test):
 
 @app.task
 def collect_relationships_issues(json_to_test):
-    warnings_and_additional_checks_results = dict()
+    """
+    This task will do relationships check
+    :param json_to_test: json to be tested
+    :return: all issues in dict
+    """
     relationships = dict()
     # In first iteration need to collect all relationships
     for name, url in ALLOWED_RECORD_TYPES.items():
         relationships.update(collect_relationships(json_to_test[name], name))
+    return check_relationships(relationships)
 
 
 @app.task
@@ -69,8 +74,9 @@ def join_validation_results(results):
         joined_results.setdefault(record_type, list())
         for index, first_record in enumerate(results[0][record_type]):
             second_record = results[1][record_type][index]
+            third_record = results[2][record_type][index]
             tmp = get_validation_results_structure(first_record['name'])
-            tmp = join_issues(tmp, first_record, second_record)
+            tmp = join_issues(tmp, first_record, second_record, third_record)
             joined_results[record_type].append(tmp)
     # print(json.dumps(joined_results))
     return joined_results

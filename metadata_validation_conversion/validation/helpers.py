@@ -1,7 +1,8 @@
 import requests
 import datetime
 import json
-from metadata_validation_conversion.helpers import get_samples_json
+from metadata_validation_conversion.helpers import get_samples_json, \
+    convert_to_snake_case
 from metadata_validation_conversion.constants import SKIP_PROPERTIES
 from .get_ontology_text_async import collect_ids
 
@@ -146,8 +147,13 @@ def check_relationships(relationships):
     :param relationships: relationships to check
     :return: issues in dict format
     """
-    issues_to_return = list()
-
+    issues_to_return = dict()
+    for k, v in relationships.items():
+        name = convert_to_snake_case(v['material'])
+        issues_to_return.setdefault(name, list())
+        tmp = get_validation_results_structure(k)
+        # tmp['type']['errors'].extend()
+        issues_to_return[name].append(tmp)
     return issues_to_return
 
 
@@ -262,9 +268,6 @@ def do_additional_checks(records, url, name):
         # TODO: Check breeds
         check_breeds()
 
-        # TODO: Check relationships
-        check_relationships()
-
         # Check custom fields for ontology consistence
         tmp['custom']['warnings'].extend(
             check_ontology_text(record['custom'], ontology_ids)
@@ -311,13 +314,14 @@ def get_record_name(record, index, name):
         return record['sample_name']['value']
 
 
-def join_issues(to_join_to, first_record, second_record):
+def join_issues(to_join_to, first_record, second_record, third_record):
     """
     This function will join all issues from first and second record into one
     place
     :param to_join_to: holder that will store merged issues
     :param first_record: first record to get issues from
     :param second_record: second record to get issues from
+    :param third_record: third record to get issues from
     :return: merged results
     """
     for issue_type in ['core', 'type', 'custom']:
@@ -326,6 +330,8 @@ def join_issues(to_join_to, first_record, second_record):
                 first_record[issue_type][issue])
             to_join_to[issue_type][issue].extend(
                 second_record[issue_type][issue])
+            to_join_to[issue_type][issue].extend(
+                third_record[issue_type][issue])
     return to_join_to
 
 
