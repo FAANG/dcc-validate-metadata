@@ -203,12 +203,13 @@ def collect_ontology_names(json_to_parse):
     return ontology_names_to_return
 
 
-def do_additional_checks(records, url):
+def do_additional_checks(records, url, name):
     """
     This function will return warning if recommended fields is not present in
     record
     :param records: record to check
     :param url: schema url for this record
+    :param name: name of the record
     :return: warnings
     """
     issues_to_return = list()
@@ -223,7 +224,7 @@ def do_additional_checks(records, url):
 
     for index, record in enumerate(records):
         # Get inner issues structure
-        record_name = get_record_name(record['custom'], index)
+        record_name = get_record_name(record['custom'], index, name)
         tmp = get_validation_results_structure(record_name)
 
         # Check that recommended fields are present
@@ -289,15 +290,16 @@ def get_validation_results_structure(record_name):
     }
 
 
-def get_record_name(record, index):
+def get_record_name(record, index, name):
     """
     This function will return name of the current record or create it
     :param record: record to search name in
     :param index: index for new name creation
+    :param name: name of the record
     :return: name of the record
     """
     if 'sample_name' not in record:
-        return f"record_{index + 1}"
+        return f"{name}_{index + 1}"
     else:
         return record['sample_name']['value']
 
@@ -318,3 +320,8 @@ def join_issues(to_join_to, first_record, second_record):
             to_join_to[issue_type][issue].extend(
                 second_record[issue_type][issue])
     return to_join_to
+
+
+def collect_relationships(records, name):
+    for index, record in enumerate(records):
+        record_name = get_record_name(record['custom'], index, name)
