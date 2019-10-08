@@ -159,6 +159,9 @@ def check_parents(current_organism_name, current_organism_value,
                               f"({current_organism_value['organism']}) doesn't "
                               f"match the specie of the parent "
                               f"({relation_organism_value['organism']})")
+    if current_organism_name in relation_organism_value['relationships']:
+        results_holder.append(f"Parent {relation_organism_name} is listing "
+                              f"the child as its parent")
 
 
 def check_relationships(relationships):
