@@ -1,7 +1,9 @@
 import requests
 import datetime
+import json
 from metadata_validation_conversion.helpers import get_samples_json
 from metadata_validation_conversion.constants import SKIP_PROPERTIES
+from .get_ontology_text_async import collect_ids
 
 
 def validate(data, schema):
@@ -58,20 +60,18 @@ def check_item_is_present(dict_to_check, list_of_items):
     return warnings
 
 
-def check_ols(field_value, ontology_names, field_name):
+def check_ols(field_value, ontology_names, field_name, ontology_ids):
     """
     This function will check ols for label existence
     :param field_value: dict to check
     :param ontology_names: name to use for check
     :param field_name: name of the field to check
+    :param ontology_ids: dict with ols records as values and ols ids as keys
     :return: warnings in str format
     """
     if 'text' in field_value and 'term' in field_value:
-        term_labels = requests.get(
-            f"http://www.ebi.ac.uk/ols/api/search?q={field_value['term']}"
-        ).json()['response']['docs']
         term_label = set()
-        for label in term_labels:
+        for label in ontology_ids[field_value['term']]:
             if ontology_names is not None and label['ontology_name'].lower() \
                     in ontology_names[field_name]:
                 term_label.add(label['label'].lower())
@@ -88,10 +88,11 @@ def check_ols(field_value, ontology_names, field_name):
     return None
 
 
-def check_ontology_text(record, ontology_names=None):
+def check_ontology_text(record, ontology_ids, ontology_names=None):
     """
     This function will check record for ols consistence
     :param record: record to check
+    :param ontology_ids: dict with ols records as values and ols ids as keys
     :param ontology_names: dict of ontology names to use
     :return: list of warnings related to ontology inconsistence
     """
@@ -99,11 +100,13 @@ def check_ontology_text(record, ontology_names=None):
     for field_name, field_value in record.items():
         if isinstance(field_value, list):
             for sub_value in field_value:
-                ols_results = check_ols(sub_value, ontology_names, field_name)
+                ols_results = check_ols(sub_value, ontology_names, field_name,
+                                        ontology_ids)
                 if ols_results is not None:
                     ontology_warnings.append(ols_results)
         else:
-            ols_results = check_ols(field_value, ontology_names, field_name)
+            ols_results = check_ols(field_value, ontology_names, field_name,
+                                    ontology_ids)
             if ols_results is not None:
                 ontology_warnings.append(ols_results)
 
@@ -216,6 +219,7 @@ def do_additional_checks(records, url):
     recommended_core_fields = collect_recommended_fields(samples_core_json)
     ontology_names_type = collect_ontology_names(samples_type_json)
     ontology_names_core = collect_ontology_names(samples_core_json)
+    ontology_ids = collect_ids(records)
 
     for index, record in enumerate(records):
         # Get inner issues structure
@@ -234,9 +238,10 @@ def do_additional_checks(records, url):
 
         # Check that ontology text is consistent with ontology term
         tmp['core']['warnings'].extend(
-            check_ontology_text(record['samples_core'], ontology_names_core))
+            check_ontology_text(record['samples_core'], ontology_ids,
+                                ontology_names_core))
         tmp['type']['warnings'].extend(
-            check_ontology_text(record, ontology_names_type))
+            check_ontology_text(record, ontology_ids, ontology_names_type))
 
         # Check that date value is consistent with date units
         tmp['core']['warnings'].extend(
@@ -254,7 +259,7 @@ def do_additional_checks(records, url):
 
         # Check custom fields for ontology consistence
         tmp['custom']['warnings'].extend(
-            check_ontology_text(record['custom'])
+            check_ontology_text(record['custom'], ontology_ids)
         )
 
         issues_to_return.append(tmp)
