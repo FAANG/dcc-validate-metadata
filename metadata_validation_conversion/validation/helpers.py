@@ -323,5 +323,29 @@ def join_issues(to_join_to, first_record, second_record):
 
 
 def collect_relationships(records, name):
+    """
+    This function will collect information about existing relationships and
+    material types for each record
+    :param records: records to parse
+    :param name: name of the record, ex. 'organism'
+    :return: dict with record_named as key and relationships + material as
+    values
+    """
+    relationships = dict()
     for index, record in enumerate(records):
         record_name = get_record_name(record['custom'], index, name)
+        relationships.setdefault(record_name, dict())
+        relationship_name = 'child_of' if name == 'organism' else 'derived_from'
+        if relationship_name in record and isinstance(
+                record[relationship_name], list):
+            tmp = list()
+            for child in record[relationship_name]:
+                tmp.append(child['value'])
+            relationships[record_name]['relationships'] = tmp
+        elif relationship_name in record and isinstance(
+                record[relationship_name], dict):
+            relationships[record_name]['relationships'] = [
+                record[relationship_name]['value']]
+        relationships[record_name]['material'] = \
+            record['samples_core']['material']['text']
+    return relationships
