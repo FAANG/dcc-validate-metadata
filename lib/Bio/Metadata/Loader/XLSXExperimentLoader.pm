@@ -93,7 +93,7 @@ has 'expr_sheet_names' => (
   },
   default => sub { [ 
   'ATAC-seq', 'BS-seq', 'ChIP-seq', 'ChIP-seq DNA-binding proteins', 'ChIP-seq input',
-  'DNase-seq', 'HiC', 'RNA-Seq', 'WGS'
+  'DNase-seq', 'HiC', 'RNA-Seq', 'WGS', 'CAGE-seq'
   ] },
 );
 
