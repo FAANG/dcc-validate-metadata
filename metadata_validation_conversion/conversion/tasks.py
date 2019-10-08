@@ -1,10 +1,10 @@
 import xlrd
 import json
 
-from .helpers import get_field_names_and_indexes, get_sample_data, \
-    convert_to_snake_case
+from .helpers import get_field_names_and_indexes, get_sample_data
 from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES
 from metadata_validation_conversion.celery import app
+from metadata_validation_conversion.helpers import convert_to_snake_case
 
 
 @app.task

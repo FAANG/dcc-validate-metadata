@@ -140,8 +140,15 @@ def check_breeds():
     pass
 
 
-def check_relationships():
-    pass
+def check_relationships(relationships):
+    """
+    This function will check relationships values
+    :param relationships: relationships to check
+    :return: issues in dict format
+    """
+    issues_to_return = list()
+
+    return issues_to_return
 
 
 def check_recommended_fields(record, recommended_fields):

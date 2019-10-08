@@ -33,6 +33,16 @@ ALLOWED_RECORD_TYPES = {
     'cell_line': CELL_LINE_URL
 }
 
+ALLOWED_RELATIONSHIPS = {
+    'organism': ['organism'],
+    'specimen_from_organism': ['organism'],
+    'pool_of_specimens': ['specimen_from_organism'],
+    'cell_specimen': ['specimen_from_organism'],
+    'cell_culture': ['specimen_from_organism', 'cell_specimen'],
+    'cell_line': ['organism', 'specimen_from_organism', 'pool_of_specimens',
+                  'cell_specimen', 'cell_culture', 'cell_line']
+}
+
 SKIP_PROPERTIES = ['describedBy', 'schema_version', 'samples_core']
 
 SPECIAL_PROPERTIES = ['unit', 'term_source_id']
