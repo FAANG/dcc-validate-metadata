@@ -152,7 +152,13 @@ def check_relationships(relationships):
         name = convert_to_snake_case(v['material'])
         issues_to_return.setdefault(name, list())
         tmp = get_validation_results_structure(k)
-        # tmp['type']['errors'].extend()
+        if 'relationships' in v:
+            errors = list()
+            for relation in v['relationships']:
+                if relation not in relationships:
+                    errors.append(f"No entity '{relation}' found "
+                                  f"(relationships part)")
+            tmp['type']['errors'].extend(errors)
         issues_to_return[name].append(tmp)
     return issues_to_return
 
