@@ -388,6 +388,7 @@ def collect_relationships(records, name):
     values
     """
     relationships = dict()
+    biosample_ids = set()
     for index, record in enumerate(records):
         record_name = get_record_name(record['custom'], index, name)
         relationships.setdefault(record_name, dict())
@@ -396,14 +397,18 @@ def collect_relationships(records, name):
                 record[relationship_name], list):
             tmp = list()
             for child in record[relationship_name]:
+                if 'SAM' in child['value']:
+                    biosample_ids.add(child['value'])
                 tmp.append(child['value'])
             relationships[record_name]['relationships'] = tmp
         elif relationship_name in record and isinstance(
                 record[relationship_name], dict):
+            if 'SAM' in record[relationship_name]['value']:
+                biosample_ids.add(record[relationship_name]['value'])
             relationships[record_name]['relationships'] = [
                 record[relationship_name]['value']]
         relationships[record_name]['material'] = \
             record['samples_core']['material']['text']
         if relationship_name == 'child_of':
             relationships[record_name]['organism'] = record['organism']['text']
-    return relationships
+    return relationships, biosample_ids
