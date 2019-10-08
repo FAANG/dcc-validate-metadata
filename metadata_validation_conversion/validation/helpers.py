@@ -3,7 +3,8 @@ import datetime
 import json
 from metadata_validation_conversion.helpers import get_samples_json, \
     convert_to_snake_case
-from metadata_validation_conversion.constants import SKIP_PROPERTIES
+from metadata_validation_conversion.constants import SKIP_PROPERTIES, \
+    ALLOWED_RELATIONSHIPS
 from .get_ontology_text_async import collect_ids
 
 
@@ -158,6 +159,16 @@ def check_relationships(relationships):
                 if relation not in relationships:
                     errors.append(f"No entity '{relation}' found "
                                   f"(relationships part)")
+                else:
+                    current_material = convert_to_snake_case(v['material'])
+                    relation_material = convert_to_snake_case(
+                        relationships[relation]['material'])
+                    allowed_relationships = ALLOWED_RELATIONSHIPS[
+                        current_material]
+                    if relation_material not in allowed_relationships:
+                        errors.append(f"Referenced entity: {relation} does "
+                                      f"not match condition: should be "
+                                      f"{' or '.join(allowed_relationships)}")
             tmp['type']['errors'].extend(errors)
         issues_to_return[name].append(tmp)
     return issues_to_return
