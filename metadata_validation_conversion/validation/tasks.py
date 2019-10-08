@@ -4,7 +4,8 @@ from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     ALLOWED_RECORD_TYPES
 from .helpers import validate, do_additional_checks, \
-    get_validation_results_structure, get_record_name, join_issues
+    get_validation_results_structure, get_record_name, join_issues, \
+    collect_relationships
 
 
 @app.task
@@ -38,10 +39,15 @@ def collect_warnings_and_additional_checks(json_to_test):
     :return: all issues in dict
     """
     warnings_and_additional_checks_results = dict()
+    relationships = dict()
     for name, url in ALLOWED_RECORD_TYPES.items():
         warnings_and_additional_checks_results.setdefault(name, list())
         warnings_and_additional_checks_results[name] = \
             do_additional_checks(json_to_test[name], url, name)
+
+        # Collect all relationship entries for future check
+        relationships.update(collect_relationships(json_to_test[name], name))
+    print(json.dumps(relationships))
     return warnings_and_additional_checks_results
 
 
@@ -60,5 +66,5 @@ def join_validation_results(results):
             tmp = get_validation_results_structure(first_record['name'])
             tmp = join_issues(tmp, first_record, second_record)
             joined_results[record_type].append(tmp)
-    print(json.dumps(joined_results))
+    # print(json.dumps(joined_results))
     return joined_results
