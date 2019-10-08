@@ -21,7 +21,7 @@ def validate_against_schema(json_to_test):
         type_schema = requests.get(url).json()
         del type_schema['properties']['samples_core']
         for index, record in enumerate(json_to_test[name]):
-            record_name = get_record_name(record['custom'], index)
+            record_name = get_record_name(record['custom'], index, name)
             tmp = get_validation_results_structure(record_name)
             tmp['core']['errors'] = validate(record['samples_core'],
                                              core_schema)
@@ -41,7 +41,7 @@ def collect_warnings_and_additional_checks(json_to_test):
     for name, url in ALLOWED_RECORD_TYPES.items():
         warnings_and_additional_checks_results.setdefault(name, list())
         warnings_and_additional_checks_results[name] = \
-            do_additional_checks(json_to_test[name], url)
+            do_additional_checks(json_to_test[name], url, name)
     return warnings_and_additional_checks_results
 
 
