@@ -286,13 +286,3 @@ def get_sample_data(input_data, field_names_indexes, wb_datemode):
                 add_row(field_name, indexes, organism_to_validate, input_data,
                         date_field, wb_datemode)
     return organism_to_validate
-
-
-def convert_to_snake_case(my_string):
-    """
-    This function will convert any string to camel_case string
-    :param my_string: string to convert
-    :return: string in camel_case format
-    """
-    return '_'.join(my_string.lower().split(" "))
-

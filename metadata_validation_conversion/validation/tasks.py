@@ -5,7 +5,7 @@ from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     ALLOWED_RECORD_TYPES
 from .helpers import validate, do_additional_checks, \
     get_validation_results_structure, get_record_name, join_issues, \
-    collect_relationships
+    collect_relationships, check_relationships
 
 
 @app.task
@@ -39,16 +39,22 @@ def collect_warnings_and_additional_checks(json_to_test):
     :return: all issues in dict
     """
     warnings_and_additional_checks_results = dict()
-    relationships = dict()
+
+    # Do additional checks
     for name, url in ALLOWED_RECORD_TYPES.items():
         warnings_and_additional_checks_results.setdefault(name, list())
         warnings_and_additional_checks_results[name] = \
             do_additional_checks(json_to_test[name], url, name)
-
-        # Collect all relationship entries for future check
-        relationships.update(collect_relationships(json_to_test[name], name))
-    print(json.dumps(relationships))
     return warnings_and_additional_checks_results
+
+
+@app.task
+def collect_relationships_issues(json_to_test):
+    warnings_and_additional_checks_results = dict()
+    relationships = dict()
+    # In first iteration need to collect all relationships
+    for name, url in ALLOWED_RECORD_TYPES.items():
+        relationships.update(collect_relationships(json_to_test[name], name))
 
 
 @app.task
