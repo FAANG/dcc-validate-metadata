@@ -142,6 +142,25 @@ def check_breeds():
     pass
 
 
+def check_parents(current_organism_name, current_organism_value,
+                  relation_organism_name, relation_organism_value,
+                  results_holder):
+    """
+    This function will perform parent-child relationships checks
+    :param current_organism_name: name of current organism
+    :param current_organism_value: values of current organism
+    :param relation_organism_name: name of relation organism
+    :param relation_organism_value: values of relation organism
+    :param results_holder: variable to save results to
+    """
+    if current_organism_value['organism'] != \
+            relation_organism_value['organism']:
+        results_holder.append(f"The specie of the child "
+                              f"({current_organism_value['organism']}) doesn't "
+                              f"match the specie of the parent "
+                              f"({relation_organism_value['organism']})")
+
+
 def check_relationships(relationships):
     """
     This function will check relationships values
@@ -163,6 +182,10 @@ def check_relationships(relationships):
                     current_material = convert_to_snake_case(v['material'])
                     relation_material = convert_to_snake_case(
                         relationships[relation]['material'])
+                    if current_material == 'organism' and \
+                            relation_material == 'organism':
+                        check_parents(k, v, relation, relationships[relation],
+                                      errors)
                     allowed_relationships = ALLOWED_RELATIONSHIPS[
                         current_material]
                     if relation_material not in allowed_relationships:
@@ -378,4 +401,6 @@ def collect_relationships(records, name):
                 record[relationship_name]['value']]
         relationships[record_name]['material'] = \
             record['samples_core']['material']['text']
+        if relationship_name == 'child_of':
+            relationships[record_name]['organism'] = record['organism']['text']
     return relationships
