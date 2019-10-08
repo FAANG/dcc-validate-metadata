@@ -56,9 +56,14 @@ def collect_relationships_issues(json_to_test):
     :return: all issues in dict
     """
     relationships = dict()
+    biosamples_ids_to_call = set()
     # In first iteration need to collect all relationships
     for name, url in ALLOWED_RECORD_TYPES.items():
-        relationships.update(collect_relationships(json_to_test[name], name))
+        new_relationships, biosample_ids = collect_relationships(
+            json_to_test[name], name)
+        relationships.update(new_relationships)
+        biosamples_ids_to_call.update(biosample_ids)
+    print(biosamples_ids_to_call)
     return check_relationships(relationships)
 
 
@@ -78,5 +83,5 @@ def join_validation_results(results):
             tmp = get_validation_results_structure(first_record['name'])
             tmp = join_issues(tmp, first_record, second_record, third_record)
             joined_results[record_type].append(tmp)
-    print(json.dumps(joined_results))
+    # print(json.dumps(joined_results))
     return joined_results
