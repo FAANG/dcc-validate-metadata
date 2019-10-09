@@ -155,12 +155,13 @@ def check_parents(current_organism_name, current_organism_value,
     """
     if current_organism_value['organism'] != \
             relation_organism_value['organism']:
-        results_holder.append(f"The specie of the child "
-                              f"({current_organism_value['organism']}) doesn't "
+        results_holder.append(f"Relationships part: the specie of the child "
+                              f"'{current_organism_value['organism']}' doesn't "
                               f"match the specie of the parent "
-                              f"({relation_organism_value['organism']})")
+                              f"'{relation_organism_value['organism']}'")
     if current_organism_name in relation_organism_value['relationships']:
-        results_holder.append(f"Parent {relation_organism_name} is listing "
+        results_holder.append(f"Relationships part: rarent "
+                              f"'{relation_organism_name}' is listing "
                               f"the child as its parent")
 
 
@@ -179,8 +180,8 @@ def check_relationships(relationships):
             errors = list()
             for relation in v['relationships']:
                 if relation not in relationships:
-                    errors.append(f"No entity '{relation}' found "
-                                  f"(relationships part)")
+                    errors.append(f"Relationships part: no entity '{relation}' "
+                                  f"found")
                 else:
                     current_material = convert_to_snake_case(v['material'])
                     relation_material = convert_to_snake_case(
@@ -192,9 +193,10 @@ def check_relationships(relationships):
                     allowed_relationships = ALLOWED_RELATIONSHIPS[
                         current_material]
                     if relation_material not in allowed_relationships:
-                        errors.append(f"Referenced entity: {relation} does "
-                                      f"not match condition: should be "
-                                      f"{' or '.join(allowed_relationships)}")
+                        errors.append(f"Relationships part: referenced entity '"
+                                      f"{relation}' does not match condition '"
+                                      f"should be "
+                                      f"{' or '.join(allowed_relationships)}'")
             tmp['type']['errors'].extend(errors)
         issues_to_return[name].append(tmp)
     return issues_to_return

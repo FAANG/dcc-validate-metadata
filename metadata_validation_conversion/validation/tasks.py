@@ -6,6 +6,7 @@ from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
 from .helpers import validate, do_additional_checks, \
     get_validation_results_structure, get_record_name, join_issues, \
     collect_relationships, check_relationships
+from .get_biosample_data_async import fetch_biosample_data_for_ids
 
 
 @app.task
@@ -63,7 +64,8 @@ def collect_relationships_issues(json_to_test):
             json_to_test[name], name)
         relationships.update(new_relationships)
         biosamples_ids_to_call.update(biosample_ids)
-    print(biosamples_ids_to_call)
+    biosample_data = fetch_biosample_data_for_ids(biosamples_ids_to_call)
+    relationships.update(biosample_data)
     return check_relationships(relationships)
 
 
@@ -83,5 +85,5 @@ def join_validation_results(results):
             tmp = get_validation_results_structure(first_record['name'])
             tmp = join_issues(tmp, first_record, second_record, third_record)
             joined_results[record_type].append(tmp)
-    # print(json.dumps(joined_results))
+    print(json.dumps(joined_results))
     return joined_results
