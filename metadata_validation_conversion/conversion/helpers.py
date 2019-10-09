@@ -286,3 +286,18 @@ def get_sample_data(input_data, field_names_indexes, wb_datemode):
                 add_row(field_name, indexes, organism_to_validate, input_data,
                         date_field, wb_datemode)
     return organism_to_validate
+
+
+def check_sheet_name_material_consistency(sample_data, name):
+    if 'samples_core' in sample_data and 'material' in \
+            sample_data['samples_core'] and 'text' in \
+            sample_data['samples_core']['material']:
+        material = sample_data['samples_core']['material']['text']
+        if material != name:
+            return f"Conversion error: '{name}' sheet contains record with " \
+                   f"inconsistent material '{material}'"
+        else:
+            return False
+    else:
+        return f"Conversion error: '{name}' sheet contains records with " \
+               f"empty material"

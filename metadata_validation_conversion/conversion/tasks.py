@@ -1,7 +1,8 @@
 import xlrd
 import json
 
-from .helpers import get_field_names_and_indexes, get_sample_data
+from .helpers import get_field_names_and_indexes, get_sample_data, \
+    check_sheet_name_material_consistency
 from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import convert_to_snake_case
@@ -36,9 +37,15 @@ def read_excel_file(conversion_type):
                 except ValueError as err:
                     return err.args[0]
                 for row_number in range(1, sh.nrows):
-                    tmp.append(get_sample_data(sh.row_values(row_number),
-                                               field_names_indexes,
-                                               wb_datemode))
+                    sample_data = get_sample_data(sh.row_values(row_number),
+                                                  field_names_indexes,
+                                                  wb_datemode)
+                    material_consistency = \
+                        check_sheet_name_material_consistency(
+                            sample_data, sh.name)
+                    if material_consistency is not False:
+                        return material_consistency
+                    tmp.append(sample_data)
                 data[convert_to_snake_case(sh.name)] = tmp
         return data
     else:
