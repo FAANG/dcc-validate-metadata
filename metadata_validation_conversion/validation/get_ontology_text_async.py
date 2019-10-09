@@ -71,7 +71,7 @@ async def fetch_all_terms(ids, results_to_return):
 
 async def fetch_term(session, my_id, results_to_return):
     """
-    This functino will create task to call my_id from OLS
+    This function will create task to call my_id from OLS
     :param session: session to work with
     :param my_id: term_id to check
     :param results_to_return: json structure to parse
