@@ -588,11 +588,11 @@ sub validate_metadata {
       my $attribute_columns =
         $reporter->determine_attr_columns( $metadata, $rule_set );
 
-      my %useage_warning_summary;
+      my %usage_warning_summary;
       for my $ac (@$attribute_columns) {
         for my $k ( keys %{ $ac->probable_duplicates } ) {
           if ( scalar %{ $ac->probable_duplicates->{$k} } ) {
-            $useage_warning_summary{$k}++;
+            $usage_warning_summary{$k}++;
           }
         }
       }
@@ -610,7 +610,7 @@ sub validate_metadata {
         attribute_outcomes     => $attribute_outcomes,
         attribute_columns      => $attribute_columns,
         entity_rule_groups     => $entity_rule_groups,
-        useage_warning_summary => \%useage_warning_summary,
+        usage_warning_summary => \%usage_warning_summary,
       );
 
       $c->stash(%stash);

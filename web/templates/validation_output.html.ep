@@ -17,7 +17,7 @@
 
 % for my $cat (@categories){
   <li role="presentation">
-    <a href="#useage-<%= $cat %>" aria-controls="profile" role="tab" data-toggle="tab">Useage - <%= $cat %></a>
+    <a href="#usage-<%= $cat %>" aria-controls="profile" role="tab" data-toggle="tab">Usage - <%= $cat %></a>
   </li>
 % }
   </ul>
@@ -43,11 +43,11 @@
 
     <br/>
 
-    % if (scalar(%$useage_warning_summary)) {
+    % if (scalar(%$usage_warning_summary)) {
       <div class="alert alert-warning" role="alert">
-        Some of the terms used look like they might have slight differences, such as different capitalisation or punctuation. This can make two entities look more different than they really are. Please check these useage tabs for problems:
+        Some of the terms used look like they might have slight differences, such as different capitalisation or punctuation. This can make two entities look more different than they really are. Please check these usage tabs for problems:
         <ul>
-        % for my $cat (sort keys %$useage_warning_summary){
+        % for my $cat (sort keys %$usage_warning_summary){
           <li>Usage - <%= $cat%></li>
         %}
         </ul>
@@ -227,7 +227,7 @@
 
 
   %for my $cat (@categories){
-    <div role="tabpanel" class="tab-pane" id="useage-<%= $cat %>">
+    <div role="tabpanel" class="tab-pane" id="usage-<%= $cat %>">
       <table class="table table-hover table-condensed table-striped">
         <th>Attribute</th>
         <th><%= $cat %></th>
