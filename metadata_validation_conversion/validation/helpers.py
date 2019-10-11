@@ -4,7 +4,7 @@ import json
 from metadata_validation_conversion.helpers import get_samples_json, \
     convert_to_snake_case
 from metadata_validation_conversion.constants import SKIP_PROPERTIES, \
-    ALLOWED_RELATIONSHIPS
+    ALLOWED_RELATIONSHIPS, MISSING_VALUES
 from .get_ontology_text_async import collect_ids
 
 
@@ -28,24 +28,25 @@ def validate(data, schema):
     return validation_errors
 
 
-def collect_recommended_fields(json_to_check):
+def collect_fields(json_to_check, type_of_fields):
     """
     This function will return list of recommended fields
     :param json_to_check: json to check for recommended fields
+    :param type_of_fields: type of fields to collect
     :return: list with recommended fields
     """
-    recommended_fields = list()
+    collected_fields = list()
     for field_name, field_value in json_to_check['properties'].items():
         if field_name not in SKIP_PROPERTIES:
             if field_value['type'] == 'object':
                 if field_value['properties']['mandatory']['const'] == \
-                        'recommended':
-                    recommended_fields.append(field_name)
+                        type_of_fields:
+                    collected_fields.append(field_name)
             elif field_value['type'] == 'array':
                 if field_value['items']['properties']['mandatory']['const'] == \
-                        'recommended':
-                    recommended_fields.append(field_name)
-    return recommended_fields
+                        type_of_fields:
+                    collected_fields.append(field_name)
+    return collected_fields
 
 
 def check_item_is_present(dict_to_check, list_of_items):
@@ -115,7 +116,63 @@ def check_ontology_text(record, ontology_ids, ontology_names=None):
     return ontology_warnings
 
 
+def check_single_missing_value(key, value, missing_values, issues_holder,
+                               field_name):
+    """
+    This function will check that specific cell contains missing values
+    :param key: key that we check
+    :param value: value that we check
+    :param missing_values: list of missing values to search in
+    :param issues_holder: holder for errors and warnings
+    :param field_name: field name that function currently on
+    """
+    if value in missing_values['errors']:
+        issues_holder['errors'].append(f"Field '{key}' of '{field_name}' "
+                                       f"contains missing value that is not "
+                                       f"appropriate for this field")
+    elif value in missing_values['warnings']:
+        issues_holder['warnings'].append(f"Field '{key}' of '{field_name}' "
+                                         f"contains missing value that is not "
+                                         f"appropriate for this field")
+
+
+def check_missing_values(record, mandatory_fields, recommended_fields,
+                         optional_fields, issues_holder):
+    """
+    This function will check that data contains special missing values
+    :param record: record to check
+    :param mandatory_fields: list of mandatory fields
+    :param recommended_fields: list of recommended fields
+    :param optional_fields: list of optional fields
+    :param issues_holder: holder for errors and warnings
+    """
+    for field_name, field_value in record.items():
+        if isinstance(field_value, list):
+            for sub_value in field_value:
+                check_missing_values({field_name: sub_value}, mandatory_fields,
+                                     recommended_fields, optional_fields,
+                                     issues_holder)
+        else:
+            for k, v in field_value.items():
+                if field_name in mandatory_fields:
+                    check_single_missing_value(k, v,
+                                               MISSING_VALUES['mandatory'],
+                                               issues_holder, field_name)
+                elif field_name in recommended_fields:
+                    check_single_missing_value(k, v,
+                                               MISSING_VALUES['recommended'],
+                                               issues_holder, field_name)
+                elif field_name in optional_fields:
+                    check_single_missing_value(k, v, MISSING_VALUES['optional'],
+                                               issues_holder, field_name)
+
+
 def check_date_units(record):
+    """
+    This function will check that date unit is consistent with data value
+    :param record: record to check
+    :return: list of warnings
+    """
     date_units_warnings = list()
     for field_name, field_value in record.items():
         if 'date' in field_name and 'value' in field_value and 'units' in \
@@ -273,9 +330,14 @@ def do_additional_checks(records, url, name):
     issues_to_return = list()
     samples_type_json, samples_core_json = get_samples_json(url)
 
-    # Collect list of recommended fields
-    recommended_type_fields = collect_recommended_fields(samples_type_json)
-    recommended_core_fields = collect_recommended_fields(samples_core_json)
+    # Collect list of all fields
+    mandatory_type_fields = collect_fields(samples_type_json, "mandatory")
+    mandatory_core_fields = collect_fields(samples_core_json, "mandatory")
+    recommended_type_fields = collect_fields(samples_type_json, "recommended")
+    recommended_core_fields = collect_fields(samples_core_json, "recommended")
+    optional_type_fields = collect_fields(samples_type_json, "optional")
+    optional_core_fields = collect_fields(samples_core_json, "optional")
+
     ontology_names_type = collect_ontology_names(samples_type_json)
     ontology_names_core = collect_ontology_names(samples_core_json)
     ontology_ids = collect_ids(records)
@@ -309,6 +371,14 @@ def do_additional_checks(records, url, name):
         tmp['type']['warnings'].extend(
             check_date_units(record)
         )
+
+        # Check that data has special missing values
+        check_missing_values(record['samples_core'], mandatory_core_fields,
+                             recommended_core_fields, optional_core_fields,
+                             tmp['core'])
+        check_missing_values(record, mandatory_type_fields,
+                             recommended_type_fields, optional_type_fields,
+                             tmp['type'])
 
         # TODO: Check breeds
         check_breeds()

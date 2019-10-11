@@ -52,3 +52,20 @@ JSON_TYPES = {
     'type': None,
     'custom': 'custom'
 }
+
+
+MISSING_VALUES = {
+    'mandatory': {
+        'errors': ["not applicable", "not collected", "not provided"],
+        "warnings": ["restricted access"]
+    },
+    'recommended': {
+        'errors': [],
+        'warnings': ["not collected", "not provided"]
+    },
+    'optional': {
+        'errors': ["not applicable", "not collected", "not provided",
+                   "restricted access"],
+        'warnings': []
+    }
+}
