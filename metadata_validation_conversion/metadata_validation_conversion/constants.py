@@ -69,3 +69,13 @@ MISSING_VALUES = {
         'warnings': []
     }
 }
+
+SPECIES_BREED_LINKS = {
+    "NCBITaxon:89462": "LBO:0001042",  # buffalo (Bubalus bubalis)
+    "NCBITaxon:9913": "LBO:0000001",  # cattle (Bos taurus)
+    "NCBITaxon:9031": "LBO:0000002",  # chicken
+    "NCBITaxon:9925": "LBO:0000954",  # goat
+    "NCBITaxon:9796": "LBO:0000713",  # horse
+    "NCBITaxon:9823": "LBO:0000003",  # pig
+    "NCBITaxon:9940": "LBO:0000004"  # sheep
+}

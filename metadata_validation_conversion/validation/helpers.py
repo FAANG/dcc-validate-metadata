@@ -4,7 +4,7 @@ import json
 from metadata_validation_conversion.helpers import get_samples_json, \
     convert_to_snake_case
 from metadata_validation_conversion.constants import SKIP_PROPERTIES, \
-    ALLOWED_RELATIONSHIPS, MISSING_VALUES
+    ALLOWED_RELATIONSHIPS, MISSING_VALUES, SPECIES_BREED_LINKS
 from .get_ontology_text_async import collect_ids
 
 
@@ -195,8 +195,22 @@ def check_date_units(record):
     return date_units_warnings
 
 
-def check_breeds():
-    pass
+def check_breeds(record):
+    organism_term = record['organism']['term']
+    schema = {
+        "type": "string",
+        "graph_restriction": {
+            "ontologies": ["obo:lbo"],
+            "classes": [f"{SPECIES_BREED_LINKS[organism_term]}"],
+            "relations": ["rdfs:subClassOf"],
+            "direct": False,
+            "include_self": True
+        }
+    }
+    validation_results = validate(record['breed']['term'], schema)
+    if len(validation_results) > 0:
+        return f"Breed '{record['breed']['text']}' doesn't match the animal " \
+               f"specie: '{record['organism']['text']}'"
 
 
 def check_parents(current_organism_name, current_organism_value,
@@ -381,7 +395,8 @@ def do_additional_checks(records, url, name):
                              tmp['type'])
 
         # TODO: Check breeds
-        check_breeds()
+        if name == 'organism':
+            tmp['type']['errors'].append(check_breeds(record))
 
         # Check custom fields for ontology consistence
         tmp['custom']['warnings'].extend(
