@@ -50,3 +50,10 @@ def read_excel_file(conversion_type):
         return data
     else:
         return 'Error: only samples are accepted now!'
+
+
+@app.task
+def upload_excel_file(file):
+    with open("./file.xlsx", 'wb+') as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
