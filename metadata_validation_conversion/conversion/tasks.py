@@ -9,17 +9,15 @@ from metadata_validation_conversion.helpers import convert_to_snake_case
 
 
 @app.task
-def read_excel_file(conversion_type):
+def read_excel_file(conversion_type, file):
     """
     This task will convert excel file to proper json format
     :param conversion_type: could be 'samples' or 'experiments'
+    :param file: file to read
     :return: converted data
     """
     if conversion_type == 'samples':
-        wb = xlrd.open_workbook(
-            '/Users/alexey/ebi_projects/dcc-validate-metadata/'
-            'metadata_validation_conversion/conversion/'
-            'organism.xlsx')
+        wb = xlrd.open_workbook(file)
         wb_datemode = wb.datemode
         data = dict()
         for sh in wb.sheets():
