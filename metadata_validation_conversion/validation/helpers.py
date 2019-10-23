@@ -1,10 +1,10 @@
 import requests
 import datetime
-import json
 from metadata_validation_conversion.helpers import get_samples_json, \
     convert_to_snake_case
 from metadata_validation_conversion.constants import SKIP_PROPERTIES, \
-    ALLOWED_RELATIONSHIPS, MISSING_VALUES, SPECIES_BREED_LINKS
+    ALLOWED_RELATIONSHIPS, MISSING_VALUES, SPECIES_BREED_LINKS, \
+    ELIXIR_VALIDTOR_URL
 from .get_ontology_text_async import collect_ids
 
 
@@ -19,10 +19,10 @@ def validate(data, schema):
         'schema': schema,
         'object': data
     }
-    response = requests.post(
-        'http://localhost:3020/validate', json=json_to_send).json()
+    response = requests.post(ELIXIR_VALIDTOR_URL, json=json_to_send).json()
     validation_errors = list()
-    if 'validationErrors' in response and len(response['validationErrors']) > 0:
+    if 'validationErrors' in response and len(
+            response['validationErrors']) > 0:
         for error in response['validationErrors']:
             validation_errors.append(error['userFriendlyMessage'])
     return validation_errors
