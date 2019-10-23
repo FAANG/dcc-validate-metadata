@@ -1,11 +1,10 @@
 import json
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.constants import ALLOWED_RECORD_TYPES
-from .helpers import do_additional_checks, collect_relationships, \
-    check_relationships
-from .get_biosample_data_async import fetch_biosample_data_for_ids
+from .helpers import do_additional_checks
 from .ElixirValidatorResults import ElixirValidatorResults
 from .JoinedResults import JoinedResults
+from .RelationshipsIssues import RelationshipsIssues
 
 
 @app.task
@@ -43,17 +42,8 @@ def collect_relationships_issues(json_to_test):
     :param json_to_test: json to be tested
     :return: all issues in dict
     """
-    relationships = dict()
-    biosamples_ids_to_call = set()
-    # In first iteration need to collect all relationships
-    for name, url in ALLOWED_RECORD_TYPES.items():
-        new_relationships, biosample_ids = collect_relationships(
-            json_to_test[name], name)
-        relationships.update(new_relationships)
-        biosamples_ids_to_call.update(biosample_ids)
-    biosample_data = fetch_biosample_data_for_ids(biosamples_ids_to_call)
-    relationships.update(biosample_data)
-    return check_relationships(relationships)
+    relationships_issues_object = RelationshipsIssues(json_to_test)
+    return relationships_issues_object.collect_relationships_issues()
 
 
 @app.task
