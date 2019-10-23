@@ -14,6 +14,7 @@ CELL_CULTURE_URL = f"{BASE_URL}type/samples/" \
                    f"faang_samples_cell_culture.metadata_rules.json"
 CELL_LINE_URL = f"{BASE_URL}type/samples/" \
                 f"faang_samples_cell_line.metadata_rules.json"
+ELIXIR_VALIDTOR_URL = "http://localhost:3020/validate"
 
 ALLOWED_SHEET_NAMES = {
     'organism': ORGANISM_URL,

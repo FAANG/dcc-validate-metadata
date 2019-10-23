@@ -1,12 +1,10 @@
-import requests
 import json
 from metadata_validation_conversion.celery import app
-from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
-    ALLOWED_RECORD_TYPES
-from .helpers import validate, do_additional_checks, \
-    get_validation_results_structure, get_record_name, join_issues, \
-    collect_relationships, check_relationships
+from metadata_validation_conversion.constants import ALLOWED_RECORD_TYPES
+from .helpers import do_additional_checks, get_validation_results_structure, \
+    join_issues, collect_relationships, check_relationships
 from .get_biosample_data_async import fetch_biosample_data_for_ids
+from .ElixirValidatorResults import ElixirValidatorResults
 
 
 @app.task
@@ -16,20 +14,8 @@ def validate_against_schema(json_to_test):
     :param json_to_test: json to test against schema
     :return: all issues in dict
     """
-    core_schema = requests.get(SAMPLE_CORE_URL).json()
-    validation_results = dict()
-    for name, url in ALLOWED_RECORD_TYPES.items():
-        validation_results.setdefault(name, list())
-        type_schema = requests.get(url).json()
-        del type_schema['properties']['samples_core']
-        for index, record in enumerate(json_to_test[name]):
-            record_name = get_record_name(record['custom'], index, name)
-            tmp = get_validation_results_structure(record_name)
-            tmp['core']['errors'] = validate(record['samples_core'],
-                                             core_schema)
-            tmp['type']['errors'] = validate(record, type_schema)
-            validation_results[name].append(tmp)
-    return validation_results
+    elixir_validation_results = ElixirValidatorResults(json_to_test)
+    return elixir_validation_results.run_validation()
 
 
 @app.task

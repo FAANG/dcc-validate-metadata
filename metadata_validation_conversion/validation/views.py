@@ -25,4 +25,5 @@ def validate_samples(request, task_id):
                       collect_relationships_issues_task),
                      join_validation_results_task)
     my_chord.apply_async()
+    # TODO send new status
     return render(request, 'validation/validation.html')
