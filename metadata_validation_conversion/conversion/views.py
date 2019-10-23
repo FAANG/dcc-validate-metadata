@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from .tasks import read_excel_file, upload_excel_file
+from .tasks import read_excel_file
 
 
 def index(request):
