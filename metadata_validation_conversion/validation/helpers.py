@@ -445,27 +445,6 @@ def get_record_name(record, index, name):
         return record['sample_name']['value']
 
 
-def join_issues(to_join_to, first_record, second_record, third_record):
-    """
-    This function will join all issues from first and second record into one
-    place
-    :param to_join_to: holder that will store merged issues
-    :param first_record: first record to get issues from
-    :param second_record: second record to get issues from
-    :param third_record: third record to get issues from
-    :return: merged results
-    """
-    for issue_type in ['core', 'type', 'custom']:
-        for issue in ['errors', 'warnings']:
-            to_join_to[issue_type][issue].extend(
-                first_record[issue_type][issue])
-            to_join_to[issue_type][issue].extend(
-                second_record[issue_type][issue])
-            to_join_to[issue_type][issue].extend(
-                third_record[issue_type][issue])
-    return to_join_to
-
-
 def collect_relationships(records, name):
     """
     This function will collect information about existing relationships and

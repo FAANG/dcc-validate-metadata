@@ -1,10 +1,11 @@
 import json
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.constants import ALLOWED_RECORD_TYPES
-from .helpers import do_additional_checks, get_validation_results_structure, \
-    join_issues, collect_relationships, check_relationships
+from .helpers import do_additional_checks, collect_relationships, \
+    check_relationships
 from .get_biosample_data_async import fetch_biosample_data_for_ids
 from .ElixirValidatorResults import ElixirValidatorResults
+from .JoinedResults import JoinedResults
 
 
 @app.task
@@ -62,14 +63,5 @@ def join_validation_results(results):
     :param results: list with results of previous two tasks
     :return: joined issues in dict
     """
-    joined_results = dict()
-    for record_type in results[0]:
-        joined_results.setdefault(record_type, list())
-        for index, first_record in enumerate(results[0][record_type]):
-            second_record = results[1][record_type][index]
-            third_record = results[2][record_type][index]
-            tmp = get_validation_results_structure(first_record['name'])
-            tmp = join_issues(tmp, first_record, second_record, third_record)
-            joined_results[record_type].append(tmp)
-    print(json.dumps(joined_results))
-    return joined_results
+    joined_results_object = JoinedResults(results)
+    return joined_results_object.join_results()
