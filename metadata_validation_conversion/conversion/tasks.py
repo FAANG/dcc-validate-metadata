@@ -1,3 +1,4 @@
+import json
 from .ReadExcelFile import ReadExcelFile
 from metadata_validation_conversion.celery import app
 
@@ -12,6 +13,8 @@ def read_excel_file(conversion_type, file):
     """
     if conversion_type == 'samples':
         read_excel_file_object = ReadExcelFile(file)
-        read_excel_file_object.start_conversion()
+        results = read_excel_file_object.start_conversion()
+        # print(json.dumps(results))
+        return results
     else:
         return 'Error: only samples are accepted now!'

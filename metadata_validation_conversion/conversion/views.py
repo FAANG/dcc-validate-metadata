@@ -17,6 +17,7 @@ def convert_samples(request):
         res = read_excel_file.apply_async(('samples', 'file.xlsx'),
                                           queue='conversion')
         return HttpResponse(f"Conversion started: {res.id}")
+    # TODO convert it to error response
     return HttpResponse("Please use POST method for conversion!")
 
 
