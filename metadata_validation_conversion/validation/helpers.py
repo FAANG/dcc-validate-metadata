@@ -394,9 +394,10 @@ def do_additional_checks(records, url, name):
                              recommended_type_fields, optional_type_fields,
                              tmp['type'])
 
-        # TODO: Check breeds
         if name == 'organism':
-            tmp['type']['errors'].append(check_breeds(record))
+            check_breeds_results = check_breeds(record)
+            if check_breeds_results:
+                tmp['type']['errors'].append(check_breeds(record))
 
         # Check custom fields for ontology consistence
         tmp['custom']['warnings'].extend(
