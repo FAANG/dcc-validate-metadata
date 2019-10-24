@@ -1,10 +1,8 @@
-import json
 from metadata_validation_conversion.celery import app
-from metadata_validation_conversion.constants import ALLOWED_RECORD_TYPES
-from .helpers import do_additional_checks
 from .ElixirValidatorResults import ElixirValidatorResults
 from .JoinedResults import JoinedResults
 from .RelationshipsIssues import RelationshipsIssues
+from .WarningsAndAdditionalChecks import WarningsAndAdditionalChecks
 
 
 @app.task
@@ -25,14 +23,8 @@ def collect_warnings_and_additional_checks(json_to_test):
     :param json_to_test: json to test against additional checks
     :return: all issues in dict
     """
-    warnings_and_additional_checks_results = dict()
-
-    # Do additional checks
-    for name, url in ALLOWED_RECORD_TYPES.items():
-        warnings_and_additional_checks_results.setdefault(name, list())
-        warnings_and_additional_checks_results[name] = \
-            do_additional_checks(json_to_test[name], url, name)
-    return warnings_and_additional_checks_results
+    additional_checks_object = WarningsAndAdditionalChecks(json_to_test)
+    return additional_checks_object.collect_warnings_and_additional_checks()
 
 
 @app.task
