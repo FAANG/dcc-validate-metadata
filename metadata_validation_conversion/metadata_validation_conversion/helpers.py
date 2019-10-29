@@ -1,5 +1,8 @@
 import requests
-from .constants import SAMPLE_CORE_URL
+import asyncio
+import websockets
+import json
+from .constants import SAMPLE_CORE_URL, WS_URL
 
 
 def get_samples_json(url):
@@ -20,3 +23,21 @@ def convert_to_snake_case(my_string):
     :return: string in camel_case format
     """
     return '_'.join(my_string.lower().split(" "))
+
+
+def send_message(status):
+    """
+    This function will call send_message_to_ws in async loop
+    :param status: status to send
+    """
+    asyncio.get_event_loop().run_until_complete(send_message_to_ws(status))
+
+
+async def send_message_to_ws(status):
+    """
+    This function will send status to ws server
+    :param status: status to send
+    :return:
+    """
+    async with websockets.connect(WS_URL) as websocket:
+        await websocket.send(json.dumps({'status': status}))

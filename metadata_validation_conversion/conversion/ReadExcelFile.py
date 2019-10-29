@@ -1,9 +1,8 @@
 import xlrd
-
 from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
-    get_samples_json
+    get_samples_json, send_message
 
 
 class ReadExcelFile:
