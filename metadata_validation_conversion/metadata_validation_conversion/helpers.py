@@ -24,11 +24,17 @@ def convert_to_snake_case(my_string):
     return '_'.join(my_string.lower().split(" "))
 
 
-def send_message(status):
+def send_message(status, errors=None):
     """
     This function will send message to channel layer
     :param status: status to send
+    :param errors: list of errors
     """
+    response = {
+        'status': status,
+        'errors': errors
+    }
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)("submission_test_task", {
-        "type": "submission_message", "status": status})
+        "type": "submission_message",
+        "response": response})
