@@ -1,4 +1,5 @@
 from metadata_validation_conversion.celery import app
+from metadata_validation_conversion.helpers import send_message
 from .ElixirValidatorResults import ElixirValidatorResults
 from .JoinedResults import JoinedResults
 from .RelationshipsIssues import RelationshipsIssues
@@ -46,4 +47,6 @@ def join_validation_results(results):
     :return: joined issues in dict
     """
     joined_results_object = JoinedResults(results)
-    return joined_results_object.join_results()
+    results = joined_results_object.join_results()
+    send_message(status='Success', validation_results=results);
+    return 'Success'

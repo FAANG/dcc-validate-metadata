@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.http import HttpResponse
 from celery import chord
 from .tasks import validate_against_schema, \
     collect_warnings_and_additional_checks, join_validation_results, \
@@ -25,5 +25,4 @@ def validate_samples(request, task_id):
                       collect_relationships_issues_task),
                      join_validation_results_task)
     my_chord.apply_async()
-    # TODO send new status
-    return render(request, 'validation/validation.html')
+    return HttpResponse("Starting validation")
