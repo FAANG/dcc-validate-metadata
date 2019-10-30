@@ -34,6 +34,7 @@ def fetch_biosample_data_for_ids(ids):
                 try:
                     response = requests.get(f"https://www.ebi.ac.uk/biosamples"
                                             f"/samples/{my_id}").json()
+                    results.setdefault(my_id, dict())
                     parse_biosample_results(response, results, my_id)
                 except ValueError:
                     pass
