@@ -43,7 +43,7 @@ def fetch_text_for_ids(ids):
     :return: dict with term_ids as keys and ols results as values
     """
     results = dict()
-    asyncio.get_event_loop().run_until_complete(fetch_all_terms(ids, results))
+    asyncio.new_event_loop().run_until_complete(fetch_all_terms(ids, results))
     # Not all ids can get through OLS because of bandwidth, so do sync calls
     if len(results) < len(ids):
         for my_id in ids:
