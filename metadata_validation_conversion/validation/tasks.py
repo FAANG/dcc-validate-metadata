@@ -48,5 +48,5 @@ def join_validation_results(results):
     """
     joined_results_object = JoinedResults(results)
     results = joined_results_object.join_results()
-    send_message(status='Success', validation_results=results);
+    send_message(status='Success', validation_results=results)
     return 'Success'

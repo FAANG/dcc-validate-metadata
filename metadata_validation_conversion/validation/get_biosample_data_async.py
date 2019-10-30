@@ -26,7 +26,7 @@ def parse_biosample_results(results, results_to_return, my_id):
 
 def fetch_biosample_data_for_ids(ids):
     results = dict()
-    asyncio.get_event_loop().run_until_complete(fetch_all_biosamples(ids,
+    asyncio.new_event_loop().run_until_complete(fetch_all_biosamples(ids,
                                                                      results))
     if len(results) < len(ids):
         for my_id in ids:
