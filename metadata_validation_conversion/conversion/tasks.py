@@ -1,7 +1,6 @@
 from .ReadExcelFile import ReadExcelFile
 from metadata_validation_conversion.celery import app
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+from metadata_validation_conversion.helpers import send_message
 
 
 @app.task
@@ -12,16 +11,11 @@ def read_excel_file(conversion_type, file):
     :param file: file to read
     :return: converted data
     """
-    channel_layer = get_channel_layer()
+    send_message('Waiting')
     if conversion_type == 'samples':
-
-        async_to_sync(channel_layer.group_send)("submission_test_task", {
-            "type": "submission_message", "status": "Waiting"})
-
         read_excel_file_object = ReadExcelFile(file)
         results = read_excel_file_object.start_conversion()
-        async_to_sync(channel_layer.group_send)("submission_test_task", {
-            "type": "submission_message", "status": "Success"})
+        send_message('Success')
         return results
     else:
         return 'Error: only samples are accepted now!'

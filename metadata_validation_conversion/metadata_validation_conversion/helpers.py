@@ -1,8 +1,7 @@
 import requests
-import asyncio
-import websockets
-import json
-from .constants import SAMPLE_CORE_URL, WS_URL
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from .constants import SAMPLE_CORE_URL
 
 
 def get_samples_json(url):
@@ -27,17 +26,9 @@ def convert_to_snake_case(my_string):
 
 def send_message(status):
     """
-    This function will call send_message_to_ws in async loop
+    This function will send message to channel layer
     :param status: status to send
     """
-    asyncio.get_event_loop().run_until_complete(send_message_to_ws(status))
-
-
-async def send_message_to_ws(status):
-    """
-    This function will send status to ws server
-    :param status: status to send
-    :return:
-    """
-    async with websockets.connect(WS_URL) as websocket:
-        await websocket.send(json.dumps({'status': status}))
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)("submission_test_task", {
+        "type": "submission_message", "status": status})
