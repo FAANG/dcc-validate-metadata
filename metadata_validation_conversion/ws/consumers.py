@@ -25,22 +25,22 @@ class SubmissionConsumer(AsyncWebsocketConsumer):
     # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json['status']
+        message = text_data_json['response']
 
         # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'submission_message',
-                'status': message
+                'response': message
             }
         )
 
     # Receive message from room group
     async def submission_message(self, event):
-        message = event['status']
+        message = event['response']
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
-            'status': message
+            'response': message
         }))

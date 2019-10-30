@@ -11,8 +11,8 @@ def read_excel_file(conversion_type, file):
     :param file: file to read
     :return: converted data
     """
-    send_message('Waiting')
     if conversion_type == 'samples':
+        send_message('Waiting')
         read_excel_file_object = ReadExcelFile(file)
         results = read_excel_file_object.start_conversion()
         send_message('Success')
