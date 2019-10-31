@@ -1,3 +1,5 @@
+from decouple import config
+
 BASE_URL = "https://raw.githubusercontent.com/FAANG/dcc-metadata/" \
            "switch_to_json-schema/json_schema/"
 SAMPLE_CORE_URL = f"{BASE_URL}core/samples/" \
@@ -14,7 +16,7 @@ CELL_CULTURE_URL = f"{BASE_URL}type/samples/" \
                    f"faang_samples_cell_culture.metadata_rules.json"
 CELL_LINE_URL = f"{BASE_URL}type/samples/" \
                 f"faang_samples_cell_line.metadata_rules.json"
-ELIXIR_VALIDATOR_URL = "http://localhost:3020/validate"
+ELIXIR_VALIDATOR_URL = config('ELIXIR_VALIDATOR_URL')
 WS_URL = "ws://127.0.0.1:8000/ws/submission/test_task/"
 
 ALLOWED_SHEET_NAMES = {
