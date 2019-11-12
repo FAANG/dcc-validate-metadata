@@ -23,5 +23,11 @@ def convert_samples(request):
 
 @csrf_exempt
 def convert_experiments(request):
-    read_excel_file.delay('experiments')
-    return HttpResponse("This is conversion app for experiments!")
+    if request.method == 'POST':
+        with open('experiments.xlsx', 'wb+') as destination:
+            for chunk in request.FILES['file'].chunks():
+                destination.write(chunk)
+        res = read_excel_file.apply_async(('experiments', 'experiments.xlsx'),
+                                          queue='conversion')
+        return HttpResponse(res.id)
+    return HttpResponse("Please use POST method for conversion")

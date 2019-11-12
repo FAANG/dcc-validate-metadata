@@ -18,4 +18,6 @@ def read_excel_file(conversion_type, file):
         send_message('Success')
         return results
     else:
-        return 'Error: only samples are accepted now!'
+        send_message('Waiting')
+        send_message('Success')
+        return 'Success'
