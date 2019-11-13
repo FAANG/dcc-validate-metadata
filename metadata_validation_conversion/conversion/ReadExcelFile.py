@@ -2,12 +2,13 @@ import xlrd
 from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
-    get_samples_json
+    get_rules_json
 
 
 class ReadExcelFile:
-    def __init__(self, file_path):
+    def __init__(self, file_path, json_type):
         self.file_path = file_path
+        self.json_type = json_type
         self.headers = list()
         self.array_fields = list()
         self.wb_datemode = None
@@ -22,7 +23,6 @@ class ReadExcelFile:
         data = dict()
         for sh in wb.sheets():
             if sh.name not in ALLOWED_SHEET_NAMES:
-                # TODO convert it to error response
                 return f"Error: there are no rules for {sh.name} type!"
             else:
                 tmp = list()
@@ -32,7 +32,6 @@ class ReadExcelFile:
                     field_names_indexes = self.get_field_names_and_indexes(
                         sh.name)
                 except ValueError as err:
-                    # TODO convert to error report
                     return err.args[0]
                 for row_number in range(1, sh.nrows):
                     sample_data = self.get_sample_data(
@@ -58,10 +57,10 @@ class ReadExcelFile:
         field_names_and_indexes = dict()
 
         url = ALLOWED_SHEET_NAMES[sheet_name]
-        samples_type_json, samples_core_json = get_samples_json(url)
-        field_names['core'], tmp = self.parse_json(samples_core_json)
+        type_json, core_json = get_rules_json(url, self.json_type)
+        field_names['core'], tmp = self.parse_json(core_json)
         array_fields.extend(tmp)
-        field_names['type'], tmp = self.parse_json(samples_type_json)
+        field_names['type'], tmp = self.parse_json(type_json)
         array_fields.extend(tmp)
         field_names['custom'], tmp = self.get_custom_data_fields(field_names)
         array_fields.extend(tmp)
@@ -205,9 +204,8 @@ class ReadExcelFile:
         :return: dict with subfield indexes
         """
         if self.headers[index + 1] != second_subfield:
-            # TODO convert to error report
-            print(
-                f"This property {field} doesn't have {second_subfield} "
+            raise ValueError(
+                f"Error: this property {field} doesn't have {second_subfield} "
                 f"provided in template!")
         else:
             if second_subfield == 'unit':
@@ -324,19 +322,23 @@ class ReadExcelFile:
         else:
             return date_item
 
-    @staticmethod
-    def check_sheet_name_material_consistency(sample_data, name):
+    def check_sheet_name_material_consistency(self, sample_data, name):
+        """
+        This function checks that sheet has consistent material
+        :param sample_data: data to check
+        :param name: name of sheet
+        :return: False or error
+        """
+        if self.json_type != 'samples':
+            return False
         if 'samples_core' in sample_data and 'material' in \
                 sample_data['samples_core'] and 'text' in \
                 sample_data['samples_core']['material']:
             material = sample_data['samples_core']['material']['text']
             if material != name:
-                # TODO convert it to error response
-                return f"Conversion error: '{name}' sheet contains record " \
-                       f"with inconsistent material '{material}'"
+                return f"Error: '{name}' sheet contains record with " \
+                       f"inconsistent material '{material}'"
             else:
                 return False
         else:
-            # TODO convert it to error response
-            return f"Conversion error: '{name}' sheet contains records with " \
-                   f"empty material"
+            return f"Error: '{name}' sheet contains records with empty material"

@@ -4,6 +4,8 @@ BASE_URL = "https://raw.githubusercontent.com/FAANG/dcc-metadata/" \
            "switch_to_json-schema/json_schema/"
 SAMPLE_CORE_URL = f"{BASE_URL}core/samples/" \
                   f"faang_samples_core.metadata_rules.json"
+EXPERIMENT_CORE_URL = f"{BASE_URL}/core/experiments/" \
+                      f"faang_experiments_core.metadata_rules.json"
 ORGANISM_URL = f"{BASE_URL}type/samples/" \
                f"faang_samples_organism.metadata_rules.json"
 SPECIMEN_FROM_ORGANISM_URL = f"{BASE_URL}type/samples/" \
@@ -16,6 +18,8 @@ CELL_CULTURE_URL = f"{BASE_URL}type/samples/" \
                    f"faang_samples_cell_culture.metadata_rules.json"
 CELL_LINE_URL = f"{BASE_URL}type/samples/" \
                 f"faang_samples_cell_line.metadata_rules.json"
+WGS_URL = f"{BASE_URL}/type/experiments/" \
+          f"faang_experiments_wgs.metadata_rules.json"
 ELIXIR_VALIDATOR_URL = config('ELIXIR_VALIDATOR_URL')
 WS_URL = "ws://127.0.0.1:8000/ws/submission/test_task/"
 
@@ -25,7 +29,8 @@ ALLOWED_SHEET_NAMES = {
     'pool of specimens': POOL_OF_SPECIMENS_URL,
     'cell specimen': CELL_SPECIMEN_URL,
     'cell culture': CELL_CULTURE_URL,
-    'cell line': CELL_LINE_URL
+    'cell line': CELL_LINE_URL,
+    'wgs': WGS_URL
 }
 
 ALLOWED_RECORD_TYPES = {
@@ -47,7 +52,12 @@ ALLOWED_RELATIONSHIPS = {
                   'cell_specimen', 'cell_culture', 'cell_line']
 }
 
-SKIP_PROPERTIES = ['describedBy', 'schema_version', 'samples_core']
+SKIP_PROPERTIES = [
+    'describedBy',
+    'schema_version',
+    'samples_core',
+    'experiments_core'
+]
 
 SPECIAL_PROPERTIES = ['unit', 'term_source_id']
 

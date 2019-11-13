@@ -1,7 +1,7 @@
 import datetime
 from metadata_validation_conversion.constants import ALLOWED_RECORD_TYPES, \
     SKIP_PROPERTIES, MISSING_VALUES, SPECIES_BREED_LINKS
-from metadata_validation_conversion.helpers import get_samples_json
+from metadata_validation_conversion.helpers import get_rules_json
 from .get_ontology_text_async import collect_ids
 from .helpers import get_record_name, get_validation_results_structure, validate
 
@@ -30,7 +30,7 @@ class WarningsAndAdditionalChecks:
         """
         records = self.json_to_test[name]
         issues_to_return = list()
-        samples_type_json, samples_core_json = get_samples_json(url)
+        samples_type_json, samples_core_json = get_rules_json(url)
 
         # Collect list of all fields
         mandatory_type_fields = self.collect_fields(samples_type_json,
