@@ -59,13 +59,24 @@ ALLOWED_SHEET_NAMES = {
     'atac-seq': ATAC_SEQ_URL
 }
 
-ALLOWED_RECORD_TYPES = {
+ALLOWED_SAMPLES_TYPES = {
     'organism': ORGANISM_URL,
     'specimen_from_organism': SPECIMEN_FROM_ORGANISM_URL,
     'pool_of_specimens': POOL_OF_SPECIMENS_URL,
     'cell_specimen': CELL_SPECIMEN_URL,
     'cell_culture': CELL_CULTURE_URL,
     'cell_line': CELL_LINE_URL
+}
+
+ALLOWED_EXPERIMENTS_TYPES = {
+    'wgs': WGS_URL,
+    'rna-seq': RNA_SEQ_URL,
+    'hi-c': HI_C_URL,
+    'dnase-seq': DNASE_SEQ_URL,
+    'chip-seq_input_dna': CHIP_SEQ_URL,
+    'chip-seq_dna-binding_proteins': CHIP_SEQ_URL,
+    'bs-seq': BS_SEQ_URL,
+    'atac-seq': ATAC_SEQ_URL
 }
 
 ALLOWED_RELATIONSHIPS = {

@@ -10,7 +10,8 @@ def validate_samples(request, task_id):
     conversion_result = app.AsyncResult(task_id)
     json_to_test = conversion_result.get()
     # Create three tasks that should be run in parallel and assign callback
-    validate_against_schema_task = validate_against_schema.s(json_to_test).set(
+    validate_against_schema_task = validate_against_schema.s(json_to_test,
+                                                             'samples').set(
         queue='validation')
     collect_warnings_and_additional_checks_task = \
         collect_warnings_and_additional_checks.s(json_to_test).set(
@@ -25,4 +26,14 @@ def validate_samples(request, task_id):
                       collect_relationships_issues_task),
                      join_validation_results_task)
     my_chord.apply_async()
+    return HttpResponse("Starting validation")
+
+
+def validate_experiments(request, task_id):
+    conversion_result = app.AsyncResult(task_id)
+    json_to_test = conversion_result.get()
+    validate_against_schema_task = validate_against_schema.s(json_to_test,
+                                                             'experiments').set(
+        queue='validation')
+    validate_against_schema_task.apply_assync()
     return HttpResponse("Starting validation")
