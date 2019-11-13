@@ -4,11 +4,12 @@ from asgiref.sync import async_to_sync
 from .constants import SAMPLE_CORE_URL, EXPERIMENT_CORE_URL
 
 
-def get_rules_json(url, json_type):
+def get_rules_json(url, json_type, module_url=None):
     """
     This function will fetch json from url and then fetch core json from $ref
     :param url: url for type json field
     :param json_type: type of json to fetch: samples, experiments, analyses
+    :param module_url: module url if appropriate
     :return: type and core json
     """
     if json_type == 'samples':
@@ -19,7 +20,11 @@ def get_rules_json(url, json_type):
         raise ValueError(f"Error: {json_type} is not allowed type!")
     type_json = requests.get(url).json()
     core_json = requests.get(core_json).json()
-    return type_json, core_json
+    if module_url:
+        module_json = requests.get(module_url).json()
+        return type_json, core_json, module_json
+    else:
+        return type_json, core_json
 
 
 def convert_to_snake_case(my_string):
