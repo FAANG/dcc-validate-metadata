@@ -1,12 +1,13 @@
 import requests
 from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
-    ALLOWED_RECORD_TYPES
+    ALLOWED_SAMPLES_TYPES, ALLOWED_EXPERIMENTS_TYPES
 from .helpers import get_record_name, get_validation_results_structure, validate
 
 
 class ElixirValidatorResults:
-    def __init__(self, json_to_test):
+    def __init__(self, json_to_test, rules_type):
         self.json_to_test = json_to_test
+        self.rules_type = rules_type
 
     def run_validation(self):
         """
@@ -15,7 +16,11 @@ class ElixirValidatorResults:
         """
         core_schema = requests.get(SAMPLE_CORE_URL).json()
         validation_results = dict()
-        for name, url in ALLOWED_RECORD_TYPES.items():
+        if self.rules_type == 'samples':
+            record_type = ALLOWED_SAMPLES_TYPES
+        else:
+            record_type = ALLOWED_EXPERIMENTS_TYPES
+        for name, url in record_type.items():
             validation_results.setdefault(name, list())
             type_schema = requests.get(url).json()
             del type_schema['properties']['samples_core']

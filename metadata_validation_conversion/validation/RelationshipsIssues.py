@@ -1,4 +1,4 @@
-from metadata_validation_conversion.constants import ALLOWED_RECORD_TYPES, \
+from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
     ALLOWED_RELATIONSHIPS
 from metadata_validation_conversion.helpers import convert_to_snake_case
 from .helpers import get_record_name, get_validation_results_structure
@@ -14,7 +14,7 @@ class RelationshipsIssues:
         biosamples_ids_to_call = set()
 
         # In first iteration need to collect all relationships
-        for name, url in ALLOWED_RECORD_TYPES.items():
+        for name, url in ALLOWED_SAMPLES_TYPES.items():
             new_relationships, biosample_ids = self.collect_relationships(name)
             relationships.update(new_relationships)
             biosamples_ids_to_call.update(biosample_ids)

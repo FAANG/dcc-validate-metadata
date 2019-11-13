@@ -7,13 +7,14 @@ from .WarningsAndAdditionalChecks import WarningsAndAdditionalChecks
 
 
 @app.task
-def validate_against_schema(json_to_test):
+def validate_against_schema(json_to_test, rules_type):
     """
     Task to send json data to elixir-validator
     :param json_to_test: json to test against schema
+    :param rules_type: type of rules to validate
     :return: all issues in dict
     """
-    elixir_validation_results = ElixirValidatorResults(json_to_test)
+    elixir_validation_results = ElixirValidatorResults(json_to_test, rules_type)
     return elixir_validation_results.run_validation()
 
 
