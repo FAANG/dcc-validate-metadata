@@ -31,5 +31,4 @@ def read_excel_file(conversion_type, file):
             send_message(status='Error', errors=results)
         else:
             send_message('Success')
-            print(json.dumps(results))
         return results
