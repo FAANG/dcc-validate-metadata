@@ -1,7 +1,9 @@
 import xlrd
 from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, CHIP_SEQ_INPUT_DNA_URL, \
-    CHIP_SEQ_DNA_BINDING_PROTEINS_URL
+    CHIP_SEQ_DNA_BINDING_PROTEINS_URL, SAMPLES_SPECIFIC_JSON_TYPES, \
+    EXPERIMENTS_SPECIFIC_JSON_TYPES, CHIP_SEQ_INPUT_DNA_JSON_TYPES, \
+    CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
 
@@ -38,7 +40,7 @@ class ReadExcelFile:
                     return err.args[0]
                 for row_number in range(1, sh.nrows):
                     sample_data = self.get_sample_data(
-                        sh.row_values(row_number), field_names_indexes)
+                        sh.row_values(row_number), field_names_indexes, sh.name)
                     material_consistency = \
                         self.check_sheet_name_material_consistency(sample_data,
                                                                    sh.name)
@@ -76,7 +78,8 @@ class ReadExcelFile:
         array_fields.extend(tmp)
         field_names['type'], tmp = self.parse_json(type_json)
         array_fields.extend(tmp)
-        field_names['custom'], tmp = self.get_custom_data_fields(field_names)
+        field_names['custom'], tmp = self.get_custom_data_fields(field_names,
+                                                                 sheet_name)
         array_fields.extend(tmp)
 
         for core_property, data_property in field_names.items():
@@ -109,19 +112,25 @@ class ReadExcelFile:
                     required_fields[pr_property].append(sc_property)
         return required_fields, array_fields
 
-    def get_custom_data_fields(self, field_names):
+    def get_custom_data_fields(self, field_names, sheet_name):
         """
         This function will go through headers and find all remaining names that
         are not in field_names
         :param field_names: names from json-schema
+        :param sheet_name: name of the sheet
         :return: rules for custom fields in dict and all array fields
         """
         custom_data_fields_indexes = dict()
         array_fields = list()
+        if sheet_name == 'chip-seq input dna' or \
+                sheet_name == 'chip-seq dna-binding proteins':
+            headers_to_check = {**field_names['core'], **field_names['type'],
+                                **field_names['module']}
+        else:
+            headers_to_check = {**field_names['core'], **field_names['type']}
         for header in self.headers:
-            if header not in field_names['core'] and \
-                    header not in field_names['type'] and \
-                    header not in SPECIAL_PROPERTIES:
+            if header not in headers_to_check and header not in \
+                    SPECIAL_PROPERTIES:
                 indexes = self.return_all_indexes(header)
                 if len(indexes) > 1:
                     array_fields.append(header)
@@ -230,15 +239,27 @@ class ReadExcelFile:
                 second_subfield = 'term'
             return {first_subfield: index, second_subfield: index + 1}
 
-    def get_sample_data(self, input_data, field_names_indexes):
+    def get_sample_data(self, input_data, field_names_indexes, name):
         """
         This function will fetch information about organism
         :param input_data: row from template to fetch information from
         :param field_names_indexes: dict with field names and indexes from json
+        :param name: name of the sheet
         :return: dict with required information
         """
         organism_to_validate = dict()
-        for k, v in JSON_TYPES.items():
+        if name == 'chip-seq input dna':
+            json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
+                          **CHIP_SEQ_INPUT_DNA_JSON_TYPES}
+        elif name == 'chip-seq dna-binding proteins':
+            json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
+                          **CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES}
+        else:
+            if self.json_type == 'samples':
+                json_types = {**SAMPLES_SPECIFIC_JSON_TYPES, **JSON_TYPES}
+            else:
+                json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES}
+        for k, v in json_types.items():
             if v is not None:
                 organism_to_validate.setdefault(v, dict())
                 for field_name, indexes in field_names_indexes[k].items():

@@ -90,9 +90,24 @@ SKIP_PROPERTIES = [
 SPECIAL_PROPERTIES = ['unit', 'term_source_id']
 
 JSON_TYPES = {
-    'core': 'samples_core',
     'type': None,
     'custom': 'custom'
+}
+
+SAMPLES_SPECIFIC_JSON_TYPES = {
+    'core': 'samples_core'
+}
+
+EXPERIMENTS_SPECIFIC_JSON_TYPES = {
+    'core': 'experiments_core'
+}
+
+CHIP_SEQ_INPUT_DNA_JSON_TYPES = {
+    'module': 'input_dna'
+}
+
+CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES = {
+    'module': 'dna-binding_proteins'
 }
 
 
