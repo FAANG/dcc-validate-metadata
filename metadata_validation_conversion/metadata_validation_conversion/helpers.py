@@ -1,18 +1,25 @@
 import requests
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from .constants import SAMPLE_CORE_URL
+from .constants import SAMPLE_CORE_URL, EXPERIMENT_CORE_URL
 
 
-def get_samples_json(url):
+def get_rules_json(url, json_type):
     """
     This function will fetch json from url and then fetch core json from $ref
     :param url: url for type json field
+    :param json_type: type of json to fetch: samples, experiments, analyses
     :return: type and core json
     """
-    samples_type_json = requests.get(url).json()
-    samples_core_json = requests.get(SAMPLE_CORE_URL).json()
-    return samples_type_json, samples_core_json
+    if json_type == 'samples':
+        core_json = SAMPLE_CORE_URL
+    elif json_type == 'experiments':
+        core_json = EXPERIMENT_CORE_URL
+    else:
+        raise ValueError(f"Error: {json_type} is not allowed type!")
+    type_json = requests.get(url).json()
+    core_json = requests.get(core_json).json()
+    return type_json, core_json
 
 
 def convert_to_snake_case(my_string):

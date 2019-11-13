@@ -1,6 +1,7 @@
 from .ReadExcelFile import ReadExcelFile
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
+import json
 
 
 @app.task
@@ -13,11 +14,22 @@ def read_excel_file(conversion_type, file):
     """
     if conversion_type == 'samples':
         send_message('Waiting')
-        read_excel_file_object = ReadExcelFile(file)
+        read_excel_file_object = ReadExcelFile(file_path=file,
+                                               json_type='samples')
         results = read_excel_file_object.start_conversion()
-        send_message('Success')
+        if 'Error' in results:
+            send_message(status='Error', errors=results)
+        else:
+            send_message('Success')
         return results
     else:
         send_message('Waiting')
-        send_message('Success')
-        return 'Success'
+        read_excel_file_object = ReadExcelFile(file_path=file,
+                                               json_type='experiments')
+        results = read_excel_file_object.start_conversion()
+        if 'Error' in results:
+            send_message(status='Error', errors=results)
+        else:
+            send_message('Success')
+        print(json.dumps(results))
+        return results
