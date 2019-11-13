@@ -1,6 +1,7 @@
 import xlrd
 from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
-    SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES
+    SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, CHIP_SEQ_INPUT_DNA_URL, \
+    CHIP_SEQ_DNA_BINDING_PROTEINS_URL
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
 
@@ -23,6 +24,8 @@ class ReadExcelFile:
         data = dict()
         for sh in wb.sheets():
             if sh.name not in ALLOWED_SHEET_NAMES:
+                if sh.name == 'faang_field_values':
+                    continue
                 return f"Error: there are no rules for {sh.name} type!"
             else:
                 tmp = list()
@@ -57,7 +60,18 @@ class ReadExcelFile:
         field_names_and_indexes = dict()
 
         url = ALLOWED_SHEET_NAMES[sheet_name]
-        type_json, core_json = get_rules_json(url, self.json_type)
+        if sheet_name == 'chip-seq input dna':
+            type_json, core_json, module_json = get_rules_json(
+                url, self.json_type, CHIP_SEQ_INPUT_DNA_URL)
+            field_names['module'], tmp = self.parse_json(module_json)
+            array_fields.extend(tmp)
+        elif sheet_name == 'chip-seq dna-binding proteins':
+            type_json, core_json, module_json = get_rules_json(
+                url, self.json_type, CHIP_SEQ_DNA_BINDING_PROTEINS_URL)
+            field_names['module'], tmp = self.parse_json(module_json)
+            array_fields.extend(tmp)
+        else:
+            type_json, core_json = get_rules_json(url, self.json_type)
         field_names['core'], tmp = self.parse_json(core_json)
         array_fields.extend(tmp)
         field_names['type'], tmp = self.parse_json(type_json)
@@ -111,9 +125,11 @@ class ReadExcelFile:
                 indexes = self.return_all_indexes(header)
                 if len(indexes) > 1:
                     array_fields.append(header)
-                if self.headers[indexes[0] + 1] == 'unit':
+                if len(self.headers)-1 > (indexes[0] + 1) and \
+                        self.headers[indexes[0] + 1] == 'unit':
                     custom_data_fields_indexes[header] = ['value', 'units']
-                elif self.headers[indexes[0] + 1] == 'term_source_id':
+                elif len(self.headers)-1 > (indexes[0] + 1) and \
+                        self.headers[indexes[0] + 1] == 'term_source_id':
                     custom_data_fields_indexes[header] = ['text', 'term']
                 else:
                     custom_data_fields_indexes[header] = ['value']

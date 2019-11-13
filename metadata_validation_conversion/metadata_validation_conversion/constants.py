@@ -27,13 +27,13 @@ HI_C_URL = f"{BASE_URL}/type/experiments/" \
 DNASE_SEQ_URL = f"{BASE_URL}/type/experiments/" \
                 f"faang_experiments_dnase-seq.metadata_rules.json"
 CHIP_SEQ_URL = f"{BASE_URL}/type/experiments/" \
-               f"faang_experiments_chips-seq.metadata_rules.json"
+               f"faang_experiments_chip-seq.metadata_rules.json"
 CHIP_SEQ_INPUT_DNA_URL = f"{BASE_URL}/module/experiments/" \
                          f"faang_experiments_chip-seq_input_dna.metadata_" \
                          f"rules.json"
-CHIP_SEQ_INPUT_DNA_URL = f"{BASE_URL}/module/experiments/" \
-                         f"faang_experiments_chip-seq_dna-binding_proteins." \
-                         f"metadata_rules.json"
+CHIP_SEQ_DNA_BINDING_PROTEINS_URL = f"{BASE_URL}/module/experiments/" \
+                                    f"faang_experiments_chip-seq_dna-binding_" \
+                                    f"proteins.metadata_rules.json"
 BS_SEQ_URL = f"{BASE_URL}/type/experiments/" \
              f"faang_experiments_bs-seq.metadata_rules.json"
 ATAC_SEQ_URL = f"{BASE_URL}/type/experiments/" \
@@ -53,8 +53,8 @@ ALLOWED_SHEET_NAMES = {
     'rna-seq': RNA_SEQ_URL,
     'hi-c': HI_C_URL,
     'dnase-seq': DNASE_SEQ_URL,
-    'chip-seq input dna': "",
-    'chip-seq dna-binding proteins': "",
+    'chip-seq input dna': CHIP_SEQ_URL,
+    'chip-seq dna-binding proteins': CHIP_SEQ_URL,
     'bs-seq': BS_SEQ_URL,
     'atac-seq': ATAC_SEQ_URL
 }
@@ -82,7 +82,9 @@ SKIP_PROPERTIES = [
     'describedBy',
     'schema_version',
     'samples_core',
-    'experiments_core'
+    'experiments_core',
+    'dna-binding_proteins',
+    'input_dna'
 ]
 
 SPECIAL_PROPERTIES = ['unit', 'term_source_id']
