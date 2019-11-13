@@ -28,7 +28,7 @@ def convert_to_snake_case(my_string):
     :param my_string: string to convert
     :return: string in camel_case format
     """
-    return '_'.join(my_string.lower().split(" "))
+    return '_'.join(my_string.lower().split(" ")).replace("'", "")
 
 
 def send_message(status, errors=None, validation_results=None):

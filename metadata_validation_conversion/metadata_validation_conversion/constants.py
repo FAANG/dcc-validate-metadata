@@ -20,8 +20,27 @@ CELL_LINE_URL = f"{BASE_URL}type/samples/" \
                 f"faang_samples_cell_line.metadata_rules.json"
 WGS_URL = f"{BASE_URL}/type/experiments/" \
           f"faang_experiments_wgs.metadata_rules.json"
+RNA_SEQ_URL = f"{BASE_URL}/type/experiments/" \
+              f"faang_experiments_rna-seq.metadata_rules.json"
+HI_C_URL = f"{BASE_URL}/type/experiments/" \
+           f"faang_experiments_hi-c.metadata_rules.json"
+DNASE_SEQ_URL = f"{BASE_URL}/type/experiments/" \
+                f"faang_experiments_dnase-seq.metadata_rules.json"
+CHIP_SEQ_URL = f"{BASE_URL}/type/experiments/" \
+               f"faang_experiments_chips-seq.metadata_rules.json"
+CHIP_SEQ_INPUT_DNA_URL = f"{BASE_URL}/module/experiments/" \
+                         f"faang_experiments_chip-seq_input_dna.metadata_" \
+                         f"rules.json"
+CHIP_SEQ_INPUT_DNA_URL = f"{BASE_URL}/module/experiments/" \
+                         f"faang_experiments_chip-seq_dna-binding_proteins." \
+                         f"metadata_rules.json"
+BS_SEQ_URL = f"{BASE_URL}/type/experiments/" \
+             f"faang_experiments_bs-seq.metadata_rules.json"
+ATAC_SEQ_URL = f"{BASE_URL}/type/experiments/" \
+               f"faang_experiments_atac-seq.metadata_rules.json"
 ELIXIR_VALIDATOR_URL = config('ELIXIR_VALIDATOR_URL')
 WS_URL = "ws://127.0.0.1:8000/ws/submission/test_task/"
+
 
 ALLOWED_SHEET_NAMES = {
     'organism': ORGANISM_URL,
@@ -30,7 +49,14 @@ ALLOWED_SHEET_NAMES = {
     'cell specimen': CELL_SPECIMEN_URL,
     'cell culture': CELL_CULTURE_URL,
     'cell line': CELL_LINE_URL,
-    'wgs': WGS_URL
+    'wgs': WGS_URL,
+    'rna-seq': RNA_SEQ_URL,
+    'hi-c': HI_C_URL,
+    'dnase-seq': DNASE_SEQ_URL,
+    'chip-seq input dna': "",
+    'chip-seq dna-binding proteins': "",
+    'bs-seq': BS_SEQ_URL,
+    'atac-seq': ATAC_SEQ_URL
 }
 
 ALLOWED_RECORD_TYPES = {
