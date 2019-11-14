@@ -15,9 +15,10 @@ class WarningsAndAdditionalChecks:
 
         # Do additional checks
         for name, url in ALLOWED_SAMPLES_TYPES.items():
-            warnings_and_additional_checks_results.setdefault(name, list())
-            warnings_and_additional_checks_results[name] = \
-                self.do_additional_checks(url, name)
+            if name in self.json_to_test:
+                warnings_and_additional_checks_results.setdefault(name, list())
+                warnings_and_additional_checks_results[name] = \
+                    self.do_additional_checks(url, name)
         return warnings_and_additional_checks_results
 
     def do_additional_checks(self, url, name):

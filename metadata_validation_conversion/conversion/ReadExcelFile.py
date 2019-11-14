@@ -47,7 +47,8 @@ class ReadExcelFile:
                     if material_consistency is not False:
                         return material_consistency
                     tmp.append(sample_data)
-                data[convert_to_snake_case(sh.name)] = tmp
+                if len(tmp) > 0:
+                    data[convert_to_snake_case(sh.name)] = tmp
         return data
 
     def get_field_names_and_indexes(self, sheet_name):
