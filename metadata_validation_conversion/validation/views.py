@@ -35,5 +35,5 @@ def validate_experiments(request, task_id):
     validate_against_schema_task = validate_against_schema.s(json_to_test,
                                                              'experiments').set(
         queue='validation')
-    validate_against_schema_task.apply_assync()
+    validate_against_schema_task.delay()
     return HttpResponse("Starting validation")
