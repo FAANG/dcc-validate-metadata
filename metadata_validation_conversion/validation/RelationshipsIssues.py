@@ -15,9 +15,11 @@ class RelationshipsIssues:
 
         # In first iteration need to collect all relationships
         for name, url in ALLOWED_SAMPLES_TYPES.items():
-            new_relationships, biosample_ids = self.collect_relationships(name)
-            relationships.update(new_relationships)
-            biosamples_ids_to_call.update(biosample_ids)
+            if name in self.json_to_test:
+                new_relationships, biosample_ids = self.collect_relationships(
+                    name)
+                relationships.update(new_relationships)
+                biosamples_ids_to_call.update(biosample_ids)
         biosample_data = fetch_biosample_data_for_ids(biosamples_ids_to_call)
         relationships.update(biosample_data)
         return self.check_relationships(relationships)
