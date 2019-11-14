@@ -46,7 +46,8 @@ class ReadExcelFile:
                                                                    sh.name)
                     if material_consistency is not False:
                         return material_consistency
-                    tmp.append(sample_data)
+                    if self.check_sample(sample_data):
+                        tmp.append(sample_data)
                 if len(tmp) > 0:
                     data[convert_to_snake_case(sh.name)] = tmp
         return data
@@ -380,3 +381,18 @@ class ReadExcelFile:
                 return False
         else:
             return f"Error: '{name}' sheet contains records with empty material"
+
+    @staticmethod
+    def check_sample(sample):
+        if 'experiments_core' in sample and len(sample) <= 3:
+            if 'input_dna' in sample:
+                if len(sample['input_dna']) > 0:
+                    return True
+                return False
+            elif 'binding_proteins' in sample:
+                if len(sample['binding_proteins']) > 0:
+                    return True
+                return False
+            else:
+                return False
+        return True
