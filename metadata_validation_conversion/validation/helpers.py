@@ -22,13 +22,14 @@ def validate(data, schema):
     return validation_errors
 
 
-def get_validation_results_structure(record_name):
+def get_validation_results_structure(record_name, include_module=False):
     """
     This function will create inner validation results structure
     :param record_name: name of the record
+    :param include_module: include module field or not
     :return: inner validation results structure
     """
-    return {
+    structure_to_return = {
         "name": record_name,
         "core": {
             "errors": list(),
@@ -43,6 +44,10 @@ def get_validation_results_structure(record_name):
             "warnings": list()
         }
     }
+    if include_module:
+        structure_to_return.update(
+            {"module": {"errors": list(), "warnings": list()}})
+    return structure_to_return
 
 
 def get_record_name(record, index, name):
@@ -53,7 +58,10 @@ def get_record_name(record, index, name):
     :param name: name of the record
     :return: name of the record
     """
-    if 'sample_name' not in record:
+    if 'sample_name' not in record and 'sample_descriptor' not in record:
         return f"{name}_{index + 1}"
     else:
-        return record['sample_name']['value']
+        if 'sample_name' in record:
+            return record['sample_name']['value']
+        else:
+            return record['sample_descriptor']['value']

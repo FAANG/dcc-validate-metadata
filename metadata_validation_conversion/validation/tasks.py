@@ -17,9 +17,9 @@ def validate_against_schema(json_to_test, rules_type):
     """
     elixir_validation_results = ElixirValidatorResults(json_to_test, rules_type)
     results = elixir_validation_results.run_validation()
-    send_message(status='Success', validation_results=results)
+    # send_message(status='Success', validation_results=results)
     print(json.dumps(results))
-    return 'Success'
+    return results
 
 
 @app.task
