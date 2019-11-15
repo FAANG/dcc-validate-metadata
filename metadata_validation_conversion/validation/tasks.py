@@ -4,7 +4,6 @@ from .ElixirValidatorResults import ElixirValidatorResults
 from .JoinedResults import JoinedResults
 from .RelationshipsIssues import RelationshipsIssues
 from .WarningsAndAdditionalChecks import WarningsAndAdditionalChecks
-import json
 
 
 @app.task
@@ -20,13 +19,15 @@ def validate_against_schema(json_to_test, rules_type):
 
 
 @app.task
-def collect_warnings_and_additional_checks(json_to_test):
+def collect_warnings_and_additional_checks(json_to_test, rules_type):
     """
     Task to do additional checks inside python app
     :param json_to_test: json to test against additional checks
+    :param rules_type: type of rules to validate
     :return: all issues in dict
     """
-    additional_checks_object = WarningsAndAdditionalChecks(json_to_test)
+    additional_checks_object = WarningsAndAdditionalChecks(json_to_test,
+                                                           rules_type)
     return additional_checks_object.collect_warnings_and_additional_checks()
 
 
