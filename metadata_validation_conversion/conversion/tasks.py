@@ -1,7 +1,6 @@
 from .ReadExcelFile import ReadExcelFile
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
-import json
 
 
 @app.task
