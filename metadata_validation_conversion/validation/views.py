@@ -35,5 +35,9 @@ def validate_experiments(request, task_id):
     validate_against_schema_task = validate_against_schema.s(json_to_test,
                                                              'experiments').set(
         queue='validation')
-    validate_against_schema_task.delay()
+    join_validation_results_task = join_validation_results.s().set(
+        queue='validation')
+    my_chord = chord((validate_against_schema_task,),
+                     join_validation_results_task)
+    my_chord.apply_async()
     return HttpResponse("Starting validation")
