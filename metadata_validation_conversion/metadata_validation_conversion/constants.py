@@ -121,6 +121,11 @@ CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES = {
     'module': 'dna-binding_proteins'
 }
 
+MODULE_SHEET_NAMES = [
+    'chip-seq_input_dna',
+    'chip-seq_dna-binding_proteins'
+]
+
 
 MISSING_VALUES = {
     'mandatory': {
