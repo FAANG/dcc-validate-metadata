@@ -4,9 +4,11 @@ from .tasks import validate_against_schema, \
     collect_warnings_and_additional_checks, join_validation_results, \
     collect_relationships_issues
 from metadata_validation_conversion.celery import app
+from metadata_validation_conversion.helpers import send_message
 
 
 def validate_samples(request, task_id):
+    send_message(validation_status="Waiting")
     conversion_result = app.AsyncResult(task_id)
     json_to_test = conversion_result.get()
     # Create three tasks that should be run in parallel and assign callback
@@ -30,6 +32,7 @@ def validate_samples(request, task_id):
 
 
 def validate_experiments(request, task_id):
+    send_message(validation_status="Waiting")
     conversion_result = app.AsyncResult(task_id)
     json_to_test = conversion_result.get()
     validate_against_schema_task = validate_against_schema.s(json_to_test,

@@ -18,9 +18,9 @@ def read_excel_file(conversion_type, file):
                                                json_type='samples')
         results = read_excel_file_object.start_conversion()
         if 'Error' in results:
-            send_message(status='Error', errors=results)
+            send_message(conversion_status='Error', errors=results)
         else:
-            send_message('Success')
+            send_message(conversion_status='Success')
         return results
     else:
         send_message('Waiting')
@@ -28,7 +28,7 @@ def read_excel_file(conversion_type, file):
                                                json_type='experiments')
         results = read_excel_file_object.start_conversion()
         if 'Error' in results:
-            send_message(status='Error', errors=results)
+            send_message(conversion_status='Error', errors=results)
         else:
-            send_message('Success')
+            send_message(conversion_status='Success')
         return results
