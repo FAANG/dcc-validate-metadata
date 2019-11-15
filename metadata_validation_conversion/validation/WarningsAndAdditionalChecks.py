@@ -253,26 +253,22 @@ class WarningsAndAdditionalChecks:
         :return: warnings in str format
         """
         if 'text' in field_value and 'term' in field_value:
-            term_label = set()
+            term_label = list()
             for label in ontology_ids[field_value['term']]:
                 if ontology_names is not None \
                         and label['ontology_name'].lower() \
                         in ontology_names[field_name]:
-                    term_label.add(label['label'].lower())
+                    term_label.append(label['label'].lower())
                 elif ontology_names is None:
-                    term_label.add(label['label'].lower())
+                    term_label.append(label['label'].lower())
             if len(term_label) == 0:
-                print(field_value)
-                print(ontology_names)
-                print(field_name)
-                print(ontology_ids[field_value['term']])
                 return f"Couldn't find label in OLS with these ontology " \
                        f"names: {ontology_names[field_name]}"
 
             if field_value['text'].lower() not in term_label:
                 return f"Provided value '{field_value['text']}' doesn't " \
-                       f"precisely match '{' or '.join(term_label)}' " \
-                       f"for term '{field_value['term']}'"
+                       f"precisely match '{term_label[0]}' for term " \
+                       f"'{field_value['term']}'"
         return None
 
     @staticmethod
