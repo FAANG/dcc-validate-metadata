@@ -14,7 +14,7 @@ def validate_samples(request, task_id):
                                                              'samples').set(
         queue='validation')
     collect_warnings_and_additional_checks_task = \
-        collect_warnings_and_additional_checks.s(json_to_test).set(
+        collect_warnings_and_additional_checks.s(json_to_test, 'samples').set(
             queue='validation')
     collect_relationships_issues_task = collect_relationships_issues.s(
         json_to_test).set(queue='validation')
@@ -35,9 +35,13 @@ def validate_experiments(request, task_id):
     validate_against_schema_task = validate_against_schema.s(json_to_test,
                                                              'experiments').set(
         queue='validation')
+    collect_warnings_and_additional_checks_task = \
+        collect_warnings_and_additional_checks.s(
+            json_to_test, 'experiments').set(queue='validation')
     join_validation_results_task = join_validation_results.s().set(
         queue='validation')
-    my_chord = chord((validate_against_schema_task,),
+    my_chord = chord((validate_against_schema_task,
+                      collect_warnings_and_additional_checks_task),
                      join_validation_results_task)
     my_chord.apply_async()
     return HttpResponse("Starting validation")

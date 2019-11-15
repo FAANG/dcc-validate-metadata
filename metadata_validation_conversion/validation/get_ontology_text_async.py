@@ -18,15 +18,16 @@ def parse_record(record):
                 return sub_record['term']
 
 
-def collect_ids(records):
+def collect_ids(records, core_name):
     """
     Main function that will collect all ids and start ids fetching
     :param records: records to fetch
+    :param core_name: name of the core field
     :return: dict with term_ids as keys and ols results as values
     """
     ids = set()
     for record in records:
-        for _, value in record['samples_core'].items():
+        for _, value in record[core_name].items():
             ids.add(parse_record(value))
         for _, value in record.items():
             ids.add(parse_record(value))
@@ -76,7 +77,7 @@ async def fetch_term(session, my_id, results_to_return):
     :param my_id: term_id to check
     :param results_to_return: json structure to parse
     """
-    url = f"http://www.ebi.ac.uk/ols/api/search?q={my_id}"
+    url = f"http://www.ebi.ac.uk/ols/api/search?q={my_id}&rows=100"
     async with session.get(url) as response:
         results = await response.json()
         if results and 'response' in results and 'docs' in results['response']:

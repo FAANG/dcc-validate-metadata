@@ -1,20 +1,26 @@
 import datetime
 from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
-    SKIP_PROPERTIES, MISSING_VALUES, SPECIES_BREED_LINKS
+    SKIP_PROPERTIES, MISSING_VALUES, SPECIES_BREED_LINKS, \
+    ALLOWED_EXPERIMENTS_TYPES
 from metadata_validation_conversion.helpers import get_rules_json
 from .get_ontology_text_async import collect_ids
 from .helpers import get_record_name, get_validation_results_structure, validate
 
 
 class WarningsAndAdditionalChecks:
-    def __init__(self, json_to_test):
+    def __init__(self, json_to_test, rules_type):
         self.json_to_test = json_to_test
+        self.rules_type = rules_type
 
     def collect_warnings_and_additional_checks(self):
         warnings_and_additional_checks_results = dict()
+        if self.rules_type == 'samples':
+            allowed_types = ALLOWED_SAMPLES_TYPES
+        elif self.rules_type == 'experiments':
+            allowed_types = ALLOWED_EXPERIMENTS_TYPES
 
         # Do additional checks
-        for name, url in ALLOWED_SAMPLES_TYPES.items():
+        for name, url in allowed_types.items():
             if name in self.json_to_test:
                 warnings_and_additional_checks_results.setdefault(name, list())
                 warnings_and_additional_checks_results[name] = \
@@ -23,15 +29,23 @@ class WarningsAndAdditionalChecks:
 
     def do_additional_checks(self, url, name):
         """
-        This function will return warning if recommended fields is not present in
-        record
+        This function will return warning if recommended fields is not present
+        in record
         :param url: schema url for this record
         :param name: name of the record
         :return: warnings
         """
         records = self.json_to_test[name]
         issues_to_return = list()
-        samples_type_json, samples_core_json = get_rules_json(url, 'samples')
+        if name == 'input_dna' or name == 'dna-binding_proteins':
+            samples_type_json, samples_core_json, samples_module_json = \
+                get_rules_json(url, self.rules_type)
+        else:
+            samples_type_json, samples_core_json = get_rules_json(
+                url, self.rules_type)
+
+        core_name = 'samples_core' if self.rules_type == 'samples' else \
+            'experiments_core'
 
         # Collect list of all fields
         mandatory_type_fields = self.collect_fields(samples_type_json,
@@ -49,7 +63,7 @@ class WarningsAndAdditionalChecks:
 
         ontology_names_type = self.collect_ontology_names(samples_type_json)
         ontology_names_core = self.collect_ontology_names(samples_core_json)
-        ontology_ids = collect_ids(records)
+        ontology_ids = collect_ids(records, core_name)
 
         for index, record in enumerate(records):
             # Get inner issues structure
@@ -58,7 +72,7 @@ class WarningsAndAdditionalChecks:
 
             # Check that recommended fields are present
             core_warnings = self.check_recommended_fields(
-                record['samples_core'], recommended_core_fields)
+                record[core_name], recommended_core_fields)
             type_warnings = self.check_recommended_fields(
                 record, recommended_type_fields)
             if core_warnings is not None:
@@ -68,7 +82,7 @@ class WarningsAndAdditionalChecks:
 
             # Check that ontology text is consistent with ontology term
             tmp['core']['warnings'].extend(
-                self.check_ontology_text(record['samples_core'], ontology_ids,
+                self.check_ontology_text(record[core_name], ontology_ids,
                                          ontology_names_core))
             tmp['type']['warnings'].extend(
                 self.check_ontology_text(record, ontology_ids,
@@ -76,14 +90,14 @@ class WarningsAndAdditionalChecks:
 
             # Check that date value is consistent with date units
             tmp['core']['warnings'].extend(
-                self.check_date_units(record['samples_core'])
+                self.check_date_units(record[core_name])
             )
             tmp['type']['warnings'].extend(
                 self.check_date_units(record)
             )
 
             # Check that data has special missing values
-            self.check_missing_values(record['samples_core'],
+            self.check_missing_values(record[core_name],
                                       mandatory_core_fields,
                                       recommended_core_fields,
                                       optional_core_fields,
@@ -248,6 +262,10 @@ class WarningsAndAdditionalChecks:
                 elif ontology_names is None:
                     term_label.add(label['label'].lower())
             if len(term_label) == 0:
+                print(field_value)
+                print(ontology_names)
+                print(field_name)
+                print(ontology_ids[field_value['term']])
                 return f"Couldn't find label in OLS with these ontology " \
                        f"names: {ontology_names[field_name]}"
 
