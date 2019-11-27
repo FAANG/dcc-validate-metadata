@@ -21,8 +21,7 @@ class RelationshipsIssues:
                 relationships.update(new_relationships)
                 biosamples_ids_to_call.update(biosample_ids)
         biosample_data = fetch_biosample_data_for_ids(biosamples_ids_to_call)
-        relationships.update(biosample_data)
-        return self.check_relationships(relationships)
+        return self.check_relationships(relationships, biosample_data)
 
     def collect_relationships(self, name):
         """
@@ -61,10 +60,11 @@ class RelationshipsIssues:
                     'text']
         return relationships, biosample_ids
 
-    def check_relationships(self, relationships):
+    def check_relationships(self, relationships, biosample_data):
         """
         This function will check relationships values
         :param relationships: relationships to check
+        :param biosample_data: relationships to check from biosamples
         :return: issues in dict format
         """
         issues_to_return = dict()
@@ -75,18 +75,24 @@ class RelationshipsIssues:
             if 'relationships' in v:
                 errors = list()
                 for relation in v['relationships']:
-                    if relation not in relationships:
+                    if relation not in relationships and relation not in \
+                            biosample_data:
                         errors.append(
                             f"Relationships part: no entity '{relation}' "
                             f"found")
                     else:
+                        if relation in relationships:
+                            relationships_to_check = relationships
+                        elif relation in biosample_data:
+                            relationships_to_check = biosample_data
                         current_material = convert_to_snake_case(v['material'])
                         relation_material = convert_to_snake_case(
-                            relationships[relation]['material'])
+                            relationships_to_check[relation]['material'])
                         if current_material == 'organism' and \
                                 relation_material == 'organism':
-                            self.check_parents(k, v, relation,
-                                               relationships[relation], errors)
+                            self.check_parents(
+                                k, v, relation,
+                                relationships_to_check[relation], errors)
                         allowed_relationships = ALLOWED_RELATIONSHIPS[
                             current_material]
                         if relation_material not in allowed_relationships:
