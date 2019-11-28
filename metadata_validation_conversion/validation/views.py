@@ -20,6 +20,7 @@ def validate_samples(request, task_id):
             queue='validation')
     collect_relationships_issues_task = collect_relationships_issues.s(
         json_to_test).set(queue='validation')
+
     # This will be callback for three previous tasks (just join results)
     join_validation_results_task = join_validation_results.s().set(
         queue='validation')
@@ -28,7 +29,7 @@ def validate_samples(request, task_id):
                       collect_relationships_issues_task),
                      join_validation_results_task)
     my_chord.apply_async()
-    return HttpResponse(my_chord.id)
+    return HttpResponse({})
 
 
 def validate_experiments(request, task_id):
@@ -47,4 +48,4 @@ def validate_experiments(request, task_id):
                       collect_warnings_and_additional_checks_task),
                      join_validation_results_task)
     my_chord.apply_async()
-    return HttpResponse("Starting validation")
+    return HttpResponse({})
