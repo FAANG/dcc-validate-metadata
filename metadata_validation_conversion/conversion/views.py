@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from metadata_validation_conversion.helpers import send_message
 from .tasks import read_excel_file
 
 
@@ -10,6 +11,7 @@ def index(request):
 
 @csrf_exempt
 def convert_samples(request):
+    send_message(validation_status="Waiting")
     if request.method == 'POST':
         with open('file.xlsx', 'wb+') as destination:
             for chunk in request.FILES['file'].chunks():
