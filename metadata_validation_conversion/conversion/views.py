@@ -11,7 +11,7 @@ def index(request):
 
 @csrf_exempt
 def convert_samples(request):
-    send_message(validation_status="Waiting")
+    send_message(conversion_status="Waiting")
     if request.method == 'POST':
         with open('file.xlsx', 'wb+') as destination:
             for chunk in request.FILES['file'].chunks():
@@ -25,6 +25,7 @@ def convert_samples(request):
 
 @csrf_exempt
 def convert_experiments(request):
+    send_message(conversion_status="Waiting")
     if request.method == 'POST':
         with open('experiments.xlsx', 'wb+') as destination:
             for chunk in request.FILES['file'].chunks():
