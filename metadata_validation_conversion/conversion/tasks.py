@@ -12,7 +12,6 @@ def read_excel_file(conversion_type, file):
     :return: converted data
     """
     if conversion_type == 'samples':
-        send_message('Waiting')
         read_excel_file_object = ReadExcelFile(file_path=file,
                                                json_type='samples')
         results = read_excel_file_object.start_conversion()
@@ -22,7 +21,6 @@ def read_excel_file(conversion_type, file):
             send_message(conversion_status='Success')
         return results
     else:
-        send_message('Waiting')
         read_excel_file_object = ReadExcelFile(file_path=file,
                                                json_type='experiments')
         results = read_excel_file_object.start_conversion()
