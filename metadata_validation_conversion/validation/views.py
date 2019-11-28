@@ -28,7 +28,7 @@ def validate_samples(request, task_id):
                       collect_relationships_issues_task),
                      join_validation_results_task)
     my_chord.apply_async()
-    return HttpResponse("Starting validation")
+    return HttpResponse(my_chord.id)
 
 
 def validate_experiments(request, task_id):
