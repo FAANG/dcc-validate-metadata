@@ -1,7 +1,7 @@
 import datetime
 from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
     SKIP_PROPERTIES, MISSING_VALUES, SPECIES_BREED_LINKS, \
-    ALLOWED_EXPERIMENTS_TYPES
+    ALLOWED_EXPERIMENTS_TYPES, ALLOWED_ANALYSES_TYPES
 from metadata_validation_conversion.helpers import get_rules_json
 from .get_ontology_text_async import collect_ids
 from .helpers import get_record_name, get_validation_results_structure, validate
@@ -18,6 +18,8 @@ class WarningsAndAdditionalChecks:
             allowed_types = ALLOWED_SAMPLES_TYPES
         elif self.rules_type == 'experiments':
             allowed_types = ALLOWED_EXPERIMENTS_TYPES
+        else:
+            allowed_types = ALLOWED_ANALYSES_TYPES
 
         # Do additional checks
         for name, url in allowed_types.items():
@@ -40,13 +42,21 @@ class WarningsAndAdditionalChecks:
         if name == 'input_dna' or name == 'dna-binding_proteins':
             samples_type_json, samples_core_json, samples_module_json = \
                 get_rules_json(url, self.rules_type)
+        elif name in ['faang', 'ena', 'eva']:
+            samples_type_json = get_rules_json(url, self.rules_type)
+            samples_core_json = None
         else:
             samples_type_json, samples_core_json = get_rules_json(
                 url, self.rules_type)
 
-        core_name = 'samples_core' if self.rules_type == 'samples' else \
-            'experiments_core'
+        if self.rules_type == 'samples':
+            core_name = 'samples_core'
+        elif self.rules_type == 'experiments':
+            core_name = 'experiments_core'
+        else:
+            core_name = None
 
+        # TODO: add modular fields
         # Collect list of all fields
         mandatory_type_fields = self.collect_fields(samples_type_json,
                                                     "mandatory")
@@ -67,12 +77,15 @@ class WarningsAndAdditionalChecks:
 
         for index, record in enumerate(records):
             # Get inner issues structure
-            record_name = get_record_name(record['custom'], index, name)
+            record_name = get_record_name(record, index, name)
             tmp = get_validation_results_structure(record_name)
 
             # Check that recommended fields are present
-            core_warnings = self.check_recommended_fields(
-                record[core_name], recommended_core_fields)
+            if core_name is not None:
+                core_warnings = self.check_recommended_fields(
+                    record[core_name], recommended_core_fields)
+            else:
+                core_warnings = None
             type_warnings = self.check_recommended_fields(
                 record, recommended_type_fields)
             if core_warnings is not None:
@@ -81,27 +94,30 @@ class WarningsAndAdditionalChecks:
                 tmp['type']['warnings'].append(type_warnings)
 
             # Check that ontology text is consistent with ontology term
-            tmp['core']['warnings'].extend(
-                self.check_ontology_text(record[core_name], ontology_ids,
-                                         ontology_names_core))
+            if core_name is not None:
+                tmp['core']['warnings'].extend(
+                    self.check_ontology_text(record[core_name], ontology_ids,
+                                             ontology_names_core))
             tmp['type']['warnings'].extend(
                 self.check_ontology_text(record, ontology_ids,
                                          ontology_names_type))
 
             # Check that date value is consistent with date units
-            tmp['core']['warnings'].extend(
-                self.check_date_units(record[core_name])
-            )
+            if core_name is not None:
+                tmp['core']['warnings'].extend(
+                    self.check_date_units(record[core_name])
+                )
             tmp['type']['warnings'].extend(
                 self.check_date_units(record)
             )
 
             # Check that data has special missing values
-            self.check_missing_values(record[core_name],
-                                      mandatory_core_fields,
-                                      recommended_core_fields,
-                                      optional_core_fields,
-                                      tmp['core'])
+            if core_name is not None:
+                self.check_missing_values(record[core_name],
+                                          mandatory_core_fields,
+                                          recommended_core_fields,
+                                          optional_core_fields,
+                                          tmp['core'])
             self.check_missing_values(record, mandatory_type_fields,
                                       recommended_type_fields,
                                       optional_type_fields,
@@ -128,6 +144,8 @@ class WarningsAndAdditionalChecks:
         :param type_of_fields: type of fields to collect
         :return: list with recommended fields
         """
+        if json_to_check is None:
+            return list()
         collected_fields = list()
         for field_name, field_value in json_to_check['properties'].items():
             if field_name not in SKIP_PROPERTIES:
@@ -148,6 +166,8 @@ class WarningsAndAdditionalChecks:
         :param json_to_parse: json-schema to parse
         :return: dict with field name as key and ontology_name as value
         """
+        if json_to_parse is None:
+            return dict()
         ontology_names_to_return = dict()
         for field_name, field_value in json_to_parse['properties'].items():
             if field_name not in SKIP_PROPERTIES \

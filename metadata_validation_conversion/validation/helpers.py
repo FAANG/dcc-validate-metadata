@@ -58,10 +58,14 @@ def get_record_name(record, index, name):
     :param name: name of the record
     :return: name of the record
     """
-    if 'sample_name' not in record and 'sample_descriptor' not in record:
+    if 'sample_name' not in record['custom'] \
+            and 'sample_descriptor' not in record['custom'] \
+            and 'alias' not in record:
         return f"{name}_{index + 1}"
     else:
-        if 'sample_name' in record:
-            return record['sample_name']['value']
+        if 'sample_name' in record['custom']:
+            return record['custom']['sample_name']['value']
+        elif 'sample_descriptor' in record['custom']:
+            return record['custom']['sample_descriptor']['value']
         else:
-            return record['sample_descriptor']['value']
+            return record['alias']['value']

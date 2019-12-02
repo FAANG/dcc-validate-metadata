@@ -27,8 +27,9 @@ def collect_ids(records, core_name):
     """
     ids = set()
     for record in records:
-        for _, value in record[core_name].items():
-            ids.add(parse_record(value))
+        if core_name is not None:
+            for _, value in record[core_name].items():
+                ids.add(parse_record(value))
         for _, value in record.items():
             ids.add(parse_record(value))
         for _, value in record['custom'].items():
