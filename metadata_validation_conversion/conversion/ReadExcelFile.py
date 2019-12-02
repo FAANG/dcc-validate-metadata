@@ -69,15 +69,22 @@ class ReadExcelFile:
                 url, self.json_type, CHIP_SEQ_INPUT_DNA_URL)
             field_names['module'], tmp = self.parse_json(module_json)
             array_fields.extend(tmp)
+            field_names['core'], tmp = self.parse_json(core_json)
+            array_fields.extend(tmp)
         elif sheet_name == 'chip-seq dna-binding proteins':
             type_json, core_json, module_json = get_rules_json(
                 url, self.json_type, CHIP_SEQ_DNA_BINDING_PROTEINS_URL)
             field_names['module'], tmp = self.parse_json(module_json)
             array_fields.extend(tmp)
+            field_names['core'], tmp = self.parse_json(core_json)
+            array_fields.extend(tmp)
+        elif sheet_name in ['faang', 'ena', 'eva']:
+            type_json = get_rules_json(url, self.json_type)
         else:
             type_json, core_json = get_rules_json(url, self.json_type)
-        field_names['core'], tmp = self.parse_json(core_json)
-        array_fields.extend(tmp)
+            field_names['core'], tmp = self.parse_json(core_json)
+            array_fields.extend(tmp)
+
         field_names['type'], tmp = self.parse_json(type_json)
         array_fields.extend(tmp)
         field_names['custom'], tmp = self.get_custom_data_fields(field_names,
@@ -128,6 +135,8 @@ class ReadExcelFile:
                 sheet_name == 'chip-seq dna-binding proteins':
             headers_to_check = {**field_names['core'], **field_names['type'],
                                 **field_names['module']}
+        elif sheet_name in ['faang', 'ena', 'eva']:
+            headers_to_check = {**field_names['type']}
         else:
             headers_to_check = {**field_names['core'], **field_names['type']}
         for header in self.headers:
@@ -259,6 +268,8 @@ class ReadExcelFile:
         else:
             if self.json_type == 'samples':
                 json_types = {**SAMPLES_SPECIFIC_JSON_TYPES, **JSON_TYPES}
+            elif self.json_type == 'analyses':
+                json_types = {**JSON_TYPES}
             else:
                 json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES}
         for k, v in json_types.items():

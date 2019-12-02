@@ -38,6 +38,12 @@ BS_SEQ_URL = f"{BASE_URL}/type/experiments/" \
              f"faang_experiments_bs-seq.metadata_rules.json"
 ATAC_SEQ_URL = f"{BASE_URL}/type/experiments/" \
                f"faang_experiments_atac-seq.metadata_rules.json"
+FAANG_ANALYSES_URL = f"{BASE_URL}/type/analyses/" \
+                     f"faang_analyses_faang.metadata_rules.json"
+ENA_ANALYSES_URL = f"{BASE_URL}/type/analyses/" \
+                   f"faang_analyses_ena.metadata_rules.json"
+EVA_ANALYSES_URL = f"{BASE_URL}/module/analyses/" \
+                   f"faang_analyses_eva.metadata_rules.json"
 ELIXIR_VALIDATOR_URL = config('ELIXIR_VALIDATOR_URL')
 WS_URL = "ws://127.0.0.1:8000/ws/submission/test_task/"
 
@@ -56,7 +62,10 @@ ALLOWED_SHEET_NAMES = {
     'chip-seq input dna': CHIP_SEQ_URL,
     'chip-seq dna-binding proteins': CHIP_SEQ_URL,
     'bs-seq': BS_SEQ_URL,
-    'atac-seq': ATAC_SEQ_URL
+    'atac-seq': ATAC_SEQ_URL,
+    'faang': FAANG_ANALYSES_URL,
+    'ena': ENA_ANALYSES_URL,
+    'eva': EVA_ANALYSES_URL
 }
 
 ALLOWED_SAMPLES_TYPES = {
@@ -95,7 +104,8 @@ SKIP_PROPERTIES = [
     'samples_core',
     'experiments_core',
     'dna-binding_proteins',
-    'input_dna'
+    'input_dna',
+    'eva'
 ]
 
 SPECIAL_PROPERTIES = ['unit', 'term_source_id']
