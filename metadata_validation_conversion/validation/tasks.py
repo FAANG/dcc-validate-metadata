@@ -4,6 +4,7 @@ from .ElixirValidatorResults import ElixirValidatorResults
 from .JoinedResults import JoinedResults
 from .RelationshipsIssues import RelationshipsIssues
 from .WarningsAndAdditionalChecks import WarningsAndAdditionalChecks
+from .helpers import get_submission_status
 
 
 @app.task
@@ -51,5 +52,8 @@ def join_validation_results(results):
     """
     joined_results_object = JoinedResults(results)
     results = joined_results_object.join_results()
-    send_message(validation_status='Finished', validation_results=results)
+    submission_status = get_submission_status(results)
+    send_message(validation_status='Finished',
+                 submission_status=submission_status,
+                 validation_results=results)
     return 'Success'

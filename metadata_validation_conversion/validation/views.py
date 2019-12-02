@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from celery import chord
+import json
 from .tasks import validate_against_schema, \
     collect_warnings_and_additional_checks, join_validation_results, \
     collect_relationships_issues
@@ -66,5 +67,5 @@ def validate_analyses(request, task_id):
     my_chord = chord((validate_against_schema_task,
                       collect_warnings_and_additional_checks_task),
                      join_validation_results_task)
-    my_chord.apply_async()
-    return HttpResponse({})
+    res = my_chord.apply_async()
+    return HttpResponse(json.dumps({"id": res.id}))

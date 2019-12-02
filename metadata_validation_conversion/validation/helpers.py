@@ -69,3 +69,31 @@ def get_record_name(record, index, name):
             return record['custom']['sample_descriptor']['value']
         else:
             return record['alias']['value']
+
+
+def get_submission_status(validation_results):
+    """
+    This function will check results for error and return appropriate message
+    :param validation_results: json to check
+    :return: submission status
+    """
+    for _, v in validation_results.items():
+        for record in v:
+            if check_issues(record, 'core') or check_issues(record, 'type') \
+                    or check_issues(record, 'custom') \
+                    or check_issues(record, 'module'):
+                return 'Fix issues'
+    return 'Ready for submission'
+
+
+def check_issues(record, issue_type):
+    """
+    This function will return True if any issues exist
+    :param record: record to check
+    :param issue_type: type of issues to check
+    :return: True if any issues and False otherwise
+    """
+    if issue_type in record:
+        return len(record[issue_type]['errors']) > 0
+    else:
+        return False
