@@ -13,7 +13,7 @@ def index(request):
 def convert_samples(request):
     send_message(conversion_status="Waiting")
     if request.method == 'POST':
-        with open('file.xlsx', 'wb+') as destination:
+        with open('samples.xlsx', 'wb+') as destination:
             for chunk in request.FILES['file'].chunks():
                 destination.write(chunk)
         res = read_excel_file.apply_async(('samples', 'samples.xlsx'),

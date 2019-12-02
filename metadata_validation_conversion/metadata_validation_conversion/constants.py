@@ -88,6 +88,12 @@ ALLOWED_EXPERIMENTS_TYPES = {
     'atac-seq': ATAC_SEQ_URL
 }
 
+ALLOWED_ANALYSES_TYPES = {
+    'faang': FAANG_ANALYSES_URL,
+    'ena': ENA_ANALYSES_URL,
+    'eva': EVA_ANALYSES_URL
+}
+
 ALLOWED_RELATIONSHIPS = {
     'organism': ['organism'],
     'specimen_from_organism': ['organism'],

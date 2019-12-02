@@ -35,7 +35,7 @@ class RelationshipsIssues:
         biosample_ids = set()
         records = self.json_to_test[name]
         for index, record in enumerate(records):
-            record_name = get_record_name(record['custom'], index, name)
+            record_name = get_record_name(record, index, name)
             relationships.setdefault(record_name, dict())
             relationship_name = 'child_of' if name == 'organism' else \
                 'derived_from'
