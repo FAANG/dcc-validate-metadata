@@ -12,20 +12,20 @@ def read_excel_file(conversion_type, file):
     :return: converted data
     """
     if conversion_type == 'samples':
-        read_excel_file_object = ReadExcelFile(file_path=file,
-                                               json_type='samples')
-        results = read_excel_file_object.start_conversion()
-        if 'Error' in results:
-            send_message(conversion_status='Error', errors=results)
-        else:
-            send_message(conversion_status='Success')
-        return results
+        json_type = 'samples'
+    elif conversion_type == 'experiments':
+        json_type = 'experiments'
+    elif conversion_type == 'analyses':
+        json_type = 'analyses'
     else:
-        read_excel_file_object = ReadExcelFile(file_path=file,
-                                               json_type='experiments')
-        results = read_excel_file_object.start_conversion()
-        if 'Error' in results:
-            send_message(conversion_status='Error', errors=results)
-        else:
-            send_message(conversion_status='Success')
-        return results
+        send_message(conversion_status='Error',
+                     errors='This type is not supported')
+        return 'Error'
+    read_excel_file_object = ReadExcelFile(file_path=file,
+                                           json_type=json_type)
+    results = read_excel_file_object.start_conversion()
+    if 'Error' in results:
+        send_message(conversion_status='Error', errors=results)
+    else:
+        send_message(conversion_status='Success')
+    return results

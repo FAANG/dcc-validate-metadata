@@ -16,6 +16,8 @@ def get_rules_json(url, json_type, module_url=None):
         core_json = SAMPLE_CORE_URL
     elif json_type == 'experiments':
         core_json = EXPERIMENT_CORE_URL
+    elif json_type == 'analyses':
+        return requests.get(url).json()
     else:
         raise ValueError(f"Error: {json_type} is not allowed type!")
     type_json = requests.get(url).json()

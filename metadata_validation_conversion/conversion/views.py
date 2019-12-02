@@ -16,10 +16,9 @@ def convert_samples(request):
         with open('file.xlsx', 'wb+') as destination:
             for chunk in request.FILES['file'].chunks():
                 destination.write(chunk)
-        res = read_excel_file.apply_async(('samples', 'file.xlsx'),
+        res = read_excel_file.apply_async(('samples', 'samples.xlsx'),
                                           queue='conversion')
         return HttpResponse(res.id)
-    # TODO convert it to error response
     return HttpResponse("Please use POST method for conversion!")
 
 
@@ -31,6 +30,19 @@ def convert_experiments(request):
             for chunk in request.FILES['file'].chunks():
                 destination.write(chunk)
         res = read_excel_file.apply_async(('experiments', 'experiments.xlsx'),
+                                          queue='conversion')
+        return HttpResponse(res.id)
+    return HttpResponse("Please use POST method for conversion")
+
+
+@csrf_exempt
+def convert_analyses(request):
+    send_message(conversion_status="Waiting")
+    if request.method == 'POST':
+        with open('analyses.xlsx', 'wb+') as destination:
+            for chunk in request.FILES['file'].chunks():
+                destination.write(chunk)
+        res = read_excel_file.apply_async(('analyses', 'analyses.xlsx'),
                                           queue='conversion')
         return HttpResponse(res.id)
     return HttpResponse("Please use POST method for conversion")
