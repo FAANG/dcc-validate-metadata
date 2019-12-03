@@ -1,7 +1,7 @@
 import time
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
-from .BIosamplesFileConverter import BiosamplesFileConverter
+from .BiosamplesFileConverter import BiosamplesFileConverter
 
 
 @app.task
