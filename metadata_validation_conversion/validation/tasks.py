@@ -56,4 +56,4 @@ def join_validation_results(results):
     send_message(validation_status='Finished',
                  submission_status=submission_status,
                  validation_results=results)
-    return 'Success'
+    return results
