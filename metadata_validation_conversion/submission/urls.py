@@ -8,5 +8,6 @@ urlpatterns = [
     path('experiments/<str:task_id>', views.experiments_submission,
          name='experiments_submission'),
     path('analyses/<str:task_id>', views.analyses_submission,
-         name='analyses_submission')
+         name='analyses_submission'),
+    path('get_data/<str:task_id>', views.send_data, name='send_data')
 ]
