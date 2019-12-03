@@ -29,8 +29,8 @@ def validate_samples(request, task_id):
                       collect_warnings_and_additional_checks_task,
                       collect_relationships_issues_task),
                      join_validation_results_task)
-    my_chord.apply_async()
-    return HttpResponse({})
+    res = my_chord.apply_async()
+    return HttpResponse(json.dumps({"id": res.id}))
 
 
 def validate_experiments(request, task_id):
@@ -48,8 +48,8 @@ def validate_experiments(request, task_id):
     my_chord = chord((validate_against_schema_task,
                       collect_warnings_and_additional_checks_task),
                      join_validation_results_task)
-    my_chord.apply_async()
-    return HttpResponse({})
+    res = my_chord.apply_async()
+    return HttpResponse(json.dumps({"id": res.id}))
 
 
 def validate_analyses(request, task_id):
