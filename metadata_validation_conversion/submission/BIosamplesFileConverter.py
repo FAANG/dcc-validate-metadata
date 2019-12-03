@@ -19,7 +19,7 @@ class BiosamplesFileConverter:
                         "title": record_name,
                         "releaseDate": current_date,
                         "taxonId": taxon_ids[record_name],
-                        "attributes": "",
+                        "attributes": self.get_sample_attributes(record),
                         "samplesRelationships": self.get_sample_relationships(
                             record)
                     }
@@ -113,3 +113,60 @@ class BiosamplesFileConverter:
                     }
                 )
         return sample_relationships
+
+    def get_sample_attributes(self, record):
+        """
+        This function will return biosample attributes
+        :param record: record to parse
+        :return: attributes for this record in biosample format
+        """
+        sample_attributes = dict()
+        for attribute_name, attribute_value in record.items():
+            if attribute_name == 'samples_core':
+                for sc_attribute_name, sc_attribute_value in \
+                        record['samples_core'].items():
+                    sample_attributes[sc_attribute_name] = \
+                        self.parse_attribute(sc_attribute_value)
+            elif attribute_name == 'custom':
+                for sc_attribute_name, sc_attribute_value in \
+                        record['custom'].items():
+                    sample_attributes[sc_attribute_name] = \
+                        self.parse_attribute(sc_attribute_value)
+            else:
+                sample_attributes[attribute_name] = self.parse_attribute(
+                    attribute_value)
+        return sample_attributes
+
+    def parse_attribute(self, value_to_parse):
+        attributes = list()
+
+        if isinstance(value_to_parse, list):
+            for sc_value_to_parse in value_to_parse:
+                attributes.append(
+                    self.parse_value_in_attribute(sc_value_to_parse)
+                )
+        elif isinstance(value_to_parse, dict):
+            attributes.append(
+                self.parse_value_in_attribute(value_to_parse)
+            )
+        return attributes
+
+    @staticmethod
+    def parse_value_in_attribute(value_to_parse):
+        attribute = dict()
+        if 'text' in value_to_parse:
+            attribute['value'] = value_to_parse['text']
+        elif 'value' in value_to_parse:
+            attribute['value'] = value_to_parse['value']
+
+        if 'term' in value_to_parse:
+            ontology_url = "_".join(value_to_parse['term'].split(":"))
+            attribute['terms'] = [
+                {
+                    "url": f"http://purl.obolibrary.org/obo/{ontology_url}"
+                }
+            ]
+
+        if 'units' in value_to_parse:
+            attribute['units'] = value_to_parse['units']
+        return attribute
