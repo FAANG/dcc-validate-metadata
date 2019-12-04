@@ -1,4 +1,6 @@
+import requests
 from datetime import datetime
+from validation.helpers import get_record_name
 
 
 class BiosamplesFileConverter:
@@ -10,9 +12,8 @@ class BiosamplesFileConverter:
         taxon_ids = self.get_all_taxon_ids()
         current_date = datetime.now().strftime("%Y-%m-%d")
         for record_type, records in self.json_to_convert.items():
-            for record in records:
-                # TODO get name from function
-                record_name = record['custom']['sample_name']['value']
+            for record_index, record in enumerate(records):
+                record_name = get_record_name(record, record_index, record_type)
                 data_to_send.append(
                     {
                         "alias": record_name,
@@ -34,9 +35,8 @@ class BiosamplesFileConverter:
         taxon_ids = dict()
         missing_ids = dict()
         for record_type, records in self.json_to_convert.items():
-            for record in records:
-                # TODO get name from function
-                record_name = record['custom']['sample_name']['value']
+            for record_index, record in enumerate(records):
+                record_name = get_record_name(record, record_index, record_type)
                 if 'organism' in record:
                     taxon_ids[record_name] = \
                         record['organism']['term'].split(":")[1]
@@ -47,12 +47,6 @@ class BiosamplesFileConverter:
                     elif isinstance(record['derived_from'], list):
                         missing_ids[record_name] = \
                             record['derived_from'][0]['value']
-                    else:
-                        # TODO return an error
-                        pass
-                else:
-                    # TODO return an error
-                    pass
         for id_to_fetch in missing_ids:
             taxon_ids[id_to_fetch] = self.fetch_id(id_to_fetch, taxon_ids,
                                                    missing_ids)
@@ -66,12 +60,20 @@ class BiosamplesFileConverter:
         :param missing_ids: missing taxon ids
         :return:
         """
-        # TODO add biosamples check
         if id_to_fetch in taxon_ids:
             return taxon_ids[id_to_fetch]
         else:
-            return self.fetch_id(missing_ids[id_to_fetch], taxon_ids,
-                                 missing_ids)
+            if 'SAM' in id_to_fetch:
+                try:
+                    return requests.get(
+                        f"https://www.ebi.ac.uk/biosamples/samples/"
+                        f"{id_to_fetch}"
+                    ).json()['taxId']
+                except ValueError:
+                    pass
+            else:
+                return self.fetch_id(missing_ids[id_to_fetch], taxon_ids,
+                                     missing_ids)
 
     @staticmethod
     def get_sample_relationships(record):
