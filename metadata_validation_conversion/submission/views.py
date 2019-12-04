@@ -39,10 +39,14 @@ def send_data(request, task_id):
     conversion_results = app.AsyncResult(task_id)
     data_to_send = conversion_results.get()
     if isinstance(data_to_send, list):
+        if data_to_send[0] == 'analysis':
+            filename = 'analyses.zip'
+        else:
+            filename = 'experiments.zip'
         zipped_file = zip_files(data_to_send[1:], data_to_send[0])
         response = HttpResponse(zipped_file,
                                 content_type='application/octet-stream')
-        response['Content-Disposition'] = 'attachment; filename="analyses.zip"'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
     else:
         response = HttpResponse(json.dumps(data_to_send),
                                 content_type='application/json')
