@@ -10,7 +10,8 @@ def zip_files(files, output_type):
     :return: zip archive
     """
     analysis_files = ['analysis.xml', 'submission.xml']
-    experiments_files = ['test.xml']
+    experiments_files = ['experiment.xml', 'run.xml', 'study.xml',
+                         'submission.xml']
     if output_type == 'analysis':
         file_names = analysis_files
     else:
