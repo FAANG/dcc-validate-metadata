@@ -138,6 +138,11 @@ class BiosamplesFileConverter:
         return sample_attributes
 
     def parse_attribute(self, value_to_parse):
+        """
+        This function will parse single attribute from data
+        :param value_to_parse: data to parse
+        :return: attributes list
+        """
         attributes = list()
 
         if isinstance(value_to_parse, list):
@@ -153,6 +158,11 @@ class BiosamplesFileConverter:
 
     @staticmethod
     def parse_value_in_attribute(value_to_parse):
+        """
+        This function will parse single fields
+        :param value_to_parse: field to parse
+        :return: dict of attributes
+        """
         attribute = dict()
         if 'text' in value_to_parse:
             attribute['value'] = value_to_parse['text']
