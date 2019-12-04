@@ -28,4 +28,4 @@ def prepare_experiments_data(json_to_convert):
     conversion_results = ExperimentFileConverter(json_to_convert)
     results = conversion_results.start_conversion()
     send_message(submission_status='Data is ready')
-    return results
+    return 'experiment', results
