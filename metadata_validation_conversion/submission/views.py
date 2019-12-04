@@ -2,7 +2,7 @@ import json
 from django.http import HttpResponse
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
-from .tasks import prepare_samples_data
+from .tasks import prepare_samples_data, prepare_analyses_data, prepare_experiments_data
 
 
 def samples_submission(request, task_id):
@@ -18,19 +18,19 @@ def samples_submission(request, task_id):
 def experiments_submission(request, task_id):
     validation_result = app.AsyncResult(task_id)
     json_to_send = validation_result.get()
-    response = HttpResponse(json.dumps(json_to_send),
-                            content_type='application/json')
-    response['Content-Disposition'] = 'attachment; filename="experiments.json"'
-    return response
+    prepare_experiments_data_task = prepare_experiments_data.s(json_to_send).set(
+        queue='submission')
+    res = prepare_experiments_data_task.apply_async()
+    return HttpResponse(json.dumps({"id": res.id}))
 
 
 def analyses_submission(request, task_id):
     validation_result = app.AsyncResult(task_id)
     json_to_send = validation_result.get()
-    response = HttpResponse(json.dumps(json_to_send),
-                            content_type='application/json')
-    response['Content-Disposition'] = 'attachment; filename="analyses.json"'
-    return response
+    prepare_analyses_data_task = prepare_analyses_data.s(json_to_send).set(
+        queue='submission')
+    res = prepare_analyses_data_task.apply_async()
+    return HttpResponse(json.dumps({"id": res.id}))
 
 
 def send_data(request, task_id):
