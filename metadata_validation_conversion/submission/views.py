@@ -20,8 +20,8 @@ def samples_submission(request, task_id):
 def experiments_submission(request, task_id):
     validation_result = app.AsyncResult(task_id)
     json_to_send = validation_result.get()
-    prepare_experiments_data_task = prepare_experiments_data.s(json_to_send).set(
-        queue='submission')
+    prepare_experiments_data_task = prepare_experiments_data.s(
+        json_to_send).set(queue='submission')
     res = prepare_experiments_data_task.apply_async()
     return HttpResponse(json.dumps({"id": res.id}))
 
