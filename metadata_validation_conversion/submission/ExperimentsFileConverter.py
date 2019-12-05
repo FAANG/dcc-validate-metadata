@@ -86,24 +86,15 @@ class ExperimentFileConverter:
 
             result += '\t\t<EXPERIMENT_ATTRIBUTES>\n'
             faang_experiment = self.find_faang_experiment(sample_descriptor)
-            for attr_name, attr_value in \
-                    faang_experiment['experiments_core'].items():
-                result += '\t\t\t<EXPERIMENT_ATTRIBUTE>\n'
-                result += f'\t\t\t\t<TAG>{remove_underscores(attr_name)}' \
-                          f'</TAG>\n'
-                if 'value' in attr_value:
-                    value = attr_value['value']
-                elif 'text' in attr_value:
-                    value = attr_value['text']
-                result += f'\t\t\t\t<VALUE>{value}</VALUE>\n'
-                if 'units' in attr_value:
-                    units = attr_value['units']
-                    result += f'\t\t\t\t<UNITS>{units}</UNITS>\n'
-                result += '\t\t\t</EXPERIMENT_ATTRIBUTE>\n'
-            for attribute in faang_experiment:
-                if attribute == 'experiments_core':
-                    continue
-                pass
+            self.parse_faang_experiment(result,
+                                        faang_experiment['experiments_core'])
+            if 'dna-binding_proteins' in faang_experiment:
+                self.parse_faang_experiment(
+                    result, faang_experiment['dna-binding_proteins'])
+            if 'input_dna' in faang_experiment:
+                self.parse_faang_experiment(result,
+                                            faang_experiment['input_dna'])
+            self.parse_faang_experiment(result, faang_experiment)
             result += '\t\t</EXPERIMENT_ATTRIBUTES>\n'
 
             result += '\t</EXPERIMENT>\n'
@@ -123,6 +114,25 @@ class ExperimentFileConverter:
                     record_id = record['custom']['sample_descriptor']['value']
                     if sample_descriptor == record_id:
                         return record
+
+    @staticmethod
+    def parse_faang_experiment(result, faang_experiment):
+        for attr_name, attr_value in faang_experiment.items():
+            if attr_name in ['experiments_core', 'dna-binding_proteins',
+                             'input_dna']:
+                continue
+            result += '\t\t\t<EXPERIMENT_ATTRIBUTE>\n'
+            result += f'\t\t\t\t<TAG>{remove_underscores(attr_name)}' \
+                      f'</TAG>\n'
+            if 'value' in attr_value:
+                value = attr_value['value']
+            elif 'text' in attr_value:
+                value = attr_value['text']
+            result += f'\t\t\t\t<VALUE>{value}</VALUE>\n'
+            if 'units' in attr_value:
+                units = attr_value['units']
+                result += f'\t\t\t\t<UNITS>{units}</UNITS>\n'
+            result += '\t\t\t</EXPERIMENT_ATTRIBUTE>\n'
 
     def generate_run_xml(self):
         """
