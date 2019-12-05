@@ -3,7 +3,8 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, CHIP_SEQ_INPUT_DNA_URL, \
     CHIP_SEQ_DNA_BINDING_PROTEINS_URL, SAMPLES_SPECIFIC_JSON_TYPES, \
     EXPERIMENTS_SPECIFIC_JSON_TYPES, CHIP_SEQ_INPUT_DNA_JSON_TYPES, \
-    CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES
+    CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, STUDY_FIELDS, \
+    EXPERIMENT_ENA_FIELDS, SUBMISSION_FIELDS, RUN_FIELDS
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
 
@@ -28,6 +29,34 @@ class ReadExcelFile:
             if sh.name not in ALLOWED_SHEET_NAMES:
                 if sh.name == 'faang_field_values':
                     continue
+                elif sh.name == 'study':
+                    study_data = self.get_experiments_additional_data(
+                        sh, STUDY_FIELDS, 'study')
+                    if 'Error' in study_data:
+                        return study_data
+                    data['study'] = study_data
+                    continue
+                elif sh.name == 'experiment ena':
+                    experiment_ena_data = self.get_experiments_additional_data(
+                        sh, EXPERIMENT_ENA_FIELDS, 'experiment ena')
+                    if 'Error' in experiment_ena_data:
+                        return experiment_ena_data
+                    data['experiment_ena'] = experiment_ena_data
+                    continue
+                elif sh.name == 'submission':
+                    submission_data = self.get_experiments_additional_data(
+                        sh, SUBMISSION_FIELDS, 'submission')
+                    if 'Error' in submission_data:
+                        return submission_data
+                    data['submission'] = submission_data
+                    continue
+                elif sh.name == 'run':
+                    run_data = self.get_experiments_additional_data(
+                        sh, RUN_FIELDS, 'run')
+                    if 'Error' in run_data:
+                        return run_data
+                    data['run'] = run_data
+                    continue
                 return f"Error: there are no rules for {sh.name} type!"
             else:
                 tmp = list()
@@ -50,6 +79,33 @@ class ReadExcelFile:
                         tmp.append(sample_data)
                 if len(tmp) > 0:
                     data[convert_to_snake_case(sh.name)] = tmp
+        return data
+
+    @staticmethod
+    def get_experiments_additional_data(table_object, sheet_fields, sheet_name):
+        """
+        This function will parse study sheet of a table
+        :param table_object: object to get data from
+        :param sheet_fields: dict constant with list of possible fields
+        :param sheet_name: name of the sheet to be parsed
+        :return: parsed data
+        """
+        data = list()
+        for row_number in range(1, table_object.nrows):
+            tmp = dict()
+            for index, study_field in enumerate(sheet_fields['all']):
+                try:
+                    tmp[study_field] = table_object.row_values(
+                        row_number)[index]
+                except IndexError:
+                    if study_field in sheet_fields['mandatory']:
+                        return f"Error: {study_field} field is mandatory in " \
+                               f"study sheet"
+                if study_field in sheet_fields['mandatory'] \
+                        and tmp[study_field] == '':
+                    return f"Error: {study_field} field is mandatory in " \
+                           f"study {sheet_name}"
+            data.append(tmp)
         return data
 
     def get_field_names_and_indexes(self, sheet_name):

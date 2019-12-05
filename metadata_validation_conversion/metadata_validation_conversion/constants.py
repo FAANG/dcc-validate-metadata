@@ -168,3 +168,71 @@ SPECIES_BREED_LINKS = {
     "NCBITaxon:9823": "LBO:0000003",  # pig
     "NCBITaxon:9940": "LBO:0000004"  # sheep
 }
+
+STUDY_FIELDS = {
+    'all': ['study_alias', 'study_title', 'study_type', 'study_abstract'],
+    'mandatory': ['study_alias', 'study_title', 'study_type']
+}
+
+EXPERIMENT_ENA_FIELDS = {
+    'all': [
+        'sample_descriptor',
+        'experiment_alias',
+        'title',
+        'study_ref',
+        'design_description',
+        'library_name',
+        'library_strategy',
+        'library_source',
+        'library_selection',
+        'library_layout',
+        'nominal_length',
+        'nominal_sdev',
+        'library_construction_protocol',
+        'platform',
+        'instrument_model'
+    ],
+    'mandatory': [
+        'sample_descriptor',
+        'experiment_alias',
+        'study_ref',
+        'design_description',
+        'library_strategy',
+        'library_source',
+        'library_selection',
+        'library_layout',
+        'platform'
+    ]
+}
+
+SUBMISSION_FIELDS = {
+    'all': ['alias'],
+    'mandatory': ['alias']
+}
+
+RUN_FIELDS = {
+    'all': [
+        'alias',
+        'run_center',
+        'run_date',
+        'experiment_ref',
+        'filename',
+        'filetype',
+        'checksum_method',
+        'checksum',
+        'filename_pair',
+        'filetype_pair',
+        'checksum_method_pair',
+        'checksum_pair'
+    ],
+    'mandatory': [
+        'alias',
+        'run_center',
+        'run_date',
+        'experiment_ref',
+        'filename',
+        'filetype',
+        'checksum_method',
+        'checksum',
+    ]
+}
