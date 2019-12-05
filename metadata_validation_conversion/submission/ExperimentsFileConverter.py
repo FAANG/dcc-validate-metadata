@@ -85,11 +85,34 @@ class ExperimentFileConverter:
         This function will generate xml file for study
         :return: study xml file
         """
+        # TODO: generate an Error
+        if 'study' not in self.json_to_convert:
+            return 'Error'
         result = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        result += '<STUDY_SET ' \
-                  'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' \
+        result += '<STUDY_SET xmlns:xsi=' \
+                  '"http://www.w3.org/2001/XMLSchema-instance" ' \
                   'xsi:noNamespaceSchemaLocation=' \
                   '"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.study.xsd">\n'
+        for record in self.json_to_convert['study']:
+            study_alias = record['study_alias']
+            study_title = record['study_title']
+            study_type = record['study_type']
+            study_abstract = record['study_abstract'] \
+                if 'study_abstract' in record else None
+            result += f'\t<STUDY alias="{study_alias}">\n'
+
+            result += '\t\t<DESCRIPTOR>\n'
+
+            result += f'\t\t\t<STUDY_TITLE>{study_title}</STUDY_TITLE>\n'
+            result += f'\t\t\t<STUDY_TYPE existing_study_type=' \
+                      f'"{study_type}"/>\n'
+            if study_abstract is not None:
+                result += f'\t\t\t<STUDY_ABSTRACT>' \
+                          f'{study_abstract}</STUDY_ABSTRACT>\n'
+
+            result += '\t\t</DESCRIPTOR>\n'
+
+            result += '\t</STUDY>\n'
         result += '</STUDY_SET>'
         return result
 
