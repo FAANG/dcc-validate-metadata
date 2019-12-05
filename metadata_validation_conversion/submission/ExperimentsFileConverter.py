@@ -17,9 +17,8 @@ class ExperimentFileConverter:
         This function will generate xml file for experiment
         :return: experiment xml file
         """
-        # TODO: generate an Error
         if 'experiment_ena' not in self.json_to_convert:
-            return 'Error'
+            return 'Error: table should have experiment_ena sheet'
         result = '<?xml version="1.0" encoding="UTF-8"?>\n'
         result += '<EXPERIMENT_SET xmlns:xsi=' \
                   '"http://www.w3.org/2001/XMLSchema-instance" ' \
@@ -130,9 +129,8 @@ class ExperimentFileConverter:
         This function will generate xml file for run
         :return: run xml file
         """
-        # TODO: generate an Error
         if 'run' not in self.json_to_convert:
-            return 'Error'
+            return 'Error: table should have run sheet'
         result = '<?xml version="1.0" encoding="UTF-8"?>\n'
         result += '<RUN_SET xmlns:xsi=' \
                   '"http://www.w3.org/2001/XMLSchema-instance" ' \
@@ -187,9 +185,8 @@ class ExperimentFileConverter:
         This function will generate xml file for study
         :return: study xml file
         """
-        # TODO: generate an Error
         if 'study' not in self.json_to_convert:
-            return 'Error'
+            return 'Error: table should have study sheet'
         result = '<?xml version="1.0" encoding="UTF-8"?>\n'
         result += '<STUDY_SET xmlns:xsi=' \
                   '"http://www.w3.org/2001/XMLSchema-instance" ' \
@@ -223,9 +220,8 @@ class ExperimentFileConverter:
         This function will generate xml file for submission
         :return: submission xml file
         """
-        # TODO: generate an Error
         if 'submission' not in self.json_to_convert:
-            return 'Error'
+            return 'Error: table should have submission sheet'
         result = '<?xml version="1.0" encoding="UTF-8"?>\n'
         result += '<SUBMISSION_SET xmlns:xsi=' \
                   '"http://www.w3.org/2001/XMLSchema-instance" ' \

@@ -39,7 +39,8 @@ def convert_to_snake_case(my_string):
 
 
 def send_message(conversion_status=None, validation_status=None,
-                 submission_status=None, errors=None, validation_results=None):
+                 submission_status=None, errors=None, validation_results=None,
+                 conversion_errors=None):
     """
     This function will send message to channel layer
     :param conversion_status: conversion status to send
@@ -47,13 +48,15 @@ def send_message(conversion_status=None, validation_status=None,
     :param submission_status: submission status to send
     :param errors: list of errors
     :param validation_results: results of validation
+    :param conversion_errors: list of conversion errors
     """
     response = {
         'conversion_status': conversion_status,
         'validation_status': validation_status,
         'submission_status': submission_status,
         'errors': errors,
-        'validation_results': validation_results
+        'validation_results': validation_results,
+        'conversion_errors': conversion_errors
     }
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)("submission_test_task", {
