@@ -1,4 +1,5 @@
 import xlrd
+import os
 from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, CHIP_SEQ_INPUT_DNA_URL, \
     CHIP_SEQ_DNA_BINDING_PROTEINS_URL, SAMPLES_SPECIFIC_JSON_TYPES, \
@@ -79,6 +80,7 @@ class ReadExcelFile:
                         tmp.append(sample_data)
                 if len(tmp) > 0:
                     data[convert_to_snake_case(sh.name)] = tmp
+        os.remove(self.file_path)
         return data
 
     @staticmethod

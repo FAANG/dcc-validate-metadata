@@ -13,10 +13,11 @@ def index(request):
 def convert_samples(request):
     send_message(conversion_status="Waiting")
     if request.method == 'POST':
-        with open('samples.xlsx', 'wb+') as destination:
-            for chunk in request.FILES['file'].chunks():
+        fileid = list(request.FILES.keys())[0]
+        with open(f'{fileid}.xlsx', 'wb+') as destination:
+            for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
-        res = read_excel_file.apply_async(('samples', 'samples.xlsx'),
+        res = read_excel_file.apply_async(('samples', f'{fileid}.xlsx'),
                                           queue='conversion')
         return HttpResponse(res.id)
     return HttpResponse("Please use POST method for conversion!")
@@ -26,10 +27,11 @@ def convert_samples(request):
 def convert_experiments(request):
     send_message(conversion_status="Waiting")
     if request.method == 'POST':
-        with open('experiments.xlsx', 'wb+') as destination:
-            for chunk in request.FILES['file'].chunks():
+        fileid = list(request.FILES.keys())[0]
+        with open(f'{fileid}.xlsx', 'wb+') as destination:
+            for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
-        res = read_excel_file.apply_async(('experiments', 'experiments.xlsx'),
+        res = read_excel_file.apply_async(('experiments', f'{fileid}.xlsx'),
                                           queue='conversion')
         return HttpResponse(res.id)
     return HttpResponse("Please use POST method for conversion")
@@ -39,10 +41,11 @@ def convert_experiments(request):
 def convert_analyses(request):
     send_message(conversion_status="Waiting")
     if request.method == 'POST':
-        with open('analyses.xlsx', 'wb+') as destination:
-            for chunk in request.FILES['file'].chunks():
+        fileid = list(request.FILES.keys())[0]
+        with open(f'{fileid}.xlsx', 'wb+') as destination:
+            for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
-        res = read_excel_file.apply_async(('analyses', 'analyses.xlsx'),
+        res = read_excel_file.apply_async(('analyses', f'{fileid}.xlsx'),
                                           queue='conversion')
         return HttpResponse(res.id)
     return HttpResponse("Please use POST method for conversion")
