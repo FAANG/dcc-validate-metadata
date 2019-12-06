@@ -11,13 +11,13 @@ def index(request):
 
 @csrf_exempt
 def convert_samples(request):
-    send_message(conversion_status="Waiting")
     if request.method == 'POST':
         fileid = list(request.FILES.keys())[0]
+        send_message(room_id=fileid, conversion_status="Waiting")
         with open(f'{fileid}.xlsx', 'wb+') as destination:
             for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
-        res = read_excel_file.apply_async(('samples', f'{fileid}.xlsx'),
+        res = read_excel_file.apply_async((fileid, 'samples', f'{fileid}.xlsx'),
                                           queue='conversion')
         return HttpResponse(res.id)
     return HttpResponse("Please use POST method for conversion!")
@@ -25,27 +25,27 @@ def convert_samples(request):
 
 @csrf_exempt
 def convert_experiments(request):
-    send_message(conversion_status="Waiting")
     if request.method == 'POST':
         fileid = list(request.FILES.keys())[0]
+        send_message(room_id=fileid, conversion_status="Waiting")
         with open(f'{fileid}.xlsx', 'wb+') as destination:
             for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
-        res = read_excel_file.apply_async(('experiments', f'{fileid}.xlsx'),
-                                          queue='conversion')
+        res = read_excel_file.apply_async((
+            fileid, 'experiments', f'{fileid}.xlsx'), queue='conversion')
         return HttpResponse(res.id)
     return HttpResponse("Please use POST method for conversion")
 
 
 @csrf_exempt
 def convert_analyses(request):
-    send_message(conversion_status="Waiting")
     if request.method == 'POST':
         fileid = list(request.FILES.keys())[0]
+        send_message(room_id=fileid, conversion_status="Waiting")
         with open(f'{fileid}.xlsx', 'wb+') as destination:
             for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
-        res = read_excel_file.apply_async(('analyses', f'{fileid}.xlsx'),
-                                          queue='conversion')
+        res = read_excel_file.apply_async((
+            fileid, 'analyses', f'{fileid}.xlsx'), queue='conversion')
         return HttpResponse(res.id)
     return HttpResponse("Please use POST method for conversion")

@@ -38,11 +38,12 @@ def convert_to_snake_case(my_string):
     return '_'.join(my_string.lower().split(" ")).replace("'", "")
 
 
-def send_message(conversion_status=None, validation_status=None,
+def send_message(room_id, conversion_status=None, validation_status=None,
                  submission_status=None, errors=None, validation_results=None,
                  conversion_errors=None):
     """
     This function will send message to channel layer
+    :param room_id: room id to construct ws url
     :param conversion_status: conversion status to send
     :param validation_status: validation status to send
     :param submission_status: submission status to send
@@ -59,6 +60,6 @@ def send_message(conversion_status=None, validation_status=None,
         'conversion_errors': conversion_errors
     }
     channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)("submission_test_task", {
+    async_to_sync(channel_layer.group_send)(f"submission_{room_id}", {
         "type": "submission_message",
         "response": response})
