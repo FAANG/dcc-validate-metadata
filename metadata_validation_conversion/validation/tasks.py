@@ -44,9 +44,10 @@ def collect_relationships_issues(json_to_test):
 
 
 @app.task
-def join_validation_results(results):
+def join_validation_results(results, room_id):
     """
     This task will join results from previous two tasks
+    :param room_id: room id to create ws url
     :param results: list with results of previous two tasks
     :return: joined issues in dict
     """
@@ -55,5 +56,5 @@ def join_validation_results(results):
     submission_status = get_submission_status(results)
     send_message(validation_status='Finished',
                  submission_status=submission_status,
-                 validation_results=results)
+                 validation_results=results, room_id=room_id)
     return results

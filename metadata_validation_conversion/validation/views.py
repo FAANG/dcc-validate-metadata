@@ -8,8 +8,8 @@ from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 
 
-def validate_samples(request, task_id):
-    send_message(validation_status="Waiting")
+def validate_samples(request, task_id, room_id):
+    send_message(room_id=room_id, validation_status="Waiting")
     conversion_result = app.AsyncResult(task_id)
     json_to_test = conversion_result.get()
     # Create three tasks that should be run in parallel and assign callback
@@ -23,7 +23,7 @@ def validate_samples(request, task_id):
         json_to_test).set(queue='validation')
 
     # This will be callback for three previous tasks (just join results)
-    join_validation_results_task = join_validation_results.s().set(
+    join_validation_results_task = join_validation_results.s(room_id).set(
         queue='validation')
     my_chord = chord((validate_against_schema_task,
                       collect_warnings_and_additional_checks_task,
@@ -33,8 +33,8 @@ def validate_samples(request, task_id):
     return HttpResponse(json.dumps({"id": res.id}))
 
 
-def validate_experiments(request, task_id):
-    send_message(validation_status="Waiting")
+def validate_experiments(request, task_id, room_id):
+    send_message(room_id=room_id, validation_status="Waiting")
     conversion_result = app.AsyncResult(task_id)
     json_to_test = conversion_result.get()
     validate_against_schema_task = validate_against_schema.s(json_to_test,
@@ -43,7 +43,7 @@ def validate_experiments(request, task_id):
     collect_warnings_and_additional_checks_task = \
         collect_warnings_and_additional_checks.s(
             json_to_test, 'experiments').set(queue='validation')
-    join_validation_results_task = join_validation_results.s().set(
+    join_validation_results_task = join_validation_results.s(room_id).set(
         queue='validation')
     my_chord = chord((validate_against_schema_task,
                       collect_warnings_and_additional_checks_task),
@@ -52,8 +52,8 @@ def validate_experiments(request, task_id):
     return HttpResponse(json.dumps({"id": res.id}))
 
 
-def validate_analyses(request, task_id):
-    send_message(validation_status="Waiting")
+def validate_analyses(request, task_id, room_id):
+    send_message(room_id=room_id, validation_status="Waiting")
     conversion_result = app.AsyncResult(task_id)
     json_to_test = conversion_result.get()
     validate_against_schema_task = validate_against_schema.s(json_to_test,
@@ -62,7 +62,7 @@ def validate_analyses(request, task_id):
     collect_warnings_and_additional_checks_task = \
         collect_warnings_and_additional_checks.s(
             json_to_test, 'analyses').set(queue='validation')
-    join_validation_results_task = join_validation_results.s().set(
+    join_validation_results_task = join_validation_results.s(room_id).set(
         queue='validation')
     my_chord = chord((validate_against_schema_task,
                       collect_warnings_and_additional_checks_task),

@@ -7,30 +7,32 @@ from .tasks import prepare_samples_data, prepare_analyses_data, \
 from .helpers import zip_files
 
 
-def samples_submission(request, task_id):
-    send_message(submission_status='Preparing data')
+def samples_submission(request, task_id, room_id):
+    send_message(submission_status='Preparing data', room_id=room_id)
     validation_result = app.AsyncResult(task_id)
     json_to_send = validation_result.get()
-    prepare_samples_data_task = prepare_samples_data.s(json_to_send).set(
-        queue='submission')
+    prepare_samples_data_task = prepare_samples_data.s(
+        json_to_send, room_id).set(queue='submission')
     res = prepare_samples_data_task.apply_async()
     return HttpResponse(json.dumps({"id": res.id}))
 
 
-def experiments_submission(request, task_id):
+def experiments_submission(request, task_id, room_id):
+    send_message(submission_status='Preparing data', room_id=room_id)
     validation_result = app.AsyncResult(task_id)
     json_to_send = validation_result.get()
     prepare_experiments_data_task = prepare_experiments_data.s(
-        json_to_send).set(queue='submission')
+        json_to_send, room_id).set(queue='submission')
     res = prepare_experiments_data_task.apply_async()
     return HttpResponse(json.dumps({"id": res.id}))
 
 
-def analyses_submission(request, task_id):
+def analyses_submission(request, task_id, room_id):
+    send_message(submission_status='Preparing data', room_id=room_id)
     validation_result = app.AsyncResult(task_id)
     json_to_send = validation_result.get()
-    prepare_analyses_data_task = prepare_analyses_data.s(json_to_send).set(
-        queue='submission')
+    prepare_analyses_data_task = prepare_analyses_data.s(
+        json_to_send, room_id).set(queue='submission')
     res = prepare_analyses_data_task.apply_async()
     return HttpResponse(json.dumps({"id": res.id}))
 
@@ -38,7 +40,8 @@ def analyses_submission(request, task_id):
 def send_data(request, task_id):
     conversion_results = app.AsyncResult(task_id)
     data_to_send = conversion_results.get()
-    if isinstance(data_to_send, list):
+    if isinstance(data_to_send, list) and data_to_send[0] in ['analysis',
+                                                              'experiment']:
         if data_to_send[0] == 'analysis':
             filename = 'analyses.zip'
         else:
