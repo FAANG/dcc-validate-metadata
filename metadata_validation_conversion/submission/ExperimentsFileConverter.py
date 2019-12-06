@@ -86,15 +86,15 @@ class ExperimentFileConverter:
 
             result += '\t\t<EXPERIMENT_ATTRIBUTES>\n'
             faang_experiment = self.find_faang_experiment(sample_descriptor)
-            self.parse_faang_experiment(result,
-                                        faang_experiment['experiments_core'])
+            result += self.parse_faang_experiment(
+                faang_experiment['experiments_core'])
             if 'dna-binding_proteins' in faang_experiment:
-                self.parse_faang_experiment(
-                    result, faang_experiment['dna-binding_proteins'])
+                result += self.parse_faang_experiment(
+                    faang_experiment['dna-binding_proteins'])
             if 'input_dna' in faang_experiment:
-                self.parse_faang_experiment(result,
-                                            faang_experiment['input_dna'])
-            self.parse_faang_experiment(result, faang_experiment)
+                result += self.parse_faang_experiment(
+                    faang_experiment['input_dna'])
+            result += self.parse_faang_experiment(faang_experiment)
             result += '\t\t</EXPERIMENT_ATTRIBUTES>\n'
 
             result += '\t</EXPERIMENT>\n'
@@ -116,14 +116,14 @@ class ExperimentFileConverter:
                         return record
 
     @staticmethod
-    def parse_faang_experiment(result, faang_experiment):
+    def parse_faang_experiment(faang_experiment):
+        result = ''
         for attr_name, attr_value in faang_experiment.items():
             if attr_name in ['experiments_core', 'dna-binding_proteins',
                              'input_dna']:
                 continue
             result += '\t\t\t<EXPERIMENT_ATTRIBUTE>\n'
-            result += f'\t\t\t\t<TAG>{remove_underscores(attr_name)}' \
-                      f'</TAG>\n'
+            result += f'\t\t\t\t<TAG>{remove_underscores(attr_name)}</TAG>\n'
             if 'value' in attr_value:
                 value = attr_value['value']
             elif 'text' in attr_value:
@@ -133,6 +133,7 @@ class ExperimentFileConverter:
                 units = attr_value['units']
                 result += f'\t\t\t\t<UNITS>{units}</UNITS>\n'
             result += '\t\t\t</EXPERIMENT_ATTRIBUTE>\n'
+        return result
 
     def generate_run_xml(self):
         """
