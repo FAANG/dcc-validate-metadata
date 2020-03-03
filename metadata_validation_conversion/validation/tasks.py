@@ -5,6 +5,7 @@ from .JoinedResults import JoinedResults
 from .RelationshipsIssues import RelationshipsIssues
 from .WarningsAndAdditionalChecks import WarningsAndAdditionalChecks
 from .helpers import get_submission_status
+import json
 
 
 @app.task
@@ -51,10 +52,22 @@ def join_validation_results(results, room_id):
     :param results: list with results of previous two tasks
     :return: joined issues in dict
     """
-    joined_results_object = JoinedResults(results)
+    results_to_join = list()
+    table_data = None
+    for result in results:
+        if isinstance(result, list):
+            for record in result:
+                if 'table' in record:
+                    table_data = record
+                else:
+                    results_to_join.append(record)
+        else:
+            results_to_join.append(result)
+    joined_results_object = JoinedResults(results_to_join)
     results = joined_results_object.join_results()
     submission_status = get_submission_status(results)
     send_message(validation_status='Finished',
                  submission_status=submission_status,
-                 validation_results=results, room_id=room_id)
+                 validation_results=results, room_id=room_id,
+                 table_data=table_data)
     return results
