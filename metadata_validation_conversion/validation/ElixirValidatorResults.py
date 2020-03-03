@@ -32,9 +32,11 @@ class ElixirValidatorResults:
 
         core_schema = requests.get(core_url).json() if core_url else None
         validation_results = dict()
+        validation_document = dict()
         for name, url in record_type.items():
             if name in self.json_to_test:
                 validation_results.setdefault(name, list())
+                validation_document.setdefault(name, list())
                 type_schema = requests.get(url).json()
                 module_schema = None
                 if name == 'chip-seq_input_dna':
@@ -51,11 +53,16 @@ class ElixirValidatorResults:
                     tmp = get_validation_results_structure(
                         record_name, module_schema is not None)
                     if core_schema:
-                        tmp['core']['errors'] = validate(record[core_name],
-                                                         core_schema)
+                        tmp['core']['errors'], paths = validate(
+                            record[core_name], core_schema)
+                        for i, error in enumerate(tmp['core']['errors']):
+                            keys = paths[i].split('.')
+                            record[core_name][keys[1]]['errors'] = error
                     tmp['type']['errors'] = validate(record, type_schema)
                     if module_schema:
                         tmp['module']['errors'] = validate(record[module_name],
                                                            module_schema)
                     validation_results[name].append(tmp)
-        return validation_results
+                    validation_document[name].append(record)
+        validation_document.setdefault('table', True)
+        return validation_results, validation_document
