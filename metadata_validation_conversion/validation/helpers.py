@@ -99,3 +99,39 @@ def check_issues(record, issue_type):
         return len(record[issue_type]['errors']) > 0
     else:
         return False
+
+
+def get_record_structure(structure, record):
+    # TODO: add docstring
+    results = parse_data(structure['type'], record)
+    results['samples_core'] = parse_data(structure['core'],
+                                         record['samples_core'])
+    results['custom'] = parse_data(structure['custom'], record['custom'])
+    return results
+
+
+def parse_data(structure, record):
+    # TODO: add docstring
+    results = dict()
+    for k, v in structure.items():
+        if isinstance(v, dict):
+            if k in record:
+                results[k] = record[k].copy()
+            else:
+                results[k] = convert_to_none(v)
+        else:
+            for index, value in enumerate(v):
+                results.setdefault(k, list())
+                try:
+                    results[k].append(record[k][index].copy())
+                except (IndexError, KeyError):
+                    results[k].append(convert_to_none(value))
+    return results
+
+
+def convert_to_none(dict_to_convert):
+    # TODO: add docstring
+    results = dict()
+    for k in dict_to_convert:
+        results[k] = None
+    return results

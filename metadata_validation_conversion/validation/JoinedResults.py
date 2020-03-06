@@ -1,5 +1,6 @@
 from metadata_validation_conversion.constants import MODULE_SHEET_NAMES
 from .helpers import get_validation_results_structure
+import json
 
 
 class JoinedResults:
@@ -10,30 +11,43 @@ class JoinedResults:
         joined_results = dict()
         number_of_results = len(self.results)
         for record_type in self.results[0]:
+            if record_type == 'table':
+                continue
             joined_results.setdefault(record_type, list())
             for index, first_record in enumerate(self.results[0][record_type]):
                 records = list()
                 for i in range(0, number_of_results):
                     records.append(self.results[i][record_type][index])
-                tmp = get_validation_results_structure(first_record['name'],
-                                                       record_type in
-                                                       MODULE_SHEET_NAMES)
-                tmp = self.join_issues(tmp, *records)
+                tmp = self.join_record(*records)
                 joined_results[record_type].append(tmp)
         return joined_results
 
     @staticmethod
-    def join_issues(to_join_to, *records):
+    def join_record(*records):
         """
         This function will join all issues into one result structure
-        :param to_join_to: holder that will store merged issues
         :param records: list of records to join
         :return: merged results
         """
-        for issue_type in ['core', 'type', 'custom', 'module']:
-            for issue in ['errors', 'warnings']:
-                for record in records:
-                    if issue_type in to_join_to and issue_type in record:
-                        to_join_to[issue_type][issue].extend(
-                            record[issue_type][issue])
-        return to_join_to
+        results_to_return = dict()
+        for record in records:
+            for name, value in record.items():
+                if name == 'samples_core' or name == 'custom':
+                    results_to_return.setdefault(name, dict())
+                    for k, v in record[name].items():
+                        # TODO: check that v is array
+                        results_to_return[name].setdefault(k, dict())
+                        results_to_return[name][k].update(v)
+                else:
+                    if isinstance(value, dict):
+                        results_to_return.setdefault(name, dict())
+                        results_to_return[name].update(value)
+                    else:
+                        results_to_return.setdefault(name, list())
+                        for index, item in enumerate(value):
+                            try:
+                                results_to_return[name][index].update(item)
+                            except IndexError:
+                                results_to_return[name].append(item)
+        return results_to_return
+

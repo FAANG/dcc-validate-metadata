@@ -30,4 +30,4 @@ def read_excel_file(room_id, conversion_type, file):
         send_message(room_id=room_id, conversion_status='Error', errors=results)
     else:
         send_message(room_id=room_id, conversion_status='Success')
-    return results
+    return results[0], results[1]

@@ -9,38 +9,45 @@ import json
 
 
 @app.task
-def validate_against_schema(json_to_test, rules_type):
+def validate_against_schema(json_to_test, rules_type, structure):
     """
     Task to send json data to elixir-validator
     :param json_to_test: json to test against schema
     :param rules_type: type of rules to validate
+    :param structure: structure of original template
     :return: all issues in dict
     """
-    elixir_validation_results = ElixirValidatorResults(json_to_test, rules_type)
+    elixir_validation_results = ElixirValidatorResults(json_to_test,
+                                                       rules_type,
+                                                       structure)
     return elixir_validation_results.run_validation()
 
 
 @app.task
-def collect_warnings_and_additional_checks(json_to_test, rules_type):
+def collect_warnings_and_additional_checks(json_to_test, rules_type,
+                                           structure):
     """
     Task to do additional checks inside python app
     :param json_to_test: json to test against additional checks
     :param rules_type: type of rules to validate
+    :param structure: structure of original template
     :return: all issues in dict
     """
     additional_checks_object = WarningsAndAdditionalChecks(json_to_test,
-                                                           rules_type)
+                                                           rules_type,
+                                                           structure)
     return additional_checks_object.collect_warnings_and_additional_checks()
 
 
 @app.task
-def collect_relationships_issues(json_to_test):
+def collect_relationships_issues(json_to_test, structure):
     """
     This task will do relationships check
     :param json_to_test: json to be tested
+    :param structure: structure of original template
     :return: all issues in dict
     """
-    relationships_issues_object = RelationshipsIssues(json_to_test)
+    relationships_issues_object = RelationshipsIssues(json_to_test, structure)
     return relationships_issues_object.collect_relationships_issues()
 
 
@@ -53,21 +60,20 @@ def join_validation_results(results, room_id):
     :return: joined issues in dict
     """
     results_to_join = list()
-    table_data = None
+    table_data = list()
     for result in results:
         if isinstance(result, list):
             for record in result:
                 if 'table' in record:
-                    table_data = record
+                    table_data.append(record)
                 else:
                     results_to_join.append(record)
         else:
             results_to_join.append(result)
-    joined_results_object = JoinedResults(results_to_join)
+    joined_results_object = JoinedResults(table_data)
     results = joined_results_object.join_results()
-    submission_status = get_submission_status(results)
+    # submission_status = get_submission_status(results)
     send_message(validation_status='Finished',
-                 submission_status=submission_status,
-                 validation_results=results, room_id=room_id,
-                 table_data=table_data)
+                 room_id=room_id,
+                 table_data=results)
     return results
