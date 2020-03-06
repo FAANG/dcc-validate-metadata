@@ -123,7 +123,8 @@ class RelationshipsIssues:
                                 relationship_to_return, errors[-1], relation)
                 tmp['type']['errors'].extend(errors)
             issues_to_return[name].append(tmp)
-        return issues_to_return
+        validation_document.setdefault('table', True)
+        return issues_to_return, validation_document
 
     @staticmethod
     def add_errors_to_relationships(relationship_to_return, error, relation):
