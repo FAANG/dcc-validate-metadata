@@ -26,6 +26,7 @@ class ReadExcelFile:
         wb = xlrd.open_workbook(self.file_path)
         self.wb_datemode = wb.datemode
         data = dict()
+        structure = dict()
         for sh in wb.sheets():
             if sh.name not in ALLOWED_SHEET_NAMES:
                 if sh.name == 'faang_field_values':
@@ -66,6 +67,8 @@ class ReadExcelFile:
                 try:
                     field_names_indexes = self.get_field_names_and_indexes(
                         sh.name)
+                    structure[convert_to_snake_case(sh.name)] = \
+                        field_names_indexes
                 except ValueError as err:
                     return err.args[0]
                 for row_number in range(1, sh.nrows):
@@ -81,7 +84,7 @@ class ReadExcelFile:
                 if len(tmp) > 0:
                     data[convert_to_snake_case(sh.name)] = tmp
         os.remove(self.file_path)
-        return data
+        return data, structure
 
     @staticmethod
     def get_experiments_additional_data(table_object, sheet_fields, sheet_name):

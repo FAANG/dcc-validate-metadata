@@ -8,7 +8,7 @@ from .tasks import read_excel_file
 def index(request):
     return render(request, 'conversion/index.html')
 
-
+# TODO: close task in case of error
 @csrf_exempt
 def convert_samples(request):
     if request.method == 'POST':
