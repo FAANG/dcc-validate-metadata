@@ -31,7 +31,7 @@ def get_rules_json(url, json_type, module_url=None):
 
 def convert_to_snake_case(my_string):
     """
-    This function will convert any string to camel_case string
+    This function will convert any string to snake_case string
     :param my_string: string to convert
     :return: string in camel_case format
     """

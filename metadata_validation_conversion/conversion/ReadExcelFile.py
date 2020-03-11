@@ -1,11 +1,10 @@
 import xlrd
 import os
 from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
-    SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, CHIP_SEQ_INPUT_DNA_URL, \
-    CHIP_SEQ_DNA_BINDING_PROTEINS_URL, SAMPLES_SPECIFIC_JSON_TYPES, \
-    EXPERIMENTS_SPECIFIC_JSON_TYPES, CHIP_SEQ_INPUT_DNA_JSON_TYPES, \
-    CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, STUDY_FIELDS, \
-    EXPERIMENT_ENA_FIELDS, SUBMISSION_FIELDS, RUN_FIELDS
+    SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, \
+    SAMPLES_SPECIFIC_JSON_TYPES, EXPERIMENTS_SPECIFIC_JSON_TYPES, \
+    CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, \
+    EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, CHIP_SEQ_MODULE_RULES
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
 
@@ -31,35 +30,18 @@ class ReadExcelFile:
             if sh.name not in ALLOWED_SHEET_NAMES:
                 if sh.name == 'faang_field_values':
                     continue
-                elif sh.name == 'study':
-                    study_data = self.get_experiments_additional_data(
-                        sh, STUDY_FIELDS, 'study')
-                    if 'Error' in study_data:
-                        return study_data
-                    data['study'] = study_data
+                elif sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES:
+                    special_sheet_data = self.get_experiments_additional_data(
+                        sh, sh.name)
+                    if 'Error' in special_sheet_data:
+                        os.remove(self.file_path)
+                        return special_sheet_data, structure
+                    data[convert_to_snake_case(sh.name)] = special_sheet_data
                     continue
-                elif sh.name == 'experiment ena':
-                    experiment_ena_data = self.get_experiments_additional_data(
-                        sh, EXPERIMENT_ENA_FIELDS, 'experiment ena')
-                    if 'Error' in experiment_ena_data:
-                        return experiment_ena_data
-                    data['experiment_ena'] = experiment_ena_data
-                    continue
-                elif sh.name == 'submission':
-                    submission_data = self.get_experiments_additional_data(
-                        sh, SUBMISSION_FIELDS, 'submission')
-                    if 'Error' in submission_data:
-                        return submission_data
-                    data['submission'] = submission_data
-                    continue
-                elif sh.name == 'run':
-                    run_data = self.get_experiments_additional_data(
-                        sh, RUN_FIELDS, 'run')
-                    if 'Error' in run_data:
-                        return run_data
-                    data['run'] = run_data
-                    continue
-                return f"Error: there are no rules for {sh.name} type!"
+                else:
+                    os.remove(self.file_path)
+                    return f"Error: there are no rules for {sh.name} type!", \
+                           structure
             else:
                 tmp = list()
                 self.headers = [
@@ -70,7 +52,8 @@ class ReadExcelFile:
                     structure[convert_to_snake_case(sh.name)] = \
                         field_names_indexes
                 except ValueError as err:
-                    return err.args[0]
+                    os.remove(self.file_path)
+                    return err.args[0], structure
                 for row_number in range(1, sh.nrows):
                     sample_data = self.get_sample_data(
                         sh.row_values(row_number), field_names_indexes, sh.name)
@@ -78,7 +61,8 @@ class ReadExcelFile:
                         self.check_sheet_name_material_consistency(sample_data,
                                                                    sh.name)
                     if material_consistency is not False:
-                        return material_consistency
+                        os.remove(self.file_path)
+                        return material_consistency, structure
                     if self.check_sample(sample_data):
                         tmp.append(sample_data)
                 if len(tmp) > 0:
@@ -87,15 +71,15 @@ class ReadExcelFile:
         return data, structure
 
     @staticmethod
-    def get_experiments_additional_data(table_object, sheet_fields, sheet_name):
+    def get_experiments_additional_data(table_object, sheet_name):
         """
         This function will parse study sheet of a table
         :param table_object: object to get data from
-        :param sheet_fields: dict constant with list of possible fields
         :param sheet_name: name of the sheet to be parsed
         :return: parsed data
         """
         data = list()
+        sheet_fields = EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES[sheet_name]
         for row_number in range(1, table_object.nrows):
             tmp = dict()
             for index, study_field in enumerate(sheet_fields['all']):
@@ -125,20 +109,15 @@ class ReadExcelFile:
         field_names_and_indexes = dict()
 
         url = ALLOWED_SHEET_NAMES[sheet_name]
-        if sheet_name == 'chip-seq input dna':
+        # Check for chip-seq module rules
+        if sheet_name in CHIP_SEQ_MODULE_RULES:
             type_json, core_json, module_json = get_rules_json(
-                url, self.json_type, CHIP_SEQ_INPUT_DNA_URL)
+                url, self.json_type, CHIP_SEQ_MODULE_RULES[sheet_name])
             field_names['module'], tmp = self.parse_json(module_json)
             array_fields.extend(tmp)
             field_names['core'], tmp = self.parse_json(core_json)
             array_fields.extend(tmp)
-        elif sheet_name == 'chip-seq dna-binding proteins':
-            type_json, core_json, module_json = get_rules_json(
-                url, self.json_type, CHIP_SEQ_DNA_BINDING_PROTEINS_URL)
-            field_names['module'], tmp = self.parse_json(module_json)
-            array_fields.extend(tmp)
-            field_names['core'], tmp = self.parse_json(core_json)
-            array_fields.extend(tmp)
+        # this experiment sheets will only have type rules
         elif sheet_name in ['faang', 'ena', 'eva']:
             type_json = get_rules_json(url, self.json_type)
         else:
@@ -192,8 +171,7 @@ class ReadExcelFile:
         """
         custom_data_fields_indexes = dict()
         array_fields = list()
-        if sheet_name == 'chip-seq input dna' or \
-                sheet_name == 'chip-seq dna-binding proteins':
+        if sheet_name in CHIP_SEQ_MODULE_RULES:
             headers_to_check = {**field_names['core'], **field_names['type'],
                                 **field_names['module']}
         elif sheet_name in ['faang', 'ena', 'eva']:
