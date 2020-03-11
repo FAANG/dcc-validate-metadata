@@ -47,6 +47,8 @@ EVA_ANALYSES_URL = f"{BASE_URL}/module/analyses/" \
 ELIXIR_VALIDATOR_URL = config('ELIXIR_VALIDATOR_URL')
 WS_URL = "ws://127.0.0.1:8000/ws/submission/test_task/"
 
+ALLOWED_TEMPLATES = ['samples', 'experiments', 'analyses']
+
 
 ALLOWED_SHEET_NAMES = {
     'organism': ORGANISM_URL,
@@ -235,4 +237,16 @@ RUN_FIELDS = {
         'checksum_method',
         'checksum',
     ]
+}
+
+EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES = {
+    'study': STUDY_FIELDS,
+    'experiment ena': EXPERIMENT_ENA_FIELDS,
+    'submission': SUBMISSION_FIELDS,
+    'run': RUN_FIELDS
+}
+
+CHIP_SEQ_MODULE_RULES = {
+    'chip-seq input dna': CHIP_SEQ_INPUT_DNA_URL,
+    'chip-seq dna-binding proteins': CHIP_SEQ_DNA_BINDING_PROTEINS_URL
 }

@@ -8,44 +8,17 @@ from .tasks import read_excel_file
 def index(request):
     return render(request, 'conversion/index.html')
 
-# TODO: close task in case of error
+
 @csrf_exempt
-def convert_samples(request):
+def convert_template(request, task_id):
     if request.method == 'POST':
         fileid = list(request.FILES.keys())[0]
         send_message(room_id=fileid, conversion_status="Waiting")
         with open(f'{fileid}.xlsx', 'wb+') as destination:
             for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
-        res = read_excel_file.apply_async((fileid, 'samples', f'{fileid}.xlsx'),
+        res = read_excel_file.apply_async((fileid, task_id, f'{fileid}.xlsx'),
                                           queue='conversion')
+        res.get()
         return HttpResponse(res.id)
     return HttpResponse("Please use POST method for conversion!")
-
-
-@csrf_exempt
-def convert_experiments(request):
-    if request.method == 'POST':
-        fileid = list(request.FILES.keys())[0]
-        send_message(room_id=fileid, conversion_status="Waiting")
-        with open(f'{fileid}.xlsx', 'wb+') as destination:
-            for chunk in request.FILES[fileid].chunks():
-                destination.write(chunk)
-        res = read_excel_file.apply_async((
-            fileid, 'experiments', f'{fileid}.xlsx'), queue='conversion')
-        return HttpResponse(res.id)
-    return HttpResponse("Please use POST method for conversion")
-
-
-@csrf_exempt
-def convert_analyses(request):
-    if request.method == 'POST':
-        fileid = list(request.FILES.keys())[0]
-        send_message(room_id=fileid, conversion_status="Waiting")
-        with open(f'{fileid}.xlsx', 'wb+') as destination:
-            for chunk in request.FILES[fileid].chunks():
-                destination.write(chunk)
-        res = read_excel_file.apply_async((
-            fileid, 'analyses', f'{fileid}.xlsx'), queue='conversion')
-        return HttpResponse(res.id)
-    return HttpResponse("Please use POST method for conversion")
