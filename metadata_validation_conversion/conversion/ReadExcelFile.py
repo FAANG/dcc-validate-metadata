@@ -434,6 +434,11 @@ class ReadExcelFile:
 
     @staticmethod
     def check_sample(sample):
+        """
+        This function will check that sample is not empty
+        :param sample: sample to check
+        :return: True if sample should be added to data and False otherwise
+        """
         if 'experiments_core' in sample and len(sample) <= 3:
             if 'input_dna' in sample:
                 if len(sample['input_dna']) > 0:
