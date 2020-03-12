@@ -3,7 +3,6 @@ from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     ALLOWED_SAMPLES_TYPES, ALLOWED_EXPERIMENTS_TYPES, EXPERIMENT_CORE_URL, \
     ALLOWED_ANALYSES_TYPES, CHIP_SEQ_MODULE_RULES
 from .helpers import validate, get_record_structure
-import json
 
 
 class ElixirValidatorResults:
@@ -59,7 +58,6 @@ class ElixirValidatorResults:
                         self.attach_errors(
                             record_to_return, errors, paths, module_name)
                     validation_document[name].append(record_to_return)
-        print(json.dumps(validation_document))
         return validation_document
 
     @staticmethod
