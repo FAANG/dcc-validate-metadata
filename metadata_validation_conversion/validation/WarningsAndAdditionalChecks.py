@@ -4,8 +4,7 @@ from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
     ALLOWED_EXPERIMENTS_TYPES, ALLOWED_ANALYSES_TYPES
 from metadata_validation_conversion.helpers import get_rules_json
 from .get_ontology_text_async import collect_ids
-from .helpers import get_record_name, get_validation_results_structure, \
-    validate, get_record_structure
+from .helpers import validate, get_record_structure
 import json
 
 

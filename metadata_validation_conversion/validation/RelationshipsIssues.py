@@ -1,8 +1,7 @@
 from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
     ALLOWED_RELATIONSHIPS
 from metadata_validation_conversion.helpers import convert_to_snake_case
-from .helpers import get_record_name, get_validation_results_structure, \
-    get_record_structure
+from .helpers import get_record_name, get_record_structure
 from .get_biosample_data_async import fetch_biosample_data_for_ids
 import json
 
@@ -78,11 +77,8 @@ class RelationshipsIssues:
         :param validation_document: document to send to front-end
         :return: issues in dict format
         """
-        issues_to_return = dict()
         for k, v in relationships.items():
             name = convert_to_snake_case(v['material'])
-            issues_to_return.setdefault(name, list())
-            tmp = get_validation_results_structure(k)
             record_to_return = self.find_record(validation_document, name, k)
             relationship_name = 'child_of' if name == 'organism' else \
                 'derived_from'
@@ -92,9 +88,8 @@ class RelationshipsIssues:
                 for relation in v['relationships']:
                     if relation not in relationships and relation not in \
                             biosample_data:
-                        errors.append(
-                            f"Relationships part: no entity '{relation}' "
-                            f"found")
+                        errors.append(f"Relationships part: no entity "
+                                      f"'{relation}' found")
                         self.add_errors_to_relationships(
                             relationship_to_return, errors[-1], relation)
                     else:
@@ -121,10 +116,7 @@ class RelationshipsIssues:
                                 f"{' or '.join(allowed_relationships)}'")
                             self.add_errors_to_relationships(
                                 relationship_to_return, errors[-1], relation)
-                tmp['type']['errors'].extend(errors)
-            issues_to_return[name].append(tmp)
-        validation_document.setdefault('table', True)
-        return issues_to_return, validation_document
+        return validation_document
 
     @staticmethod
     def add_errors_to_relationships(relationship_to_return, error, relation):

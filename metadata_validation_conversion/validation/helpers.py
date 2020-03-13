@@ -24,34 +24,6 @@ def validate(data, schema):
     return validation_errors, paths
 
 
-def get_validation_results_structure(record_name, include_module=False):
-    """
-    This function will create inner validation results structure
-    :param record_name: name of the record
-    :param include_module: include module field or not
-    :return: inner validation results structure
-    """
-    structure_to_return = {
-        "name": record_name,
-        "core": {
-            "errors": list(),
-            "warnings": list()
-        },
-        "type": {
-            "errors": list(),
-            "warnings": list()
-        },
-        "custom": {
-            "errors": list(),
-            "warnings": list()
-        }
-    }
-    if include_module:
-        structure_to_return.update(
-            {"module": {"errors": list(), "warnings": list()}})
-    return structure_to_return
-
-
 def get_record_name(record, index, name):
     """
     This function will return name of the current record or create it

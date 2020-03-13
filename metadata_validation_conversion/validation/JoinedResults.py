@@ -1,8 +1,3 @@
-from metadata_validation_conversion.constants import MODULE_SHEET_NAMES
-from .helpers import get_validation_results_structure
-import json
-
-
 class JoinedResults:
     def __init__(self, results):
         self.results = results
