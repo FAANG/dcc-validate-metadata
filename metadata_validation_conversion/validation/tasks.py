@@ -62,8 +62,8 @@ def join_validation_results(results, room_id):
     joined_results_object = JoinedResults(results)
     results = joined_results_object.join_results()
     # TODO: update this method
-    # submission_status = get_submission_status(results)
+    submission_status = get_submission_status(results)
     send_message(validation_status='Finished', room_id=room_id,
-                 table_data=results)
+                 table_data=results, submission_status=submission_status)
     print(json.dumps(results))
     return results
