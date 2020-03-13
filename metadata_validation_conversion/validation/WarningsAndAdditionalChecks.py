@@ -16,7 +16,6 @@ class WarningsAndAdditionalChecks:
         self.structure = structure
 
     def collect_warnings_and_additional_checks(self):
-        warnings_and_additional_checks_results = dict()
         validation_document = dict()
         if self.rules_type == 'samples':
             allowed_types = ALLOWED_SAMPLES_TYPES
@@ -28,11 +27,8 @@ class WarningsAndAdditionalChecks:
         # Do additional checks
         for name, url in allowed_types.items():
             if name in self.json_to_test:
-                warnings_and_additional_checks_results[
-                    name], validation_document[name] = \
-                    self.do_additional_checks(url, name)
-        validation_document.setdefault('table', True)
-        return warnings_and_additional_checks_results, validation_document
+                validation_document[name] = self.do_additional_checks(url, name)
+        return validation_document
 
     def do_additional_checks(self, url, name):
         """
@@ -44,7 +40,6 @@ class WarningsAndAdditionalChecks:
         """
         records = self.json_to_test[name]
         structure_to_use = self.structure[name]
-        issues_to_return = list()
         data_to_return = list()
         if name == 'input_dna' or name == 'dna-binding_proteins':
             samples_type_json, samples_core_json, samples_module_json = \
@@ -63,20 +58,33 @@ class WarningsAndAdditionalChecks:
         else:
             core_name = None
 
-        # TODO: add modular fields
         # Collect list of all fields
-        mandatory_type_fields = self.collect_fields(samples_type_json,
-                                                    "mandatory")
-        mandatory_core_fields = self.collect_fields(samples_core_json,
-                                                    "mandatory")
-        recommended_type_fields = self.collect_fields(samples_type_json,
-                                                      "recommended")
-        recommended_core_fields = self.collect_fields(samples_core_json,
-                                                      "recommended")
-        optional_type_fields = self.collect_fields(samples_type_json,
-                                                   "optional")
-        optional_core_fields = self.collect_fields(samples_core_json,
-                                                   "optional")
+        fields = dict()
+        json_files = {
+            'core': samples_core_json,
+            'type': samples_type_json
+        }
+        try:
+            json_files['modular'] = samples_module_json
+        except NameError:
+            pass
+        for field in ['mandatory', 'recommended', 'optional']:
+            for json_type, json_file in json_files.items():
+                fields.setdefault(field, dict())
+                fields[field][json_type] = self.collect_fields(json_file, field)
+
+        # mandatory_type_fields = self.collect_fields(samples_type_json,
+        #                                             "mandatory")
+        # mandatory_core_fields = self.collect_fields(samples_core_json,
+        #                                             "mandatory")
+        # recommended_type_fields = self.collect_fields(samples_type_json,
+        #                                               "recommended")
+        # recommended_core_fields = self.collect_fields(samples_core_json,
+        #                                               "recommended")
+        # optional_type_fields = self.collect_fields(samples_type_json,
+        #                                            "optional")
+        # optional_core_fields = self.collect_fields(samples_core_json,
+        #                                            "optional")
 
         ontology_names_type = self.collect_ontology_names(samples_type_json)
         ontology_names_core = self.collect_ontology_names(samples_core_json)
@@ -84,73 +92,62 @@ class WarningsAndAdditionalChecks:
 
         for index, record in enumerate(records):
             # Get inner issues structure
-            record_name = get_record_name(record, index, name)
-            tmp = get_validation_results_structure(record_name)
             record_to_return = get_record_structure(structure_to_use, record)
 
-            # Check that recommended fields are present
             if core_name is not None:
-                core_warnings = self.check_recommended_fields(
-                    record[core_name], recommended_core_fields,
+                # Check that recommended fields are present for core fields
+                self.check_recommended_fields(
+                    record[core_name], fields['recommended']['core'],
                     record_to_return[core_name])
-            else:
-                core_warnings = None
-            type_warnings = self.check_recommended_fields(
-                record, recommended_type_fields, record_to_return)
-            if core_warnings is not None:
-                tmp['core']['warnings'].append(core_warnings)
-            if type_warnings is not None:
-                tmp['type']['warnings'].append(type_warnings)
 
-            # Check that ontology text is consistent with ontology term
-            if core_name is not None:
-                tmp['core']['warnings'].extend(
-                    self.check_ontology_text(record[core_name], ontology_ids,
-                                             record_to_return[core_name],
-                                             ontology_names_core))
-            tmp['type']['warnings'].extend(
-                self.check_ontology_text(record, ontology_ids,
-                                         record_to_return,
-                                         ontology_names_type))
+                # Check that ontology text is consistent with ontology term for
+                # core fields
+                self.check_ontology_text(record[core_name], ontology_ids,
+                                         record_to_return[core_name],
+                                         ontology_names_core)
 
-            # Check that date value is consistent with date units
-            if core_name is not None:
-                tmp['core']['warnings'].extend(
-                    self.check_date_units(
-                        record[core_name], record_to_return[core_name])
-                )
-            tmp['type']['warnings'].extend(
-                self.check_date_units(record, record_to_return)
-            )
+                # Check that date value is consistent with date units for core
+                # fields
+                self.check_date_units(record[core_name],
+                                      record_to_return[core_name])
 
-            # Check that data has special missing values
-            if core_name is not None:
+                # Check that data has special missing values for core fields
                 self.check_missing_values(record[core_name],
                                           record_to_return[core_name],
-                                          mandatory_core_fields,
-                                          recommended_core_fields,
-                                          optional_core_fields,
-                                          tmp['core'])
-            self.check_missing_values(record,
-                                      record_to_return,
-                                      mandatory_type_fields,
-                                      recommended_type_fields,
-                                      optional_type_fields,
-                                      tmp['type'])
+                                          fields['mandatory']['core'],
+                                          fields['recommended']['core'],
+                                          fields['optional']['core'])
+
+            # Check that recommended fields are present for type fields
+            self.check_recommended_fields(
+                record, fields['recommended']['type'], record_to_return)
+
+            # Check that ontology text is consistent with ontology term for
+            # type fields
+            self.check_ontology_text(record, ontology_ids, record_to_return,
+                                     ontology_names_type)
+
+            # Check that date value is consistent with date units for type
+            # fields
+            self.check_date_units(record, record_to_return)
+
+            # Check that data has special missing values for type fields
+            self.check_missing_values(record, record_to_return,
+                                      fields['mandatory']['type'],
+                                      fields['recommended']['type'],
+                                      fields['optional']['type'])
+            # TODO: check for module fields
 
             # check species breeds consistency
             if name == 'organism':
                 self.check_breeds(record, record_to_return)
 
             # Check custom fields for ontology consistence
-            tmp['custom']['warnings'].extend(
-                self.check_ontology_text(record['custom'], ontology_ids,
-                                         record_to_return['custom'])
-            )
+            self.check_ontology_text(record['custom'], ontology_ids,
+                                     record_to_return['custom'])
 
-            issues_to_return.append(tmp)
             data_to_return.append(record_to_return)
-        return issues_to_return, data_to_return
+        return data_to_return
 
     @staticmethod
     def collect_fields(json_to_check, type_of_fields):
@@ -226,41 +223,20 @@ class WarningsAndAdditionalChecks:
             return True
         return False
 
-    def check_recommended_fields(self, record, recommended_fields,
-                                 record_to_return):
+    @staticmethod
+    def check_recommended_fields(record, recommended_fields, record_to_return):
         """
         This function will return warnings when recommended field is not present
         :param record: record to check
         :param recommended_fields: list of recommended fields to check
         :param record_to_return: dict for front-end
-        :return: warning message
         """
-        warnings = self.check_item_is_present(record, recommended_fields,
-                                              record_to_return)
-        if len(warnings) > 0:
-            return f"Couldn't find these recommended fields: " \
-                   f"{', '.join(warnings)}"
-        else:
-            return None
-
-    @staticmethod
-    def check_item_is_present(dict_to_check, list_of_items, record_to_return):
-        """
-        This function will collect all field names that are not in data
-        :param dict_to_check: data to check
-        :param list_of_items: list of items to search in data
-        :return: list of items that are not in data
-        :param record_to_return: dict for front-end
-        """
-        warnings = list()
-        for item in list_of_items:
-            if item not in dict_to_check:
+        for item in recommended_fields:
+            if item not in record:
                 record_to_return[item].setdefault('warnings', list())
                 record_to_return[item]['warnings'].append(
                     'This item is recommended but was not provided'
                 )
-                warnings.append(item)
-        return warnings
 
     def check_ontology_text(self, record, ontology_ids, record_to_return,
                             ontology_names=None):
@@ -270,9 +246,7 @@ class WarningsAndAdditionalChecks:
         :param ontology_ids: dict with ols records as values and ols ids as keys
         :param record_to_return: dict with data that goes to front-end
         :param ontology_names: dict of ontology names to use
-        :return: list of warnings related to ontology inconsistence
         """
-        ontology_warnings = list()
         for field_name, field_value in record.items():
             if isinstance(field_value, list):
                 for i, sub_value in enumerate(field_value):
@@ -284,16 +258,12 @@ class WarningsAndAdditionalChecks:
                         record_to_return[field_name][i]['warnings'].append(
                             ols_results
                         )
-                        ontology_warnings.append(ols_results)
             else:
                 ols_results = self.check_ols(field_value, ontology_names,
                                              field_name, ontology_ids)
                 if ols_results is not None:
                     record_to_return[field_name].setdefault('warnings', list())
                     record_to_return[field_name]['warnings'].append(ols_results)
-                    ontology_warnings.append(ols_results)
-
-        return ontology_warnings
 
     @staticmethod
     def check_ols(field_value, ontology_names, field_name, ontology_ids):
@@ -330,9 +300,7 @@ class WarningsAndAdditionalChecks:
         This function will check that date unit is consistent with data value
         :param record: record to check
         :param record_to_return: dict with data that goes to front-end
-        :return: list of warnings
         """
-        date_units_warnings = list()
         for field_name, field_value in record.items():
             if 'date' in field_name and 'value' in field_value and 'units' in \
                     field_value:
@@ -347,19 +315,15 @@ class WarningsAndAdditionalChecks:
                 try:
                     datetime.datetime.strptime(field_value['value'], units)
                 except ValueError:
-                    date_units_warnings.append(f"Date units: "
-                                               f"{field_value['units']} should "
-                                               f"be consistent with date "
-                                               f"value: {field_value['value']}")
                     record_to_return[field_name].setdefault('warnings', list())
                     record_to_return[field_name]['warnings'].append(
-                        date_units_warnings[-1]
+                        f"Date units: {field_value['units']} should be "
+                        f"consistent with date value: {field_value['value']}"
                     )
-        return date_units_warnings
 
     def check_missing_values(self, record, record_to_return,
                              mandatory_fields, recommended_fields,
-                             optional_fields, issues_holder, index=None):
+                             optional_fields, index=None):
         """
         This function will check that data contains special missing values
         :param record: record to check
@@ -367,7 +331,6 @@ class WarningsAndAdditionalChecks:
         :param mandatory_fields: list of mandatory fields
         :param recommended_fields: list of recommended fields
         :param optional_fields: list of optional fields
-        :param issues_holder: holder for errors and warnings
         :param index: index of data in array
         """
         for field_name, field_value in record.items():
@@ -377,8 +340,7 @@ class WarningsAndAdditionalChecks:
                                               record_to_return,
                                               mandatory_fields,
                                               recommended_fields,
-                                              optional_fields,
-                                              issues_holder, i)
+                                              optional_fields, i)
             else:
                 for k, v in field_value.items():
                     record_to_return_ref = record_to_return[field_name][index] \
@@ -387,48 +349,44 @@ class WarningsAndAdditionalChecks:
                         self.check_single_missing_value(k, v,
                                                         MISSING_VALUES[
                                                             'mandatory'],
-                                                        issues_holder,
                                                         field_name,
                                                         record_to_return_ref)
                     elif field_name in recommended_fields:
                         self.check_single_missing_value(k, v,
                                                         MISSING_VALUES[
                                                             'recommended'],
-                                                        issues_holder,
                                                         field_name,
                                                         record_to_return_ref)
                     elif field_name in optional_fields:
                         self.check_single_missing_value(k, v,
                                                         MISSING_VALUES[
                                                             'optional'],
-                                                        issues_holder,
                                                         field_name,
                                                         record_to_return_ref)
 
     @staticmethod
-    def check_single_missing_value(key, value, missing_values, issues_holder,
-                                   field_name, record_to_return):
+    def check_single_missing_value(key, value, missing_values, field_name,
+                                   record_to_return):
         """
         This function will check that specific cell contains missing values
         :param key: key that we check
         :param value: value that we check
         :param missing_values: list of missing values to search in
-        :param issues_holder: holder for errors and warnings
         :param field_name: field name that function currently on
         :param record_to_return: dict with data that goes to front-end
         """
         if value in missing_values['errors']:
-            issues_holder['errors'].append(f"Field '{key}' of '{field_name}' "
-                                           f"contains missing value that is "
-                                           f"not appropriate for this field")
             record_to_return.setdefault('errors', list())
-            record_to_return['errors'].append(issues_holder['errors'][-1])
+            record_to_return['errors'].append(
+                f"Field '{key}' of '{field_name}' contains missing value that "
+                f"is not appropriate for this field"
+            )
         elif value in missing_values['warnings']:
-            issues_holder['warnings'].append(f"Field '{key}' of '{field_name}' "
-                                             f"contains missing value that is "
-                                             f"not appropriate for this field")
             record_to_return.setdefault('warnings', list())
-            record_to_return['warnings'].append(issues_holder['warnings'][-1])
+            record_to_return['warnings'].append(
+                f"Field '{key}' of '{field_name}' contains missing value that "
+                f"is not appropriate for this field"
+            )
 
     @staticmethod
     def check_breeds(record, record_to_return):
