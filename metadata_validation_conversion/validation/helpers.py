@@ -53,37 +53,60 @@ def get_submission_status(validation_results):
     """
     for _, v in validation_results.items():
         for record in v:
-            if check_issues(record, 'core') or check_issues(record, 'type') \
-                    or check_issues(record, 'custom') \
-                    or check_issues(record, 'module'):
+            if check_issues(record):
                 return 'Fix issues'
     return 'Ready for submission'
 
 
-def check_issues(record, issue_type):
+def check_issues(record):
     """
     This function will return True if any issues exist
     :param record: record to check
     :param issue_type: type of issues to check
     :return: True if any issues and False otherwise
     """
-    if issue_type in record:
-        return len(record[issue_type]['errors']) > 0
-    else:
-        return False
+    for key, value in record.items():
+        if isinstance(value, list):
+            for item in value:
+                if 'errors' in item and len(item['errors']) > 0:
+                    return True
+        elif key in ['samples_core', 'custom']:
+            for k, v in value.items():
+                if 'errors' in v and len(v['errors']) > 0:
+                    return True
+        else:
+            if 'errors' in value and len(value['errors']) > 0:
+                return True
+    return False
 
 
 def get_record_structure(structure, record):
-    # TODO: add docstring
+    """
+    this function will create structure to return to front-end
+    :param structure: structure of a table
+    :param record: record that came from table
+    :return: structure to return to front-end
+    """
     results = parse_data(structure['type'], record)
-    results['samples_core'] = parse_data(structure['core'],
-                                         record['samples_core'])
+    if 'samples_core' in record:
+        results['samples_core'] = parse_data(structure['core'],
+                                             record['samples_core'])
+    elif 'experiments_core' in record:
+        results['experiments_core'] = parse_data(structure['core'],
+                                                 record['experiments_core'])
     results['custom'] = parse_data(structure['custom'], record['custom'])
+    if 'module' in structure:
+        results['module'] = parse_data(structure['module'], record['module'])
     return results
 
 
 def parse_data(structure, record):
-    # TODO: add docstring
+    """
+    This function will copy data from record to structure
+    :param structure: structure of a table
+    :param record: record that came from table
+    :return: converted data
+    """
     results = dict()
     for k, v in structure.items():
         if isinstance(v, dict):
@@ -102,7 +125,11 @@ def parse_data(structure, record):
 
 
 def convert_to_none(dict_to_convert):
-    # TODO: add docstring
+    """
+    This function will assign fields to None
+    :param dict_to_convert: dict to parse
+    :return: dict with None for fields
+    """
     results = dict()
     for k in dict_to_convert:
         results[k] = None
