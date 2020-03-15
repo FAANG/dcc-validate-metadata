@@ -62,7 +62,6 @@ def check_issues(record):
     """
     This function will return True if any issues exist
     :param record: record to check
-    :param issue_type: type of issues to check
     :return: True if any issues and False otherwise
     """
     for key, value in record.items():
@@ -70,7 +69,7 @@ def check_issues(record):
             for item in value:
                 if 'errors' in item and len(item['errors']) > 0:
                     return True
-        elif key in ['samples_core', 'custom']:
+        elif key in ['samples_core', 'custom', 'experiments_core', 'module']:
             for k, v in value.items():
                 if 'errors' in v and len(v['errors']) > 0:
                     return True

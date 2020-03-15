@@ -27,7 +27,8 @@ class JoinedResults:
         results_to_return = dict()
         for record in records:
             for name, value in record.items():
-                if name == 'samples_core' or name == 'custom':
+                if name == 'samples_core' or name == 'custom' \
+                        or name == 'module':
                     results_to_return.setdefault(name, dict())
                     for k, v in record[name].items():
                         # TODO: check that v is array
@@ -45,4 +46,3 @@ class JoinedResults:
                             except IndexError:
                                 results_to_return[name].append(item)
         return results_to_return
-
