@@ -7,3 +7,4 @@ python-decouple==3.1
 requests==2.22.0
 asgiref==3.2.3
 aiohttp==3.6.2
+xlsxwriter

@@ -250,3 +250,20 @@ CHIP_SEQ_MODULE_RULES = {
     'chip-seq input dna': CHIP_SEQ_INPUT_DNA_URL,
     'chip-seq dna-binding proteins': CHIP_SEQ_DNA_BINDING_PROTEINS_URL
 }
+
+FIELD_NAMES = {
+    'samples': {
+        'core_name': 'samples_core',
+        'record_column_name': 'Sample Name',
+        'record_name': 'sample_name'
+    },
+    'experiments': {
+        'core_name': 'experiments_core',
+        'record_column_name': 'Sample Descriptor',
+        'record_name': 'sample_descriptor'
+    },
+    'analyses': {
+        'record_column_name': 'Alias',
+        'record_name': 'alias'
+    }
+}

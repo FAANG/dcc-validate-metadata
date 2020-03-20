@@ -45,3 +45,10 @@ def remove_underscores(value_to_convert):
     return " ".join(value_to_convert.split("_"))
 
 
+def convert_to_uppercase(value_to_convert):
+    """
+    This function will convert column names to uppercase
+    :param value_to_convert: value to be converted
+    :return: value in uppercase
+    """
+    return ' '.join([word.capitalize() for word in value_to_convert.split('_')])
