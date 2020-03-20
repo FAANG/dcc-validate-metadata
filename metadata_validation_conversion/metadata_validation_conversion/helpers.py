@@ -40,7 +40,8 @@ def convert_to_snake_case(my_string):
 
 def send_message(room_id, conversion_status=None, validation_status=None,
                  submission_status=None, errors=None, validation_results=None,
-                 conversion_errors=None, table_data=None):
+                 conversion_errors=None, table_data=None,
+                 annotation_status=None):
     """
     This function will send message to channel layer
     :param room_id: room id to construct ws url
@@ -51,6 +52,7 @@ def send_message(room_id, conversion_status=None, validation_status=None,
     :param validation_results: results of validation
     :param conversion_errors: list of conversion errors
     :param table_data: data to show the table
+    :param annotation_status: annotation status to send
     """
     response = {
         'conversion_status': conversion_status,
@@ -59,7 +61,8 @@ def send_message(room_id, conversion_status=None, validation_status=None,
         'errors': errors,
         'validation_results': validation_results,
         'conversion_errors': conversion_errors,
-        'table_data': table_data
+        'table_data': table_data,
+        'annotation_status': annotation_status
     }
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(f"submission_{room_id}", {

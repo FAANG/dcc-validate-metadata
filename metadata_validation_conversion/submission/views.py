@@ -1,10 +1,36 @@
 import json
+import os
+
 from django.http import HttpResponse
+
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from .tasks import prepare_samples_data, prepare_analyses_data, \
-    prepare_experiments_data
+    prepare_experiments_data, generate_annotated_template
 from .helpers import zip_files
+
+XLSX_CONTENT_TYPE = 'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+
+def get_template(request, task_id, room_id, data_type):
+    send_message(annotation_status='Annotating template', room_id=room_id)
+    validation_results = app.AsyncResult(task_id)
+    json_to_convert = validation_results.get()
+    convert_template_task = generate_annotated_template.s(
+        json_to_convert, room_id, data_type).set(queue='submission')
+    res = convert_template_task.apply_async()
+    return HttpResponse(json.dumps({'id': res.id}))
+
+
+def download_template(request, room_id):
+    with open(f"{room_id}.xlsx", 'rb') as f:
+        file_data = f.read()
+    response = HttpResponse(file_data,
+                            content_type=f'application/{XLSX_CONTENT_TYPE}')
+    response['Content-Disposition'] = 'attachment; filename="annotated.xlsx"'
+    print('removing file')
+    os.remove(f"{room_id}.xlsx")
+    return response
 
 
 def samples_submission(request, task_id, room_id):

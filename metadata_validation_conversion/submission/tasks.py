@@ -4,7 +4,16 @@ from metadata_validation_conversion.helpers import send_message
 from .BiosamplesFileConverter import BiosamplesFileConverter
 from .AnalysesFileConverter import AnalysesFileConverter
 from .ExperimentsFileConverter import ExperimentFileConverter
+from .AnnotateTemplate import AnnotateTemplate
 from .helpers import zip_files
+
+
+@app.task
+def generate_annotated_template(json_to_convert, room_id, data_type):
+    annotation_results = AnnotateTemplate(json_to_convert, room_id, data_type)
+    annotation_results.start_conversion()
+    send_message(annotation_status='Download data', room_id=room_id)
+    return 'Success'
 
 
 @app.task
