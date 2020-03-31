@@ -18,7 +18,7 @@ def generate_annotated_template(json_to_convert, room_id, data_type):
 
 @app.task
 def prepare_samples_data(json_to_convert, room_id):
-    conversion_results = BiosamplesFileConverter(json_to_convert)
+    conversion_results = BiosamplesFileConverter(json_to_convert[0])
     results = conversion_results.start_conversion()
     send_message(submission_status='Data is ready', room_id=room_id)
     return results
@@ -26,7 +26,7 @@ def prepare_samples_data(json_to_convert, room_id):
 
 @app.task
 def prepare_analyses_data(json_to_convert, room_id):
-    conversion_results = AnalysesFileConverter(json_to_convert)
+    conversion_results = AnalysesFileConverter(json_to_convert[0])
     analysis_xml, submission_xml = conversion_results.start_conversion()
     send_message(submission_status='Data is ready', room_id=room_id)
     return 'analysis', analysis_xml, submission_xml
