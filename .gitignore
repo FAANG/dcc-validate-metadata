@@ -25,3 +25,5 @@ nytprof.out
 *sqlite3
 *xlsx
 .idea
+*/*/.env
+.gitignore
