@@ -37,7 +37,7 @@ class ExperimentFileConverter:
             library_selection = record['library_selection']
             library_layout = record['library_layout']
             # TODO check for this value
-            nominal_length = record['nominal_length']
+            nominal_length = int(record['nominal_length'])
             library_construction_protocol = check_field_existence(
                 'library_construction_protocol', record)
             platform = record['platform']
@@ -81,8 +81,8 @@ class ExperimentFileConverter:
             if instrument_model is not None:
                 result += f'\t\t\t\t<INSTRUMENT_MODEL>' \
                           f'{instrument_model}</INSTRUMENT_MODEL>\n'
-            result += f'\t\t\t<{platform}>\n'
-            result += '\t\t<PLATFORM>\n'
+            result += f'\t\t\t</{platform}>\n'
+            result += '\t\t</PLATFORM>\n'
 
             result += '\t\t<EXPERIMENT_ATTRIBUTES>\n'
             faang_experiment = self.find_faang_experiment(sample_descriptor)
