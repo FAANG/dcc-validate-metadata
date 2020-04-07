@@ -176,6 +176,8 @@ STUDY_FIELDS = {
     'mandatory': ['study_alias', 'study_title', 'study_type']
 }
 
+# Mandatory fields refer to https://raw.githubusercontent.com/enasequence/schema/master/src/main/resources/
+# uk/ac/ebi/ena/sra/schema/SRA.experiment.xsd
 EXPERIMENT_ENA_FIELDS = {
     'all': [
         'sample_descriptor',
@@ -197,13 +199,20 @@ EXPERIMENT_ENA_FIELDS = {
     'mandatory': [
         'sample_descriptor',
         'experiment_alias',
+        # required by ExperimentType
         'study_ref',
+        # required by LibraryType
         'design_description',
+        # required by FAANG community (workshop 2020)
+        'library_name',
+        # required by LibraryDescriptorType
         'library_strategy',
         'library_source',
         'library_selection',
         'library_layout',
-        'platform'
+        # required by com:PlatformType
+        'platform',
+        'instrument_model'
     ]
 }
 
@@ -227,11 +236,16 @@ RUN_FIELDS = {
         'checksum_method_pair',
         'checksum_pair'
     ],
+    # refers to https://raw.githubusercontent.com/enasequence/schema/master/src/main/resources/
+    # uk/ac/ebi/ena/sra/schema/SRA.run.xsd
     'mandatory': [
         'alias',
+        # required by FAANG
         'run_center',
         'run_date',
+        # required by Run
         'experiment_ref',
+        # required by FILE element
         'filename',
         'filetype',
         'checksum_method',
