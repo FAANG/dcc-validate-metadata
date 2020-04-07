@@ -24,15 +24,17 @@ class ReadExcelFile:
         """
         wb = xlrd.open_workbook(self.file_path)
         self.wb_datemode = wb.datemode
+        # keys are sheet names and values are lists of dicts, each element in the list is one row
         data = dict()
         structure = dict()
         for sh in wb.sheets():
             if sh.name not in ALLOWED_SHEET_NAMES:
                 if sh.name == 'faang_field_values':
+                    # TODO: read in the limited values for columns, particularly for fields not in the ruleset
+                    # TODO: the ones limited in ENA e.g. existing_study_type
                     continue
                 elif sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES:
-                    special_sheet_data = self.get_experiments_additional_data(
-                        sh, sh.name)
+                    special_sheet_data = self.get_experiments_additional_data(sh)
                     if 'Error' in special_sheet_data:
                         os.remove(self.file_path)
                         return special_sheet_data, structure
@@ -70,30 +72,45 @@ class ReadExcelFile:
         os.remove(self.file_path)
         return data, structure
 
-    @staticmethod
-    def get_experiments_additional_data(table_object, sheet_name):
+    def get_experiments_additional_data(self, sheet):
         """
-        This function will parse study sheet of a table
-        :param table_object: object to get data from
-        :param sheet_name: name of the sheet to be parsed
+        This function will parse non assay type specific sheets in the experiment template
+        the returned data is a list of rows, each row is represented as a dict with filed name as key and value as value
+        :param sheet: object to get data from
         :return: parsed data
         """
+        sheet_name = sheet.name
         data = list()
         sheet_fields = EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES[sheet_name]
-        for row_number in range(1, table_object.nrows):
+        for row_number in range(1, sheet.nrows):
             tmp = dict()
-            for index, study_field in enumerate(sheet_fields['all']):
+            for index, field_name in enumerate(sheet_fields['all']):
                 try:
-                    tmp[study_field] = table_object.row_values(
-                        row_number)[index]
+                    tmp[field_name] = sheet.row_values(row_number)[index]
+                    # Convert date data to string (as Excel stores date in float format)
+                    # According to https://xlrd.readthedocs.io/en/latest/dates.html, using this package’s
+                    # xldate_as_tuple() function to convert numbers from a workbook, you must use
+                    # the datemode attribute of the Book object
+                    if field_name == 'run_date':
+                        # noinspection PyPep8Naming
+                        y, m, d, H, M, S = xlrd.xldate_as_tuple(sheet.row_values(row_number)[index], self.wb_datemode)
+                        m = self.add_leading_zero(m)
+                        d = self.add_leading_zero(d)
+                        # noinspection PyPep8Naming
+                        H = self.add_leading_zero(H)
+                        # noinspection PyPep8Naming
+                        M = self.add_leading_zero(M)
+                        # noinspection PyPep8Naming
+                        S = self.add_leading_zero(S)
+                        cell_value = f"{y}-{m}-{d}T{H}:{M}:{S}"
+                        tmp[field_name] = cell_value
+
                 except IndexError:
-                    if study_field in sheet_fields['mandatory']:
-                        return f"Error: {study_field} field is mandatory in " \
-                               f"study sheet"
-                if study_field in sheet_fields['mandatory'] \
-                        and tmp[study_field] == '':
-                    return f"Error: {study_field} field is mandatory in " \
-                           f"study {sheet_name}"
+                    if field_name in sheet_fields['mandatory']:
+                        return f'Error: {field_name} field is mandatory in sheet {sheet_name}'
+                if field_name in sheet_fields['mandatory'] \
+                        and tmp[field_name] == '':
+                    return f'Error: mandatory field {field_name} in sheet {sheet_name} cannot have empty value'
             data.append(tmp)
         return data
 
@@ -377,8 +394,9 @@ class ReadExcelFile:
                 if field_name == 'term' and "_" in cell_value:
                     cell_value = cell_value.replace("_", ":")
 
-                # Convert date data to string (as Excel stores date in float
-                # format)
+                # Convert date data to string (as Excel stores date in float format)
+                # According to https://xlrd.readthedocs.io/en/latest/dates.html, using this package’s xldate_as_tuple()
+                # function to convert numbers from a workbook, you must use the datemode attribute of the Book object
                 if date_field is True and isinstance(cell_value, float):
                     y, m, d, _, _, _ = xlrd.xldate_as_tuple(cell_value,
                                                             self.wb_datemode)
