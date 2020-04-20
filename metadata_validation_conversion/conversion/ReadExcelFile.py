@@ -56,8 +56,9 @@ class ReadExcelFile:
                 except ValueError as err:
                     os.remove(self.file_path)
                     return err.args[0], structure
+                # read the values
                 for row_number in range(1, sh.nrows):
-                    sample_data = self.get_sample_data(
+                    sample_data = self.get_data_requiring_validation(
                         sh.row_values(row_number), field_names_indexes, sh.name)
                     material_consistency = \
                         self.check_sheet_name_material_consistency(sample_data,
@@ -90,7 +91,8 @@ class ReadExcelFile:
                     # Convert date data to string (as Excel stores date in float format)
                     # According to https://xlrd.readthedocs.io/en/latest/dates.html, using this package’s
                     # xldate_as_tuple() function to convert numbers from a workbook, you must use
-                    # the datemode attribute of the Book object
+                    # the datemode attribute of the WorkBook object
+                    # has to be hard-coded as only run_date requires dateTime type, all others use date type
                     if field_name == 'run_date':
                         # noinspection PyPep8Naming
                         y, m, d, H, M, S = xlrd.xldate_as_tuple(sheet.row_values(row_number)[index], self.wb_datemode)
@@ -115,6 +117,10 @@ class ReadExcelFile:
         return data
 
     def get_field_names_and_indexes(self, sheet_name):
+        # TODO: discuss with Alexey the logic of this function
+        # Propose to read template to get field-index dict
+        # read the ruleset to 1) check whether all mandatory fields there 2) split into 4 sections
+        # current logic: read the ruleset, for every column the template needs to be read once
         """
         This function will create dict with field_names as keys and field
         sub_names
@@ -124,70 +130,86 @@ class ReadExcelFile:
         field_names = dict()
         array_fields = list()
         field_names_and_indexes = dict()
-
+        # get the sheet sheet_name specific ruleset url
         url = ALLOWED_SHEET_NAMES[sheet_name]
+        # TODO: check whether sheet is empty or not before loading ruleset. If empty, no need to load
         # Check for chip-seq module rules
         if sheet_name in CHIP_SEQ_MODULE_RULES:
-            type_json, core_json, module_json = get_rules_json(
+            type_section_json, core_section_json, module_section_json = get_rules_json(
                 url, self.json_type, CHIP_SEQ_MODULE_RULES[sheet_name])
-            field_names['module'], tmp = self.parse_json(module_json)
+            field_names['module'], tmp = self.parse_json(module_section_json)
             array_fields.extend(tmp)
-            field_names['core'], tmp = self.parse_json(core_json)
+            field_names['core'], tmp = self.parse_json(core_section_json)
             array_fields.extend(tmp)
-        # this experiment sheets will only have type rules
-        elif sheet_name in ['faang', 'ena', 'eva']:
-            type_json = get_rules_json(url, self.json_type)
+        # TODO: switch to judge whether it is analysis data (json_type maybe more suitable)
+        elif sheet_name in ['faang', 'ena', 'eva']:  # analysis type only have one rule set (type)
+            type_section_json = get_rules_json(url, self.json_type)
         else:
-            type_json, core_json = get_rules_json(url, self.json_type)
-            field_names['core'], tmp = self.parse_json(core_json)
+            type_section_json, core_section_json = get_rules_json(url, self.json_type)
+            field_names['core'], tmp = self.parse_json(core_section_json)
             array_fields.extend(tmp)
 
-        field_names['type'], tmp = self.parse_json(type_json)
+        field_names['type'], tmp = self.parse_json(type_section_json)
         array_fields.extend(tmp)
         field_names['custom'], tmp = self.get_custom_data_fields(field_names,
                                                                  sheet_name)
         array_fields.extend(tmp)
 
-        for core_property, data_property in field_names.items():
+        # Add column index based on the field sheet_name
+        # {'core': {'assay_type': ['value'], 'sample_storage': ['value'],..},...}
+        # convert to {'core': {'assay_type': {'value': 1}, 'sample_storage': {'value': 2},...},...}
+        for ruleset_section, section_details in field_names.items():
             subtype_name_and_indexes = dict()
-            for field_name, field_types in data_property.items():
+            for field_name, field_types in section_details.items():
                 subtype_name_and_indexes[field_name] = self.get_indices(
                     field_name, field_types, array_fields)
-            field_names_and_indexes[core_property] = subtype_name_and_indexes
+            field_names_and_indexes[ruleset_section] = subtype_name_and_indexes
         return field_names_and_indexes
 
     @staticmethod
     def parse_json(json_to_parse):
         """
-        This function will parse json and return field names with positions
-        :param json_to_parse: json file that should be parsed
-        :return: dict with field_names as keys and field sub_names as values
+        This function will parse ruleset in json
+        :param json_to_parse: json file (not link) that should be parsed
+        :return: dict with field_names as keys and expected sub field list as values
+                e.g. {'organism': ['text', 'term'], 'birth_date': ['value', 'units'], 'health_status': ['text', 'term']}
+                 and fields which allow multiple values, e.g. ['health_status', 'child_of']
         """
+        # example json: https://raw.githubusercontent.com/FAANG/dcc-metadata/switch_to_json-schema/json_schema
+        # /type/samples/faang_samples_organism.metadata_rules.json
+        # which has both array and object types
         required_fields = dict()
-        array_fields = list()
-        for pr_property, value in json_to_parse['properties'].items():
-            if pr_property not in SKIP_PROPERTIES and value['type'] == 'object':
-                required_fields.setdefault(pr_property, [])
-                for sc_property in value['required']:
-                    required_fields[pr_property].append(sc_property)
-            elif pr_property not in SKIP_PROPERTIES and \
-                    value['type'] == 'array':
-                array_fields.append(pr_property)
-                required_fields.setdefault(pr_property, [])
-                for sc_property in value['items']['required']:
-                    required_fields[pr_property].append(sc_property)
-        return required_fields, array_fields
+        allow_multiple_fields = list()
+        for field_name, field_details in json_to_parse['properties'].items():
+            if field_name not in SKIP_PROPERTIES:
+                # currently the ruleset only has two types: object or array,
+                # array is for fields which allows multiple values
+                # single value uses object type, even actually it is a string type, e.g. project = FAANG
+                required_fields.setdefault(field_name, [])
+                if field_details['type'] == 'object':
+                    for sc_property in field_details['required']:
+                        required_fields[field_name].append(sc_property)
+                elif field_details['type'] == 'array':
+                    allow_multiple_fields.append(field_name)
+                    for sc_property in field_details['items']['required']:
+                        required_fields[field_name].append(sc_property)
+        return required_fields, allow_multiple_fields
 
     def get_custom_data_fields(self, field_names, sheet_name):
         """
         This function will go through headers and find all remaining names that
-        are not in field_names
+        are not in FAANG ruleset
         :param field_names: names from json-schema
-        :param sheet_name: name of the sheet
+        :param sheet_name: name of the template sheet
         :return: rules for custom fields in dict and all array fields
         """
         custom_data_fields_indexes = dict()
-        array_fields = list()
+        allow_multiple_fields = list()
+        # headers_to_check contains all field names corresponding to the current sheet sheet_name
+        # example for ataq-seq sheet in experiment
+        #      core ruleset part                                       type ruleset part
+        # {'assay_type': ['value'], 'sample_storage': ['value'], ..., transposase_protocol': ['value']}
+        # TODO: add test case: template having both BS-seq and Hi-C as both of them have the same restriction enzyme
         if sheet_name in CHIP_SEQ_MODULE_RULES:
             headers_to_check = {**field_names['core'], **field_names['type'],
                                 **field_names['module']}
@@ -195,12 +217,22 @@ class ReadExcelFile:
             headers_to_check = {**field_names['type']}
         else:
             headers_to_check = {**field_names['core'], **field_names['type']}
+        # self.headers is assigned when the sheet is being read, in snake case
+        # NOTE: current implementation all fields including core ruleset fields are present in a single sheet,
+        # not like old template which is split into experiment ena, experiment faang, assay-type specific
         for header in self.headers:
+            # SPECIAL_PROPERTIES: special conserved headers, e.g. unit
+            # TODO: add id properties to the condition which should also be skipped
+            # TODO: add test case in the same sheet duplicate columns should same layout
+            #  (sheet_name | sheet_name+unit| sheet_name+ontolgoy id), if mixed, needs to be reported as error
+            # currently for experiment template, sample_descriptor will be included in the loop
             if header not in headers_to_check and header not in \
                     SPECIAL_PROPERTIES:
                 indexes = self.return_all_indexes(header)
+                # multiple values are expected to be presented as duplicated columns in the template
                 if len(indexes) > 1:
-                    array_fields.append(header)
+                    allow_multiple_fields.append(header)
+                # check
                 if len(self.headers)-1 > (indexes[0] + 1) and \
                         self.headers[indexes[0] + 1] == 'unit':
                     custom_data_fields_indexes[header] = ['value', 'units']
@@ -209,11 +241,11 @@ class ReadExcelFile:
                     custom_data_fields_indexes[header] = ['text', 'term']
                 else:
                     custom_data_fields_indexes[header] = ['value']
-        return custom_data_fields_indexes, array_fields
+        return custom_data_fields_indexes, allow_multiple_fields
 
     def return_all_indexes(self, item_to_check):
         """
-        This function will return array of all indexes of iterm in array
+        This function will return array of all indexes of item in array
         :param item_to_check: item to search
         :return:
         """
@@ -223,19 +255,21 @@ class ReadExcelFile:
     def get_indices(self, field_name, field_types, array_fields):
         """
         This function will return position of fields in template
-        :param field_name: name of the field
+        :param field_name: name of the field in the template
         :param field_types: types that this field has
-        :param array_fields
+        :param array_fields: the list of fields which allow multiple values
         :return: dict with positions of types of field
         """
         if field_name not in self.headers:
             raise ValueError(
                 f"Error: can't find this property '{field_name}' in "
                 f"headers")
+        # TODO: check with Alexey when field_type == 1 but not as 'value'
         if len(field_types) == 1 and 'value' in field_types:
             indices = self.return_all_indexes(field_name)
             if len(indices) == 1 and field_name not in array_fields:
                 return {'value': indices[0]}
+            # TODO: check why just field_name in array_fields
             elif (len(indices) > 1 and field_name in array_fields) or \
                     (field_name in array_fields):
                 indices_list = list()
@@ -264,6 +298,7 @@ class ReadExcelFile:
                     raise ValueError(f"Error: multiple entries for attribute "
                                      f"'{field_name}' present")
             elif field_types == ['text', 'term']:
+                # TODO: highly similar code -> extract to a function
                 text_indices = self.return_all_indexes(field_name)
                 if len(text_indices) == 1 and field_name not in array_fields:
                     return self.check_field_existence(text_indices[0],
@@ -290,9 +325,9 @@ class ReadExcelFile:
         """
         This function will check whether table has all required fields
         :param index: index to check in table
-        :param field: field name
-        :param first_subfield: first subfield name
-        :param second_subfield: second subfield name
+        :param field: field sheet_name
+        :param first_subfield: first subfield sheet_name
+        :param second_subfield: second subfield sheet_name
         :return: dict with subfield indexes
         """
         if self.headers[index + 1] != second_subfield:
@@ -300,25 +335,29 @@ class ReadExcelFile:
                 f"Error: this property {field} doesn't have {second_subfield} "
                 f"provided in template!")
         else:
+            # TODO: reverse the logic, pass in units/term, then check for unit and term_source_id
+            # TODO: introduce a new Dict constant
             if second_subfield == 'unit':
                 second_subfield = 'units'
             elif second_subfield == 'term_source_id':
                 second_subfield = 'term'
             return {first_subfield: index, second_subfield: index + 1}
 
-    def get_sample_data(self, input_data, field_names_indexes, name):
+    def get_data_requiring_validation(self, input_data, field_names_indexes, sheet_name):
         """
         This function will fetch information about organism
         :param input_data: row from template to fetch information from
         :param field_names_indexes: dict with field names and indexes from json
-        :param name: name of the sheet
+        :param sheet_name: name of the sheet
         :return: dict with required information
         """
         organism_to_validate = dict()
-        if name == 'chip-seq input dna':
+        # json_types indicates which ruleset will be applied to the current sheet
+        # {'core': 'experiments_core', 'type': None, 'custom': 'custom'}
+        if sheet_name == 'chip-seq input dna':
             json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
                           **CHIP_SEQ_INPUT_DNA_JSON_TYPES}
-        elif name == 'chip-seq dna-binding proteins':
+        elif sheet_name == 'chip-seq dna-binding proteins':
             json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
                           **CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES}
         else:
@@ -328,6 +367,7 @@ class ReadExcelFile:
                 json_types = {**JSON_TYPES}
             else:
                 json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES}
+
         for k, v in json_types.items():
             if v is not None:
                 organism_to_validate.setdefault(v, dict())
@@ -346,8 +386,8 @@ class ReadExcelFile:
     def check_cell_is_date(field_name):
         """
         This function will check that current column is date field
-        :param field_name: name of column
-        :return: True if column is date and False otherwise
+        :param field_name: header of the column
+        :return: True if column header contains 'date' and False otherwise
         """
         if 'date' in field_name:
             return True
@@ -358,7 +398,7 @@ class ReadExcelFile:
                 date_field):
         """
         High-level function to get data from table
-        :param field_name: name of the field to add
+        :param field_name: sheet_name of the field to add
         :param indexes: subfields of this field
         :param organism_to_validate: results holder
         :param input_data: row from table
@@ -367,23 +407,23 @@ class ReadExcelFile:
         if isinstance(indexes, list):
             tmp_list = list()
             for index in indexes:
-                tmp_data = self.get_data(input_data, date_field, **index)
+                tmp_data = self.get_data_without_validation(input_data, date_field, **index)
                 if len(tmp_data) != 0:
                     tmp_list.append(tmp_data)
             if len(tmp_list) != 0:
                 organism_to_validate[field_name] = tmp_list
         else:
             self.check_existence(field_name, organism_to_validate,
-                                 self.get_data(input_data, date_field,
-                                               **indexes))
+                                 self.get_data_without_validation(input_data, date_field,
+                                                                  **indexes))
 
-    def get_data(self, input_data, date_field, **fields):
+    def get_data_without_validation(self, input_data, date_field, **fields):
         """
         This function will create dict with required fields and required
         information
         :param input_data: row from template
         :param date_field: boolean value is this data is date data
-        :param fields: dict with field name as key and field index as value
+        :param fields: dict with field sheet_name as key and field index as value
         :return: dict with required information
         """
         data_to_return = dict()
@@ -410,7 +450,7 @@ class ReadExcelFile:
     def check_existence(field_name, data_to_validate, template_data):
         """
         This function will check whether template_data has required field
-        :param field_name: name of field
+        :param field_name: sheet_name of field
         :param data_to_validate: data dict for validation
         :param template_data: template data to check
         """
@@ -433,7 +473,7 @@ class ReadExcelFile:
         """
         This function checks that sheet has consistent material
         :param sample_data: data to check
-        :param name: name of sheet
+        :param name: sheet_name of sheet
         :return: False or error
         """
         if self.json_type != 'samples':

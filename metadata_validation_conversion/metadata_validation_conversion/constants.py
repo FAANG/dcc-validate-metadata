@@ -49,7 +49,7 @@ WS_URL = "ws://127.0.0.1:8000/ws/submission/test_task/"
 
 ALLOWED_TEMPLATES = ['samples', 'experiments', 'analyses']
 
-
+# keys are sheet sheet_name used in the template
 ALLOWED_SHEET_NAMES = {
     'organism': ORGANISM_URL,
     'specimen from organism': SPECIMEN_FROM_ORGANISM_URL,
@@ -106,6 +106,7 @@ ALLOWED_RELATIONSHIPS = {
                   'cell_specimen', 'cell_culture', 'cell_line']
 }
 
+# some are conserved keywords, some are with JSON pointer for the purpose of reusage, recursion etc
 SKIP_PROPERTIES = [
     'describedBy',
     'schema_version',
