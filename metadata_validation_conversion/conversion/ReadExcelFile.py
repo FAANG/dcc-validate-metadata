@@ -26,6 +26,7 @@ class ReadExcelFile:
         self.wb_datemode = wb.datemode
         # keys are sheet names and values are lists of dicts, each element in the list is one row
         data = dict()
+        # for frontend usage, the structure of the template
         structure = dict()
         for sh in wb.sheets():
             if sh.name not in ALLOWED_SHEET_NAMES:
@@ -264,14 +265,12 @@ class ReadExcelFile:
             raise ValueError(
                 f"Error: can't find this property '{field_name}' in "
                 f"headers")
-        # TODO: check with Alexey when field_type == 1 but not as 'value'
-        if len(field_types) == 1 and 'value' in field_types:
+        # in the current design, when only one column expected for one field, that column must be 'value'
+        if len(field_types) == 1:
             indices = self.return_all_indexes(field_name)
             if len(indices) == 1 and field_name not in array_fields:
                 return {'value': indices[0]}
-            # TODO: check why just field_name in array_fields
-            elif (len(indices) > 1 and field_name in array_fields) or \
-                    (field_name in array_fields):
+            elif field_name in array_fields:
                 indices_list = list()
                 for index in indices:
                     indices_list.append({'value': index})
@@ -280,38 +279,16 @@ class ReadExcelFile:
                 raise ValueError(f"Error: multiple entries for attribute "
                                  f"'{field_name}' present")
         else:
-            if field_types == ['value', 'units']:
+            if field_types == ['value', 'units'] or field_types == ['text', 'term']:
                 value_indices = self.return_all_indexes(field_name)
                 if len(value_indices) == 1 and field_name not in array_fields:
                     return self.check_field_existence(value_indices[0],
-                                                      field_name, 'value',
-                                                      'unit')
-                elif (len(value_indices) > 1 and field_name in array_fields) \
-                        or (field_name in array_fields):
+                                                      field_name, field_types[0], field_types[1])
+                elif field_name in array_fields:
                     indices_list = list()
                     for index in value_indices:
                         indices_list.append(
-                            self.check_field_existence(index, field_name,
-                                                       'value', 'unit'))
-                    return indices_list
-                else:
-                    raise ValueError(f"Error: multiple entries for attribute "
-                                     f"'{field_name}' present")
-            elif field_types == ['text', 'term']:
-                # TODO: highly similar code -> extract to a function
-                text_indices = self.return_all_indexes(field_name)
-                if len(text_indices) == 1 and field_name not in array_fields:
-                    return self.check_field_existence(text_indices[0],
-                                                      field_name, 'text',
-                                                      'term_source_id')
-                elif (len(text_indices) > 1 and field_name in array_fields) \
-                        or (field_name in array_fields):
-                    indices_list = list()
-                    for index in text_indices:
-                        indices_list.append(
-                            self.check_field_existence(index, field_name,
-                                                       'text',
-                                                       'term_source_id'))
+                            self.check_field_existence(index, field_name, field_types[0], field_types[1]))
                     return indices_list
                 else:
                     raise ValueError(f"Error: multiple entries for attribute "
@@ -323,64 +300,64 @@ class ReadExcelFile:
     def check_field_existence(self, index, field, first_subfield,
                               second_subfield):
         """
-        This function will check whether table has all required fields
+        This function will check whether table has all required subfields,
+        for example, ontology id expect to have text and term two subfields
         :param index: index to check in table
-        :param field: field sheet_name
-        :param first_subfield: first subfield sheet_name
-        :param second_subfield: second subfield sheet_name
+        :param field: field name
+        :param first_subfield: first subfield name
+        :param second_subfield: second subfield name
         :return: dict with subfield indexes
         """
-        if self.headers[index + 1] != second_subfield:
-            raise ValueError(
-                f"Error: this property {field} doesn't have {second_subfield} "
-                f"provided in template!")
-        else:
-            # TODO: reverse the logic, pass in units/term, then check for unit and term_source_id
-            # TODO: introduce a new Dict constant
-            if second_subfield == 'unit':
-                second_subfield = 'units'
-            elif second_subfield == 'term_source_id':
-                second_subfield = 'term'
-            return {first_subfield: index, second_subfield: index + 1}
+        # subfield_to_check is the snake cased column header used in the template
+        if second_subfield == 'units':
+            subfield_to_check = 'unit'
+        elif second_subfield == 'term':
+            subfield_to_check = 'term_source_id'
 
-    def get_data_requiring_validation(self, input_data, field_names_indexes, sheet_name):
+        if self.headers[index + 1] != subfield_to_check:
+            raise ValueError(
+                f"Error: this property {field} doesn't have {subfield_to_check} "
+                f"provided in template!")
+        return {first_subfield: index, second_subfield: index + 1}
+
+    def get_data_requiring_validation(self, row_data, field_names_indexes, sheet_name):
         """
         This function will fetch information about organism
-        :param input_data: row from template to fetch information from
+        :param row_data: row from template to fetch information from
         :param field_names_indexes: dict with field names and indexes from json
         :param sheet_name: name of the sheet
         :return: dict with required information
         """
-        organism_to_validate = dict()
-        # json_types indicates which ruleset will be applied to the current sheet
-        # {'core': 'experiments_core', 'type': None, 'custom': 'custom'}
+        data_to_validate = dict()
+        # ruleset_section_types indicates which ruleset will be applied to the current sheet
+        # e.g. {'core': 'experiments_core', 'type': None, 'custom': 'custom'}
         if sheet_name == 'chip-seq input dna':
-            json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
+            ruleset_section_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
                           **CHIP_SEQ_INPUT_DNA_JSON_TYPES}
         elif sheet_name == 'chip-seq dna-binding proteins':
-            json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
+            ruleset_section_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
                           **CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES}
         else:
             if self.json_type == 'samples':
-                json_types = {**SAMPLES_SPECIFIC_JSON_TYPES, **JSON_TYPES}
+                ruleset_section_types = {**SAMPLES_SPECIFIC_JSON_TYPES, **JSON_TYPES}
             elif self.json_type == 'analyses':
-                json_types = {**JSON_TYPES}
+                ruleset_section_types = {**JSON_TYPES}
             else:
-                json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES}
+                ruleset_section_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES}
 
-        for k, v in json_types.items():
-            if v is not None:
-                organism_to_validate.setdefault(v, dict())
-                for field_name, indexes in field_names_indexes[k].items():
-                    date_field = self.check_cell_is_date(field_name)
-                    self.add_row(field_name, indexes, organism_to_validate[v],
-                                 input_data, date_field)
+        for section_type, section_pointer in ruleset_section_types.items():
+            if section_pointer is not None:
+                data_to_validate.setdefault(section_pointer, dict())
+                for field_name, indexes in field_names_indexes[section_type].items():
+                    date_field_flag = self.check_cell_is_date(field_name)
+                    self.add_row(field_name, indexes, data_to_validate[section_pointer],
+                                 row_data, date_field_flag)
             else:
-                for field_name, indexes in field_names_indexes[k].items():
-                    date_field = self.check_cell_is_date(field_name)
-                    self.add_row(field_name, indexes, organism_to_validate,
-                                 input_data, date_field)
-        return organism_to_validate
+                for field_name, indexes in field_names_indexes[section_type].items():
+                    date_field_flag = self.check_cell_is_date(field_name)
+                    self.add_row(field_name, indexes, data_to_validate,
+                                 row_data, date_field_flag)
+        return data_to_validate
 
     @staticmethod
     def check_cell_is_date(field_name):
@@ -407,17 +384,17 @@ class ReadExcelFile:
         if isinstance(indexes, list):
             tmp_list = list()
             for index in indexes:
-                tmp_data = self.get_data_without_validation(input_data, date_field, **index)
+                tmp_data = self.get_data(input_data, date_field, **index)
                 if len(tmp_data) != 0:
                     tmp_list.append(tmp_data)
             if len(tmp_list) != 0:
                 organism_to_validate[field_name] = tmp_list
         else:
             self.check_existence(field_name, organism_to_validate,
-                                 self.get_data_without_validation(input_data, date_field,
-                                                                  **indexes))
+                                 self.get_data(input_data, date_field,
+                                               **indexes))
 
-    def get_data_without_validation(self, input_data, date_field, **fields):
+    def get_data(self, input_data, date_field, **fields):
         """
         This function will create dict with required fields and required
         information
