@@ -4,15 +4,15 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, \
     SAMPLES_SPECIFIC_JSON_TYPES, EXPERIMENTS_SPECIFIC_JSON_TYPES, \
     CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, \
-    EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, CHIP_SEQ_MODULE_RULES
+    EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, CHIP_SEQ_MODULE_RULES, SAMPLE, EXPERIMENT, ANALYSIS
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
 
 
 class ReadExcelFile:
-    def __init__(self, file_path, json_type):
+    def __init__(self, file_path, data_file_type):
         self.file_path = file_path
-        self.json_type = json_type
+        self.data_file_type = data_file_type
         self.headers = list()
         self.array_fields = list()
         self.wb_datemode = None
@@ -28,13 +28,14 @@ class ReadExcelFile:
         data = dict()
         # for frontend usage, the structure of the template
         structure = dict()
+        data_specific_allowed_sheets = ALLOWED_SHEET_NAMES[self.data_file_type]
         for sh in wb.sheets():
-            if sh.name not in ALLOWED_SHEET_NAMES:
+            if sh.name not in data_specific_allowed_sheets:
                 if sh.name == 'faang_field_values':
                     # TODO: read in the limited values for columns, particularly for fields not in the ruleset
                     # TODO: the ones limited in ENA e.g. existing_study_type
                     continue
-                elif sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES:
+                elif self.data_file_type == EXPERIMENT and sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES:
                     special_sheet_data = self.get_experiments_additional_data(sh)
                     if 'Error' in special_sheet_data:
                         os.remove(self.file_path)
@@ -50,8 +51,7 @@ class ReadExcelFile:
                 self.headers = [
                     convert_to_snake_case(item) for item in sh.row_values(0)]
                 try:
-                    field_names_indexes = self.get_field_names_and_indexes(
-                        sh.name)
+                    field_names_indexes = self.get_field_names_and_indexes(self.data_file_type, sh.name)
                     structure[convert_to_snake_case(sh.name)] = \
                         field_names_indexes
                 except ValueError as err:
@@ -117,7 +117,7 @@ class ReadExcelFile:
             data.append(tmp)
         return data
 
-    def get_field_names_and_indexes(self, sheet_name):
+    def get_field_names_and_indexes(self, data_file_type, sheet_name):
         # TODO: discuss with Alexey the logic of this function
         # Propose to read template to get field-index dict
         # read the ruleset to 1) check whether all mandatory fields there 2) split into 4 sections
@@ -132,21 +132,20 @@ class ReadExcelFile:
         array_fields = list()
         field_names_and_indexes = dict()
         # get the sheet sheet_name specific ruleset url
-        url = ALLOWED_SHEET_NAMES[sheet_name]
+        url = ALLOWED_SHEET_NAMES[data_file_type][sheet_name]
         # TODO: check whether sheet is empty or not before loading ruleset. If empty, no need to load
         # Check for chip-seq module rules
         if sheet_name in CHIP_SEQ_MODULE_RULES:
             type_section_json, core_section_json, module_section_json = get_rules_json(
-                url, self.json_type, CHIP_SEQ_MODULE_RULES[sheet_name])
+                url, self.data_file_type, CHIP_SEQ_MODULE_RULES[sheet_name])
             field_names['module'], tmp = self.parse_json(module_section_json)
             array_fields.extend(tmp)
             field_names['core'], tmp = self.parse_json(core_section_json)
             array_fields.extend(tmp)
-        # TODO: switch to judge whether it is analysis data (json_type maybe more suitable)
-        elif sheet_name in ['faang', 'ena', 'eva']:  # analysis type only have one rule set (type)
-            type_section_json = get_rules_json(url, self.json_type)
+        elif data_file_type == ANALYSIS:  # analysis type only have one rule set (type)
+            type_section_json = get_rules_json(url, self.data_file_type)
         else:
-            type_section_json, core_section_json = get_rules_json(url, self.json_type)
+            type_section_json, core_section_json = get_rules_json(url, self.data_file_type)
             field_names['core'], tmp = self.parse_json(core_section_json)
             array_fields.extend(tmp)
 
@@ -338,9 +337,9 @@ class ReadExcelFile:
             ruleset_section_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
                           **CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES}
         else:
-            if self.json_type == 'samples':
+            if self.data_file_type == SAMPLE:
                 ruleset_section_types = {**SAMPLES_SPECIFIC_JSON_TYPES, **JSON_TYPES}
-            elif self.json_type == 'analyses':
+            elif self.data_file_type == ANALYSIS:
                 ruleset_section_types = {**JSON_TYPES}
             else:
                 ruleset_section_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES}
@@ -453,7 +452,7 @@ class ReadExcelFile:
         :param name: sheet_name of sheet
         :return: False or error
         """
-        if self.json_type != 'samples':
+        if self.data_file_type != SAMPLE:
             return False
         if 'samples_core' in sample_data and 'material' in \
                 sample_data['samples_core'] and 'text' in \

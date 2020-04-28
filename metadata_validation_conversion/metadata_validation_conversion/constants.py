@@ -47,16 +47,23 @@ EVA_ANALYSES_URL = f"{BASE_URL}/module/analyses/" \
 ELIXIR_VALIDATOR_URL = config('ELIXIR_VALIDATOR_URL')
 WS_URL = "ws://127.0.0.1:8000/ws/submission/test_task/"
 
-ALLOWED_TEMPLATES = ['samples', 'experiments', 'analyses']
+SAMPLE = 'samples'
+EXPERIMENT = 'experiments'
+ANALYSIS = 'analyses'
+
+# ALLOWED_TEMPLATES = [SAMPLE, EXPERIMENT, ANALYSIS]
 
 # keys are sheet sheet_name used in the template
-ALLOWED_SHEET_NAMES = {
+ALLOWED_SAMPLE_SHEET_NAMES = {
     'organism': ORGANISM_URL,
     'specimen from organism': SPECIMEN_FROM_ORGANISM_URL,
     'pool of specimens': POOL_OF_SPECIMENS_URL,
     'cell specimen': CELL_SPECIMEN_URL,
     'cell culture': CELL_CULTURE_URL,
     'cell line': CELL_LINE_URL,
+}
+
+ALLOWED_EXPERIMENT_SHEET_NAMES = {
     'wgs': WGS_URL,
     'rna-seq': RNA_SEQ_URL,
     'hi-c': HI_C_URL,
@@ -65,9 +72,18 @@ ALLOWED_SHEET_NAMES = {
     'chip-seq dna-binding proteins': CHIP_SEQ_URL,
     'bs-seq': BS_SEQ_URL,
     'atac-seq': ATAC_SEQ_URL,
+}
+
+ALLOWED_ANALYSIS_SHEET_NAMES = {
     'faang': FAANG_ANALYSES_URL,
     'ena': ENA_ANALYSES_URL,
     'eva': EVA_ANALYSES_URL
+}
+
+ALLOWED_SHEET_NAMES = {
+    SAMPLE: ALLOWED_SAMPLE_SHEET_NAMES,
+    EXPERIMENT: ALLOWED_EXPERIMENT_SHEET_NAMES,
+    ANALYSIS: ALLOWED_ANALYSIS_SHEET_NAMES
 }
 
 ALLOWED_SAMPLES_TYPES = {
@@ -267,17 +283,17 @@ CHIP_SEQ_MODULE_RULES = {
 }
 
 FIELD_NAMES = {
-    'samples': {
+    SAMPLE: {
         'core_name': 'samples_core',
         'record_column_name': 'Sample Name',
         'record_name': 'sample_name'
     },
-    'experiments': {
+    EXPERIMENT: {
         'core_name': 'experiments_core',
         'record_column_name': 'Sample Descriptor',
         'record_name': 'sample_descriptor'
     },
-    'analyses': {
+    ANALYSIS: {
         'record_column_name': 'Alias',
         'record_name': 'alias'
     }
