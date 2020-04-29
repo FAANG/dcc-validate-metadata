@@ -20,8 +20,10 @@ class ReadExcelFile:
     def start_conversion(self):
         """
         Main function that will convert xlsx file to proper json format
-        :return: submitted data in proper json format
+        :return: two values, first the message, second the submitted data in proper json format
+        to report an error, the message must contains Error, suggested pattern Error: error_detail
         """
+        # TODO introduce validation result object which contains status, details etc. instead of current string pattern
         wb = xlrd.open_workbook(self.file_path)
         self.wb_datemode = wb.datemode
         # keys are sheet names and values are lists of dicts, each element in the list is one row
@@ -29,7 +31,14 @@ class ReadExcelFile:
         # for frontend usage, the structure of the template
         structure = dict()
         data_specific_allowed_sheets = ALLOWED_SHEET_NAMES[self.data_file_type]
-        for sh in wb.sheets():
+
+        sheets = wb.sheets()
+        readme_sheet = sheets.pop(0)
+        readme_flag, readme_check_result = self.check_readme_sheet(readme_sheet)
+        if not readme_flag:
+            return f"Error: {readme_check_result}", structure
+
+        for sh in sheets:
             if sh.name not in data_specific_allowed_sheets:
                 if sh.name == 'faang_field_values':
                     # TODO: read in the limited values for columns, particularly for fields not in the ruleset
@@ -61,6 +70,7 @@ class ReadExcelFile:
                 for row_number in range(1, sh.nrows):
                     sample_data = self.get_data_requiring_validation(
                         sh.row_values(row_number), field_names_indexes, sh.name)
+
                     material_consistency = \
                         self.check_sheet_name_material_consistency(sample_data,
                                                                    sh.name)
@@ -73,6 +83,27 @@ class ReadExcelFile:
                     data[convert_to_snake_case(sh.name)] = tmp
         os.remove(self.file_path)
         return data, structure
+
+    def check_readme_sheet(self, readme_sheet):
+        if readme_sheet.name != 'readme':
+            return False, "The first sheet of the template must have the name as readme. " \
+                          "Please do not modify the structure of the provided template."
+
+        attributes = dict()
+        for row_number in range(1, readme_sheet.nrows):
+            if len(str(readme_sheet.row_values(row_number)[1])):
+                attr_name = str(readme_sheet.row_values(row_number)[0]).lower()
+                attr_value = str(readme_sheet.row_values(row_number)[1]).lower()
+                attributes[attr_name] = attr_value
+        if attributes and 'type' in attributes:
+            template_type = attributes['type']
+            if template_type != self.data_file_type:
+                return False, f"The selected validation type is {self.data_file_type}, " \
+                              f"however the template is for {template_type} type"
+        else:
+            return False, "Could not find template type information in the readme sheet. " \
+                          "Please do not modify the provided template."
+        return True, ""
 
     def get_experiments_additional_data(self, sheet):
         """
@@ -445,12 +476,12 @@ class ReadExcelFile:
         else:
             return date_item
 
-    def check_sheet_name_material_consistency(self, sample_data, name):
+    def check_sheet_name_material_consistency(self, sample_data, sheet_name):
         """
         This function checks that sheet has consistent material
         :param sample_data: data to check
-        :param name: sheet_name of sheet
-        :return: False or error
+        :param sheet_name: name of sheet
+        :return: False or error message
         """
         if self.data_file_type != SAMPLE:
             return False
@@ -458,13 +489,13 @@ class ReadExcelFile:
                 sample_data['samples_core'] and 'text' in \
                 sample_data['samples_core']['material']:
             material = sample_data['samples_core']['material']['text']
-            if material != name:
-                return f"Error: '{name}' sheet contains record with " \
+            if material != sheet_name:
+                return f"Error: '{sheet_name}' sheet contains record with " \
                        f"inconsistent material '{material}'"
             else:
                 return False
         else:
-            return f"Error: '{name}' sheet contains records with empty material"
+            return f"Error: '{sheet_name}' sheet contains records with empty material"
 
     @staticmethod
     def check_sample(sample):

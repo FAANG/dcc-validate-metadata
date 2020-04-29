@@ -51,8 +51,6 @@ SAMPLE = 'samples'
 EXPERIMENT = 'experiments'
 ANALYSIS = 'analyses'
 
-# ALLOWED_TEMPLATES = [SAMPLE, EXPERIMENT, ANALYSIS]
-
 # keys are sheet sheet_name used in the template
 ALLOWED_SAMPLE_SHEET_NAMES = {
     'organism': ORGANISM_URL,
