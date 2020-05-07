@@ -1,7 +1,7 @@
 import datetime
 from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
     SKIP_PROPERTIES, MISSING_VALUES, SPECIES_BREED_LINKS, \
-    ALLOWED_EXPERIMENTS_TYPES, ALLOWED_ANALYSES_TYPES
+    ALLOWED_EXPERIMENTS_TYPES, ALLOWED_ANALYSES_TYPES, SAMPLE, EXPERIMENT, ANALYSIS
 from metadata_validation_conversion.helpers import get_rules_json
 from .get_ontology_text_async import collect_ids
 from .helpers import validate, get_record_structure
@@ -16,11 +16,11 @@ class WarningsAndAdditionalChecks:
 
     def collect_warnings_and_additional_checks(self):
         validation_document = dict()
-        if self.rules_type == 'samples':
+        if self.rules_type == SAMPLE:
             allowed_types = ALLOWED_SAMPLES_TYPES
-        elif self.rules_type == 'experiments':
+        elif self.rules_type == EXPERIMENT:
             allowed_types = ALLOWED_EXPERIMENTS_TYPES
-        else:
+        elif self.rules_type == ANALYSIS:
             allowed_types = ALLOWED_ANALYSES_TYPES
 
         # Do additional checks
@@ -43,18 +43,19 @@ class WarningsAndAdditionalChecks:
         if name == 'input_dna' or name == 'dna-binding_proteins':
             samples_type_json, samples_core_json, samples_module_json = \
                 get_rules_json(url, self.rules_type)
-        elif name in ['faang', 'ena', 'eva']:
+        elif self.rules_type == ANALYSIS:
             samples_type_json = get_rules_json(url, self.rules_type)
             samples_core_json = None
         else:
             samples_type_json, samples_core_json = get_rules_json(
                 url, self.rules_type)
 
-        if self.rules_type == 'samples':
+        #TODO: similar code used in the conversion, better extract a method
+        if self.rules_type == SAMPLE:
             core_name = 'samples_core'
-        elif self.rules_type == 'experiments':
+        elif self.rules_type == EXPERIMENT:
             core_name = 'experiments_core'
-        else:
+        elif self.rules_type == ANALYSIS:
             core_name = None
 
         # Collect list of all fields

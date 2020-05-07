@@ -4,7 +4,8 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, \
     SAMPLES_SPECIFIC_JSON_TYPES, EXPERIMENTS_SPECIFIC_JSON_TYPES, \
     CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, \
-    EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, CHIP_SEQ_MODULE_RULES, SAMPLE, EXPERIMENT, ANALYSIS
+    EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, CHIP_SEQ_MODULE_RULES, \
+    SAMPLE, EXPERIMENT, ANALYSIS, ID_COLUMNS_WITH_INDICES
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
 
@@ -36,6 +37,7 @@ class ReadExcelFile:
         readme_sheet = sheets.pop(0)
         readme_flag, readme_check_result = self.check_readme_sheet(readme_sheet)
         if not readme_flag:
+            os.remove(self.file_path)
             return f"Error: {readme_check_result}", structure
 
         for sh in sheets:
@@ -56,6 +58,16 @@ class ReadExcelFile:
                     return f"Error: there are no rules for {sh.name} type!", \
                            structure
             else:
+                # if no data in the sheet (only containing headers), skip the sheet
+                if sh.nrows < 2:
+                    continue
+
+                if self.data_file_type in ID_COLUMNS_WITH_INDICES:
+                    check_id_flag, check_id_detail = \
+                        self.check_id_columns(sh, ID_COLUMNS_WITH_INDICES[self.data_file_type])
+                if not check_id_flag:
+                    os.remove(self.file_path)
+                    return f"Error: {check_id_detail}", structure
                 tmp = list()
                 self.headers = [
                     convert_to_snake_case(item) for item in sh.row_values(0)]
@@ -83,6 +95,27 @@ class ReadExcelFile:
                     data[convert_to_snake_case(sh.name)] = tmp
         os.remove(self.file_path)
         return data, structure
+
+    @staticmethod
+    def check_id_columns(data_sheet, id_columns_info: dict):
+        """
+        check whether the data sheet contains the expected identification columns
+        :param data_sheet: the sheet of the data
+        :param id_columns_info: the expected column names with indices
+        :return: flag and the error message (if flag is False)
+        """
+        headers = data_sheet.row_values(0)
+        for id_column_name, id_column_index in id_columns_info.items():
+            if id_column_index > len(headers) - 1:
+                return False, f"The template seems to have been modified in sheet {data_sheet.name}: " \
+                              f"id column {id_column_name} is expected to be at column {id_column_index+1}"
+            actual_header_value = convert_to_snake_case(headers[id_column_index])
+            print(actual_header_value)
+            if actual_header_value != id_column_name:
+                return False, f"The template seems to have been modified in sheet {data_sheet.name}: " \
+                              f"column {id_column_index+1} is expected to have column name {id_column_name}, " \
+                              f"but the actual values is {actual_header_value}"
+        return True, ""
 
     def check_readme_sheet(self, readme_sheet):
         if readme_sheet.name != 'readme':
@@ -244,21 +277,22 @@ class ReadExcelFile:
         if sheet_name in CHIP_SEQ_MODULE_RULES:
             headers_to_check = {**field_names['core'], **field_names['type'],
                                 **field_names['module']}
-        elif sheet_name in ['faang', 'ena', 'eva']:
+        elif self.data_file_type == ANALYSIS:
             headers_to_check = {**field_names['type']}
         else:
             headers_to_check = {**field_names['core'], **field_names['type']}
         # self.headers is assigned when the sheet is being read, in snake case
         # NOTE: current implementation all fields including core ruleset fields are present in a single sheet,
         # not like old template which is split into experiment ena, experiment faang, assay-type specific
+        id_columns = list()
+        if self.data_file_type in ID_COLUMNS_WITH_INDICES:
+            id_columns = ID_COLUMNS_WITH_INDICES[self.data_file_type]
         for header in self.headers:
             # SPECIAL_PROPERTIES: special conserved headers, e.g. unit
-            # TODO: add id properties to the condition which should also be skipped
             # TODO: add test case in the same sheet duplicate columns should same layout
             #  (sheet_name | sheet_name+unit| sheet_name+ontolgoy id), if mixed, needs to be reported as error
-            # currently for experiment template, sample_descriptor will be included in the loop
             if header not in headers_to_check and header not in \
-                    SPECIAL_PROPERTIES:
+                    SPECIAL_PROPERTIES and header not in id_columns:
                 indexes = self.return_all_indexes(header)
                 # multiple values are expected to be presented as duplicated columns in the template
                 if len(indexes) > 1:

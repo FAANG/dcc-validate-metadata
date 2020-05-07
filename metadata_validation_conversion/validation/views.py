@@ -6,19 +6,21 @@ from .tasks import validate_against_schema, \
     collect_relationships_issues
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
+from metadata_validation_conversion.constants import SAMPLE
 
 
 def validate(request, validation_type, task_id, room_id):
     send_message(room_id=room_id, validation_status="Waiting")
     conversion_result = app.AsyncResult(task_id)
     json_to_test, structure = conversion_result.get()
-    if validation_type == 'samples':
+    if validation_type == SAMPLE:
         # Create three tasks that should be run in parallel and assign callback
+
         validate_against_schema_task = validate_against_schema.s(
-            json_to_test, 'samples', structure).set(queue='validation')
+            json_to_test, SAMPLE, structure).set(queue='validation')
         collect_warnings_and_additional_checks_task = \
             collect_warnings_and_additional_checks.s(
-                json_to_test, 'samples', structure).set(queue='validation')
+                json_to_test, SAMPLE, structure).set(queue='validation')
         collect_relationships_issues_task = collect_relationships_issues.s(
             json_to_test, structure).set(queue='validation')
 

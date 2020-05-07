@@ -110,6 +110,13 @@ ALLOWED_ANALYSES_TYPES = {
     'eva': EVA_ANALYSES_URL
 }
 
+# column index starts from 0
+ID_COLUMNS_WITH_INDICES = {
+    SAMPLE: {'sample_name': 0},
+    EXPERIMENT: {'sample_descriptor': 0, 'experiment_alias': 1},
+    ANALYSIS: {'alias': 0}
+}
+
 ALLOWED_RELATIONSHIPS = {
     'organism': ['organism'],
     'specimen_from_organism': ['organism'],
