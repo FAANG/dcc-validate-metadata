@@ -110,7 +110,6 @@ class ReadExcelFile:
                 return False, f"The template seems to have been modified in sheet {data_sheet.name}: " \
                               f"id column {id_column_name} is expected to be at column {id_column_index+1}"
             actual_header_value = convert_to_snake_case(headers[id_column_index])
-            print(actual_header_value)
             if actual_header_value != id_column_name:
                 return False, f"The template seems to have been modified in sheet {data_sheet.name}: " \
                               f"column {id_column_index+1} is expected to have column name {id_column_name}, " \
@@ -159,18 +158,27 @@ class ReadExcelFile:
                     # the datemode attribute of the WorkBook object
                     # has to be hard-coded as only run_date requires dateTime type, all others use date type
                     if field_name == 'run_date':
-                        # noinspection PyPep8Naming
-                        y, m, d, H, M, S = xlrd.xldate_as_tuple(sheet.row_values(row_number)[index], self.wb_datemode)
-                        m = self.add_leading_zero(m)
-                        d = self.add_leading_zero(d)
-                        # noinspection PyPep8Naming
-                        H = self.add_leading_zero(H)
-                        # noinspection PyPep8Naming
-                        M = self.add_leading_zero(M)
-                        # noinspection PyPep8Naming
-                        S = self.add_leading_zero(S)
-                        cell_value = f"{y}-{m}-{d}T{H}:{M}:{S}"
-                        tmp[field_name] = cell_value
+                        date_value = sheet.row_values(row_number)[index]
+                        if isinstance(date_value, float):
+                            # noinspection PyPep8Naming
+                            y, m, d, H, M, S = xlrd.xldate_as_tuple(sheet.row_values(row_number)[index], self.wb_datemode)
+                            m = self.add_leading_zero(m)
+                            d = self.add_leading_zero(d)
+                            # noinspection PyPep8Naming
+                            H = self.add_leading_zero(H)
+                            # noinspection PyPep8Naming
+                            M = self.add_leading_zero(M)
+                            # noinspection PyPep8Naming
+                            S = self.add_leading_zero(S)
+                            cell_value = f"{y}-{m}-{d}T{H}:{M}:{S}"
+                            tmp[field_name] = cell_value
+                        elif isinstance(date_value, str):
+                            if 'T' in date_value:
+                                tmp[field_name] = date_value
+                            else:
+                                tmp[field_name] = f"{date_value}T00:00:00"
+                        else:
+                            return f"Error: run_date field has unrecognized value {date_value}"
 
                 except IndexError:
                     if field_name in sheet_fields['mandatory']:
@@ -474,7 +482,6 @@ class ReadExcelFile:
                 # Convert all "_" in term ids to ":" as required by validator
                 if field_name == 'term' and "_" in cell_value:
                     cell_value = cell_value.replace("_", ":")
-
                 # Convert date data to string (as Excel stores date in float format)
                 # According to https://xlrd.readthedocs.io/en/latest/dates.html, using this package’s xldate_as_tuple()
                 # function to convert numbers from a workbook, you must use the datemode attribute of the Book object
