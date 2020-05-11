@@ -5,7 +5,7 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SAMPLES_SPECIFIC_JSON_TYPES, EXPERIMENTS_SPECIFIC_JSON_TYPES, \
     CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, \
     EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, CHIP_SEQ_MODULE_RULES, \
-    SAMPLE, EXPERIMENT, ANALYSIS, ID_COLUMNS_WITH_INDICES
+    SAMPLE, EXPERIMENT, ANALYSIS, ID_COLUMNS_WITH_INDICES, MINIMUM_TEMPLATE_VERSION_REQUIREMENT
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
 
@@ -80,17 +80,17 @@ class ReadExcelFile:
                     return err.args[0], structure
                 # read the values
                 for row_number in range(1, sh.nrows):
-                    sample_data = self.get_data_requiring_validation(
+                    row_data = self.get_data_requiring_validation(
                         sh.row_values(row_number), field_names_indexes, sh.name)
 
                     material_consistency = \
-                        self.check_sheet_name_material_consistency(sample_data,
+                        self.check_sheet_name_material_consistency(row_data,
                                                                    sh.name)
                     if material_consistency is not False:
                         os.remove(self.file_path)
                         return material_consistency, structure
-                    if self.check_sample(sample_data):
-                        tmp.append(sample_data)
+                    if self.check_record(row_data):
+                        tmp.append(row_data)
                 if len(tmp) > 0:
                     data[convert_to_snake_case(sh.name)] = tmp
         os.remove(self.file_path)
@@ -127,6 +127,7 @@ class ReadExcelFile:
                 attr_name = str(readme_sheet.row_values(row_number)[0]).lower()
                 attr_value = str(readme_sheet.row_values(row_number)[1]).lower()
                 attributes[attr_name] = attr_value
+
         if attributes and 'type' in attributes:
             template_type = attributes['type']
             if template_type != self.data_file_type:
@@ -135,6 +136,20 @@ class ReadExcelFile:
         else:
             return False, "Could not find template type information in the readme sheet. " \
                           "Please do not modify the provided template."
+
+        template_version = 0
+        if attributes and 'template version' in attributes:
+            try:
+                template_version = float(attributes['template version'])
+            except ValueError:
+                return False, f"The value provided for template version" \
+                              f" ({attributes['template version']}) is not a valid number"
+        if template_version < MINIMUM_TEMPLATE_VERSION_REQUIREMENT:
+            if template_version == 0:
+                return False, f"Missing template version information in the readme sheet"
+            else:
+                return False, f"Please re-download the template from data.faang.org as the template you are using " \
+                              f"(version {template_version}) is out of date and no longer supported."
         return True, ""
 
     def get_experiments_additional_data(self, sheet):
@@ -299,8 +314,13 @@ class ReadExcelFile:
             # SPECIAL_PROPERTIES: special conserved headers, e.g. unit
             # TODO: add test case in the same sheet duplicate columns should same layout
             #  (sheet_name | sheet_name+unit| sheet_name+ontolgoy id), if mixed, needs to be reported as error
-            if header not in headers_to_check and header not in \
-                    SPECIAL_PROPERTIES and header not in id_columns:
+            # TODO: not want to change big structure for now, still use the old style of list. need to move to dict
+            # with id columns as keys. For now it is important to have id columns as custom columns
+            # because in RelationshipsIssues.py", in find_record function
+            #     if record['custom']['sample_name']['value'] == name:  which is hard coded
+            # if header not in headers_to_check and header not in \
+            #         SPECIAL_PROPERTIES and header not in id_columns:
+            if header not in headers_to_check and header not in SPECIAL_PROPERTIES:
                 indexes = self.return_all_indexes(header)
                 # multiple values are expected to be presented as duplicated columns in the template
                 if len(indexes) > 1:
@@ -539,19 +559,19 @@ class ReadExcelFile:
             return f"Error: '{sheet_name}' sheet contains records with empty material"
 
     @staticmethod
-    def check_sample(sample):
+    def check_record(record):
         """
-        This function will check that sample is not empty
-        :param sample: sample to check
-        :return: True if sample should be added to data and False otherwise
+        This function will check that record is not empty
+        :param record: record to check
+        :return: True if record should be added to data and False otherwise
         """
-        if 'experiments_core' in sample and len(sample) <= 3:
-            if 'input_dna' in sample:
-                if len(sample['input_dna']) > 0:
+        if 'experiments_core' in record and len(record) <= 3:
+            if 'input_dna' in record:
+                if len(record['input_dna']) > 0:
                     return True
                 return False
-            elif 'binding_proteins' in sample:
-                if len(sample['binding_proteins']) > 0:
+            elif 'binding_proteins' in record:
+                if len(record['binding_proteins']) > 0:
                     return True
                 return False
             else:

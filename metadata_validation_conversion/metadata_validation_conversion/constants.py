@@ -51,6 +51,8 @@ SAMPLE = 'samples'
 EXPERIMENT = 'experiments'
 ANALYSIS = 'analyses'
 
+MINIMUM_TEMPLATE_VERSION_REQUIREMENT = 1.1
+
 # keys are sheet sheet_name used in the template
 ALLOWED_SAMPLE_SHEET_NAMES = {
     'organism': ORGANISM_URL,

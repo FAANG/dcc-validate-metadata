@@ -14,7 +14,8 @@ def validate(request, validation_type, task_id, room_id):
     conversion_result = app.AsyncResult(task_id)
     json_to_test, structure = conversion_result.get()
     if validation_type == SAMPLE:
-        # Create three tasks that should be run in parallel and assign callback
+        # s function from Celery is a shortcut for method.signature() to pass parameters to a Celery task
+        # chord function from Celery creates three tasks that should be run in parallel and assign callback
 
         validate_against_schema_task = validate_against_schema.s(
             json_to_test, SAMPLE, structure).set(queue='validation')
