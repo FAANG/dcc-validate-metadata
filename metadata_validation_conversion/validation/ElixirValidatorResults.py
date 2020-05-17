@@ -60,8 +60,8 @@ class ElixirValidatorResults:
                     validation_document[name].append(record_to_return)
         return validation_document
 
-    @staticmethod
-    def attach_errors(record_to_return, errors, paths, additional_field=None):
+    def attach_errors(self, record_to_return, errors, paths,
+                      additional_field=None):
         """
         This function will add all errors to document
         :param record_to_return: record to add errors to
@@ -71,11 +71,39 @@ class ElixirValidatorResults:
         """
         for i, error in enumerate(errors):
             keys = paths[i].split('.')
-            if additional_field:
-                record_to_return[additional_field][keys[1]].setdefault(
-                    'errors', list())
-                record_to_return[additional_field][keys[1]]['errors'].append(
-                    error)
+            # Check that returned path was for fields that allow to have
+            # multiple values
+            if '[' in keys[1]:
+                # parsing values like 'health_status[0]'
+                key = keys[1].split('[')[0]
+                additional_key = int(keys[1].split('[')[-1].split(']')[0])
+                self.update_record_to_return(record_to_return, key, error,
+                                             additional_key=additional_key,
+                                             additional_field=additional_field)
             else:
-                record_to_return[keys[1]].setdefault('errors', list())
-                record_to_return[keys[1]]['errors'].append(error)
+                key = keys[1]
+                self.update_record_to_return(record_to_return, key, error,
+                                             additional_field=additional_field)
+
+    @staticmethod
+    def update_record_to_return(record_to_return, key, error,
+                                additional_key=None, additional_field=None):
+        """
+        This function will add error to record_to_return
+        :param record_to_return: record to update
+        :param key: key of error inside record_to_return
+        :param error: errors message
+        :param additional_key: index of field inside record_to_return
+        :param additional_field: might be core, etc..
+        :return:
+        """
+        if additional_key is not None and additional_field is not None:
+            pointer = record_to_return[additional_field][key][additional_key]
+        elif additional_key is not None and additional_field is None:
+            pointer = record_to_return[key][additional_key]
+        elif additional_key is None and additional_field is not None:
+            pointer = record_to_return[additional_field][key]
+        else:
+            pointer = record_to_return[key]
+        pointer.setdefault('errors', list())
+        pointer['errors'].append(error)
