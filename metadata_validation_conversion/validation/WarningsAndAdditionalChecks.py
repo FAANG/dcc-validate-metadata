@@ -5,7 +5,6 @@ from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
 from metadata_validation_conversion.helpers import get_rules_json
 from .get_ontology_text_async import collect_ids
 from .helpers import validate, get_record_structure
-import json
 
 
 class WarningsAndAdditionalChecks:
@@ -233,10 +232,15 @@ class WarningsAndAdditionalChecks:
         """
         for item in recommended_fields:
             if item not in record:
-                record_to_return[item].setdefault('warnings', list())
-                record_to_return[item]['warnings'].append(
-                    'This item is recommended but was not provided'
-                )
+                if isinstance(record_to_return[item], list):
+                    for row in record_to_return[item]:
+                        row.setdefault('warnings', list())
+                        row['warnings'].append(
+                            'This item is recommended but was not provided')
+                else:
+                    record_to_return[item].setdefault('warnings', list())
+                    record_to_return[item]['warnings'].append(
+                        'This item is recommended but was not provided')
 
     def check_ontology_text(self, record, ontology_ids, record_to_return,
                             ontology_names=None):

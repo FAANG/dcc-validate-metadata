@@ -111,26 +111,34 @@ def parse_data(structure, record):
     for k, v in structure.items():
         if isinstance(v, dict):
             if k in record:
-                results[k] = record[k].copy()
+                results[k] = convert_to_none(v, record[k])
             else:
                 results[k] = convert_to_none(v)
         else:
             for index, value in enumerate(v):
                 results.setdefault(k, list())
-                try:
-                    results[k].append(record[k][index].copy())
-                except (IndexError, KeyError):
+                if k in record:
+                    results[k].append(convert_to_none(value, record[k][index]))
+                else:
                     results[k].append(convert_to_none(value))
     return results
 
 
-def convert_to_none(dict_to_convert):
+def convert_to_none(structure, data_to_check=None):
     """
     This function will assign fields to None
-    :param dict_to_convert: dict to parse
+    :param data_to_check: data to check values
+    :param structure: dict to parse
     :return: dict with None for fields
     """
     results = dict()
-    for k in dict_to_convert:
-        results[k] = None
+    if data_to_check is None:
+        for k in structure:
+            results[k] = None
+    else:
+        for k in structure:
+            if k in data_to_check:
+                results[k] = data_to_check[k]
+            else:
+                results[k] = None
     return results
