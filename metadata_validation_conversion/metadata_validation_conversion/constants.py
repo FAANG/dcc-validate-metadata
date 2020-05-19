@@ -26,6 +26,8 @@ HI_C_URL = f"{BASE_URL}/type/experiments/" \
            f"faang_experiments_hi-c.metadata_rules.json"
 DNASE_SEQ_URL = f"{BASE_URL}/type/experiments/" \
                 f"faang_experiments_dnase-seq.metadata_rules.json"
+CAGE_SEQ_URL = f"{BASE_URL}/type/experiments/" \
+                f"faang_experiments_cage-seq.metadata_rules.json"
 CHIP_SEQ_URL = f"{BASE_URL}/type/experiments/" \
                f"faang_experiments_chip-seq.metadata_rules.json"
 CHIP_SEQ_INPUT_DNA_URL = f"{BASE_URL}/module/experiments/" \
@@ -54,38 +56,6 @@ ANALYSIS = 'analyses'
 MINIMUM_TEMPLATE_VERSION_REQUIREMENT = 1.1
 
 # keys are sheet sheet_name used in the template
-ALLOWED_SAMPLE_SHEET_NAMES = {
-    'organism': ORGANISM_URL,
-    'specimen from organism': SPECIMEN_FROM_ORGANISM_URL,
-    'pool of specimens': POOL_OF_SPECIMENS_URL,
-    'cell specimen': CELL_SPECIMEN_URL,
-    'cell culture': CELL_CULTURE_URL,
-    'cell line': CELL_LINE_URL,
-}
-
-ALLOWED_EXPERIMENT_SHEET_NAMES = {
-    'wgs': WGS_URL,
-    'rna-seq': RNA_SEQ_URL,
-    'hi-c': HI_C_URL,
-    'dnase-seq': DNASE_SEQ_URL,
-    'chip-seq input dna': CHIP_SEQ_URL,
-    'chip-seq dna-binding proteins': CHIP_SEQ_URL,
-    'bs-seq': BS_SEQ_URL,
-    'atac-seq': ATAC_SEQ_URL,
-}
-
-ALLOWED_ANALYSIS_SHEET_NAMES = {
-    'faang': FAANG_ANALYSES_URL,
-    'ena': ENA_ANALYSES_URL,
-    'eva': EVA_ANALYSES_URL
-}
-
-ALLOWED_SHEET_NAMES = {
-    SAMPLE: ALLOWED_SAMPLE_SHEET_NAMES,
-    EXPERIMENT: ALLOWED_EXPERIMENT_SHEET_NAMES,
-    ANALYSIS: ALLOWED_ANALYSIS_SHEET_NAMES
-}
-
 ALLOWED_SAMPLES_TYPES = {
     'organism': ORGANISM_URL,
     'specimen_from_organism': SPECIMEN_FROM_ORGANISM_URL,
@@ -100,6 +70,7 @@ ALLOWED_EXPERIMENTS_TYPES = {
     'rna-seq': RNA_SEQ_URL,
     'hi-c': HI_C_URL,
     'dnase-seq': DNASE_SEQ_URL,
+    'cage-seq': CAGE_SEQ_URL,
     'chip-seq_input_dna': CHIP_SEQ_URL,
     'chip-seq_dna-binding_proteins': CHIP_SEQ_URL,
     'bs-seq': BS_SEQ_URL,
@@ -111,6 +82,13 @@ ALLOWED_ANALYSES_TYPES = {
     'ena': ENA_ANALYSES_URL,
     'eva': EVA_ANALYSES_URL
 }
+
+ALLOWED_SHEET_NAMES = {
+    SAMPLE: ALLOWED_SAMPLES_TYPES,
+    EXPERIMENT: ALLOWED_EXPERIMENTS_TYPES,
+    ANALYSIS: ALLOWED_ANALYSES_TYPES
+}
+
 
 # column index starts from 0
 ID_COLUMNS_WITH_INDICES = {
@@ -279,7 +257,7 @@ RUN_FIELDS = {
 
 EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES = {
     'study': STUDY_FIELDS,
-    'experiment ena': EXPERIMENT_ENA_FIELDS,
+    'experiment_ena': EXPERIMENT_ENA_FIELDS,
     'submission': SUBMISSION_FIELDS,
     'run': RUN_FIELDS
 }
