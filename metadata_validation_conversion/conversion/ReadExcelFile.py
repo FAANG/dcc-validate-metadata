@@ -5,7 +5,8 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SAMPLES_SPECIFIC_JSON_TYPES, EXPERIMENTS_SPECIFIC_JSON_TYPES, \
     CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, \
     EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, CHIP_SEQ_MODULE_RULES, \
-    SAMPLE, EXPERIMENT, ANALYSIS, ID_COLUMNS_WITH_INDICES, MINIMUM_TEMPLATE_VERSION_REQUIREMENT
+    SAMPLE, EXPERIMENT, ANALYSIS, ID_COLUMNS_WITH_INDICES, MINIMUM_TEMPLATE_VERSION_REQUIREMENT, \
+    SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
 
@@ -47,7 +48,15 @@ class ReadExcelFile:
                     # TODO: the ones limited in ENA e.g. existing_study_type
                     continue
                 elif self.data_file_type == EXPERIMENT and sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES:
-                    special_sheet_data = self.get_experiments_additional_data(sh)
+                    special_sheet_data = self.get_additional_data(sh, EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES)
+                    if 'Error' in special_sheet_data:
+                        os.remove(self.file_path)
+                        return special_sheet_data, structure
+                    data[convert_to_snake_case(sh.name)] = special_sheet_data
+                    continue
+                elif sh.name in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES \
+                        and self.json_type == SAMPLE:
+                    special_sheet_data = self.get_additional_data(sh, SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES)
                     if 'Error' in special_sheet_data:
                         os.remove(self.file_path)
                         return special_sheet_data, structure
@@ -152,16 +161,17 @@ class ReadExcelFile:
                               f"(version {template_version}) is out of date and no longer supported."
         return True, ""
 
-    def get_experiments_additional_data(self, sheet):
+    def get_additional_data(self, sheet, allowed_sheet_names):
         """
         This function will parse non assay type specific sheets in the experiment template
         the returned data is a list of rows, each row is represented as a dict with filed name as key and value as value
         :param sheet: object to get data from
+        :param allowed_sheet_names: list of sheet names that are allowed
         :return: parsed data
         """
         sheet_name = sheet.name
         data = list()
-        sheet_fields = EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES[sheet_name]
+        sheet_fields = allowed_sheet_names[sheet_name]
         for row_number in range(1, sheet.nrows):
             tmp = dict()
             for index, field_name in enumerate(sheet_fields['all']):
@@ -197,11 +207,15 @@ class ReadExcelFile:
 
                 except IndexError:
                     if field_name in sheet_fields['mandatory']:
-                        return f'Error: {field_name} field is mandatory in sheet {sheet_name}'
+                        error_field_name = ' '.join(field_name.split('_'))
+                        return f'Error: {error_field_name} field is mandatory in sheet {sheet_name}'
                 if field_name in sheet_fields['mandatory'] \
                         and tmp[field_name] == '':
-                    return f'Error: mandatory field {field_name} in sheet {sheet_name} cannot have empty value'
+                    error_field_name = ' '.join(field_name.split('_'))
+                    return f'Error: mandatory field {error_field_name} in sheet {sheet_name} cannot have empty value'
             data.append(tmp)
+        if len(data) == 0:
+            return f"Error: data for '{sheet_name}' sheet was not provided"
         return data
 
     def get_field_names_and_indexes(self, data_file_type, sheet_name):
