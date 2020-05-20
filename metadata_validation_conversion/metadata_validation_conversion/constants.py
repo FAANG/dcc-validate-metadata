@@ -239,11 +239,60 @@ RUN_FIELDS = {
     ]
 }
 
+PERSON_FIELDS = {
+    'all': [
+        'person_last_name',
+        'person_initials',
+        'person_first_name',
+        'person_email',
+        'person_role'
+    ],
+    'mandatory': [
+        'person_last_name',
+        'person_initials',
+        'person_first_name',
+        'person_email',
+        'person_role'
+    ]
+}
+
+ORGANIZATION_FIELDS = {
+    'all': [
+        'organization_name',
+        'organization_address',
+        'organization_uri',
+        'organization_role'
+    ],
+    'mandatory': [
+        'organization_name',
+        'organization_address',
+        'organization_uri',
+        'organization_role'
+    ]
+}
+
+SAMPLES_SUBMISSION_FIELDS = {
+    'all': [
+        'submission_title',
+        'submission_description'
+    ],
+    'mandatory': [
+        'submission_title',
+        'submission_description'
+    ]
+}
+
 EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES = {
     'study': STUDY_FIELDS,
     'experiment ena': EXPERIMENT_ENA_FIELDS,
     'submission': SUBMISSION_FIELDS,
     'run': RUN_FIELDS
+}
+
+SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES = {
+    'person': PERSON_FIELDS,
+    'organization': ORGANIZATION_FIELDS,
+    'submission': SAMPLES_SUBMISSION_FIELDS
 }
 
 CHIP_SEQ_MODULE_RULES = {
