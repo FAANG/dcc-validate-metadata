@@ -3,7 +3,7 @@ from datetime import datetime
 from metadata_validation_conversion.constants import \
     SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES
 from validation.helpers import get_record_name
-import json
+from submission.helpers import remove_underscores
 
 
 class BiosamplesFileConverter:
@@ -19,10 +19,10 @@ class BiosamplesFileConverter:
         for additional_field in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
             for item in self.json_to_convert[additional_field]:
                 for existing_field, existing_value in item.items():
-                    additional_fields.setdefault(existing_field, list())
-                    additional_fields[existing_field].append({
-                        'value': existing_value
-                    })
+                    additional_fields.setdefault(
+                        remove_underscores(existing_field), list())
+                    additional_fields[remove_underscores(
+                        existing_field)].append({'value': existing_value})
         for record_type, records in self.json_to_convert.items():
             if record_type in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
                 continue
@@ -41,7 +41,6 @@ class BiosamplesFileConverter:
                             record)
                     }
                 )
-        print(json.dumps(data_to_send))
         return data_to_send
 
     def get_taxon_information(self):
@@ -155,16 +154,16 @@ class BiosamplesFileConverter:
             if attribute_name == 'samples_core':
                 for sc_attribute_name, sc_attribute_value in \
                         record['samples_core'].items():
-                    sample_attributes[sc_attribute_name] = \
+                    sample_attributes[remove_underscores(sc_attribute_name)] = \
                         self.parse_attribute(sc_attribute_value)
             elif attribute_name == 'custom':
                 for sc_attribute_name, sc_attribute_value in \
                         record['custom'].items():
-                    sample_attributes[sc_attribute_name] = \
+                    sample_attributes[remove_underscores(sc_attribute_name)] = \
                         self.parse_attribute(sc_attribute_value)
             else:
-                sample_attributes[attribute_name] = self.parse_attribute(
-                    attribute_value)
+                sample_attributes[remove_underscores(attribute_name)] = \
+                    self.parse_attribute(attribute_value)
         sample_attributes.update(additional_fields)
         return sample_attributes
 
