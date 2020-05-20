@@ -402,11 +402,15 @@ class ReadExcelFile:
 
                 except IndexError:
                     if field_name in sheet_fields['mandatory']:
-                        return f'Error: {field_name} field is mandatory in sheet {sheet_name}'
+                        error_field_name = ' '.join(field_name.split('_'))
+                        return f'Error: {error_field_name} field is mandatory in sheet {sheet_name}'
                 if field_name in sheet_fields['mandatory'] \
                         and tmp[field_name] == '':
-                    return f'Error: mandatory field {field_name} in sheet {sheet_name} cannot have empty value'
+                    error_field_name = ' '.join(field_name.split('_'))
+                    return f'Error: mandatory field {error_field_name} in sheet {sheet_name} cannot have empty value'
             data.append(tmp)
+        if len(data) == 0:
+            return f"Error: data for '{sheet_name}' sheet was not provided"
         return data
 
     @staticmethod

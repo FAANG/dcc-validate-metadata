@@ -1,6 +1,9 @@
 import requests
 from datetime import datetime
+from metadata_validation_conversion.constants import \
+    SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES
 from validation.helpers import get_record_name
+import json
 
 
 class BiosamplesFileConverter:
@@ -9,9 +12,20 @@ class BiosamplesFileConverter:
 
     def start_conversion(self):
         data_to_send = list()
-        taxon_ids = self.get_all_taxon_ids()
+        taxon_ids, taxons = self.get_taxon_information()
         current_date = datetime.now().strftime("%Y-%m-%d")
+        # Collect additional data
+        additional_fields = dict()
+        for additional_field in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
+            for item in self.json_to_convert[additional_field]:
+                for existing_field, existing_value in item.items():
+                    additional_fields.setdefault(existing_field, list())
+                    additional_fields[existing_field].append({
+                        'value': existing_value
+                    })
         for record_type, records in self.json_to_convert.items():
+            if record_type in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
+                continue
             for record_index, record in enumerate(records):
                 record_name = get_record_name(record, record_index, record_type)
                 data_to_send.append(
@@ -20,26 +34,33 @@ class BiosamplesFileConverter:
                         "title": record_name,
                         "releaseDate": current_date,
                         "taxonId": taxon_ids[record_name],
-                        "attributes": self.get_sample_attributes(record),
-                        "samplesRelationships": self.get_sample_relationships(
+                        "taxon": taxons[record_name],
+                        "attributes": self.get_sample_attributes(
+                            record, additional_fields),
+                        "sampleRelationships": self.get_sample_relationships(
                             record)
                     }
                 )
+        print(json.dumps(data_to_send))
         return data_to_send
 
-    def get_all_taxon_ids(self):
+    def get_taxon_information(self):
         """
         This function will parse whole json to get all taxon ids
         :return: dict with id as key and taxon id as value
         """
         taxon_ids = dict()
+        taxons = dict()
         missing_ids = dict()
         for record_type, records in self.json_to_convert.items():
+            if record_type in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
+                continue
             for record_index, record in enumerate(records):
                 record_name = get_record_name(record, record_index, record_type)
                 if 'organism' in record:
                     taxon_ids[record_name] = \
                         record['organism']['term'].split(":")[1]
+                    taxons[record_name] = record['organism']['text']
                 elif 'derived_from' in record:
                     if isinstance(record['derived_from'], dict):
                         missing_ids[record_name] = \
@@ -48,21 +69,25 @@ class BiosamplesFileConverter:
                         missing_ids[record_name] = \
                             record['derived_from'][0]['value']
         for id_to_fetch in missing_ids:
-            taxon_ids[id_to_fetch] = self.fetch_id(id_to_fetch, taxon_ids,
-                                                   missing_ids)
-        return taxon_ids
+            taxon_ids[id_to_fetch], taxons[id_to_fetch] = \
+                self.fetch_taxon_information(id_to_fetch, taxon_ids, taxons,
+                                             missing_ids)
+        return taxon_ids, taxons
 
-    def fetch_id(self, id_to_fetch, taxon_ids, missing_ids):
+    def fetch_taxon_information(self, id_to_fetch, taxon_ids, taxons,
+                                missing_ids):
         """
         This function will find taxon id for particular record
         :param id_to_fetch: id to check
         :param taxon_ids: existing taxon ids
+        :param taxons: existing taxons
         :param missing_ids: missing taxon ids
         :return:
         """
-        if id_to_fetch in taxon_ids:
-            return taxon_ids[id_to_fetch]
+        if id_to_fetch in taxon_ids and id_to_fetch in taxons:
+            return taxon_ids[id_to_fetch], taxons[id_to_fetch]
         else:
+            # TODO: return error in taxon is not in biosamples
             if 'SAM' in id_to_fetch:
                 try:
                     return requests.get(
@@ -72,8 +97,10 @@ class BiosamplesFileConverter:
                 except ValueError:
                     pass
             else:
-                return self.fetch_id(missing_ids[id_to_fetch], taxon_ids,
-                                     missing_ids)
+                return self.fetch_taxon_information(missing_ids[id_to_fetch],
+                                                    taxon_ids,
+                                                    taxons,
+                                                    missing_ids)
 
     @staticmethod
     def get_sample_relationships(record):
@@ -116,10 +143,11 @@ class BiosamplesFileConverter:
                 )
         return sample_relationships
 
-    def get_sample_attributes(self, record):
+    def get_sample_attributes(self, record, additional_fields):
         """
         This function will return biosample attributes
         :param record: record to parse
+        :param additional_fields: additional fields to add to dict
         :return: attributes for this record in biosample format
         """
         sample_attributes = dict()
@@ -137,6 +165,7 @@ class BiosamplesFileConverter:
             else:
                 sample_attributes[attribute_name] = self.parse_attribute(
                     attribute_value)
+        sample_attributes.update(additional_fields)
         return sample_attributes
 
     def parse_attribute(self, value_to_parse):
