@@ -4,7 +4,8 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, \
     SAMPLES_SPECIFIC_JSON_TYPES, EXPERIMENTS_SPECIFIC_JSON_TYPES, \
     CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, \
-    EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, CHIP_SEQ_MODULE_RULES
+    EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, CHIP_SEQ_MODULE_RULES, \
+    SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
 
@@ -30,9 +31,19 @@ class ReadExcelFile:
             if sh.name not in ALLOWED_SHEET_NAMES:
                 if sh.name == 'faang_field_values':
                     continue
-                elif sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES:
-                    special_sheet_data = self.get_experiments_additional_data(
-                        sh, sh.name)
+                elif sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES \
+                        and self.json_type == 'experiments':
+                    special_sheet_data = self.get_additional_data(
+                        sh, sh.name, EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES)
+                    if 'Error' in special_sheet_data:
+                        os.remove(self.file_path)
+                        return special_sheet_data, structure
+                    data[convert_to_snake_case(sh.name)] = special_sheet_data
+                    continue
+                elif sh.name in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES \
+                        and self.json_type == 'samples':
+                    special_sheet_data = self.get_additional_data(
+                        sh, sh.name, SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES)
                     if 'Error' in special_sheet_data:
                         os.remove(self.file_path)
                         return special_sheet_data, structure
@@ -71,30 +82,36 @@ class ReadExcelFile:
         return data, structure
 
     @staticmethod
-    def get_experiments_additional_data(table_object, sheet_name):
+    def get_additional_data(table_object, sheet_name,
+                            allowed_sheet_names):
         """
         This function will parse study sheet of a table
         :param table_object: object to get data from
         :param sheet_name: name of the sheet to be parsed
+        :param allowed_sheet_names: list of sheet names that are allowed
         :return: parsed data
         """
         data = list()
-        sheet_fields = EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES[sheet_name]
+        sheet_fields = allowed_sheet_names[sheet_name]
         for row_number in range(1, table_object.nrows):
             tmp = dict()
-            for index, study_field in enumerate(sheet_fields['all']):
+            for index, additional_field in enumerate(sheet_fields['all']):
                 try:
-                    tmp[study_field] = table_object.row_values(
+                    tmp[additional_field] = table_object.row_values(
                         row_number)[index]
                 except IndexError:
-                    if study_field in sheet_fields['mandatory']:
-                        return f"Error: {study_field} field is mandatory in " \
-                               f"study sheet"
-                if study_field in sheet_fields['mandatory'] \
-                        and tmp[study_field] == '':
-                    return f"Error: {study_field} field is mandatory in " \
-                           f"study {sheet_name}"
+                    if additional_field in sheet_fields['mandatory']:
+                        error_field_name = ' '.join(additional_field.split('_'))
+                        return f"Error: '{error_field_name}' field is " \
+                               f"mandatory in '{sheet_name}' sheet"
+                if additional_field in sheet_fields['mandatory'] \
+                        and tmp[additional_field] == '':
+                    error_field_name = ' '.join(additional_field.split('_'))
+                    return f"Error: '{error_field_name}' field is mandatory " \
+                           f"in '{sheet_name}' sheet"
             data.append(tmp)
+        if len(data) == 0:
+            return f"Error: data for '{sheet_name}' sheet was not provided"
         return data
 
     def get_field_names_and_indexes(self, sheet_name):

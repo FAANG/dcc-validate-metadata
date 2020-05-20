@@ -70,6 +70,11 @@ class ElixirValidatorResults:
         :param additional_field: could be core field or modular field
         """
         for i, error in enumerate(errors):
+            if 'root of document' in paths:
+                key = error.split("'")[1]
+                self.update_record_to_return(record_to_return, key, error,
+                                             additional_field=additional_field)
+                continue
             keys = paths[i].split('.')
             # Check that returned path was for fields that allow to have
             # multiple values
