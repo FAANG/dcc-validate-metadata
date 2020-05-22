@@ -1,7 +1,49 @@
 import requests
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from .constants import SAMPLE_CORE_URL, EXPERIMENT_CORE_URL, SAMPLE, EXPERIMENT, ANALYSIS
+from .constants import SAMPLE_CORE_URL, EXPERIMENT_CORE_URL, SAMPLE, EXPERIMENT, ANALYSIS, \
+    ALLOWED_SHEET_NAMES, CHIP_SEQ_MODULE_RULES
+
+
+def get_core_ruleset_json(template_type):
+    """
+    Get the core ruleset in the json format according to the template type
+    :param template_type: the template type
+    :return:
+    """
+    if template_type == SAMPLE:
+        return requests.get(SAMPLE_CORE_URL).json()
+    elif template_type == EXPERIMENT:
+        return requests.get(EXPERIMENT_CORE_URL).json()
+    elif template_type == ANALYSIS:
+        return None
+
+
+def get_type_ruleset_json(template_type, sheet_name):
+    """
+    Get the type ruleset in the json format according to the template type
+    :param template_type: the template type
+    :param sheet_name: the name of the sheet, which indicates the type of the data
+    :return:
+    """
+    if template_type in ALLOWED_SHEET_NAMES and sheet_name in ALLOWED_SHEET_NAMES[template_type]:
+        url = ALLOWED_SHEET_NAMES[template_type][sheet_name]
+        return requests.get(url).json()
+    return None
+
+
+def get_module_ruleset_json(template_type, sheet_name):
+    """
+    Get the type ruleset in the json format according to the template type
+    :param template_type: the template type
+    :param sheet_name: the name of the sheet, which indicates the type of the data
+    :return:
+    """
+    # TODO: replace CHIP_SEQ_MODULE_RULES with general module ruleset constant
+    if template_type == EXPERIMENT and sheet_name in CHIP_SEQ_MODULE_RULES:
+        url = CHIP_SEQ_MODULE_RULES[sheet_name]
+        return requests.get(url).json()
+    return None
 
 
 def get_rules_json(url, json_type, module_url=None):

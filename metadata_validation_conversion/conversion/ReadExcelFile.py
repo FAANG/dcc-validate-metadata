@@ -32,7 +32,7 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SPECIAL_SHEETS, CHIP_SEQ_MODULE_RULES, \
     SAMPLE, EXPERIMENT, ANALYSIS, ID_COLUMNS_WITH_INDICES, MINIMUM_TEMPLATE_VERSION_REQUIREMENT
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
-    get_rules_json, get_core_ruleset_json, get_type_ruleset_json, get_module_ruleset_json
+    get_core_ruleset_json, get_type_ruleset_json, get_module_ruleset_json
 
 
 class ReadExcelFile:
