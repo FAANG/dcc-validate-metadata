@@ -292,7 +292,8 @@ class WarningsAndAdditionalChecks:
                 return f"Couldn't find label in OLS with these ontology " \
                        f"names: {ontology_names[field_name]}"
 
-            if field_value['text'].lower() not in term_label:
+            # Use str in case user provided number
+            if str(field_value['text']).lower() not in term_label:
                 return f"Provided value '{field_value['text']}' doesn't " \
                        f"precisely match '{term_label[0]}' for term " \
                        f"'{field_value['term']}'"
