@@ -107,7 +107,7 @@ ALLOWED_RELATIONSHIPS = {
                   'cell_specimen', 'cell_culture', 'cell_line']
 }
 
-# some are conserved keywords, some are with JSON pointer for the purpose of reusage, recursion etc
+# map_field_for_locations are conserved keywords, map_field_for_locations are with JSON pointer for the purpose of reusage, recursion etc
 SKIP_PROPERTIES = [
     'describedBy',
     'schema_version',
@@ -260,6 +260,10 @@ EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES = {
     'experiment_ena': EXPERIMENT_ENA_FIELDS,
     'submission': SUBMISSION_FIELDS,
     'run': RUN_FIELDS
+}
+
+SPECIAL_SHEETS = {
+    EXPERIMENT: EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES
 }
 
 CHIP_SEQ_MODULE_RULES = {
