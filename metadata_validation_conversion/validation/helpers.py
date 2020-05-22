@@ -117,7 +117,7 @@ def parse_data(structure, record):
         else:
             for index, value in enumerate(v):
                 results.setdefault(k, list())
-                if k in record:
+                if k in record and index < len(record[k]):
                     results[k].append(convert_to_none(value, record[k][index]))
                 else:
                     results[k].append(convert_to_none(value))

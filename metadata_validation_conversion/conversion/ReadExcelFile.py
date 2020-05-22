@@ -532,12 +532,14 @@ class ReadExcelFile:
             cell_value = input_data[field_index]
             if cell_value != '':
                 # Convert all "_" in term ids to ":" as required by validator
-                if field_name == 'term' and "_" in cell_value:
+                if field_name == 'term' and isinstance(cell_value, str)  \
+                        and "_" in cell_value:
                     cell_value = cell_value.replace("_", ":")
                 # Convert date data to string (as Excel stores date in float format)
                 # According to https://xlrd.readthedocs.io/en/latest/dates.html, using this package’s xldate_as_tuple()
                 # function to convert numbers from a workbook, you must use the datemode attribute of the Book object
-                if date_field is True and isinstance(cell_value, float):
+                if date_field is True and isinstance(cell_value, float) \
+                        and field_name == 'value':
                     y, m, d, _, _, _ = xlrd.xldate_as_tuple(cell_value,
                                                             self.wb_datemode)
                     m = self.add_leading_zero(m)
