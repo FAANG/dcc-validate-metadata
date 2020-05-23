@@ -28,8 +28,7 @@ import os
 from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, \
     SAMPLES_SPECIFIC_JSON_TYPES, EXPERIMENTS_SPECIFIC_JSON_TYPES, \
-    CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, \
-    SPECIAL_SHEETS, CHIP_SEQ_MODULE_RULES, \
+    CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, SPECIAL_SHEETS, \
     SAMPLE, EXPERIMENT, ANALYSIS, ID_COLUMNS_WITH_INDICES, MINIMUM_TEMPLATE_VERSION_REQUIREMENT
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_core_ruleset_json, get_type_ruleset_json, get_module_ruleset_json
@@ -142,7 +141,7 @@ class ReadExcelFile:
                 for location, header in enumerate(sh.row_values(0)):
                     header = convert_to_snake_case(header)
                     # header as unit and term source id should have already been dealt with
-                    if header == 'unit' or header == 'term_source_id':
+                    if header in SPECIAL_PROPERTIES:
                         continue
                     main, additional = self.determine_subfields(sh.row_values(0), location)
                     if header in headers_in_template:  # has been dealt with already, i.e. multiple
@@ -193,7 +192,6 @@ class ReadExcelFile:
 
                 # self.headers = [
                 #     convert_to_snake_case(item) for item in sh.row_values(0)]
-
                 tmp = list()
                 for row_number in range(1, sh.nrows):
                     row_data = self.get_data_requiring_validation(
@@ -218,6 +216,12 @@ class ReadExcelFile:
 
     @staticmethod
     def determine_subfields(headers, location):
+        """
+        determine the data type of the particular header according to the location
+        :param headers: the header row in the template
+        :param location: the location
+        :return: the list of expected sub-fields
+        """
         if location >= len(headers) - 1:
             return 'value', None
         next_header = headers[location+1]

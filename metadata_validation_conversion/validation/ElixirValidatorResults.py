@@ -1,7 +1,7 @@
 import requests
 from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     ALLOWED_SAMPLES_TYPES, ALLOWED_EXPERIMENTS_TYPES, EXPERIMENT_CORE_URL, \
-    ALLOWED_ANALYSES_TYPES, CHIP_SEQ_MODULE_RULES, SAMPLE, EXPERIMENT, ANALYSIS
+    ALLOWED_ANALYSES_TYPES, MODULE_RULES, SAMPLE, EXPERIMENT, ANALYSIS
 from .helpers import validate, get_record_structure
 
 
@@ -38,10 +38,12 @@ class ElixirValidatorResults:
                 type_schema = requests.get(url).json()
                 module_schema = None
                 module_name = None
-                if name in CHIP_SEQ_MODULE_RULES:
-                    module_schema = requests.get(CHIP_SEQ_MODULE_RULES[name])
+                # TODO: hard-coded part (module_name) needs to be replaced
+                if self.rules_type in MODULE_RULES and name in MODULE_RULES[self.rules_type]:
+                    module_schema = requests.get(MODULE_RULES[self.rules_type][name])
                     module_name = name.split("chip-seq_")[-1]
-                # in JSON schema, the core ruleset is defined by reference
+                # in JSON schema, the core ruleset is defined by reference,
+                # the Elixor validator could not check ruleset using reference
                 if core_name:
                     del type_schema['properties'][core_name]
                 # iterate the records

@@ -141,12 +141,6 @@ CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES = {
     'module': 'dna-binding_proteins'
 }
 
-MODULE_SHEET_NAMES = [
-    'chip-seq_input_dna',
-    'chip-seq_dna-binding_proteins'
-]
-
-
 MISSING_VALUES = {
     'mandatory': {
         'errors': ["not applicable", "not collected", "not provided"],
@@ -266,9 +260,13 @@ SPECIAL_SHEETS = {
     EXPERIMENT: EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES
 }
 
-CHIP_SEQ_MODULE_RULES = {
-    'chip-seq input dna': CHIP_SEQ_INPUT_DNA_URL,
-    'chip-seq dna-binding proteins': CHIP_SEQ_DNA_BINDING_PROTEINS_URL
+EXPERIMENT_MODULE_RULES = {
+    'chip-seq_input_dna': CHIP_SEQ_INPUT_DNA_URL,
+    'chip-seq_dna-binding_proteins': CHIP_SEQ_DNA_BINDING_PROTEINS_URL
+}
+
+MODULE_RULES = {
+    EXPERIMENT: EXPERIMENT_MODULE_RULES
 }
 
 FIELD_NAMES = {
