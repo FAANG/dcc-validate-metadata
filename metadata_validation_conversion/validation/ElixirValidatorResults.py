@@ -3,6 +3,7 @@ from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     ALLOWED_SAMPLES_TYPES, ALLOWED_EXPERIMENTS_TYPES, EXPERIMENT_CORE_URL, \
     ALLOWED_ANALYSES_TYPES, CHIP_SEQ_MODULE_RULES
 from .helpers import validate, get_record_structure
+import json
 
 
 class ElixirValidatorResults:
@@ -39,13 +40,30 @@ class ElixirValidatorResults:
                 module_schema = None
                 module_name = None
                 if name in CHIP_SEQ_MODULE_RULES:
-                    module_schema = requests.get(CHIP_SEQ_MODULE_RULES[name])
+                    module_schema = requests.get(
+                        CHIP_SEQ_MODULE_RULES[name]).json()
                     module_name = name.split("chip-seq_")[-1]
+
+                # Elixir validator complains about links
                 if core_name:
                     del type_schema['properties'][core_name]
+
+                # Elixir validator complains about duplicated values in enum
+                if 'experiment_target' in type_schema['properties']:
+                    del type_schema['properties']['experiment_target'][
+                        'properties']['ontology_name']
+
+                # Elixir validator complains about links
+                if 'dna-binding_proteins' in type_schema['properties']:
+                    del type_schema['properties']['dna-binding_proteins']
+
+                # Elixir validator complains about links
+                if 'input_dna' in type_schema['properties']:
+                    del type_schema['properties']['input_dna']
+
                 for index, record in enumerate(self.json_to_test[name]):
                     record_to_return = get_record_structure(
-                        structure_to_use, record)
+                        structure_to_use, record, module_name)
                     if core_schema:
                         errors, paths = validate(record[core_name], core_schema)
                         self.attach_errors(
@@ -70,7 +88,7 @@ class ElixirValidatorResults:
         :param additional_field: could be core field or modular field
         """
         for i, error in enumerate(errors):
-            if 'root of document' in paths:
+            if 'root of document' in error:
                 key = error.split("'")[1]
                 self.update_record_to_return(record_to_return, key, error,
                                              additional_field=additional_field)
