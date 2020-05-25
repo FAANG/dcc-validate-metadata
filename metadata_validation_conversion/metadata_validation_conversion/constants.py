@@ -297,7 +297,9 @@ SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES = {
 
 CHIP_SEQ_MODULE_RULES = {
     'chip-seq input dna': CHIP_SEQ_INPUT_DNA_URL,
-    'chip-seq dna-binding proteins': CHIP_SEQ_DNA_BINDING_PROTEINS_URL
+    'chip-seq_input_dna': CHIP_SEQ_INPUT_DNA_URL,
+    'chip-seq dna-binding proteins': CHIP_SEQ_DNA_BINDING_PROTEINS_URL,
+    'chip-seq_dna-binding_proteins': CHIP_SEQ_DNA_BINDING_PROTEINS_URL
 }
 
 FIELD_NAMES = {
