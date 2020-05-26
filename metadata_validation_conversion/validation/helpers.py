@@ -41,7 +41,8 @@ def get_record_name(record, index, name):
         if 'sample_name' in record['custom']:
             return record['custom']['sample_name']['value']
         elif 'sample_descriptor' in record['custom']:
-            return record['custom']['sample_descriptor']['value']
+            return f"{record['custom']['sample_descriptor']['value']}-" \
+                   f"{record['custom']['experiment_alias']['value']}"
         else:
             return record['alias']['value']
 

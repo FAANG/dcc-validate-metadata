@@ -63,8 +63,11 @@ class RelationshipsIssues:
             relationships[record_name]['material'] = \
                 record['samples_core']['material']['text']
             if relationship_name == 'child_of':
-                relationships[record_name]['organism'] = record['organism'][
-                    'text']
+                try:
+                    relationships[record_name]['organism'] = \
+                        record['organism']['text']
+                except KeyError:
+                    pass
             data_to_return.append(record_to_return)
         return relationships, biosample_ids, data_to_return
 

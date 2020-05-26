@@ -423,7 +423,10 @@ class WarningsAndAdditionalChecks:
         :param record_to_return: dict to send to front-end
         :return:
         """
-        organism_term = record['organism']['term']
+        try:
+            organism_term = record['organism']['term']
+        except KeyError:
+            return
         schema = {
             "type": "string",
             "graph_restriction": {
