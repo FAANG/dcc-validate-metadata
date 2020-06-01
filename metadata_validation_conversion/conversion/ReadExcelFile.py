@@ -54,8 +54,7 @@ class ReadExcelFile:
                         return special_sheet_data, structure
                     data[convert_to_snake_case(sh.name)] = special_sheet_data
                     continue
-                elif sh.name in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES \
-                        and self.json_type == SAMPLE:
+                elif sh.name in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES and self.data_file_type == SAMPLE:
                     special_sheet_data = self.get_additional_data(sh, SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES)
                     if 'Error' in special_sheet_data:
                         os.remove(self.file_path)
@@ -98,8 +97,7 @@ class ReadExcelFile:
                     if material_consistency is not False:
                         os.remove(self.file_path)
                         return material_consistency, structure
-                    if self.check_record(row_data):
-                        tmp.append(row_data)
+                    tmp.append(row_data)
                 if len(tmp) > 0:
                     data[convert_to_snake_case(sh.name)] = tmp
         os.remove(self.file_path)
@@ -574,22 +572,3 @@ class ReadExcelFile:
         else:
             return f"Error: '{sheet_name}' sheet contains records with empty material"
 
-    @staticmethod
-    def check_record(record):
-        """
-        This function will check that record is not empty
-        :param record: record to check
-        :return: True if record should be added to data and False otherwise
-        """
-        if 'experiments_core' in record and len(record) <= 3:
-            if 'input_dna' in record:
-                if len(record['input_dna']) > 0:
-                    return True
-                return False
-            elif 'binding_proteins' in record:
-                if len(record['binding_proteins']) > 0:
-                    return True
-                return False
-            else:
-                return False
-        return True

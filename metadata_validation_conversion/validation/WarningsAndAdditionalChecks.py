@@ -1,7 +1,8 @@
 import datetime
 from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
     SKIP_PROPERTIES, MISSING_VALUES, SPECIES_BREED_LINKS, \
-    ALLOWED_EXPERIMENTS_TYPES, ALLOWED_ANALYSES_TYPES, SAMPLE, EXPERIMENT, ANALYSIS
+    ALLOWED_EXPERIMENTS_TYPES, ALLOWED_ANALYSES_TYPES, SAMPLE, EXPERIMENT, ANALYSIS,\
+    CHIP_SEQ_INPUT_DNA_URL, CHIP_SEQ_DNA_BINDING_PROTEINS_URL
 from metadata_validation_conversion.helpers import get_rules_json
 from .get_ontology_text_async import collect_ids
 from .helpers import validate, get_record_structure
@@ -39,15 +40,23 @@ class WarningsAndAdditionalChecks:
         records = self.json_to_test[name]
         structure_to_use = self.structure[name]
         data_to_return = list()
-        if name == 'input_dna' or name == 'dna-binding_proteins':
+        if name == 'chip-seq_input_dna':
             samples_type_json, samples_core_json, samples_module_json = \
-                get_rules_json(url, self.rules_type)
+                get_rules_json(url, self.rules_type, CHIP_SEQ_INPUT_DNA_URL)
+            module_name = name.split("chip-seq_")[-1]
+        elif name == 'chip-seq_dna-binding_proteins':
+            samples_type_json, samples_core_json, samples_module_json = \
+                get_rules_json(url, self.rules_type,
+                               CHIP_SEQ_DNA_BINDING_PROTEINS_URL)
+            module_name = name.split("chip-seq_")[-1]
         elif self.rules_type == ANALYSIS:
             samples_type_json = get_rules_json(url, self.rules_type)
-            samples_core_json = None
+            samples_core_json, samples_module_json, module_name = \
+                None, None, None
         else:
             samples_type_json, samples_core_json = get_rules_json(
                 url, self.rules_type)
+            samples_module_json, module_name = None, None
 
         #TODO: similar code used in the conversion, better extract a method
         if self.rules_type == SAMPLE:
@@ -64,7 +73,7 @@ class WarningsAndAdditionalChecks:
             'type': samples_type_json
         }
         try:
-            json_files['modular'] = samples_module_json
+            json_files['module'] = samples_module_json
         except NameError:
             pass
         for field in ['mandatory', 'recommended', 'optional']:
@@ -72,26 +81,16 @@ class WarningsAndAdditionalChecks:
                 fields.setdefault(field, dict())
                 fields[field][json_type] = self.collect_fields(json_file, field)
 
-        # mandatory_type_fields = self.collect_fields(samples_type_json,
-        #                                             "mandatory")
-        # mandatory_core_fields = self.collect_fields(samples_core_json,
-        #                                             "mandatory")
-        # recommended_type_fields = self.collect_fields(samples_type_json,
-        #                                               "recommended")
-        # recommended_core_fields = self.collect_fields(samples_core_json,
-        #                                               "recommended")
-        # optional_type_fields = self.collect_fields(samples_type_json,
-        #                                            "optional")
-        # optional_core_fields = self.collect_fields(samples_core_json,
-        #                                            "optional")
-
         ontology_names_type = self.collect_ontology_names(samples_type_json)
         ontology_names_core = self.collect_ontology_names(samples_core_json)
-        ontology_ids = collect_ids(records, core_name)
+        ontology_names_module = self.collect_ontology_names(samples_module_json)
+
+        ontology_ids = collect_ids(records, core_name, module_name)
 
         for index, record in enumerate(records):
             # Get inner issues structure
-            record_to_return = get_record_structure(structure_to_use, record)
+            record_to_return = get_record_structure(structure_to_use, record,
+                                                    module_name)
 
             if core_name is not None:
                 # Check that recommended fields are present for core fields
@@ -135,7 +134,29 @@ class WarningsAndAdditionalChecks:
                                       fields['mandatory']['type'],
                                       fields['recommended']['type'],
                                       fields['optional']['type'])
-            # TODO: check for module fields
+            if module_name is not None:
+                # Check that recommended fields are present for core fields
+                self.check_recommended_fields(
+                    record[module_name], fields['recommended']['module'],
+                    record_to_return[module_name])
+
+                # Check that ontology text is consistent with ontology term for
+                # core fields
+                self.check_ontology_text(record[module_name], ontology_ids,
+                                         record_to_return[module_name],
+                                         ontology_names_module)
+
+                # Check that date value is consistent with date units for core
+                # fields
+                self.check_date_units(record[module_name],
+                                      record_to_return[module_name])
+
+                # Check that data has special missing values for core fields
+                self.check_missing_values(record[module_name],
+                                          record_to_return[module_name],
+                                          fields['mandatory']['module'],
+                                          fields['recommended']['module'],
+                                          fields['optional']['module'])
 
             # check species breeds consistency
             if name == 'organism':
@@ -339,6 +360,8 @@ class WarningsAndAdditionalChecks:
         :param index: index of data in array
         """
         for field_name, field_value in record.items():
+            if field_name in SKIP_PROPERTIES:
+                continue
             if isinstance(field_value, list):
                 for i, sub_value in enumerate(field_value):
                     self.check_missing_values({field_name: sub_value},
@@ -401,7 +424,10 @@ class WarningsAndAdditionalChecks:
         :param record_to_return: dict to send to front-end
         :return:
         """
-        organism_term = record['organism']['term']
+        try:
+            organism_term = record['organism']['term']
+        except KeyError:
+            return
         schema = {
             "type": "string",
             "graph_restriction": {

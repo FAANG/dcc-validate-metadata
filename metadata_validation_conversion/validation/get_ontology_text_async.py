@@ -18,17 +18,21 @@ def parse_record(record):
                 return sub_record['term']
 
 
-def collect_ids(records, core_name):
+def collect_ids(records, core_name=None, module_name=None):
     """
     Main function that will collect all ids and start ids fetching
     :param records: records to fetch
-    :param core_name: name of the core field
+    :param core_name: name of the core fields
+    :param module_name: name of the module fields
     :return: dict with term_ids as keys and ols results as values
     """
     ids = set()
     for record in records:
         if core_name is not None:
             for _, value in record[core_name].items():
+                ids.add(parse_record(value))
+        if module_name is not None:
+            for _, value in record[module_name].items():
                 ids.add(parse_record(value))
         for _, value in record.items():
             ids.add(parse_record(value))

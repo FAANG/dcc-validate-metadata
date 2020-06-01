@@ -1,5 +1,6 @@
 import requests
 from metadata_validation_conversion.constants import ELIXIR_VALIDATOR_URL
+import json
 
 
 def validate(data, schema):
@@ -41,7 +42,8 @@ def get_record_name(record, index, name):
         if 'sample_name' in record['custom']:
             return record['custom']['sample_name']['value']
         elif 'sample_descriptor' in record['custom']:
-            return record['custom']['sample_descriptor']['value']
+            return f"{record['custom']['sample_descriptor']['value']}-" \
+                   f"{record['custom']['experiment_alias']['value']}"
         else:
             return record['alias']['value']
 
@@ -80,11 +82,12 @@ def check_issues(record):
     return False
 
 
-def get_record_structure(structure, record):
+def get_record_structure(structure, record, module_name=None):
     """
     this function will create structure to return to front-end
     :param structure: structure of a table
     :param record: record that came from table
+    :param module_name: name of the module_field
     :return: structure to return to front-end
     """
     results = parse_data(structure['type'], record)
@@ -95,8 +98,8 @@ def get_record_structure(structure, record):
         results['experiments_core'] = parse_data(structure['core'],
                                                  record['experiments_core'])
     results['custom'] = parse_data(structure['custom'], record['custom'])
-    if 'module' in structure:
-        results['module'] = parse_data(structure['module'], record['module'])
+    if 'module' in structure and module_name is not None:
+        results[module_name] = parse_data(structure['module'], record[module_name])
     return results
 
 
