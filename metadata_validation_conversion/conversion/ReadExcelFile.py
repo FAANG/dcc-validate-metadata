@@ -93,19 +93,20 @@ class ReadExcelFile:
                                structure
                 else:
                     os.remove(self.file_path)
-                    return f"Error: there are no rules for {sh.name} type!", \
+                    return f"Error: unexpected sheet name {sh.name}!", \
                            structure
             # Step 5: Normal sheet
             else:
-                print(sh.name)
                 # Step 5a: if no data in the sheet (only containing headers), skip the sheet
                 if sh.nrows < 2:
                     continue
                 # Step 5b: check id columns
-                id_columns = list()
+                id_columns = dict()
                 if self.data_file_type in ID_COLUMNS_WITH_INDICES:
                     id_columns = ID_COLUMNS_WITH_INDICES[self.data_file_type]
                     check_id_flag, check_id_detail = self.check_id_columns(sh, id_columns)
+                else:
+                    return f"Error: no id columns defined for {self.data_file_type}", structure
                 if not check_id_flag:
                     os.remove(self.file_path)
                     return f"Error: {check_id_detail}", structure
@@ -189,9 +190,39 @@ class ReadExcelFile:
                     field_names_with_indices[ruleset_type] = section_with_indices
                 # work out custom fields
                 field_names_with_indices['custom'] = self.extract_custom_fields(not_found)
-
+                structure[sheet_name] = field_names_with_indices
                 # self.headers = [
                 #     convert_to_snake_case(item) for item in sh.row_values(0)]
+
+                # by reaching here, the ruleset has been loaded successfully,
+                # field_names_with_indices, id_columns and mandatory_field_list will be used to read/check actual data
+                # step 5e read in each line of data
+                mapped_row_data = dict()
+                for row_number in range(1, sh.nrows):
+                    raw_row_data = sh.row_values(row_number)
+                    mandatory_not_found = mandatory_field_list
+                    tmp_id_comps = list()
+                    id_values = dict()
+                    for id_field, id_loc in id_columns.items():
+                        if raw_row_data[id_loc] == '':
+                            return f"Error: the record {row_number} in sheet {sh.name} has empty id column " \
+                                   f"{id_field}. Please make sure that all records in that sheet have values" \
+                                   f" for that column", structure
+                        id_values[id_field] = raw_row_data[id_loc]
+                        tmp_id_comps.append(raw_row_data[id_loc])
+                    id_string = "-".join(tmp_id_comps)
+                    mapped_row_data.setdefault(id_string, dict())
+                    mapped_row_data[id_string]['id'] = id_values
+
+                    # rulset_type is one of core, type, module or custom
+                    for ruleset_type, section_detail in field_names_with_indices.items():
+                        data_in_one_section = dict()
+                        for field_name, field_detail in section_detail:
+                            pass
+                            
+
+
+                data = dict()
                 tmp = list()
                 for row_number in range(1, sh.nrows):
                     row_data = self.get_data_requiring_validation(
@@ -212,6 +243,11 @@ class ReadExcelFile:
                 if len(tmp) > 0:
                     data[convert_to_snake_case(sh.name)] = tmp
         os.remove(self.file_path)
+        # import json
+        # print("data")
+        # print(json.dumps(data))
+        # print("structure")
+        # print(json.dumps(structure))
         return data, structure
 
     @staticmethod
@@ -296,7 +332,7 @@ class ReadExcelFile:
     @staticmethod
     def check_id_columns(data_sheet, id_columns_info: dict):
         """
-        check whether the data sheet contains the expected identification columns
+        check whether the data sheet contains the expected identification column headers
         :param data_sheet: the sheet of the data
         :param id_columns_info: the expected column names with indices
         :return: flag and the error message (if flag is False)
