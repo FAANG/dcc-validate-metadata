@@ -40,16 +40,29 @@ class ElixirValidatorResults:
                 module_name = None
                 # TODO: hard-coded part (module_name) needs to be replaced
                 if self.rules_type in MODULE_RULES and name in MODULE_RULES[self.rules_type]:
-                    module_schema = requests.get(MODULE_RULES[self.rules_type][name])
+                    module_schema = requests.get(MODULE_RULES[self.rules_type][name]).json()
                     module_name = name.split("chip-seq_")[-1]
                 # in JSON schema, the core ruleset is defined by reference,
                 # the Elixor validator could not check ruleset using reference
                 if core_name:
                     del type_schema['properties'][core_name]
-                # iterate the records
+
+                # Elixir validator complains about duplicated values in enum
+                if 'experiment_target' in type_schema['properties']:
+                    del type_schema['properties']['experiment_target'][
+                        'properties']['ontology_name']
+
+                # Elixir validator complains about links
+                if 'dna-binding_proteins' in type_schema['properties']:
+                    del type_schema['properties']['dna-binding_proteins']
+
+                # Elixir validator complains about links
+                if 'input_dna' in type_schema['properties']:
+                    del type_schema['properties']['input_dna']
+
                 for index, record in enumerate(self.json_to_test[name]):
                     record_to_return = get_record_structure(
-                        structure_to_use, record)
+                        structure_to_use, record, module_name)
                     if core_schema:
                         errors, paths = validate(record[core_name], core_schema)
                         self.attach_errors(
@@ -74,7 +87,7 @@ class ElixirValidatorResults:
         :param additional_field: could be core field or modular field
         """
         for i, error in enumerate(errors):
-            if 'root of document' in paths:
+            if 'root of document' in error:
                 key = error.split("'")[1]
                 self.update_record_to_return(record_to_return, key, error,
                                              additional_field=additional_field)
