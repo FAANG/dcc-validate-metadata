@@ -32,7 +32,7 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SAMPLE, EXPERIMENT, ANALYSIS, ID_COLUMNS_WITH_INDICES, MINIMUM_TEMPLATE_VERSION_REQUIREMENT
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_core_ruleset_json, get_type_ruleset_json, get_module_ruleset_json
-
+import json
 
 class ReadExcelFile:
     def __init__(self, file_path, data_file_type):
@@ -201,6 +201,7 @@ class ReadExcelFile:
                 for row_number in range(1, sh.nrows):
                     raw_row_data = sh.row_values(row_number)
                     mandatory_not_found = mandatory_field_list
+                    # generate the id part for the current record (row)
                     tmp_id_comps = list()
                     id_values = dict()
                     for id_field, id_loc in id_columns.items():
@@ -210,19 +211,21 @@ class ReadExcelFile:
                                    f" for that column", structure
                         id_values[id_field] = raw_row_data[id_loc]
                         tmp_id_comps.append(raw_row_data[id_loc])
+                    # id string is the combination of values of all id columns
                     id_string = "-".join(tmp_id_comps)
+                    if id_string in mapped_row_data:
+                        return f"Error: In the {sh.name} sheet, there are more than one records using the same values " \
+                               f"for id columns {json.dumps(mapped_row_data[id_string]['id'])}", structure
                     mapped_row_data.setdefault(id_string, dict())
                     mapped_row_data[id_string]['id'] = id_values
-
                     # rulset_type is one of core, type, module or custom
                     # for ruleset_type, section_detail in field_names_with_indices.items():
                     #     data_in_one_section = dict()
                     #     for field_name, field_detail in section_detail:
                     #         pass
-                    #
 
 
-                data = dict()
+
                 tmp = list()
                 for row_number in range(1, sh.nrows):
                     row_data = self.get_data_requiring_validation(
@@ -242,11 +245,13 @@ class ReadExcelFile:
                 if len(tmp) > 0:
                     data[convert_to_snake_case(sh.name)] = tmp
         os.remove(self.file_path)
+
         # import json
-        # print("data")
-        # print(json.dumps(data))
-        # print("structure")
-        # print(json.dumps(structure))
+        # debug = dict()
+        # debug['branch'] = 'cage_python'
+        # debug['data'] = data
+        # debug['structure'] = structure
+        # print(json.dumps(debug))
         return data, structure
 
     @staticmethod
@@ -317,7 +322,6 @@ class ReadExcelFile:
         # hence logical to re-use the method (map_field_for_locations) which generates the structure for ruleset fields
         # the only thing needs to do is to create the artificial field_subfields_in_ruleset
         result = dict()
-        print(not_found)
         for field_name, field_in_template in not_found.items():
             # create the artificial variable
             if field_in_template['additional'] is None:
