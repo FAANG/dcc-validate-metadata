@@ -200,7 +200,6 @@ class ReadExcelFile:
                 mapped_row_data = dict()
                 for row_number in range(1, sh.nrows):
                     raw_row_data = sh.row_values(row_number)
-                    mandatory_not_found = mandatory_field_list
                     # generate the id part for the current record (row)
                     tmp_id_comps = list()
                     id_values = dict()
@@ -219,12 +218,22 @@ class ReadExcelFile:
                     mapped_row_data.setdefault(id_string, dict())
                     mapped_row_data[id_string]['id'] = id_values
                     # rulset_type is one of core, type, module or custom
-                    # for ruleset_type, section_detail in field_names_with_indices.items():
-                    #     data_in_one_section = dict()
-                    #     for field_name, field_detail in section_detail:
-                    #         pass
+                    for ruleset_type, section_detail in field_names_with_indices.items():
+                        data_in_one_section = dict()
+                        for field_name, field_detail in section_detail.items():
+                            if type(field_detail) is list:
+                                data_in_one_section[field_name] = \
+                                    self.get_multiple_values(field_name, field_detail, raw_row_data)
+                            else:
+                                data_in_one_section[field_name] = \
+                                    self.get_single_value(field_name, field_detail, raw_row_data)
+                        mapped_row_data[id_string][ruleset_type] = data_in_one_section
 
-
+                    empty_mandatory_field = \
+                        self.check_empty_mandatory_fields(mapped_row_data[id_string], mandatory_field_list)
+                    if empty_mandatory_field is not None:
+                        return f"Error: in the {sh.name} sheet, the mandatory field {empty_mandatory_field} " \
+                               f"in record {row_number} has empty value", structure
 
                 tmp = list()
                 for row_number in range(1, sh.nrows):
@@ -253,6 +262,77 @@ class ReadExcelFile:
         # debug['structure'] = structure
         # print(json.dumps(debug))
         return data, structure
+
+    def check_empty_mandatory_fields(self, record_data, mandatory_field_list):
+        """
+        Check all mandatory fields to see whether containing empty value
+        :param record_data: the data of one record
+        :param mandatory_field_list: all mandatory fields
+        :return: None if all mandatory fields have values,
+        or the name of the first mandatory field which has empty value
+        """
+        for section_name, section_detail in record_data.items():
+            # custom fields and id fields do not have rulesets, no need to check
+            if section_name == 'custom' or section_name == 'id':
+                continue
+            for field_name, field_value in section_detail.items():
+                if field_name not in mandatory_field_list:
+                    continue
+                if type(field_value) is list:
+                    for one in field_value:
+                        flag = self.check_empty_value(one)
+                        if flag is not None:
+                            return f"{field_name} ({flag})"
+                else:
+                    flag = self.check_empty_value(field_value)
+                    if flag is not None:
+                        return f"{field_name} ({flag})"
+        return None
+
+    @staticmethod
+    def check_empty_value(value: dict):
+        """
+        check single entry (including one of the mutliple values) contains empty value
+        :param value: the single entry
+        :return: None if no empty value found, otherwise the specific sub-field (value, units, text, term)
+        which contains empty value
+        """
+        for k,v in value.items():
+            if v is None or len(str(v)) == 0:
+                return k
+        return None
+
+    def get_multiple_values(self, field_name, field_detail, raw_row_data):
+        """
+        Get values for a field allowing multiple values
+        :param field_name: the name of the field
+        :param field_detail: the structure of the field with indices
+        :param raw_row_data: the record raw data in the template
+        :return: the list of
+        """
+        result = list()
+        for element in field_detail:
+            one = self.get_single_value(field_name, element, raw_row_data)
+            result.append(one)
+        return result
+
+    def get_single_value(self, field_name, field_detail, raw_row_data):
+        """
+        Get values for a field expecting single value and guarantee value is in number for non-date field with unit
+        :param field_name: the name of the field
+        :param field_detail: the structure of the field with indices
+        :param raw_row_data: the record raw data in the template
+        :return: the mapped field with value
+        """
+        result = dict()
+        for subfield, index in field_detail.items():
+            result[subfield] = raw_row_data[index]
+        # make sure every non-empty value with units (not date units) are in the form of float
+        if 'value' in result and result['value'] is None:
+            return result
+        if not self.check_cell_is_date(field_name) and 'units' in field_detail and len(str(result['value'])) > 0:
+            result['value'] = float(result['value'])
+        return result
 
     @staticmethod
     def determine_subfields(headers, location):
