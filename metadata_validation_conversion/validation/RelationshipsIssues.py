@@ -3,7 +3,6 @@ from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
 from metadata_validation_conversion.helpers import convert_to_snake_case
 from .helpers import get_record_name, get_record_structure
 from .get_biosample_data_async import fetch_biosample_data_for_ids
-import json
 
 
 class RelationshipsIssues:

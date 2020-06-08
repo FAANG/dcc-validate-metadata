@@ -69,8 +69,8 @@ class BiosamplesFileConverter:
                             record['derived_from'][0]['value']
         for id_to_fetch in missing_ids:
             taxon_ids[id_to_fetch], taxons[id_to_fetch] = \
-                self.fetch_taxon_information(id_to_fetch, taxon_ids, taxons,
-                                             missing_ids)
+                self.fetch_taxon_information(id_to_fetch, taxon_ids,
+                                             taxons, missing_ids)
         return taxon_ids, taxons
 
     def fetch_taxon_information(self, id_to_fetch, taxon_ids, taxons,
@@ -89,10 +89,11 @@ class BiosamplesFileConverter:
             # TODO: return error in taxon is not in biosamples
             if 'SAM' in id_to_fetch:
                 try:
-                    return requests.get(
+                    results = requests.get(
                         f"https://www.ebi.ac.uk/biosamples/samples/"
-                        f"{id_to_fetch}"
-                    ).json()['taxId']
+                        f"{id_to_fetch}").json()
+                    return results['taxId'], results['characteristics'][
+                        'organism'][0]['text']
                 except ValueError:
                     pass
             else:
