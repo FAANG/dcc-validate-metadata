@@ -318,7 +318,8 @@ class ReadExcelFile:
 
     def get_single_value(self, field_name, field_detail, raw_row_data):
         """
-        Get values for a field expecting single value and guarantee value is in number for non-date field with unit
+        Get values for a field expecting single value and
+        guarantee value is in number for non-date field with unit and ratio field
         :param field_name: the name of the field
         :param field_detail: the structure of the field with indices
         :param raw_row_data: the record raw data in the template
@@ -331,6 +332,8 @@ class ReadExcelFile:
         if 'value' in result and result['value'] is None:
             return result
         if not self.check_cell_is_date(field_name) and 'units' in field_detail and len(str(result['value'])) > 0:
+            result['value'] = float(result['value'])
+        elif self.check_cell_is_ratio_or_number(field_name):
             result['value'] = float(result['value'])
         return result
 
@@ -601,6 +604,20 @@ class ReadExcelFile:
                     self.add_row(field_name, indexes, data_to_validate,
                                  row_data, date_field_flag)
         return data_to_validate
+
+    @staticmethod
+    def check_cell_is_ratio_or_number(field_name: str):
+        """
+        This function will check that current column is having ratio or expected to have number
+        Currently by the field name, in future should move to by checking
+        whether unit is the correct ontology (supported by the ruleset)
+        :param field_name: header of the column
+        :return: True if the column is expected to have ratio value and False otherwise
+        """
+        if field_name.endswith('_ratio') or field_name.endswith('_number'):
+            return True
+        else:
+            return False
 
     @staticmethod
     def check_cell_is_date(field_name):
