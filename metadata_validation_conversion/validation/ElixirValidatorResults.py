@@ -67,8 +67,10 @@ class ElixirValidatorResults:
                         errors, paths = validate(record[core_name], core_schema)
                         self.attach_errors(
                             record_to_return, errors, paths, core_name)
+
                     errors, paths = validate(record, type_schema)
                     self.attach_errors(record_to_return, errors, paths)
+
                     if module_schema:
                         errors, paths = validate(
                             record[module_name], module_schema)

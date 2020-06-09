@@ -3,6 +3,41 @@ from metadata_validation_conversion.constants import ELIXIR_VALIDATOR_URL
 import json
 
 
+def sanitize(data: dict, sanitize_map: dict):
+    """
+    Elixir validator treats field name containing '-' or ':' as multiple value field even they are not
+    This method change - and : to _ to avoid this happen
+    :param data: the data before sanitization
+    :param sanitize_map: the map between sanitized field name and the original field name
+    :return: sanitized data
+    """
+    result = data
+    for sanitized_value, to_be_processed in sanitize_map.items():
+        result[sanitized_value] = result.pop(to_be_processed)
+    return result
+
+
+def unsanitize_error(error: dict, sanitized_map: dict):
+    """
+    The sanitized field name would not match to the field name in the template, then raise error
+    Manually update the error value to match to the template
+    :param error: the error object returned by the Elixir validator
+    :param sanitized_map: the map between sanitized name (keys) and original name used in the template (values)
+    :return: curated error
+    """
+    # no sanitized columns
+    if len(sanitized_map) == 0:
+        return error
+    # sanitization is to prevent validator wrongly treat single value column as multiple value column,
+    # hence safe to skip checking for [], field name should always be after the first .
+    paths = error['absoluteDataPath'].split('.')
+    if paths[1] in sanitized_map:
+        paths[1] = sanitized_map[paths[1]]
+        error['absoluteDataPath'] = ".".join(paths)
+        error['userFriendlyMessage'] = f"{error['message']} at {error['absoluteDataPath']}"
+    return error
+
+
 def validate(data, schema):
     """
     This function will send data to elixir-validator and collect all errors
@@ -10,19 +45,36 @@ def validate(data, schema):
     :param schema: schema to validate against
     :return: list of error messages
     """
+    sanitized_map = dict()
+    for field_name in data.keys():
+        sanitized_name = field_name.replace('-', '_')
+        sanitized_name = sanitized_name.replace(':', '_')
+        if sanitized_name != field_name:
+            sanitized_map[sanitized_name] = field_name
+
+    sanitized_data = sanitize(data, sanitized_map)
+    sanitized_schema = schema
+    sanitized_schema['properties'] = sanitize(schema['properties'], sanitized_map)
+
     json_to_send = {
-        'schema': schema,
-        'object': data
+        'schema': sanitized_schema,
+        'object': sanitized_data
     }
     response = requests.post(ELIXIR_VALIDATOR_URL, json=json_to_send).json()
     validation_errors = list()
     paths = list()
 
+    # example response
+    # "validationErrors": [{"ajvError": {some data}, "message": "should be number",
+    # "absoluteDataPath": ".rna_purity_260_230_ratio.value",
+    # "userFriendlyMessage": "should be number at .rna_purity_260_230_ratio.value"},{another error}]
+    # the abosluteDataPath should be reverted back to the name used in the template .rna_purity-260:280_ratio.value
     if 'validationErrors' in response and len(
             response['validationErrors']) > 0:
         for error in response['validationErrors']:
-            validation_errors.append(error['userFriendlyMessage'])
-            paths.append(error['absoluteDataPath'])
+            unsanitized_error = unsanitize_error(error, sanitized_map)
+            validation_errors.append(unsanitized_error['userFriendlyMessage'])
+            paths.append(unsanitized_error['absoluteDataPath'])
     return validation_errors, paths
 
 
