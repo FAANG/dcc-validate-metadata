@@ -438,6 +438,7 @@ class WarningsAndAdditionalChecks:
                 "include_self": True
             }
         }
+        # TODO: add check crossbreed
         validation_results, _ = validate(record['breed']['term'], schema)
         if len(validation_results) > 0:
             record_to_return['organism'].setdefault('errors', list())

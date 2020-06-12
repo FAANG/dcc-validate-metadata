@@ -46,15 +46,28 @@ def validate(data, schema):
     :return: list of error messages
     """
     sanitized_map = dict()
-    for field_name in data.keys():
-        sanitized_name = field_name.replace('-', '_')
-        sanitized_name = sanitized_name.replace(':', '_')
-        if sanitized_name != field_name:
-            sanitized_map[sanitized_name] = field_name
+    # this method usage includes to check ontology
+    if isinstance(data, dict):
+        for field_name in data.keys():
+            sanitized_name = field_name.replace('-', '_')
+            sanitized_name = sanitized_name.replace(':', '_')
+            # hard coded part
+            # dna-binding_protein can be removed from the condition when
+            # validate core, type, module dynamically
+            # for section_type in data.keys: validate(data[section_type], schema)
+            # rna_purity can be removed from the condition when the template and ruleset once matches,
+            # now ruleset uses 260-280 and template uses 260_280
+            if sanitized_name != field_name\
+                    and field_name != 'dna-binding_proteins' \
+                    and not field_name.startswith('rna_purity'):
+                sanitized_map[sanitized_name] = field_name
 
-    sanitized_data = sanitize(data, sanitized_map)
-    sanitized_schema = schema
-    sanitized_schema['properties'] = sanitize(schema['properties'], sanitized_map)
+        sanitized_data = sanitize(data, sanitized_map)
+        sanitized_schema = schema
+        sanitized_schema['properties'] = sanitize(schema['properties'], sanitized_map)
+    else:
+        sanitized_data = data
+        sanitized_schema = schema
 
     json_to_send = {
         'schema': sanitized_schema,
