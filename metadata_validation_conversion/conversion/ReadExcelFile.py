@@ -264,14 +264,6 @@ class ReadExcelFile:
 
                 data[convert_to_snake_case(sh.name)] = converted
         os.remove(self.file_path)
-
-        # import json
-        # debug = dict()
-        # debug['branch'] = 'cage_python'
-        # debug['data'] = data
-        # debug['structure'] = structure
-        # print(json.dumps(debug))
-        # return converted, structure
         return data, structure
 
     def remove_empty_fields(self, section_detail: dict):
@@ -307,6 +299,11 @@ class ReadExcelFile:
 
     @staticmethod
     def remove_empty_in_single(single_value: dict):
+        """
+        make field containing empty value to None
+        :param single_value: the field value expected to be a single dict
+        :return: None if all values in the dict are empty or the original value
+        """
         no_value_flag = True
         for v in single_value.values():
             if v and len(str(v)) > 0:
@@ -346,7 +343,7 @@ class ReadExcelFile:
     @staticmethod
     def check_empty_value(value: dict):
         """
-        check single entry (including one of the mutliple values) contains empty value
+        check single entry (including one of the multiple values) contains empty value
         :param value: the single entry
         :return: None if no empty value found, otherwise the specific sub-field (value, units, text, term)
         which contains empty value
@@ -632,45 +629,6 @@ class ReadExcelFile:
                     mandatory_fields.append(field_name)
         return required_fields, allow_multiple_fields, mandatory_fields
 
-    def get_data_requiring_validation(self, row_data, field_names_indexes, sheet_name):
-        """
-        This function will fetch information about organism
-        :param row_data: row from template to fetch information from
-        :param field_names_indexes: dict with field names and indexes from json
-        :param sheet_name: name of the sheet
-        :return: dict with required information
-        """
-        data_to_validate = dict()
-        # ruleset_section_types indicates which ruleset will be applied to the current sheet
-        # e.g. {'core': 'experiments_core', 'type': None, 'custom': 'custom'}
-        if sheet_name == 'chip-seq input dna':
-            ruleset_section_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
-                                     **CHIP_SEQ_INPUT_DNA_JSON_TYPES}
-        elif sheet_name == 'chip-seq dna-binding proteins':
-            ruleset_section_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
-                                     **CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES}
-        else:
-            if self.data_file_type == SAMPLE:
-                ruleset_section_types = {**SAMPLES_SPECIFIC_JSON_TYPES, **JSON_TYPES}
-            elif self.data_file_type == ANALYSIS:
-                ruleset_section_types = {**JSON_TYPES}
-            else:
-                ruleset_section_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES}
-
-        for section_type, section_pointer in ruleset_section_types.items():
-            if section_pointer is not None:
-                data_to_validate.setdefault(section_pointer, dict())
-                for field_name, indexes in field_names_indexes[section_type].items():
-                    date_field_flag = self.check_cell_is_date(field_name)
-                    self.add_row(field_name, indexes, data_to_validate[section_pointer],
-                                 row_data, date_field_flag)
-            else:
-                for field_name, indexes in field_names_indexes[section_type].items():
-                    date_field_flag = self.check_cell_is_date(field_name)
-                    self.add_row(field_name, indexes, data_to_validate,
-                                 row_data, date_field_flag)
-        return data_to_validate
-
     @staticmethod
     def check_cell_is_ratio_or_number(field_name: str):
         """
@@ -697,69 +655,6 @@ class ReadExcelFile:
         else:
             return False
 
-    def add_row(self, field_name, indexes, organism_to_validate, input_data,
-                date_field):
-        """
-        High-level function to get data from table
-        :param field_name: sheet_name of the field to add
-        :param indexes: subfields of this field
-        :param organism_to_validate: results holder
-        :param input_data: row from table
-        :param date_field: date field to check
-        """
-        if isinstance(indexes, list):
-            tmp_list = list()
-            for index in indexes:
-                tmp_data = self.get_data(input_data, date_field, **index)
-                if len(tmp_data) != 0:
-                    tmp_list.append(tmp_data)
-            if len(tmp_list) != 0:
-                organism_to_validate[field_name] = tmp_list
-        else:
-            self.check_existence(field_name, organism_to_validate,
-                                 self.get_data(input_data, date_field,
-                                               **indexes))
-
-    def get_data(self, input_data, date_field, **fields):
-        """
-        This function will create dict with required fields and required
-        information
-        :param input_data: row from template
-        :param date_field: boolean value is this data is date data
-        :param fields: dict with field sheet_name as key and field index as value
-        :return: dict with required information
-        """
-        data_to_return = dict()
-        for field_name, field_index in fields.items():
-            cell_value = input_data[field_index]
-            if cell_value != '':
-                # Convert all "_" in term ids to ":" as required by validator
-                if field_name == 'term' and isinstance(cell_value, str) \
-                        and "_" in cell_value:
-                    cell_value = cell_value.replace("_", ":")
-                # Convert date data to string (as Excel stores date in float format)
-                # According to https://xlrd.readthedocs.io/en/latest/dates.html, using this package’s xldate_as_tuple()
-                # function to convert numbers from a workbook, you must use the datemode attribute of the Book object
-                if date_field is True and isinstance(cell_value, float) \
-                        and field_name == 'value':
-                    y, m, d, _, _, _ = xlrd.xldate_as_tuple(cell_value,
-                                                            self.wb_datemode)
-                    m = self.add_leading_zero(m)
-                    d = self.add_leading_zero(d)
-                    cell_value = f"{y}-{m}-{d}"
-                data_to_return[field_name] = cell_value
-        return data_to_return
-
-    @staticmethod
-    def check_existence(field_name, data_to_validate, template_data):
-        """
-        This function will check whether template_data has required field
-        :param field_name: sheet_name of field
-        :param data_to_validate: data dict for validation
-        :param template_data: template data to check
-        """
-        if len(template_data) != 0:
-            data_to_validate[field_name] = template_data
 
     @staticmethod
     def add_leading_zero(date_item):
@@ -773,6 +668,9 @@ class ReadExcelFile:
         else:
             return date_item
 
+    # TODO: not used at all, keep it here as a reminder
+    # TODO: after adding organism into sample type rulesets,
+    # TODO: assay_type into experiment type rulesets, the function can be deleted completely
     def check_sheet_name_material_consistency(self, sample_data, sheet_name):
         """
         This function checks that sheet has consistent material
