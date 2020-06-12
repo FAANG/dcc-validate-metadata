@@ -1,4 +1,5 @@
 from .helpers import check_field_existence, remove_underscores
+import requests
 
 
 class ExperimentFileConverter:
@@ -37,7 +38,7 @@ class ExperimentFileConverter:
             library_selection = record['library_selection']
             library_layout = record['library_layout']
             # TODO check for this value
-            nominal_length = record['nominal_length']
+            nominal_length = int(record['nominal_length'])
             library_construction_protocol = check_field_existence(
                 'library_construction_protocol', record)
             platform = record['platform']
@@ -48,7 +49,16 @@ class ExperimentFileConverter:
             if title is not None:
                 result += f'\t\t<TITLE>{title}</TITLE>\n'
 
-            result += f'\t\t<STUDY_REF refname="{study_ref}"/>\n'
+            if self.matched_study_alias(study_ref):
+                result += f'\t\t<STUDY_REF refname="{study_ref}"/>\n'
+            else:
+                tmp = self.xml_updating_existing_study(study_ref)
+                if tmp:
+                    result += tmp
+                else:
+                    # should report error, the used study ref does not match neither study alias
+                    # nor existing study accessions
+                    pass
 
             result += '\t\t<DESIGN>\n'
             result += f'\t\t\t<DESIGN_DESCRIPTION>' \
@@ -81,8 +91,8 @@ class ExperimentFileConverter:
             if instrument_model is not None:
                 result += f'\t\t\t\t<INSTRUMENT_MODEL>' \
                           f'{instrument_model}</INSTRUMENT_MODEL>\n'
-            result += f'\t\t\t<{platform}>\n'
-            result += '\t\t<PLATFORM>\n'
+            result += f'\t\t\t</{platform}>\n'
+            result += '\t\t</PLATFORM>\n'
 
             result += '\t\t<EXPERIMENT_ATTRIBUTES>\n'
             faang_experiment = self.find_faang_experiment(sample_descriptor)
@@ -114,6 +124,50 @@ class ExperimentFileConverter:
                     record_id = record['custom']['sample_descriptor']['value']
                     if sample_descriptor == record_id:
                         return record
+
+    def matched_study_alias(self, study_alias: str) -> bool:
+        """
+        check whether the study alias used in the experiment ena sheet matches to any alias defined in the study sheet
+        :param study_alias: the study alias used for the experiment
+        :return: True when matched, False otherwise
+        """
+        for record in self.json_to_convert['study']:
+            if record['study_alias'] == study_alias:
+                return True
+        return False
+
+    @staticmethod
+    def xml_updating_existing_study(accession: str) -> str:
+        """
+        Search ENA by the given accession, if found as one of the existing study, generate the correct study referencing
+        XML string
+        :param accession: the study alias used in the experiment ena sheet
+        :return: empty string if not found or the correct string for the found study accession
+        """
+        url_base = 'https://www.ebi.ac.uk/ena/portal/api/search?dataPortal=ena&' \
+                   'fields=study_accession,secondary_study_accession&format=json&result=read_study&'
+        field_names = ['study_accession', 'secondary_study_accession']
+        prjeb_accession = ''
+        erp_accession = ''
+        for field_name in field_names:
+            url = f'{url_base}query={field_name}%3D%22{accession}%22'
+            result = requests.get(url)
+            if result.status_code == 200:  # found
+                json_result = result.json()[0]
+                prjeb_accession = json_result['study_accession']
+                erp_accession = json_result['secondary_study_accession']
+                break
+
+        result = ''
+        if prjeb_accession:
+            tab_str = '\t\t'
+            result = f'{tab_str}<STUDY_REF accession="{erp_accession}">\n'
+            result += f'{tab_str}\t<IDENTIFIERS>\n'
+            result += f'{tab_str}\t\t<PRIMARY_ID>{erp_accession}</PRIMARY_ID>\n'
+            result += f'{tab_str}\t\t<SECONDARY_ID>{prjeb_accession}</SECONDARY_ID>\n'
+            result += f'{tab_str}\t</IDENTIFIERS>\n'
+            result += f'{tab_str}</STUDY_REF>\n'
+        return result
 
     @staticmethod
     def parse_faang_experiment(faang_experiment):
@@ -258,3 +312,4 @@ class ExperimentFileConverter:
             result += '\t</SUBMISSION>\n'
         result += '</SUBMISSION_SET>'
         return result
+

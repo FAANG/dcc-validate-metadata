@@ -1,423 +1,660 @@
+"""
+The main script which reads in the Excel file and the corresponding rulesets
+Steps
+1. Initialize with the Excel file path
+2. Preliminary check: contains readme sheet? the right template used?
+3. Read in the core ruleset which applies to all data in the template (except the special sheets in Experiment template)
+4. Iterate all sheets in the template file
+    a. special sheets: e.g. allowed value sheet, related to submission sheets including runs, studies etc
+    b. Normal sheet
+    c. Unexpected sheet: report error
+5. For each normal sheet
+    a. if empty, skip
+    b. check whether all expected id columns exist (id columns are do expected in the ruleset)
+        i. if yes, continue
+        ii. if no, report the error to the user
+    c. load the corresponding type/module ruleset and work out which columns are mandatory
+    d. check the template against the ruleset for three things
+        i.  all fields with multiple values are allowed to have multiple values in the ruleset
+        ii. if any mandatory field missing, report to the user for correction
+        iii. any unaccounted for fields will be classified as custom fields
+    e. read each line
+        i. check whether each row has values for id columns (mutliple id columns allowed which means that
+            the key for the record is the combination of all id columns)
+        ii. check all mandatory fields contain value (the validity of the value will be checked later)
+"""
 import xlrd
 import os
 from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, \
     SAMPLES_SPECIFIC_JSON_TYPES, EXPERIMENTS_SPECIFIC_JSON_TYPES, \
-    CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, \
-    EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, CHIP_SEQ_MODULE_RULES, \
-    SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES
+    CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, SPECIAL_SHEETS, \
+    SAMPLE, EXPERIMENT, ANALYSIS, ID_COLUMNS_WITH_INDICES, MINIMUM_TEMPLATE_VERSION_REQUIREMENT, \
+    CORE_NAMES, MODULE_SHEET
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
-    get_rules_json
+    get_core_ruleset_json, get_type_ruleset_json, get_module_ruleset_json, get_constant_value
+import json
+from typing import Dict
 
 
 class ReadExcelFile:
-    def __init__(self, file_path, json_type):
+    def __init__(self, file_path, data_file_type):
         self.file_path = file_path
-        self.json_type = json_type
+        self.data_file_type = data_file_type
         self.headers = list()
         self.array_fields = list()
         self.wb_datemode = None
+        self.rulesets = dict()
 
     def start_conversion(self):
         """
         Main function that will convert xlsx file to proper json format
-        :return: submitted data in proper json format
+        :return: two values, first the message, second the submitted data in proper json format
+        to report an error, the message must contains Error, suggested pattern Error: error_detail
         """
+        # TODO introduce validation result object which contains status, details etc. instead of current string pattern
         wb = xlrd.open_workbook(self.file_path)
         self.wb_datemode = wb.datemode
+        # keys are sheet names and values are lists of dicts, each element in the list is one row
         data = dict()
+        # for frontend usage, the structure of the template
         structure = dict()
-        for sh in wb.sheets():
-            if sh.name not in ALLOWED_SHEET_NAMES:
-                if sh.name == 'faang_field_values':
+        # Step 2: Preliminary check: contains readme sheet? the right template used?
+        sheets = wb.sheets()
+        # readme sheet is expected to always be the first sheet
+        readme_sheet = sheets.pop(0)
+        readme_flag, readme_check_result = self.check_readme_sheet(readme_sheet)
+        if not readme_flag:
+            os.remove(self.file_path)
+            return f"Error: {readme_check_result}", structure
+        # Step 3: Read in the core ruleset
+        self.rulesets['core'] = get_core_ruleset_json(self.data_file_type)
+
+        # Step 4: Iterate all sheets
+        # the expected sheets according to data type
+        data_specific_allowed_sheets = ALLOWED_SHEET_NAMES[self.data_file_type]
+        for sh in sheets:
+            sheet_name = convert_to_snake_case(sh.name)
+            if sheet_name not in data_specific_allowed_sheets:
+                if sheet_name == 'faang_field_values':
+                    # TODO: read in the limited values for columns, particularly for fields not in the ruleset
+                    # TODO: the ones limited in ENA e.g. existing_study_type
                     continue
-                elif sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES \
-                        and self.json_type == 'experiments':
-                    special_sheet_data = self.get_additional_data(
-                        sh, sh.name, EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES)
-                    if 'Error' in special_sheet_data:
+                elif self.data_file_type in SPECIAL_SHEETS:
+                    special_sheet_list = SPECIAL_SHEETS[self.data_file_type]
+                    if sheet_name in special_sheet_list:
+                        expected_special_fields = special_sheet_list[sheet_name]
+                        special_sheet_data = self.get_special_sheet_data(sh, expected_special_fields)
+                        if 'Error' in special_sheet_data:
+                            os.remove(self.file_path)
+                            return special_sheet_data, structure
+                        data[sheet_name] = special_sheet_data
+                        continue
+                    else:
                         os.remove(self.file_path)
-                        return special_sheet_data, structure
-                    data[convert_to_snake_case(sh.name)] = special_sheet_data
-                    continue
-                elif sh.name in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES \
-                        and self.json_type == 'samples':
-                    special_sheet_data = self.get_additional_data(
-                        sh, sh.name, SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES)
-                    if 'Error' in special_sheet_data:
-                        os.remove(self.file_path)
-                        return special_sheet_data, structure
-                    data[convert_to_snake_case(sh.name)] = special_sheet_data
-                    continue
+                        return f"Error: there are no rules for {sh.name} type!", \
+                               structure
                 else:
                     os.remove(self.file_path)
-                    return f"Error: there are no rules for {sh.name} type!", \
+                    return f"Error: unexpected sheet name {sh.name}!", \
                            structure
+            # Step 5: Normal sheet
             else:
-                tmp = list()
-                self.headers = [
-                    convert_to_snake_case(item) for item in sh.row_values(0)]
-                try:
-                    field_names_indexes = self.get_field_names_and_indexes(
-                        sh.name)
-                    structure[convert_to_snake_case(sh.name)] = \
-                        field_names_indexes
-                except ValueError as err:
+                # Step 5a: if no data in the sheet (only containing headers), skip the sheet
+                if sh.nrows < 2:
+                    continue
+                # Step 5b: check id columns
+                id_columns = dict()
+                if self.data_file_type in ID_COLUMNS_WITH_INDICES:
+                    id_columns = ID_COLUMNS_WITH_INDICES[self.data_file_type]
+                    check_id_flag, check_id_detail = self.check_id_columns(sh, id_columns)
+                else:
+                    return f"Error: no id columns defined for {self.data_file_type}", structure
+                if not check_id_flag:
                     os.remove(self.file_path)
-                    return err.args[0], structure
+                    return f"Error: {check_id_detail}", structure
+
+                # Step 5c: Load type and module ruleset
+                # read the json files of the rulesets from dcc-metadata repository
+                snaked_sheet_name = convert_to_snake_case(sh.name)
+                self.rulesets['type'] = get_type_ruleset_json(self.data_file_type, snaked_sheet_name)
+                self.rulesets['module'] = get_module_ruleset_json(self.data_file_type, snaked_sheet_name)
+                # convert the json-schema ruleset into field names
+                field_names: Dict[str, Dict] = dict()
+                multiple_values_field_list = list()
+                mandatory_field_list = list()
+                for ruleset_type, section_detail in self.rulesets.items():
+                    if section_detail is not None:
+                        field_names[ruleset_type], tmp_multiple, tmp_mandatory = \
+                            self.parse_ruleset_json(section_detail)
+                        multiple_values_field_list.extend(tmp_multiple)
+                        mandatory_field_list.extend(tmp_mandatory)
+                # get all field names which will be used to
+                # determine and process custom fields (fields not in the ruleset)
+                all_field_names_in_ruleset = set()
+                for section_detail in field_names.values():
+                    if section_detail is not None:
+                        for field_name in section_detail:
+                            all_field_names_in_ruleset.add(field_name)
+
+                # Step 5d: check the template against the ruleset
+                # read in the headers in the current sheet and process
+                headers_in_template = dict()
+                # for display purpose to keep the original header, the keys in headers_in_template are snake cased
+                multiple_header_field_dict = dict()
+                for location, header in enumerate(sh.row_values(0)):
+                    header = convert_to_snake_case(header)
+                    # header as unit and term source id should have already been dealt with
+                    if header in SPECIAL_PROPERTIES:
+                        continue
+                    main, additional = self.determine_subfields(sh.row_values(0), location)
+                    if header in headers_in_template:  # has been dealt with already, i.e. multiple
+                        if main != headers_in_template[header]['main'] or \
+                                additional != headers_in_template[header]['additional']:
+                            return f"Error: In the sheet {sh.name}, column {sh.row_values(0)[location]} " \
+                                   f"has multiple appearances but different structure", structure
+                        multiple_header_field_dict[header] = sh.row_values(0)[location]
+                        headers_in_template[header]['location'].append(location)
+                    else:
+                        headers_in_template.setdefault(header, dict())
+                        headers_in_template[header].setdefault('location', list())
+                        headers_in_template[header]['location'].append(location)
+                        headers_in_template[header]['main'] = main
+                        headers_in_template[header]['additional'] = additional
+
+                # 5di: check whether multiple values allowed
+                for tmp in multiple_header_field_dict:
+                    # only check fields in the ruleset
+                    if tmp in all_field_names_in_ruleset and tmp not in multiple_values_field_list:
+                        return f"Error: In the sheet {sh.name}, column {multiple_header_field_dict[tmp]} " \
+                               f"has multiple values which is not allowed in the ruleset", structure
+                # 5d ii: check all mandatory fields exist in the template
+                for tmp in mandatory_field_list:
+                    if tmp not in headers_in_template:
+                        return f"Error: the mandatory field {tmp.replace('_', ' ')} could not be found " \
+                               f"in the {sh.name} sheet", structure
+                # 5d iii: map template to the ruleset (field_names) to add locations into it (field_names_with_indices)
+                # meanwhile work out the fields in the template are not in the ruleset
+                # those fields will be listed as custom fields
+
+                not_found = headers_in_template
+                field_names_with_indices = dict()
+                for ruleset_type, section_ruleset_detail in field_names.items():
+                    section_with_indices = dict()
+                    for field_name, field_subfields_in_ruleset in section_ruleset_detail.items():
+                        field_in_template = headers_in_template[field_name]
+                        field_mapped = self.map_field_for_locations(field_name, field_in_template,
+                                                                    field_subfields_in_ruleset)
+                        # only return string (error message) when there is an error
+                        if type(field_mapped) is str:
+                            return field_mapped, structure
+                        section_with_indices[field_name] = field_mapped
+                        not_found.pop(field_name)
+                    field_names_with_indices[ruleset_type] = section_with_indices
+                # work out custom fields
+                field_names_with_indices['custom'] = self.extract_custom_fields(not_found)
+                structure[sheet_name] = field_names_with_indices
+                # self.headers = [
+                #     convert_to_snake_case(item) for item in sh.row_values(0)]
+
+                # by reaching here, the ruleset has been loaded successfully,
+                # field_names_with_indices, id_columns and mandatory_field_list will be used to read/check actual data
+                # step 5e read in each line of data
+                mapped_row_data = dict()
                 for row_number in range(1, sh.nrows):
-                    sample_data = self.get_sample_data(
-                        sh.row_values(row_number), field_names_indexes, sh.name)
-                    material_consistency = \
-                        self.check_sheet_name_material_consistency(sample_data,
-                                                                   sh.name)
-                    if material_consistency is not False:
-                        os.remove(self.file_path)
-                        return material_consistency, structure
+                    raw_row_data = sh.row_values(row_number)
+                    # generate the id part for the current record (row)
+                    tmp_id_comps = list()
+                    id_values = dict()
+                    for id_field, id_loc in id_columns.items():
+                        if raw_row_data[id_loc] == '':
+                            return f"Error: the record {row_number} in sheet {sh.name} has empty id column " \
+                                   f"{id_field}. Please make sure that all records in that sheet have values" \
+                                   f" for that column", structure
+                        id_values[id_field] = raw_row_data[id_loc]
+                        tmp_id_comps.append(raw_row_data[id_loc])
+                    # id string is the combination of values of all id columns
+                    id_string = "-".join(tmp_id_comps)
+                    if id_string in mapped_row_data:
+                        return f"Error: In the {sh.name} sheet, there are more than one records using the same " \
+                               f"values for id columns {json.dumps(mapped_row_data[id_string]['id'])}", structure
+                    mapped_row_data.setdefault(id_string, dict())
+                    mapped_row_data[id_string]['id'] = id_values
+                    # rulset_type is one of core, type, module or custom
+                    for ruleset_type, section_detail in field_names_with_indices.items():
+                        data_in_one_section = dict()
+                        for field_name, field_detail in section_detail.items():
+                            if type(field_detail) is list:
+                                data_in_one_section[field_name] = \
+                                    self.get_multiple_values(field_name, field_detail, raw_row_data)
+                            else:
+                                data_in_one_section[field_name] = \
+                                    self.get_single_value(field_name, field_detail, raw_row_data)
+                        data_in_one_section = self.remove_empty_fields(data_in_one_section)
+                        mapped_row_data[id_string][ruleset_type] = data_in_one_section
 
-                    tmp.append(sample_data)
+                    empty_mandatory_field = \
+                        self.check_empty_mandatory_fields(mapped_row_data[id_string], mandatory_field_list)
+                    if empty_mandatory_field is not None:
+                        return f"Error: in the {sh.name} sheet, the mandatory field {empty_mandatory_field} " \
+                               f"in record {row_number} has empty value", structure
 
-                if len(tmp) > 0:
-                    data[convert_to_snake_case(sh.name)] = tmp
+                # TODO: digest this temporary codes,
+                # TODO: i.e. gradually update validation part codes to avoid this conversion
+                # the codes below is to convert the new data structure into the old data structure to allow following
+                # validation work
+                # the benefits of the new structure include
+                # 1. dict structure which allows quick references among sheets as the key of dict is the record id
+                # e.g. 4 records in experiment ena sheets, 2 of them are atac-seq and the other 2 are cage-seq
+                # 2. treat core, type, module the same, not like the old structure type data is flattened, which improve
+                # the code re-usage and module name needs to change
+                # 3. new structure has some automatic curation e.g. string to float for ratio value
+                converted = list()
+                for mapped_record_data in mapped_row_data.values():
+                    converted_record = dict()
+                    converted_record['custom'] = mapped_record_data['custom']
+                    for type_field_name, type_field_value in mapped_record_data['type'].items():
+                        converted_record[type_field_name] = type_field_value
+                    if 'core' in mapped_record_data:
+                        converted_record[CORE_NAMES[self.data_file_type]] = mapped_record_data['core']
+                    if 'module' in mapped_record_data:
+                        module_name = get_constant_value(self.data_file_type, sheet_name, MODULE_SHEET)
+                        converted_record[module_name] = mapped_record_data['module']
+                    converted.append(converted_record)
+
+                data[convert_to_snake_case(sh.name)] = converted
         os.remove(self.file_path)
         return data, structure
 
-    @staticmethod
-    def get_additional_data(table_object, sheet_name,
-                            allowed_sheet_names):
+    def remove_empty_fields(self, section_detail: dict):
         """
-        This function will parse study sheet of a table
-        :param table_object: object to get data from
-        :param sheet_name: name of the sheet to be parsed
-        :param allowed_sheet_names: list of sheet names that are allowed
+        Remove empty fields from the section data
+        :param section_detail: the section data
+        :return: the section data without empty fields
+        """
+        result = dict()
+        for field_name, field_value in section_detail.items():
+            if isinstance(field_value, list):
+                tmp = self.remove_empty_in_list(field_value)
+            else:
+                tmp = self.remove_empty_in_single(field_value)
+            if tmp:
+                result[field_name] = tmp
+        return result
+
+    def remove_empty_in_list(self, list_value):
+        """
+        Make empty field having list value to None
+        :param list_value: the field value expected to be a list
+        :return: None if all elements in the list are empty, otherwise the list only containing non-empty elements
+        """
+        result = list()
+        for one in list_value:
+            tmp = self.remove_empty_in_single(one)
+            if tmp:
+                result.append(tmp)
+        if result:
+            return result
+        return None
+
+    @staticmethod
+    def remove_empty_in_single(single_value: dict):
+        """
+        make field containing empty value to None
+        :param single_value: the field value expected to be a single dict
+        :return: None if all values in the dict are empty or the original value
+        """
+        no_value_flag = True
+        for v in single_value.values():
+            if v and len(str(v)) > 0:
+                no_value_flag = False
+                break
+        if no_value_flag:
+            return None
+        else:
+            return single_value
+
+    def check_empty_mandatory_fields(self, record_data, mandatory_field_list):
+        """
+        Check all mandatory fields to see whether containing empty value
+        :param record_data: the data of one record
+        :param mandatory_field_list: all mandatory fields
+        :return: None if all mandatory fields have values,
+        or the name of the first mandatory field which has empty value
+        """
+        for section_name, section_detail in record_data.items():
+            # custom fields and id fields do not have rulesets, no need to check
+            if section_name == 'custom' or section_name == 'id':
+                continue
+            for field_name, field_value in section_detail.items():
+                if field_name not in mandatory_field_list:
+                    continue
+                if type(field_value) is list:
+                    for one in field_value:
+                        flag = self.check_empty_value(one)
+                        if flag is not None:
+                            return f"{field_name} ({flag})"
+                else:
+                    flag = self.check_empty_value(field_value)
+                    if flag is not None:
+                        return f"{field_name} ({flag})"
+        return None
+
+    @staticmethod
+    def check_empty_value(value: dict):
+        """
+        check single entry (including one of the multiple values) contains empty value
+        :param value: the single entry
+        :return: None if no empty value found, otherwise the specific sub-field (value, units, text, term)
+        which contains empty value
+        """
+        for k, v in value.items():
+            if v is None or len(str(v)) == 0:
+                return k
+        return None
+
+    def get_multiple_values(self, field_name, field_detail, raw_row_data):
+        """
+        Get values for a field allowing multiple values
+        :param field_name: the name of the field
+        :param field_detail: the structure of the field with indices
+        :param raw_row_data: the record raw data in the template
+        :return: the list of
+        """
+        result = list()
+        for element in field_detail:
+            one = self.get_single_value(field_name, element, raw_row_data)
+            result.append(one)
+        return result
+
+    def get_single_value(self, field_name, field_detail, raw_row_data):
+        """
+        Get values for a field expecting single value and
+        guarantee value is in number for non-date field with unit and ratio field
+        :param field_name: the name of the field
+        :param field_detail: the structure of the field with indices
+        :param raw_row_data: the record raw data in the template
+        :return: the mapped field with value
+        """
+        result = dict()
+        for subfield, index in field_detail.items():
+            result[subfield] = raw_row_data[index]
+            # Convert all "_" in term ids to ":" as required by validator
+            if subfield == 'term' and isinstance(result[subfield], str) and "_" in result[subfield]:
+                result[subfield] = result[subfield].replace("_", ":")
+
+        # make sure every non-empty value with units (not date units) are in the form of float
+        if 'value' in result and result['value'] is None:
+            return None
+        if self.check_cell_is_date(field_name):
+            if 'value' in result and isinstance(result['value'], float):
+                y, m, d, _, _, _ = xlrd.xldate_as_tuple(result['value'], self.wb_datemode)
+                m = self.add_leading_zero(m)
+                d = self.add_leading_zero(d)
+                result['value'] = f"{y}-{m}-{d}"
+        else:
+            if 'units' in field_detail and isinstance(result['value'], str) and len(result['value']) > 0:
+                result['value'] = float(result['value'])
+            elif self.check_cell_is_ratio_or_number(field_name) and isinstance(result['value'], str):
+                result['value'] = float(result['value'])
+
+        return result
+
+    @staticmethod
+    def determine_subfields(headers, location):
+        """
+        determine the data type of the particular header according to the location
+        :param headers: the header row in the template
+        :param location: the location
+        :return: the list of expected sub-fields
+        """
+        if location >= len(headers) - 1:
+            return 'value', None
+        next_header = headers[location + 1]
+        next_header = convert_to_snake_case(next_header)
+        if next_header == 'unit':
+            return 'value', 'units'
+        elif next_header == 'term_source_id':
+            return 'text', 'term'
+        else:
+            return 'value', None
+
+    @staticmethod
+    def map_field_for_locations(field_name, field_in_template, field_subfields_in_ruleset):
+        """
+        map one field from ruleset to template to get column location information
+        :param field_name: the name of the field
+        :param field_in_template: the map of column(s) with the field name in the given template
+        e.g.
+        :param field_subfields_in_ruleset: the list of the expected subfields in the ruleset,
+        e.g. ['value'], or ['text','term']
+        :return: the location-mapped result (list for multiple or dict for single value) or the error message
+        """
+        if len(field_subfields_in_ruleset) == 1:  # just 'value' for the field
+            if field_in_template['additional'] is not None:
+                return f"Error: Field {field_name} only expects a value, please check the provided template"
+            if len(field_in_template['location']) == 1:  # single value
+                result = dict()
+                result[field_in_template['main']] = field_in_template['location'][0]
+            else:  # multiple values for the field
+                result = list()
+                for loc in field_in_template['location']:
+                    result.append({field_in_template['main']: loc})
+        else:  # either ['value', 'units'] or ['text', 'term']
+            if field_in_template['main'] != field_subfields_in_ruleset[0] or \
+                    field_in_template['additional'] != field_subfields_in_ruleset[1]:
+                return f"Error: the field {field_name} does not match the corresponding ruleset"
+            if len(field_in_template['location']) == 1:  # single value
+                result = dict()
+                result[field_subfields_in_ruleset[0]] = field_in_template['location'][0]
+                result[field_subfields_in_ruleset[1]] = field_in_template['location'][0] + 1
+            else:
+                result = list()
+                for loc in field_in_template['location']:
+                    tmp = dict()
+                    tmp[field_subfields_in_ruleset[0]] = loc
+                    tmp[field_subfields_in_ruleset[1]] = loc + 1
+                    result.append(tmp)
+        return result
+
+    def extract_custom_fields(self, not_found):
+        """
+        extract custom fields from the fields not mapped in the template
+        :param not_found: the dict of fields present in the template but not mapped to rulesets
+        :return: custom fields
+        """
+        # custom fields are the fields not in the ruleset, apart from this,
+        # the returned structure should be exactly the same as the structure returned from fields having rulesets
+        # hence logical to re-use the method (map_field_for_locations) which generates the structure for ruleset fields
+        # the only thing needs to do is to create the artificial field_subfields_in_ruleset
+        result = dict()
+        for field_name, field_in_template in not_found.items():
+            # create the artificial variable
+            if field_in_template['additional'] is None:
+                artificial_subfields = [field_in_template['main']]
+            else:
+                artificial_subfields = [field_in_template['main'], field_in_template['additional']]
+            result[field_name] = self.map_field_for_locations(field_name, field_in_template, artificial_subfields)
+        return result
+
+    @staticmethod
+    def check_id_columns(data_sheet, id_columns_info: dict):
+        """
+        check whether the data sheet contains the expected identification column headers
+        :param data_sheet: the sheet of the data
+        :param id_columns_info: the expected column names with indices
+        :return: flag and the error message (if flag is False)
+        """
+        headers = data_sheet.row_values(0)
+        for id_column_name, id_column_index in id_columns_info.items():
+            if id_column_index > len(headers) - 1:
+                return False, f"The template seems to have been modified in sheet {data_sheet.name}: " \
+                              f"id column {id_column_name} is expected to be at column {id_column_index + 1}"
+            actual_header_value = convert_to_snake_case(headers[id_column_index])
+            if actual_header_value != id_column_name:
+                return False, f"The template seems to have been modified in sheet {data_sheet.name}: " \
+                              f"column {id_column_index + 1} is expected to have column name {id_column_name}, " \
+                              f"but the actual values is {actual_header_value}"
+        return True, ""
+
+    def check_readme_sheet(self, readme_sheet):
+        """
+        Check the content of the readme sheet, currently check two things: version and type of the template
+        :param readme_sheet: the readme sheet in the template
+        :return: check result (True or False) and details
+        """
+        if readme_sheet.name != 'readme':
+            return False, "The first sheet of the template must have the name as readme. " \
+                          "Please do not modify the structure of the provided template."
+
+        attributes = dict()
+        for row_number in range(1, readme_sheet.nrows):
+            # check 2nd cell of each row, if not empty, assume to be the attribute value
+            # if empty, then it is the description of the template, ignored
+            if len(str(readme_sheet.row_values(row_number)[1])):
+                attr_name = str(readme_sheet.row_values(row_number)[0]).lower()
+                attr_value = str(readme_sheet.row_values(row_number)[1]).lower()
+                attributes[attr_name] = attr_value
+
+        if attributes and 'type' in attributes:
+            template_type = attributes['type']
+            if template_type != self.data_file_type:
+                return False, f"The selected validation type is {self.data_file_type}, " \
+                              f"however the template is for {template_type} type"
+        else:
+            return False, "Could not find template type information in the readme sheet. " \
+                          "Please do not modify the provided template."
+
+        template_version = 0
+        if attributes and 'template version' in attributes:
+            try:
+                template_version = float(attributes['template version'])
+            except ValueError:
+                return False, f"The value provided for template version" \
+                              f" ({attributes['template version']}) is not a valid number"
+        if template_version < MINIMUM_TEMPLATE_VERSION_REQUIREMENT:
+            if template_version == 0:
+                return False, f"Missing template version information in the readme sheet"
+            else:
+                return False, f"Please re-download the template from data.faang.org as the template you are using " \
+                              f"(version {template_version}) is out of date and no longer supported."
+        return True, ""
+
+    def get_special_sheet_data(self, sheet, sheet_fields):
+        """
+        This function will parse non assay type specific sheets
+        in the template (currently only existing in experiment template)
+        the returned data is a list of rows, each row is represented as a dict with filed name as key and value as value
+        :param sheet: object to get data from
+        :param sheet_fields: the expected fields for the special sheet defined in the constants.py
         :return: parsed data
         """
+        sheet_name = sheet.name
         data = list()
-        sheet_fields = allowed_sheet_names[sheet_name]
-        for row_number in range(1, table_object.nrows):
+        for row_number in range(1, sheet.nrows):
             tmp = dict()
-            for index, additional_field in enumerate(sheet_fields['all']):
+            for index, field_name in enumerate(sheet_fields['all']):
                 try:
-                    tmp[additional_field] = table_object.row_values(
-                        row_number)[index]
+                    tmp[field_name] = sheet.row_values(row_number)[index]
+                    # Convert date data to string (as Excel stores date in float format)
+                    # According to https://xlrd.readthedocs.io/en/latest/dates.html, using this package’s
+                    # xldate_as_tuple() function to convert numbers from a workbook, you must use
+                    # the datemode attribute of the WorkBook object
+                    # has to be hard-coded as only run_date requires dateTime type, all others use date type
+                    if field_name == 'run_date':
+                        date_value = sheet.row_values(row_number)[index]
+                        if isinstance(date_value, float):
+                            # noinspection PyPep8Naming
+                            y, m, d, H, M, S = \
+                                xlrd.xldate_as_tuple(sheet.row_values(row_number)[index], self.wb_datemode)
+                            m = self.add_leading_zero(m)
+                            d = self.add_leading_zero(d)
+                            # noinspection PyPep8Naming
+                            H = self.add_leading_zero(H)
+                            # noinspection PyPep8Naming
+                            M = self.add_leading_zero(M)
+                            # noinspection PyPep8Naming
+                            S = self.add_leading_zero(S)
+                            cell_value = f"{y}-{m}-{d}T{H}:{M}:{S}"
+                            tmp[field_name] = cell_value
+                        elif isinstance(date_value, str):
+                            if 'T' in date_value:
+                                tmp[field_name] = date_value
+                            else:
+                                tmp[field_name] = f"{date_value}T00:00:00"
+                        else:
+                            return f"Error: run_date field has unrecognized value {date_value}"
+
                 except IndexError:
-                    if additional_field in sheet_fields['mandatory']:
-                        error_field_name = ' '.join(additional_field.split('_'))
-                        return f"Error: '{error_field_name}' field is " \
-                               f"mandatory in '{sheet_name}' sheet"
-                if additional_field in sheet_fields['mandatory'] \
-                        and tmp[additional_field] == '':
-                    error_field_name = ' '.join(additional_field.split('_'))
-                    return f"Error: '{error_field_name}' field is mandatory " \
-                           f"in '{sheet_name}' sheet"
+                    if field_name in sheet_fields['mandatory']:
+                        error_field_name = ' '.join(field_name.split('_'))
+                        return f'Error: {error_field_name} field is mandatory in sheet {sheet_name}'
+                if field_name in sheet_fields['mandatory'] \
+                        and tmp[field_name] == '':
+                    error_field_name = ' '.join(field_name.split('_'))
+                    return f'Error: mandatory field {error_field_name} in sheet {sheet_name} cannot have empty value'
             data.append(tmp)
         if len(data) == 0:
             return f"Error: data for '{sheet_name}' sheet was not provided"
         return data
 
-    def get_field_names_and_indexes(self, sheet_name):
+    @staticmethod
+    def parse_ruleset_json(json_to_parse):
         """
-        This function will create dict with field_names as keys and field
-        sub_names
-        with its indices inside template as values
-        :return dict with core and type field_names and indexes
+        This function will parse ruleset in json
+        :param json_to_parse: json file (not link) that should be parsed
+        :return: dict with field_names as keys and expected sub field list as values
+                e.g. {'organism': ['text', 'term'], 'birth_date': ['value', 'units'], 'health_status': ['text', 'term']}
+                 and fields which allow multiple values, e.g. ['health_status', 'child_of']
         """
-        field_names = dict()
-        array_fields = list()
-        field_names_and_indexes = dict()
-
-        url = ALLOWED_SHEET_NAMES[sheet_name]
-        # Check for chip-seq module rules
-        if sheet_name in CHIP_SEQ_MODULE_RULES:
-            type_json, core_json, module_json = get_rules_json(
-                url, self.json_type, CHIP_SEQ_MODULE_RULES[sheet_name])
-            field_names['module'], tmp = self.parse_json(module_json)
-            array_fields.extend(tmp)
-            field_names['core'], tmp = self.parse_json(core_json)
-            array_fields.extend(tmp)
-        # this experiment sheets will only have type rules
-        elif sheet_name in ['faang', 'ena', 'eva']:
-            type_json = get_rules_json(url, self.json_type)
-        else:
-            type_json, core_json = get_rules_json(url, self.json_type)
-            field_names['core'], tmp = self.parse_json(core_json)
-            array_fields.extend(tmp)
-
-        field_names['type'], tmp = self.parse_json(type_json)
-        array_fields.extend(tmp)
-        field_names['custom'], tmp = self.get_custom_data_fields(field_names,
-                                                                 sheet_name)
-        array_fields.extend(tmp)
-
-        for core_property, data_property in field_names.items():
-            subtype_name_and_indexes = dict()
-            for field_name, field_types in data_property.items():
-                subtype_name_and_indexes[field_name] = self.get_indices(
-                    field_name, field_types, array_fields)
-            field_names_and_indexes[core_property] = subtype_name_and_indexes
-        return field_names_and_indexes
+        # example json: https://raw.githubusercontent.com/FAANG/dcc-metadata/switch_to_json-schema/json_schema
+        # /type/samples/faang_samples_organism.metadata_rules.json
+        # which has both array and object types
+        required_fields = dict()
+        allow_multiple_fields = list()
+        mandatory_fields = list()
+        for field_name, field_details in json_to_parse['properties'].items():
+            if field_name not in SKIP_PROPERTIES:
+                # currently the ruleset only has two types: object or array,
+                # array is for fields which allows multiple values, e.g. health status in sample
+                # single value uses object type, even actually it is a string type, e.g. project = FAANG
+                required_fields.setdefault(field_name, [])
+                # for the array type, the details is a level deeper
+                if field_details['type'] == 'array':
+                    allow_multiple_fields.append(field_name)
+                    field_details = field_details['items']
+                for sc_property in field_details['required']:
+                    required_fields[field_name].append(sc_property)
+                if field_details['properties']['mandatory']['const'] == 'mandatory':
+                    mandatory_fields.append(field_name)
+        return required_fields, allow_multiple_fields, mandatory_fields
 
     @staticmethod
-    def parse_json(json_to_parse):
+    def check_cell_is_ratio_or_number(field_name: str):
         """
-        This function will parse json and return field names with positions
-        :param json_to_parse: json file that should be parsed
-        :return: dict with field_names as keys and field sub_names as values
+        This function will check that current column is having ratio or expected to have number
+        Currently by the field name, in future should move to by checking
+        whether unit is the correct ontology (supported by the ruleset)
+        :param field_name: header of the column
+        :return: True if the column is expected to have ratio value and False otherwise
         """
-        required_fields = dict()
-        array_fields = list()
-        for pr_property, value in json_to_parse['properties'].items():
-            if pr_property not in SKIP_PROPERTIES and value['type'] == 'object':
-                required_fields.setdefault(pr_property, [])
-                for sc_property in value['required']:
-                    required_fields[pr_property].append(sc_property)
-            elif pr_property not in SKIP_PROPERTIES and \
-                    value['type'] == 'array':
-                array_fields.append(pr_property)
-                required_fields.setdefault(pr_property, [])
-                for sc_property in value['items']['required']:
-                    required_fields[pr_property].append(sc_property)
-        return required_fields, array_fields
-
-    def get_custom_data_fields(self, field_names, sheet_name):
-        """
-        This function will go through headers and find all remaining names that
-        are not in field_names
-        :param field_names: names from json-schema
-        :param sheet_name: name of the sheet
-        :return: rules for custom fields in dict and all array fields
-        """
-        custom_data_fields_indexes = dict()
-        array_fields = list()
-        if sheet_name in CHIP_SEQ_MODULE_RULES:
-            headers_to_check = {**field_names['core'], **field_names['type'],
-                                **field_names['module']}
-        elif sheet_name in ['faang', 'ena', 'eva']:
-            headers_to_check = {**field_names['type']}
+        if field_name.endswith('_ratio') or field_name.endswith('_number'):
+            return True
         else:
-            headers_to_check = {**field_names['core'], **field_names['type']}
-        for header in self.headers:
-            if header not in headers_to_check and header not in \
-                    SPECIAL_PROPERTIES:
-                indexes = self.return_all_indexes(header)
-                if len(indexes) > 1:
-                    array_fields.append(header)
-                if len(self.headers)-1 > (indexes[0] + 1) and \
-                        self.headers[indexes[0] + 1] == 'unit':
-                    custom_data_fields_indexes[header] = ['value', 'units']
-                elif len(self.headers)-1 > (indexes[0] + 1) and \
-                        self.headers[indexes[0] + 1] == 'term_source_id':
-                    custom_data_fields_indexes[header] = ['text', 'term']
-                else:
-                    custom_data_fields_indexes[header] = ['value']
-        return custom_data_fields_indexes, array_fields
-
-    def return_all_indexes(self, item_to_check):
-        """
-        This function will return array of all indexes of iterm in array
-        :param item_to_check: item to search
-        :return:
-        """
-        return [index for index, value in enumerate(self.headers) if value ==
-                item_to_check]
-
-    def get_indices(self, field_name, field_types, array_fields):
-        """
-        This function will return position of fields in template
-        :param field_name: name of the field
-        :param field_types: types that this field has
-        :param array_fields
-        :return: dict with positions of types of field
-        """
-        if field_name not in self.headers:
-            raise ValueError(
-                f"Error: can't find this property '{field_name}' in "
-                f"headers")
-        if len(field_types) == 1 and 'value' in field_types:
-            indices = self.return_all_indexes(field_name)
-            if len(indices) == 1 and field_name not in array_fields:
-                return {'value': indices[0]}
-            elif (len(indices) > 1 and field_name in array_fields) or \
-                    (field_name in array_fields):
-                indices_list = list()
-                for index in indices:
-                    indices_list.append({'value': index})
-                return indices_list
-            else:
-                raise ValueError(f"Error: multiple entries for attribute "
-                                 f"'{field_name}' present")
-        else:
-            if field_types == ['value', 'units']:
-                value_indices = self.return_all_indexes(field_name)
-                if len(value_indices) == 1 and field_name not in array_fields:
-                    return self.check_field_existence(value_indices[0],
-                                                      field_name, 'value',
-                                                      'unit')
-                elif (len(value_indices) > 1 and field_name in array_fields) \
-                        or (field_name in array_fields):
-                    indices_list = list()
-                    for index in value_indices:
-                        indices_list.append(
-                            self.check_field_existence(index, field_name,
-                                                       'value', 'unit'))
-                    return indices_list
-                else:
-                    raise ValueError(f"Error: multiple entries for attribute "
-                                     f"'{field_name}' present")
-            elif field_types == ['text', 'term']:
-                text_indices = self.return_all_indexes(field_name)
-                if len(text_indices) == 1 and field_name not in array_fields:
-                    return self.check_field_existence(text_indices[0],
-                                                      field_name, 'text',
-                                                      'term_source_id')
-                elif (len(text_indices) > 1 and field_name in array_fields) \
-                        or (field_name in array_fields):
-                    indices_list = list()
-                    for index in text_indices:
-                        indices_list.append(
-                            self.check_field_existence(index, field_name,
-                                                       'text',
-                                                       'term_source_id'))
-                    return indices_list
-                else:
-                    raise ValueError(f"Error: multiple entries for attribute "
-                                     f"'{field_name}' present")
-            else:
-                raise ValueError(f"Error: unknown types present for attribute "
-                                 f"'{field_types}' present")
-
-    def check_field_existence(self, index, field, first_subfield,
-                              second_subfield):
-        """
-        This function will check whether table has all required fields
-        :param index: index to check in table
-        :param field: field name
-        :param first_subfield: first subfield name
-        :param second_subfield: second subfield name
-        :return: dict with subfield indexes
-        """
-        if self.headers[index + 1] != second_subfield:
-            raise ValueError(
-                f"Error: this property {field} doesn't have {second_subfield} "
-                f"provided in template!")
-        else:
-            if second_subfield == 'unit':
-                second_subfield = 'units'
-            elif second_subfield == 'term_source_id':
-                second_subfield = 'term'
-            return {first_subfield: index, second_subfield: index + 1}
-
-    def get_sample_data(self, input_data, field_names_indexes, name):
-        """
-        This function will fetch information about organism
-        :param input_data: row from template to fetch information from
-        :param field_names_indexes: dict with field names and indexes from json
-        :param name: name of the sheet
-        :return: dict with required information
-        """
-        organism_to_validate = dict()
-        if name == 'chip-seq input dna':
-            json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
-                          **CHIP_SEQ_INPUT_DNA_JSON_TYPES}
-        elif name == 'chip-seq dna-binding proteins':
-            json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
-                          **CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES}
-        else:
-            if self.json_type == 'samples':
-                json_types = {**SAMPLES_SPECIFIC_JSON_TYPES, **JSON_TYPES}
-            elif self.json_type == 'analyses':
-                json_types = {**JSON_TYPES}
-            else:
-                json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES}
-        for k, v in json_types.items():
-            if v is not None:
-                organism_to_validate.setdefault(v, dict())
-                for field_name, indexes in field_names_indexes[k].items():
-                    date_field = self.check_cell_is_date(field_name)
-                    self.add_row(field_name, indexes, organism_to_validate[v],
-                                 input_data, date_field)
-            else:
-                for field_name, indexes in field_names_indexes[k].items():
-                    date_field = self.check_cell_is_date(field_name)
-                    self.add_row(field_name, indexes, organism_to_validate,
-                                 input_data, date_field)
-        return organism_to_validate
+            return False
 
     @staticmethod
     def check_cell_is_date(field_name):
         """
         This function will check that current column is date field
-        :param field_name: name of column
-        :return: True if column is date and False otherwise
+        :param field_name: header of the column
+        :return: True if column header contains 'date' and False otherwise
         """
         if 'date' in field_name:
             return True
         else:
             return False
 
-    def add_row(self, field_name, indexes, organism_to_validate, input_data,
-                date_field):
-        """
-        High-level function to get data from table
-        :param field_name: name of the field to add
-        :param indexes: subfields of this field
-        :param organism_to_validate: results holder
-        :param input_data: row from table
-        :param date_field: date field to check
-        """
-        if isinstance(indexes, list):
-            tmp_list = list()
-            for index in indexes:
-                tmp_data = self.get_data(input_data, date_field, **index)
-                if len(tmp_data) != 0:
-                    tmp_list.append(tmp_data)
-            if len(tmp_list) != 0:
-                organism_to_validate[field_name] = tmp_list
-        else:
-            self.check_existence(field_name, organism_to_validate,
-                                 self.get_data(input_data, date_field,
-                                               **indexes))
-
-    def get_data(self, input_data, date_field, **fields):
-        """
-        This function will create dict with required fields and required
-        information
-        :param input_data: row from template
-        :param date_field: boolean value is this data is date data
-        :param fields: dict with field name as key and field index as value
-        :return: dict with required information
-        """
-        data_to_return = dict()
-        for field_name, field_index in fields.items():
-            cell_value = input_data[field_index]
-            if cell_value != '':
-                # Convert all "_" in term ids to ":" as required by validator
-                if field_name == 'term' and isinstance(cell_value, str)  \
-                        and "_" in cell_value:
-                    cell_value = cell_value.replace("_", ":")
-
-                # Convert date data to string (as Excel stores date in float
-                # format)
-                if date_field is True and isinstance(cell_value, float) \
-                        and field_name == 'value':
-                    y, m, d, _, _, _ = xlrd.xldate_as_tuple(cell_value,
-                                                            self.wb_datemode)
-                    m = self.add_leading_zero(m)
-                    d = self.add_leading_zero(d)
-                    cell_value = f"{y}-{m}-{d}"
-                data_to_return[field_name] = cell_value
-        return data_to_return
-
-    @staticmethod
-    def check_existence(field_name, data_to_validate, template_data):
-        """
-        This function will check whether template_data has required field
-        :param field_name: name of field
-        :param data_to_validate: data dict for validation
-        :param template_data: template data to check
-        """
-        if len(template_data) != 0:
-            data_to_validate[field_name] = template_data
 
     @staticmethod
     def add_leading_zero(date_item):
@@ -431,23 +668,26 @@ class ReadExcelFile:
         else:
             return date_item
 
-    def check_sheet_name_material_consistency(self, sample_data, name):
+    # TODO: not used at all, keep it here as a reminder
+    # TODO: after adding organism into sample type rulesets,
+    # TODO: assay_type into experiment type rulesets, the function can be deleted completely
+    def check_sheet_name_material_consistency(self, sample_data, sheet_name):
         """
         This function checks that sheet has consistent material
         :param sample_data: data to check
-        :param name: name of sheet
-        :return: False or error
+        :param sheet_name: name of sheet
+        :return: False or error message
         """
-        if self.json_type != 'samples':
+        if self.data_file_type != SAMPLE:
             return False
         if 'samples_core' in sample_data and 'material' in \
                 sample_data['samples_core'] and 'text' in \
                 sample_data['samples_core']['material']:
             material = sample_data['samples_core']['material']['text']
-            if material != name:
-                return f"Error: '{name}' sheet contains record with " \
+            if material != sheet_name:
+                return f"Error: '{sheet_name}' sheet contains record with " \
                        f"inconsistent material '{material}'"
             else:
                 return False
         else:
-            return f"Error: '{name}' sheet contains records with empty material"
+            return f"Error: '{sheet_name}' sheet contains records with empty material"

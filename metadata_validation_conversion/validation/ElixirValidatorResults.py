@@ -1,9 +1,8 @@
 import requests
 from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     ALLOWED_SAMPLES_TYPES, ALLOWED_EXPERIMENTS_TYPES, EXPERIMENT_CORE_URL, \
-    ALLOWED_ANALYSES_TYPES, CHIP_SEQ_MODULE_RULES
+    ALLOWED_ANALYSES_TYPES, MODULE_RULES, SAMPLE, EXPERIMENT, ANALYSIS
 from .helpers import validate, get_record_structure
-import json
 
 
 class ElixirValidatorResults:
@@ -17,15 +16,15 @@ class ElixirValidatorResults:
         This function will run validation using Elixir Validator
         :return: results of validation
         """
-        if self.rules_type == 'samples':
+        if self.rules_type == SAMPLE:
             record_type = ALLOWED_SAMPLES_TYPES
             core_name = 'samples_core'
             core_url = SAMPLE_CORE_URL
-        elif self.rules_type == 'analyses':
+        elif self.rules_type == ANALYSIS:
             record_type = ALLOWED_ANALYSES_TYPES
             core_name = None
             core_url = None
-        else:
+        elif self.rules_type == EXPERIMENT:
             record_type = ALLOWED_EXPERIMENTS_TYPES
             core_name = 'experiments_core'
             core_url = EXPERIMENT_CORE_URL
@@ -39,12 +38,12 @@ class ElixirValidatorResults:
                 type_schema = requests.get(url).json()
                 module_schema = None
                 module_name = None
-                if name in CHIP_SEQ_MODULE_RULES:
-                    module_schema = requests.get(
-                        CHIP_SEQ_MODULE_RULES[name]).json()
+                # TODO: hard-coded part (module_name) needs to be replaced
+                if self.rules_type in MODULE_RULES and name in MODULE_RULES[self.rules_type]:
+                    module_schema = requests.get(MODULE_RULES[self.rules_type][name]).json()
                     module_name = name.split("chip-seq_")[-1]
-
-                # Elixir validator complains about links
+                # in JSON schema, the core ruleset is defined by reference,
+                # the Elixor validator could not check ruleset using reference
                 if core_name:
                     del type_schema['properties'][core_name]
 
@@ -68,8 +67,10 @@ class ElixirValidatorResults:
                         errors, paths = validate(record[core_name], core_schema)
                         self.attach_errors(
                             record_to_return, errors, paths, core_name)
+
                     errors, paths = validate(record, type_schema)
                     self.attach_errors(record_to_return, errors, paths)
+
                     if module_schema:
                         errors, paths = validate(
                             record[module_name], module_schema)

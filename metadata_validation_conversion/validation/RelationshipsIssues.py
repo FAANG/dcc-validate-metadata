@@ -16,34 +16,34 @@ class RelationshipsIssues:
         validation_document = dict()
 
         # In first iteration need to collect all relationships
-        for name, url in ALLOWED_SAMPLES_TYPES.items():
-            if name in self.json_to_test:
-                new_relationships, biosample_ids, validation_document[name] = \
-                    self.collect_relationships(name)
+        for material, url in ALLOWED_SAMPLES_TYPES.items():
+            if material in self.json_to_test:
+                new_relationships, biosample_ids, validation_document[material] = \
+                    self.collect_relationships(material)
                 relationships.update(new_relationships)
                 biosamples_ids_to_call.update(biosample_ids)
         biosample_data = fetch_biosample_data_for_ids(biosamples_ids_to_call)
         return self.check_relationships(relationships, biosample_data,
                                         validation_document)
 
-    def collect_relationships(self, name):
+    def collect_relationships(self, material_type):
         """
         This function will collect information about existing relationships and
         material types for each record
-        :param name: name of the record, ex. 'organism'
+        :param material_type: material of the record, e.g. 'organism'
         :return: dict with record_named as key and relationships + material as
         values
         """
         relationships = dict()
         biosample_ids = set()
         data_to_return = list()
-        records = self.json_to_test[name]
-        structure_to_use = self.structure[name]
+        records = self.json_to_test[material_type]
+        structure_to_use = self.structure[material_type]
         for index, record in enumerate(records):
             record_to_return = get_record_structure(structure_to_use, record)
-            record_name = get_record_name(record, index, name)
+            record_name = get_record_name(record, index, material_type)
             relationships.setdefault(record_name, dict())
-            relationship_name = 'child_of' if name == 'organism' else \
+            relationship_name = 'child_of' if material_type == 'organism' else \
                 'derived_from'
             if relationship_name in record and isinstance(
                     record[relationship_name], list):

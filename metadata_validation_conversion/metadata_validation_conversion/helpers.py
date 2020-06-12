@@ -1,22 +1,78 @@
 import requests
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from .constants import SAMPLE_CORE_URL, EXPERIMENT_CORE_URL
+from .constants import SAMPLE_CORE_URL, EXPERIMENT_CORE_URL, SAMPLE, EXPERIMENT, ANALYSIS, \
+    ALLOWED_SHEET_NAMES, MODULE_RULES
+
+
+def get_core_ruleset_json(template_type):
+    """
+    Get the core ruleset in the json format according to the template type
+    :param template_type: the template type
+    :return:
+    """
+    if template_type == SAMPLE:
+        return requests.get(SAMPLE_CORE_URL).json()
+    elif template_type == EXPERIMENT:
+        return requests.get(EXPERIMENT_CORE_URL).json()
+    elif template_type == ANALYSIS:
+        return None
+
+
+def get_constant_value(template_type, sheet_name, constants_collection):
+    """
+    Get the constant value according to the template type and sheet name in the given collection
+    :param template_type: the template type
+    :param sheet_name: the name of the sheet, which indicates the type of the data
+    :param constants_collection: the constants collection
+    :return: the constant value or None if not found
+    """
+    if template_type in constants_collection and sheet_name in constants_collection[template_type]:
+        return constants_collection[template_type][sheet_name]
+    return None
+
+
+def get_type_ruleset_json(template_type, sheet_name):
+    """
+    Get the type ruleset in the json format according to the template type
+    :param template_type: the template type
+    :param sheet_name: the name of the sheet, which indicates the type of the data
+    :return: the corresponding ruleset schema in json
+    """
+    url = get_constant_value(template_type, sheet_name, ALLOWED_SHEET_NAMES)
+    if url:
+        return requests.get(url).json()
+    return None
+
+
+def get_module_ruleset_json(template_type, sheet_name):
+    """
+    Get the module ruleset in the json format according to the template type
+    :param template_type: the template type
+    :param sheet_name: the name of the sheet, which indicates the type of the data
+    :return: the corresponding ruleset schema in json
+    """
+    url = get_constant_value(template_type, sheet_name, MODULE_RULES)
+    if url:
+        return requests.get(url).json()
+    return None
 
 
 def get_rules_json(url, json_type, module_url=None):
     """
-    This function will fetch json from url and then fetch core json from $ref
+    Retrieve ruleset json based on the given condition
+    if type is analyses, return json based on the url,
+    otherwise return type rule set from url, core rule set and module rule set (if provided)
     :param url: url for type json field
     :param json_type: type of json to fetch: samples, experiments, analyses
     :param module_url: module url if appropriate
     :return: type and core json
     """
-    if json_type == 'samples':
+    if json_type == SAMPLE:
         core_json = SAMPLE_CORE_URL
-    elif json_type == 'experiments':
+    elif json_type == EXPERIMENT:
         core_json = EXPERIMENT_CORE_URL
-    elif json_type == 'analyses':
+    elif json_type == ANALYSIS:
         return requests.get(url).json()
     else:
         raise ValueError(f"Error: {json_type} is not allowed type!")
