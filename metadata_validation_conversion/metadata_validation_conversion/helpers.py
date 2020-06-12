@@ -19,16 +19,16 @@ def get_core_ruleset_json(template_type):
         return None
 
 
-def get_ruleset_from_constants(template_type, sheet_name, constants):
+def get_constant_value(template_type, sheet_name, constants_collection):
     """
-    Get the type ruleset in the json format according to the template type
+    Get the constant value according to the template type and sheet name in the given collection
     :param template_type: the template type
     :param sheet_name: the name of the sheet, which indicates the type of the data
-    :return:
+    :param constants_collection: the constants collection
+    :return: the constant value or None if not found
     """
-    if template_type in constants and sheet_name in constants[template_type]:
-        url = constants[template_type][sheet_name]
-        return requests.get(url).json()
+    if template_type in constants_collection and sheet_name in constants_collection[template_type]:
+        return constants_collection[template_type][sheet_name]
     return None
 
 
@@ -37,20 +37,25 @@ def get_type_ruleset_json(template_type, sheet_name):
     Get the type ruleset in the json format according to the template type
     :param template_type: the template type
     :param sheet_name: the name of the sheet, which indicates the type of the data
-    :return:
+    :return: the corresponding ruleset schema in json
     """
-    return get_ruleset_from_constants(template_type, sheet_name, ALLOWED_SHEET_NAMES)
+    url = get_constant_value(template_type, sheet_name, ALLOWED_SHEET_NAMES)
+    if url:
+        return requests.get(url).json()
+    return None
 
 
 def get_module_ruleset_json(template_type, sheet_name):
     """
-    Get the type ruleset in the json format according to the template type
+    Get the module ruleset in the json format according to the template type
     :param template_type: the template type
     :param sheet_name: the name of the sheet, which indicates the type of the data
-    :return:
+    :return: the corresponding ruleset schema in json
     """
-
-    return get_ruleset_from_constants(template_type, sheet_name, MODULE_RULES)
+    url = get_constant_value(template_type, sheet_name, MODULE_RULES)
+    if url:
+        return requests.get(url).json()
+    return None
 
 
 def get_rules_json(url, json_type, module_url=None):

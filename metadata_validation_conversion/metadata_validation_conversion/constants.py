@@ -133,6 +133,20 @@ EXPERIMENTS_SPECIFIC_JSON_TYPES = {
     'core': 'experiments_core'
 }
 
+CORE_NAMES = {
+    SAMPLE: 'samples_core',
+    EXPERIMENT: 'experiments_core'
+}
+
+EXPERIMENT_MODULE_SHEET = {
+    'chip-seq_input_dna': 'input_dna',
+    'chip-seq_dna-binding_proteins': 'dna-binding_proteins'
+}
+
+MODULE_SHEET = {
+    EXPERIMENT: EXPERIMENT_MODULE_SHEET
+}
+
 CHIP_SEQ_INPUT_DNA_JSON_TYPES = {
     'module': 'input_dna'
 }
