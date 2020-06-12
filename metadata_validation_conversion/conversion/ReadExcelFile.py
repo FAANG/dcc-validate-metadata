@@ -29,10 +29,13 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, \
     SAMPLES_SPECIFIC_JSON_TYPES, EXPERIMENTS_SPECIFIC_JSON_TYPES, \
     CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, SPECIAL_SHEETS, \
-    SAMPLE, EXPERIMENT, ANALYSIS, ID_COLUMNS_WITH_INDICES, MINIMUM_TEMPLATE_VERSION_REQUIREMENT
+    SAMPLE, EXPERIMENT, ANALYSIS, ID_COLUMNS_WITH_INDICES, MINIMUM_TEMPLATE_VERSION_REQUIREMENT, \
+    CORE_NAMES, MODULE_SHEET
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
-    get_core_ruleset_json, get_type_ruleset_json, get_module_ruleset_json
+    get_core_ruleset_json, get_type_ruleset_json, get_module_ruleset_json, get_constant_value
 import json
+from typing import Dict
+
 
 class ReadExcelFile:
     def __init__(self, file_path, data_file_type):
@@ -117,7 +120,7 @@ class ReadExcelFile:
                 self.rulesets['type'] = get_type_ruleset_json(self.data_file_type, snaked_sheet_name)
                 self.rulesets['module'] = get_module_ruleset_json(self.data_file_type, snaked_sheet_name)
                 # convert the json-schema ruleset into field names
-                field_names = dict()
+                field_names: Dict[str, Dict] = dict()
                 multiple_values_field_list = list()
                 mandatory_field_list = list()
                 for ruleset_type, section_detail in self.rulesets.items():
@@ -168,7 +171,7 @@ class ReadExcelFile:
                 # 5d ii: check all mandatory fields exist in the template
                 for tmp in mandatory_field_list:
                     if tmp not in headers_in_template:
-                        return f"Error: the mandatory field {tmp.replace('_',' ')} could not be found " \
+                        return f"Error: the mandatory field {tmp.replace('_', ' ')} could not be found " \
                                f"in the {sh.name} sheet", structure
                 # 5d iii: map template to the ruleset (field_names) to add locations into it (field_names_with_indices)
                 # meanwhile work out the fields in the template are not in the ruleset
@@ -213,8 +216,8 @@ class ReadExcelFile:
                     # id string is the combination of values of all id columns
                     id_string = "-".join(tmp_id_comps)
                     if id_string in mapped_row_data:
-                        return f"Error: In the {sh.name} sheet, there are more than one records using the same values " \
-                               f"for id columns {json.dumps(mapped_row_data[id_string]['id'])}", structure
+                        return f"Error: In the {sh.name} sheet, there are more than one records using the same " \
+                               f"values for id columns {json.dumps(mapped_row_data[id_string]['id'])}", structure
                     mapped_row_data.setdefault(id_string, dict())
                     mapped_row_data[id_string]['id'] = id_values
                     # rulset_type is one of core, type, module or custom
@@ -227,6 +230,7 @@ class ReadExcelFile:
                             else:
                                 data_in_one_section[field_name] = \
                                     self.get_single_value(field_name, field_detail, raw_row_data)
+                        data_in_one_section = self.remove_empty_fields(data_in_one_section)
                         mapped_row_data[id_string][ruleset_type] = data_in_one_section
 
                     empty_mandatory_field = \
@@ -235,24 +239,30 @@ class ReadExcelFile:
                         return f"Error: in the {sh.name} sheet, the mandatory field {empty_mandatory_field} " \
                                f"in record {row_number} has empty value", structure
 
-                tmp = list()
-                for row_number in range(1, sh.nrows):
-                    row_data = self.get_data_requiring_validation(
-                        sh.row_values(row_number), field_names_with_indices, sh.name)
-                    material_consistency = \
-                        self.check_sheet_name_material_consistency(row_data,
-                                                                   sh.name)
-                    # if sh.name == 'cage-seq':
-                    #     import json
-                    #     print(json.dumps(row_data))
-                    #     print(material_consistency)
-                    #     print(self.check_record(row_data))
-                    if material_consistency is not False:
-                        os.remove(self.file_path)
-                        return material_consistency, structure
-                    tmp.append(row_data)
-                if len(tmp) > 0:
-                    data[convert_to_snake_case(sh.name)] = tmp
+                # TODO: digest this temporary codes,
+                # TODO: i.e. gradually update validation part codes to avoid this conversion
+                # the codes below is to convert the new data structure into the old data structure to allow following
+                # validation work
+                # the benefits of the new structure include
+                # 1. dict structure which allows quick references among sheets as the key of dict is the record id
+                # e.g. 4 records in experiment ena sheets, 2 of them are atac-seq and the other 2 are cage-seq
+                # 2. treat core, type, module the same, not like the old structure type data is flattened, which improve
+                # the code re-usage and module name needs to change
+                # 3. new structure has some automatic curation e.g. string to float for ratio value
+                converted = list()
+                for mapped_record_data in mapped_row_data.values():
+                    converted_record = dict()
+                    converted_record['custom'] = mapped_record_data['custom']
+                    for type_field_name, type_field_value in mapped_record_data['type'].items():
+                        converted_record[type_field_name] = type_field_value
+                    if 'core' in mapped_record_data:
+                        converted_record[CORE_NAMES[self.data_file_type]] = mapped_record_data['core']
+                    if 'module' in mapped_record_data:
+                        module_name = get_constant_value(self.data_file_type, sheet_name, MODULE_SHEET)
+                        converted_record[module_name] = mapped_record_data['module']
+                    converted.append(converted_record)
+
+                data[convert_to_snake_case(sh.name)] = converted
         os.remove(self.file_path)
 
         # import json
@@ -261,7 +271,51 @@ class ReadExcelFile:
         # debug['data'] = data
         # debug['structure'] = structure
         # print(json.dumps(debug))
+        # return converted, structure
         return data, structure
+
+    def remove_empty_fields(self, section_detail: dict):
+        """
+        Remove empty fields from the section data
+        :param section_detail: the section data
+        :return: the section data without empty fields
+        """
+        result = dict()
+        for field_name, field_value in section_detail.items():
+            if isinstance(field_value, list):
+                tmp = self.remove_empty_in_list(field_value)
+            else:
+                tmp = self.remove_empty_in_single(field_value)
+            if tmp:
+                result[field_name] = tmp
+        return result
+
+    def remove_empty_in_list(self, list_value):
+        """
+        Make empty field having list value to None
+        :param list_value: the field value expected to be a list
+        :return: None if all elements in the list are empty, otherwise the list only containing non-empty elements
+        """
+        result = list()
+        for one in list_value:
+            tmp = self.remove_empty_in_single(one)
+            if tmp:
+                result.append(tmp)
+        if result:
+            return result
+        return None
+
+    @staticmethod
+    def remove_empty_in_single(single_value: dict):
+        no_value_flag = True
+        for v in single_value.values():
+            if v and len(str(v)) > 0:
+                no_value_flag = False
+                break
+        if no_value_flag:
+            return None
+        else:
+            return single_value
 
     def check_empty_mandatory_fields(self, record_data, mandatory_field_list):
         """
@@ -297,7 +351,7 @@ class ReadExcelFile:
         :return: None if no empty value found, otherwise the specific sub-field (value, units, text, term)
         which contains empty value
         """
-        for k,v in value.items():
+        for k, v in value.items():
             if v is None or len(str(v)) == 0:
                 return k
         return None
@@ -328,13 +382,25 @@ class ReadExcelFile:
         result = dict()
         for subfield, index in field_detail.items():
             result[subfield] = raw_row_data[index]
+            # Convert all "_" in term ids to ":" as required by validator
+            if subfield == 'term' and isinstance(result[subfield], str) and "_" in result[subfield]:
+                result[subfield] = result[subfield].replace("_", ":")
+
         # make sure every non-empty value with units (not date units) are in the form of float
         if 'value' in result and result['value'] is None:
-            return result
-        if not self.check_cell_is_date(field_name) and 'units' in field_detail and len(str(result['value'])) > 0:
-            result['value'] = float(result['value'])
-        elif self.check_cell_is_ratio_or_number(field_name):
-            result['value'] = float(result['value'])
+            return None
+        if self.check_cell_is_date(field_name):
+            if 'value' in result and isinstance(result['value'], float):
+                y, m, d, _, _, _ = xlrd.xldate_as_tuple(result['value'], self.wb_datemode)
+                m = self.add_leading_zero(m)
+                d = self.add_leading_zero(d)
+                result['value'] = f"{y}-{m}-{d}"
+        else:
+            if 'units' in field_detail and isinstance(result['value'], str) and len(result['value']) > 0:
+                result['value'] = float(result['value'])
+            elif self.check_cell_is_ratio_or_number(field_name) and isinstance(result['value'], str):
+                result['value'] = float(result['value'])
+
         return result
 
     @staticmethod
@@ -347,7 +413,7 @@ class ReadExcelFile:
         """
         if location >= len(headers) - 1:
             return 'value', None
-        next_header = headers[location+1]
+        next_header = headers[location + 1]
         next_header = convert_to_snake_case(next_header)
         if next_header == 'unit':
             return 'value', 'units'
@@ -414,7 +480,6 @@ class ReadExcelFile:
             result[field_name] = self.map_field_for_locations(field_name, field_in_template, artificial_subfields)
         return result
 
-
     @staticmethod
     def check_id_columns(data_sheet, id_columns_info: dict):
         """
@@ -427,11 +492,11 @@ class ReadExcelFile:
         for id_column_name, id_column_index in id_columns_info.items():
             if id_column_index > len(headers) - 1:
                 return False, f"The template seems to have been modified in sheet {data_sheet.name}: " \
-                              f"id column {id_column_name} is expected to be at column {id_column_index+1}"
+                              f"id column {id_column_name} is expected to be at column {id_column_index + 1}"
             actual_header_value = convert_to_snake_case(headers[id_column_index])
             if actual_header_value != id_column_name:
                 return False, f"The template seems to have been modified in sheet {data_sheet.name}: " \
-                              f"column {id_column_index+1} is expected to have column name {id_column_name}, " \
+                              f"column {id_column_index + 1} is expected to have column name {id_column_name}, " \
                               f"but the actual values is {actual_header_value}"
         return True, ""
 
@@ -503,7 +568,8 @@ class ReadExcelFile:
                         date_value = sheet.row_values(row_number)[index]
                         if isinstance(date_value, float):
                             # noinspection PyPep8Naming
-                            y, m, d, H, M, S = xlrd.xldate_as_tuple(sheet.row_values(row_number)[index], self.wb_datemode)
+                            y, m, d, H, M, S = \
+                                xlrd.xldate_as_tuple(sheet.row_values(row_number)[index], self.wb_datemode)
                             m = self.add_leading_zero(m)
                             d = self.add_leading_zero(d)
                             # noinspection PyPep8Naming
@@ -579,10 +645,10 @@ class ReadExcelFile:
         # e.g. {'core': 'experiments_core', 'type': None, 'custom': 'custom'}
         if sheet_name == 'chip-seq input dna':
             ruleset_section_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
-                          **CHIP_SEQ_INPUT_DNA_JSON_TYPES}
+                                     **CHIP_SEQ_INPUT_DNA_JSON_TYPES}
         elif sheet_name == 'chip-seq dna-binding proteins':
             ruleset_section_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
-                          **CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES}
+                                     **CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES}
         else:
             if self.data_file_type == SAMPLE:
                 ruleset_section_types = {**SAMPLES_SPECIFIC_JSON_TYPES, **JSON_TYPES}
@@ -668,7 +734,7 @@ class ReadExcelFile:
             cell_value = input_data[field_index]
             if cell_value != '':
                 # Convert all "_" in term ids to ":" as required by validator
-                if field_name == 'term' and isinstance(cell_value, str)  \
+                if field_name == 'term' and isinstance(cell_value, str) \
                         and "_" in cell_value:
                     cell_value = cell_value.replace("_", ":")
                 # Convert date data to string (as Excel stores date in float format)
@@ -727,4 +793,3 @@ class ReadExcelFile:
                 return False
         else:
             return f"Error: '{sheet_name}' sheet contains records with empty material"
-
