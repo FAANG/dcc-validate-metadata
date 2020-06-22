@@ -249,7 +249,6 @@ PERSON_FIELDS = {
     ],
     'mandatory': [
         'person_last_name',
-        'person_initials',
         'person_first_name',
         'person_email',
         'person_role'
