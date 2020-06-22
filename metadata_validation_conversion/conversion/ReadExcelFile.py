@@ -8,6 +8,7 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
+import json
 
 
 class ReadExcelFile:
@@ -390,6 +391,8 @@ class ReadExcelFile:
         data_to_return = dict()
         for field_name, field_index in fields.items():
             cell_value = input_data[field_index]
+            if cell_value is not None and isinstance(cell_value, str):
+                cell_value = cell_value.strip()
             if cell_value != '':
                 # Convert all "_" in term ids to ":" as required by validator
                 if field_name == 'term' and isinstance(cell_value, str)  \
