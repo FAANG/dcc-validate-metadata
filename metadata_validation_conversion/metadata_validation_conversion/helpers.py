@@ -1,22 +1,24 @@
 import requests
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from .constants import SAMPLE_CORE_URL, EXPERIMENT_CORE_URL
+from .constants import SAMPLE_CORE_URL, EXPERIMENT_CORE_URL, SAMPLE, EXPERIMENT, ANALYSIS
 
 
 def get_rules_json(url, json_type, module_url=None):
     """
-    This function will fetch json from url and then fetch core json from $ref
+    Retrieve ruleset json based on the given condition
+    if type is analyses, return json based on the url,
+    otherwise return type rule set from url, core rule set and module rule set (if provided)
     :param url: url for type json field
     :param json_type: type of json to fetch: samples, experiments, analyses
     :param module_url: module url if appropriate
     :return: type and core json
     """
-    if json_type == 'samples':
+    if json_type == SAMPLE:
         core_json = SAMPLE_CORE_URL
-    elif json_type == 'experiments':
+    elif json_type == EXPERIMENT:
         core_json = EXPERIMENT_CORE_URL
-    elif json_type == 'analyses':
+    elif json_type == ANALYSIS:
         return requests.get(url).json()
     else:
         raise ValueError(f"Error: {json_type} is not allowed type!")

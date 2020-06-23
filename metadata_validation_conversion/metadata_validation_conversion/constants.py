@@ -47,16 +47,23 @@ EVA_ANALYSES_URL = f"{BASE_URL}/module/analyses/" \
 ELIXIR_VALIDATOR_URL = config('ELIXIR_VALIDATOR_URL')
 WS_URL = "ws://127.0.0.1:8000/ws/submission/test_task/"
 
-ALLOWED_TEMPLATES = ['samples', 'experiments', 'analyses']
+SAMPLE = 'samples'
+EXPERIMENT = 'experiments'
+ANALYSIS = 'analyses'
 
+MINIMUM_TEMPLATE_VERSION_REQUIREMENT = 1.1
 
-ALLOWED_SHEET_NAMES = {
+# keys are sheet sheet_name used in the template
+ALLOWED_SAMPLE_SHEET_NAMES = {
     'organism': ORGANISM_URL,
     'specimen from organism': SPECIMEN_FROM_ORGANISM_URL,
     'pool of specimens': POOL_OF_SPECIMENS_URL,
     'cell specimen': CELL_SPECIMEN_URL,
     'cell culture': CELL_CULTURE_URL,
     'cell line': CELL_LINE_URL,
+}
+
+ALLOWED_EXPERIMENT_SHEET_NAMES = {
     'wgs': WGS_URL,
     'rna-seq': RNA_SEQ_URL,
     'hi-c': HI_C_URL,
@@ -65,9 +72,18 @@ ALLOWED_SHEET_NAMES = {
     'chip-seq dna-binding proteins': CHIP_SEQ_URL,
     'bs-seq': BS_SEQ_URL,
     'atac-seq': ATAC_SEQ_URL,
+}
+
+ALLOWED_ANALYSIS_SHEET_NAMES = {
     'faang': FAANG_ANALYSES_URL,
     'ena': ENA_ANALYSES_URL,
     'eva': EVA_ANALYSES_URL
+}
+
+ALLOWED_SHEET_NAMES = {
+    SAMPLE: ALLOWED_SAMPLE_SHEET_NAMES,
+    EXPERIMENT: ALLOWED_EXPERIMENT_SHEET_NAMES,
+    ANALYSIS: ALLOWED_ANALYSIS_SHEET_NAMES
 }
 
 ALLOWED_SAMPLES_TYPES = {
@@ -96,6 +112,13 @@ ALLOWED_ANALYSES_TYPES = {
     'eva': EVA_ANALYSES_URL
 }
 
+# column index starts from 0
+ID_COLUMNS_WITH_INDICES = {
+    SAMPLE: {'sample_name': 0},
+    EXPERIMENT: {'sample_descriptor': 0, 'experiment_alias': 1},
+    ANALYSIS: {'alias': 0}
+}
+
 ALLOWED_RELATIONSHIPS = {
     'organism': ['organism'],
     'specimen_from_organism': ['organism'],
@@ -106,6 +129,7 @@ ALLOWED_RELATIONSHIPS = {
                   'cell_specimen', 'cell_culture', 'cell_line']
 }
 
+# some are conserved keywords, some are with JSON pointer for the purpose of reusage, recursion etc
 SKIP_PROPERTIES = [
     'describedBy',
     'schema_version',
@@ -176,6 +200,8 @@ STUDY_FIELDS = {
     'mandatory': ['study_alias', 'study_title', 'study_type']
 }
 
+# Mandatory fields refer to https://raw.githubusercontent.com/enasequence/schema/master/src/main/resources/
+# uk/ac/ebi/ena/sra/schema/SRA.experiment.xsd
 EXPERIMENT_ENA_FIELDS = {
     'all': [
         'sample_descriptor',
@@ -197,13 +223,20 @@ EXPERIMENT_ENA_FIELDS = {
     'mandatory': [
         'sample_descriptor',
         'experiment_alias',
+        # required by ExperimentType
         'study_ref',
+        # required by LibraryType
         'design_description',
+        # required by FAANG community (workshop 2020)
+        'library_name',
+        # required by LibraryDescriptorType
         'library_strategy',
         'library_source',
         'library_selection',
         'library_layout',
-        'platform'
+        # required by com:PlatformType
+        'platform',
+        'instrument_model'
     ]
 }
 
@@ -227,11 +260,16 @@ RUN_FIELDS = {
         'checksum_method_pair',
         'checksum_pair'
     ],
+    # refers to https://raw.githubusercontent.com/enasequence/schema/master/src/main/resources/
+    # uk/ac/ebi/ena/sra/schema/SRA.run.xsd
     'mandatory': [
         'alias',
+        # required by FAANG
         'run_center',
         'run_date',
+        # required by Run
         'experiment_ref',
+        # required by FILE element
         'filename',
         'filetype',
         'checksum_method',
@@ -302,17 +340,17 @@ CHIP_SEQ_MODULE_RULES = {
 }
 
 FIELD_NAMES = {
-    'samples': {
+    SAMPLE: {
         'core_name': 'samples_core',
         'record_column_name': 'Sample Name',
         'record_name': 'sample_name'
     },
-    'experiments': {
+    EXPERIMENT: {
         'core_name': 'experiments_core',
         'record_column_name': 'Sample Descriptor',
         'record_name': 'sample_descriptor'
     },
-    'analyses': {
+    ANALYSIS: {
         'record_column_name': 'Alias',
         'record_name': 'alias'
     }

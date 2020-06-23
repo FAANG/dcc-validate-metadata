@@ -1,7 +1,7 @@
 import requests
 from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     ALLOWED_SAMPLES_TYPES, ALLOWED_EXPERIMENTS_TYPES, EXPERIMENT_CORE_URL, \
-    ALLOWED_ANALYSES_TYPES, CHIP_SEQ_MODULE_RULES
+    ALLOWED_ANALYSES_TYPES, CHIP_SEQ_MODULE_RULES, SAMPLE, EXPERIMENT, ANALYSIS
 from .helpers import validate, get_record_structure
 import json
 
@@ -17,15 +17,15 @@ class ElixirValidatorResults:
         This function will run validation using Elixir Validator
         :return: results of validation
         """
-        if self.rules_type == 'samples':
+        if self.rules_type == SAMPLE:
             record_type = ALLOWED_SAMPLES_TYPES
             core_name = 'samples_core'
             core_url = SAMPLE_CORE_URL
-        elif self.rules_type == 'analyses':
+        elif self.rules_type == ANALYSIS:
             record_type = ALLOWED_ANALYSES_TYPES
             core_name = None
             core_url = None
-        else:
+        elif self.rules_type == EXPERIMENT:
             record_type = ALLOWED_EXPERIMENTS_TYPES
             core_name = 'experiments_core'
             core_url = EXPERIMENT_CORE_URL
