@@ -30,15 +30,13 @@ class BiosamplesFileConverter:
                 record_name = get_record_name(record, record_index, record_type)
                 data_to_send.append(
                     {
-                        "alias": record_name,
-                        "title": record_name,
-                        "releaseDate": current_date,
-                        "taxonId": taxon_ids[record_name],
-                        "taxon": taxons[record_name],
-                        "attributes": self.get_sample_attributes(
+                        "name": record_name,
+                        "release": current_date,
+                        "domain": "",
+                        "characteristics": self.get_sample_attributes(
                             record, additional_fields),
-                        "sampleRelationships": self.get_sample_relationships(
-                            record)
+                        "relationships": self.get_sample_relationships(
+                            record, record_name)
                     }
                 )
         return data_to_send
@@ -103,26 +101,29 @@ class BiosamplesFileConverter:
                                                     missing_ids)
 
     @staticmethod
-    def get_sample_relationships(record):
+    def get_sample_relationships(record, record_name):
         """
         This function will parse record and find all relationships
         :param record: record to parse
+        :param record_name: name of the current record
         :return: list of all relationships
         """
         sample_relationships = list()
         if 'same_as' in record:
             sample_relationships.append(
                 {
-                    "alias": record['same_as']['value'],
-                    "relationshipNature": "same as"
+                    "source": record_name,
+                    "type": "same as",
+                    "target": record['same_as']['value']
                 }
             )
         if 'child_of' in record:
             for child in record['child_of']:
                 sample_relationships.append(
                     {
-                        "alias": child['value'],
-                        "relationshipNature": "child of"
+                        "source": record_name,
+                        "type": "child of",
+                        "target": child['value']
                     }
                 )
         if 'derived_from' in record:
@@ -130,15 +131,17 @@ class BiosamplesFileConverter:
                 for child in record['derived_from']:
                     sample_relationships.append(
                         {
-                            "alias": child['value'],
-                            "relationshipNature": "derived from"
+                            "source": record_name,
+                            "type": "derived from",
+                            "target": child['value']
                         }
                     )
             elif isinstance(record['derived_from'], dict):
                 sample_relationships.append(
                     {
-                        "alias": record['derived_from']['value'],
-                        "relationshipNature": "derived from"
+                        "source": record_name,
+                        "type": "derived from",
+                        "target": record['derived_from']['value']
                     }
                 )
         return sample_relationships
@@ -196,18 +199,15 @@ class BiosamplesFileConverter:
         """
         attribute = dict()
         if 'text' in value_to_parse:
-            attribute['value'] = value_to_parse['text']
+            attribute['text'] = value_to_parse['text']
         elif 'value' in value_to_parse:
-            attribute['value'] = value_to_parse['value']
+            attribute['text'] = value_to_parse['value']
 
         if 'term' in value_to_parse:
             ontology_url = "_".join(value_to_parse['term'].split(":"))
-            attribute['terms'] = [
-                {
-                    "url": f"http://purl.obolibrary.org/obo/{ontology_url}"
-                }
-            ]
+            attribute['ontologyTerms'] = [
+                f"http://purl.obolibrary.org/obo/{ontology_url}"]
 
         if 'units' in value_to_parse:
-            attribute['units'] = value_to_parse['units']
+            attribute['unit'] = value_to_parse['units']
         return attribute
