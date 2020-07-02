@@ -32,6 +32,7 @@ class BiosamplesFileConverter:
                     {
                         "name": record_name,
                         "release": current_date,
+                        # TODO: take domain name from AAP credentials
                         "domain": "",
                         "characteristics": self.get_sample_attributes(
                             record, additional_fields),
