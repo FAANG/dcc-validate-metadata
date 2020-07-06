@@ -1,7 +1,6 @@
-import requests
 from datetime import datetime
 from metadata_validation_conversion.constants import \
-    SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES
+    SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES, ADDITIONAL_INFO_MAPPING
 from validation.helpers import get_record_name
 from submission.helpers import remove_underscores
 
@@ -12,17 +11,20 @@ class BiosamplesFileConverter:
 
     def start_conversion(self):
         data_to_send = list()
-        taxon_ids, taxons = self.get_taxon_information()
         current_date = datetime.now().strftime("%Y-%m-%d")
-        # Collect additional data
+        # Collect additional data, submission information
         additional_fields = dict()
         for additional_field in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
+            if additional_field in ['person', 'organization']:
+                continue
             for item in self.json_to_convert[additional_field]:
                 for existing_field, existing_value in item.items():
                     additional_fields.setdefault(
                         remove_underscores(existing_field), list())
                     additional_fields[remove_underscores(
-                        existing_field)].append({'value': existing_value})
+                        existing_field)].append({'text': existing_value})
+        organisation_info = self.get_additional_data('organization')
+        person_info = self.get_additional_data('person')
         for record_type, records in self.json_to_convert.items():
             if record_type in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
                 continue
@@ -32,8 +34,8 @@ class BiosamplesFileConverter:
                     {
                         "name": record_name,
                         "release": current_date,
-                        # TODO: take domain name from AAP credentials
-                        "domain": "",
+                        "contact": person_info,
+                        "organisation": organisation_info,
                         "characteristics": self.get_sample_attributes(
                             record, additional_fields),
                         "relationships": self.get_sample_relationships(
@@ -42,64 +44,14 @@ class BiosamplesFileConverter:
                 )
         return data_to_send
 
-    def get_taxon_information(self):
-        """
-        This function will parse whole json to get all taxon ids
-        :return: dict with id as key and taxon id as value
-        """
-        taxon_ids = dict()
-        taxons = dict()
-        missing_ids = dict()
-        for record_type, records in self.json_to_convert.items():
-            if record_type in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
-                continue
-            for record_index, record in enumerate(records):
-                record_name = get_record_name(record, record_index, record_type)
-                if 'organism' in record:
-                    taxon_ids[record_name] = \
-                        record['organism']['term'].split(":")[1]
-                    taxons[record_name] = record['organism']['text']
-                elif 'derived_from' in record:
-                    if isinstance(record['derived_from'], dict):
-                        missing_ids[record_name] = \
-                            record['derived_from']['value']
-                    elif isinstance(record['derived_from'], list):
-                        missing_ids[record_name] = \
-                            record['derived_from'][0]['value']
-        for id_to_fetch in missing_ids:
-            taxon_ids[id_to_fetch], taxons[id_to_fetch] = \
-                self.fetch_taxon_information(id_to_fetch, taxon_ids,
-                                             taxons, missing_ids)
-        return taxon_ids, taxons
-
-    def fetch_taxon_information(self, id_to_fetch, taxon_ids, taxons,
-                                missing_ids):
-        """
-        This function will find taxon id for particular record
-        :param id_to_fetch: id to check
-        :param taxon_ids: existing taxon ids
-        :param taxons: existing taxons
-        :param missing_ids: missing taxon ids
-        :return:
-        """
-        if id_to_fetch in taxon_ids and id_to_fetch in taxons:
-            return taxon_ids[id_to_fetch], taxons[id_to_fetch]
-        else:
-            # TODO: return error in taxon is not in biosamples
-            if 'SAM' in id_to_fetch:
-                try:
-                    results = requests.get(
-                        f"https://www.ebi.ac.uk/biosamples/samples/"
-                        f"{id_to_fetch}").json()
-                    return results['taxId'], results['characteristics'][
-                        'organism'][0]['text']
-                except ValueError:
-                    pass
-            else:
-                return self.fetch_taxon_information(missing_ids[id_to_fetch],
-                                                    taxon_ids,
-                                                    taxons,
-                                                    missing_ids)
+    def get_additional_data(self, key):
+        additional_data = list()
+        for item in self.json_to_convert[key]:
+            tmp = dict()
+            for existing_field, existing_value in item.items():
+                tmp[ADDITIONAL_INFO_MAPPING[existing_field]] = existing_value
+            additional_data.append(tmp)
+        return additional_data
 
     @staticmethod
     def get_sample_relationships(record, record_name):
