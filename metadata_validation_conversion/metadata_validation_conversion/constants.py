@@ -317,3 +317,15 @@ FIELD_NAMES = {
         'record_name': 'alias'
     }
 }
+
+ADDITIONAL_INFO_MAPPING = {
+    'person_last_name': 'LastName',
+    'person_initials': 'MidInitials',
+    'person_first_name': 'FirstName',
+    'person_email': 'E-mail',
+    'person_role': 'Role',
+    'organization_name': 'Name',
+    'organization_address': 'Address',
+    'organization_uri': 'URL',
+    'organization_role': 'Role'
+}
