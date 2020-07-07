@@ -1,8 +1,9 @@
-from datetime import datetime
+import datetime
 from metadata_validation_conversion.constants import \
     SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES, ADDITIONAL_INFO_MAPPING
 from validation.helpers import get_record_name
 from submission.helpers import remove_underscores
+import json
 
 
 class BiosamplesFileConverter:
@@ -11,7 +12,7 @@ class BiosamplesFileConverter:
 
     def start_conversion(self):
         data_to_send = list()
-        current_date = datetime.now().strftime("%Y-%m-%d")
+        current_date = datetime.datetime.now().isoformat()
         # Collect additional data, submission information
         additional_fields = dict()
         for additional_field in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
@@ -23,7 +24,7 @@ class BiosamplesFileConverter:
                         remove_underscores(existing_field), list())
                     additional_fields[remove_underscores(
                         existing_field)].append({'text': existing_value})
-        organisation_info = self.get_additional_data('organization')
+        organization_info = self.get_additional_data('organization')
         person_info = self.get_additional_data('person')
         for record_type, records in self.json_to_convert.items():
             if record_type in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
@@ -35,13 +36,14 @@ class BiosamplesFileConverter:
                         "name": record_name,
                         "release": current_date,
                         "contact": person_info,
-                        "organisation": organisation_info,
+                        "organization": organization_info,
                         "characteristics": self.get_sample_attributes(
                             record, additional_fields),
                         "relationships": self.get_sample_relationships(
                             record, record_name)
                     }
                 )
+        print(json.dumps(data_to_send))
         return data_to_send
 
     def get_additional_data(self, key):
