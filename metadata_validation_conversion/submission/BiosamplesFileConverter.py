@@ -3,7 +3,6 @@ from metadata_validation_conversion.constants import \
     SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES, ADDITIONAL_INFO_MAPPING
 from validation.helpers import get_record_name
 from submission.helpers import remove_underscores
-import json
 
 
 class BiosamplesFileConverter:
@@ -43,7 +42,6 @@ class BiosamplesFileConverter:
                             record, record_name)
                     }
                 )
-        print(json.dumps(data_to_send))
         return data_to_send
 
     def get_additional_data(self, key):
