@@ -1,12 +1,16 @@
 import json
 import os
 
+from celery import chord
+
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from .tasks import prepare_samples_data, prepare_analyses_data, \
-    prepare_experiments_data, generate_annotated_template
+    prepare_experiments_data, generate_annotated_template, get_domains, \
+    submit_new_domain, submit_to_biosamples
 from .helpers import zip_files
 
 XLSX_CONTENT_TYPE = 'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -33,7 +37,7 @@ def download_template(request, room_id):
     return response
 
 
-def samples_submission(request, task_id, room_id):
+def samples_conversion(request, task_id, room_id):
     send_message(submission_status='Preparing data', room_id=room_id)
     validation_result = app.AsyncResult(task_id)
     json_to_send = validation_result.get()
@@ -41,6 +45,50 @@ def samples_submission(request, task_id, room_id):
         json_to_send, room_id).set(queue='submission')
     res = prepare_samples_data_task.apply_async()
     return HttpResponse(json.dumps({"id": res.id}))
+
+
+@csrf_exempt
+def choose_domain(request, room_id):
+    send_message(submission_message='Waiting: authenticating user',
+                 room_id=room_id)
+    if request.method == 'POST':
+        choose_domain_task = get_domains.s(
+            json.loads(request.body.decode('utf-8')), room_id).set(
+            queue='submission')
+        res = choose_domain_task.apply_async()
+        return HttpResponse(json.dumps({"id": res.id}))
+    return HttpResponse("Please use POST method for submission!")
+
+
+@csrf_exempt
+def submit_domain(request, room_id):
+    send_message(submission_message='Submitting new domain', room_id=room_id)
+    if request.method == 'POST':
+        submit_new_domain_task = submit_new_domain.s(
+            json.loads(request.body.decode('utf-8')), room_id).set(
+            queue='submission')
+        res = submit_new_domain_task.apply_async()
+        return HttpResponse(json.dumps({"id": res.id}))
+    return HttpResponse("Please use POST method for submission!")
+
+
+@csrf_exempt
+def submit_records(request, room_id, task_id):
+    send_message(submission_message='Waiting: submitting records to BioSamples',
+                 room_id=room_id)
+    if request.method == 'POST':
+        validation_result = app.AsyncResult(task_id)
+        json_to_send = validation_result.get()
+        prepare_samples_data_task = prepare_samples_data.s(
+            json_to_send, room_id).set(queue='submission')
+        submit_to_biosamples_task = submit_to_biosamples.s(
+            json.loads(request.body.decode('utf-8')), room_id).set(
+            queue='submission')
+        my_chord = chord((prepare_samples_data_task,),
+                         submit_to_biosamples_task)
+        res = my_chord.apply_async()
+        return HttpResponse(json.dumps({"id": res.id}))
+    return HttpResponse("Please use POST method for submission!")
 
 
 def experiments_submission(request, task_id, room_id):

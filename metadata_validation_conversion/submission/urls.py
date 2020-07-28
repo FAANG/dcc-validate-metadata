@@ -3,7 +3,14 @@ from . import views
 
 app_name = 'submission'
 urlpatterns = [
-    path('samples/<str:task_id>/<str:room_id>', views.samples_submission,
+    path('samples/<str:room_id>/choose_domain', views.choose_domain,
+         name='choose_domain'),
+    path('samples/<str:room_id>/submit_domain', views.submit_domain,
+         name='submit_domain'),
+    path('samples/<str:task_id>/<str:room_id>/submit_records',
+         views.submit_records,
+         name='submit_records'),
+    path('samples/<str:task_id>/<str:room_id>', views.samples_conversion,
          name='samples_submission'),
     path('experiments/<str:task_id>/<str:room_id>', views.experiments_submission,
          name='experiments_submission'),
