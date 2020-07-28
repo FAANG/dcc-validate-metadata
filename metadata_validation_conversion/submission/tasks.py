@@ -1,11 +1,67 @@
-import time
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from .BiosamplesFileConverter import BiosamplesFileConverter
+from .BiosamplesSubmission import BioSamplesSubmission
 from .AnalysesFileConverter import AnalysesFileConverter
 from .ExperimentsFileConverter import ExperimentFileConverter
 from .AnnotateTemplate import AnnotateTemplate
-from .helpers import zip_files
+
+import json
+
+
+@app.task
+def get_domains(credentials, room_id):
+    send_message(submission_message="Waiting: getting information about "
+                                    "existing domains", room_id=room_id)
+    biosamples_submission = BioSamplesSubmission(credentials['username'],
+                                                 credentials['password'],
+                                                 {}, 'test')
+    domains = biosamples_submission.choose_domain()
+    if 'Error' in domains:
+        send_message(submission_message=domains, room_id=room_id)
+    else:
+        send_message(
+            domains=domains,
+            submission_message='Success: got information about existing '
+                               'domains', room_id=room_id)
+    return 'Success'
+
+
+@app.task
+def submit_new_domain(credentials, room_id):
+    biosamples_submission = BioSamplesSubmission(credentials['username'],
+                                                 credentials['password'],
+                                                 {}, 'test')
+    create_domain_results = biosamples_submission.create_domain(
+        credentials['domain_name'], credentials['domain_description'])
+    send_message(submission_message=create_domain_results, room_id=room_id)
+    domains = biosamples_submission.choose_domain()
+    if 'Error' in domains:
+        send_message(submission_message=domains, room_id=room_id)
+    else:
+        send_message(
+            domains=domains,
+            submission_message='Success: got information about existing '
+                               'domains', room_id=room_id)
+    return 'Success'
+
+
+@app.task
+def submit_to_biosamples(results, credentials, room_id):
+    biosamples_submission = BioSamplesSubmission(credentials['username'],
+                                                 credentials['password'],
+                                                 results[0],
+                                                 'test',
+                                                 credentials['domain_name'])
+    submission_results = biosamples_submission.submit_records()
+    if 'Error' in submission_results:
+        send_message(submission_message=submission_results, room_id=room_id)
+    else:
+        send_message(
+            biosamples=submission_results,
+            submission_message="Success: submission was completed",
+            room_id=room_id)
+    return 'Success'
 
 
 @app.task
