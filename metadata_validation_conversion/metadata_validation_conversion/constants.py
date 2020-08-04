@@ -332,7 +332,7 @@ ADDITIONAL_INFO_MAPPING = {
 
 AAP_TEST_SERVER = 'https://explore.api.aai.ebi.ac.uk'
 SUBMISSION_TEST_SERVER = 'https://wwwdev.ebi.ac.uk'
-AAP_PROD_SERVER = 'https://explore.api.aai.ebi.ac.uk'
-SUBMISSION_PROD_SERVER = 'https://wwwdev.ebi.ac.uk'
+AAP_PROD_SERVER = 'https://api.aai.ebi.ac.uk'
+SUBMISSION_PROD_SERVER = 'https://www.ebi.ac.uk'
 
 
