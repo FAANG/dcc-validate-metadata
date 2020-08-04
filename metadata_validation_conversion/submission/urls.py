@@ -20,5 +20,7 @@ urlpatterns = [
     path('get_template/<str:task_id>/<str:room_id>/<str:data_type>',
          views.get_template, name='get_template'),
     path('download_template/<str:room_id>', views.download_template,
-         name='download_template')
+         name='download_template'),
+    path('download_submission_results/<str:task_id>',
+         views.download_submission_results, name='download_submission_results')
 ]

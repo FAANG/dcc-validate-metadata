@@ -15,7 +15,7 @@ def get_domains(credentials, room_id):
                                     "existing domains", room_id=room_id)
     biosamples_submission = BioSamplesSubmission(credentials['username'],
                                                  credentials['password'],
-                                                 {}, 'test')
+                                                 {}, credentials['mode'])
     domains = biosamples_submission.choose_domain()
     if 'Error' in domains:
         send_message(submission_message=domains, room_id=room_id)
@@ -31,7 +31,7 @@ def get_domains(credentials, room_id):
 def submit_new_domain(credentials, room_id):
     biosamples_submission = BioSamplesSubmission(credentials['username'],
                                                  credentials['password'],
-                                                 {}, 'test')
+                                                 {}, credentials['mode'])
     create_domain_results = biosamples_submission.create_domain(
         credentials['domain_name'], credentials['domain_description'])
     send_message(submission_message=create_domain_results, room_id=room_id)
@@ -51,17 +51,21 @@ def submit_to_biosamples(results, credentials, room_id):
     biosamples_submission = BioSamplesSubmission(credentials['username'],
                                                  credentials['password'],
                                                  results[0],
-                                                 'test',
+                                                 credentials['mode'],
                                                  credentials['domain_name'])
     submission_results = biosamples_submission.submit_records()
     if 'Error' in submission_results:
         send_message(submission_message=submission_results, room_id=room_id)
+        return 'Error'
     else:
         send_message(
             biosamples=submission_results,
             submission_message="Success: submission was completed",
             room_id=room_id)
-    return 'Success'
+        submission_data = ''
+        for k, v in submission_results.items():
+            submission_data += f"{k}\t{v}\n"
+        return submission_data
 
 
 @app.task

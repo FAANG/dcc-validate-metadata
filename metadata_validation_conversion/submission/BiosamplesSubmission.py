@@ -135,7 +135,8 @@ class BioSamplesSubmission:
                 headers=self.get_header(),
                 data=tmp)
             if create_submission_response.status_code != 201:
-                return 'Error: record was not submitted to BioSamples'
+                return 'Error: record was not submitted to BioSamples, ' \
+                       'please contact faang-dcc@ebi.ac.uk'
             biosamples_ids[name] = create_submission_response.json()[
                 'accession']
 
@@ -158,5 +159,6 @@ class BioSamplesSubmission:
                     headers=self.get_header(),
                     data=item)
                 if create_submission_response.status_code != 200:
-                    return 'Error: relationship part was not updated'
+                    return 'Error: relationship part was not updated, ' \
+                           'please contact faang-dcc@ebi.ac.uk'
         return biosamples_ids

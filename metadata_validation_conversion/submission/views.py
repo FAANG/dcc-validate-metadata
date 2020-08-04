@@ -37,6 +37,15 @@ def download_template(request, room_id):
     return response
 
 
+def download_submission_results(request, task_id):
+    submission_results = app.AsyncResult(task_id)
+    file_to_send = submission_results.get()
+    response = HttpResponse(file_to_send, content_type=f'text/plain')
+    response['Content-Disposition'] = 'attachment; ' \
+                                      'filename="submission_results.txt"'
+    return response
+
+
 def samples_conversion(request, task_id, room_id):
     send_message(submission_status='Preparing data', room_id=room_id)
     validation_result = app.AsyncResult(task_id)
