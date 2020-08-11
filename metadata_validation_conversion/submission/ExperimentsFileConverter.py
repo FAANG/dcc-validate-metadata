@@ -1,9 +1,12 @@
+from lxml import etree
+
 from .helpers import check_field_existence, remove_underscores
 
 
 class ExperimentFileConverter:
-    def __init__(self, json_to_convert):
+    def __init__(self, json_to_convert, room_id):
         self.json_to_convert = json_to_convert
+        self.room_id = room_id
 
     def start_conversion(self):
         experiment_xml = self.generate_experiment_xml()
@@ -19,12 +22,8 @@ class ExperimentFileConverter:
         """
         if 'experiment_ena' not in self.json_to_convert:
             return 'Error: table should have experiment_ena sheet'
-        result = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        result += '<EXPERIMENT_SET xmlns:xsi=' \
-                  '"http://www.w3.org/2001/XMLSchema-instance" ' \
-                  'xsi:noNamespaceSchemaLocation=' \
-                  '"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/' \
-                  'SRA.experiment.xsd">\n'
+        experiment_set = etree.Element('EXPERIMENT_SET')
+        experiment_xml = etree.ElementTree(experiment_set)
         for record in self.json_to_convert['experiment_ena']:
             alias = record['experiment_alias']
             title = check_field_existence('title', record)
@@ -36,70 +35,65 @@ class ExperimentFileConverter:
             library_source = record['library_source']
             library_selection = record['library_selection']
             library_layout = record['library_layout']
-            # TODO check for this value
-            nominal_length = record['nominal_length']
+            nominal_length = check_field_existence('nominal_length', record)
             library_construction_protocol = check_field_existence(
                 'library_construction_protocol', record)
             platform = record['platform']
             instrument_model = check_field_existence('instrument_model', record)
-
-            result += f'\t<EXPERIMENT alias="{alias}">\n'
-
+            experiment_elt = etree.SubElement(experiment_set, 'EXPERIMENT',
+                                              alias=alias)
             if title is not None:
-                result += f'\t\t<TITLE>{title}</TITLE>\n'
-
-            result += f'\t\t<STUDY_REF refname="{study_ref}"/>\n'
-
-            result += '\t\t<DESIGN>\n'
-            result += f'\t\t\t<DESIGN_DESCRIPTION>' \
-                      f'{design_description}</DESIGN_DESCRIPTION>\n'
-            result += f'\t\t\t<SAMPLE_DESCRIPTOR ' \
-                      f'refname="{sample_descriptor}"/>\n'
-            result += '\t\t\t<LIBRARY_DESCRIPTOR>\n'
+                etree.SubElement(experiment_elt, 'TITLE').text = title
+            etree.SubElement(experiment_elt, 'STUDY_REF').text = study_ref
+            design_elt = etree.SubElement(experiment_elt, 'DESIGN')
+            etree.SubElement(design_elt,
+                             'DESIGN_DESCRIPTION').text = design_description
+            etree.SubElement(design_elt,
+                             'SAMPLE_DESCRIPTOR').text = sample_descriptor
+            library_descriptor_elt = etree.SubElement(design_elt,
+                                                      'LIBRARY_DESCRIPTOR')
             if library_name is not None:
-                result += f'\t\t\t\t<LIBRARY_NAME>' \
-                          f'{library_name}</LIBRARY_NAME>\n'
-            result += f'\t\t\t\t<LIBRARY_STRATEGY>' \
-                      f'{library_strategy}</LIBRARY_STRATEGY>\n'
-            result += f'\t\t\t\t<LIBRARY_SOURCE>' \
-                      f'{library_source}</LIBRARY_SOURCE>\n'
-            result += f'\t\t\t\t<LIBRARY_SELECTION>' \
-                      f'{library_selection}</LIBRARY_SELECTION>\n'
-            result += f'\t\t\t\t<LIBRARY_LAYOUT>\n'
-            result += f'\t\t\t\t\t<{library_layout} ' \
-                      f'NOMINAL_LENGTH="{nominal_length}"/>\n'
-            result += '\t\t\t\t</LIBRARY_LAYOUT>\n'
+                etree.SubElement(library_descriptor_elt,
+                                 'LIBRARY_NAME').text = library_name
+            etree.SubElement(library_descriptor_elt,
+                             'LIBRARY_STRATEGY').text = library_strategy
+            etree.SubElement(library_descriptor_elt,
+                             'LIBRARY_SOURCE').text = library_source
+            etree.SubElement(library_descriptor_elt,
+                             'LIBRARY_SELECTION').text = library_selection
+            library_layout_elt = etree.SubElement(library_descriptor_elt,
+                                                  'LIBRARY_LAYOUT')
+            if nominal_length is not None:
+                etree.SubElement(library_layout_elt, library_layout,
+                                 NOMINAL_LENGTH=nominal_length)
+            else:
+                etree.SubElement(library_layout_elt, library_layout)
             if library_construction_protocol is not None:
-                result += f'\t\t\t\t<LIBRARY_CONSTRUCTION_PROTOCOL>' \
-                          f'{library_construction_protocol}' \
-                          f'</LIBRARY_CONSTRUCTION_PROTOCOL>\n'
-            result += '\t\t\t</LIBRARY_DESCRIPTOR>\n'
-            result += '\t\t</DESIGN>\n'
-
-            result += '\t\t<PLATFORM>\n'
-            result += f'\t\t\t<{platform}>\n'
+                etree.SubElement(library_descriptor_elt,
+                                 'LIBRARY_CONSTRUCTION_PROTOCOL').text = \
+                    library_construction_protocol
+            platform_elt = etree.SubElement(experiment_elt, 'PLATFORM')
+            platform_desc_elt = etree.SubElement(platform_elt, platform)
             if instrument_model is not None:
-                result += f'\t\t\t\t<INSTRUMENT_MODEL>' \
-                          f'{instrument_model}</INSTRUMENT_MODEL>\n'
-            result += f'\t\t\t<{platform}>\n'
-            result += '\t\t<PLATFORM>\n'
-
-            result += '\t\t<EXPERIMENT_ATTRIBUTES>\n'
+                etree.SubElement(platform_desc_elt,
+                                 'INSTRUMENT_MODEL').text = instrument_model
+            experiment_attributes_elt = etree.SubElement(
+                experiment_elt, 'EXPERIMENT_ATTRIBUTES')
             faang_experiment = self.find_faang_experiment(sample_descriptor)
-            result += self.parse_faang_experiment(
-                faang_experiment['experiments_core'])
+            self.parse_faang_experiment(faang_experiment['experiments_core'],
+                                        experiment_attributes_elt)
             if 'dna-binding_proteins' in faang_experiment:
-                result += self.parse_faang_experiment(
-                    faang_experiment['dna-binding_proteins'])
+                self.parse_faang_experiment(
+                    faang_experiment['dna-binding_proteins'],
+                    experiment_attributes_elt)
             if 'input_dna' in faang_experiment:
-                result += self.parse_faang_experiment(
-                    faang_experiment['input_dna'])
-            result += self.parse_faang_experiment(faang_experiment)
-            result += '\t\t</EXPERIMENT_ATTRIBUTES>\n'
-
-            result += '\t</EXPERIMENT>\n'
-        result += '</EXPERIMENT_SET>'
-        return result
+                self.parse_faang_experiment(faang_experiment['input_dna'],
+                                            experiment_attributes_elt)
+            self.parse_faang_experiment(faang_experiment,
+                                        experiment_attributes_elt)
+        experiment_xml.write(f"{self.room_id}_experiment.xml",
+                             pretty_print=True, xml_declaration=True,
+                             encoding='UTF-8')
 
     def find_faang_experiment(self, sample_descriptor):
         """
@@ -116,24 +110,23 @@ class ExperimentFileConverter:
                         return record
 
     @staticmethod
-    def parse_faang_experiment(faang_experiment):
-        result = ''
+    def parse_faang_experiment(faang_experiment, experiment_attributes_elt):
         for attr_name, attr_value in faang_experiment.items():
             if attr_name in ['experiments_core', 'dna-binding_proteins',
                              'input_dna']:
                 continue
-            result += '\t\t\t<EXPERIMENT_ATTRIBUTE>\n'
-            result += f'\t\t\t\t<TAG>{remove_underscores(attr_name)}</TAG>\n'
+            experiment_attribute_elt = etree.SubElement(
+                experiment_attributes_elt, 'EXPERIMENT_ATTRIBUTE')
+            etree.SubElement(experiment_attribute_elt,
+                             'TAG').text = remove_underscores(attr_name)
             if 'value' in attr_value:
                 value = attr_value['value']
             elif 'text' in attr_value:
                 value = attr_value['text']
-            result += f'\t\t\t\t<VALUE>{value}</VALUE>\n'
+            etree.SubElement(experiment_attribute_elt, 'VALUE').text = value
             if 'units' in attr_value:
-                units = attr_value['units']
-                result += f'\t\t\t\t<UNITS>{units}</UNITS>\n'
-            result += '\t\t\t</EXPERIMENT_ATTRIBUTE>\n'
-        return result
+                etree.SubElement(experiment_attribute_elt,
+                                 'UNITS').text = attr_value['units']
 
     def generate_run_xml(self):
         """
@@ -142,11 +135,8 @@ class ExperimentFileConverter:
         """
         if 'run' not in self.json_to_convert:
             return 'Error: table should have run sheet'
-        result = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        result += '<RUN_SET xmlns:xsi=' \
-                  '"http://www.w3.org/2001/XMLSchema-instance" ' \
-                  'xsi:noNamespaceSchemaLocation=' \
-                  '"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.run.xsd">\n'
+        run_set = etree.Element('RUN_SET')
+        run_xml = etree.ElementTree(run_set)
         for record in self.json_to_convert['run']:
             run_alias = record['alias']
             run_center = record['run_center']
@@ -165,31 +155,21 @@ class ExperimentFileConverter:
                 filetype_pair = record['filetype_pair']
                 checksum_method_pair = record['checksum_method_pair']
                 checksum_pair = record['checksum_pair']
-
-            result += f'\t<RUN alias="{run_alias}" run_center="{run_center}" ' \
-                      f'run_date="{run_date}">\n'
-
-            result += f'\t\t<EXPERIMENT_REF refname="{experiment_ref}"/>\n'
-
-            result += '\t\t<DATA_BLOCK>\n'
-            result += '\t\t\t<FILES>\n'
-
-            result += f'\t\t\t\t<FILE filename="{filename}" ' \
-                      f'filetype="{filetype}" ' \
-                      f'checksum_method="{checksum_method}" ' \
-                      f'checksum="{checksum}"/>\n'
+            run_elt = etree.SubElement(run_set, 'RUN', alias=run_alias,
+                                       run_center=run_center, run_date=run_date)
+            etree.SubElement(run_elt, 'EXPERIMENT_REF', refname=experiment_ref)
+            data_block_elt = etree.SubElement(run_elt, 'DATA_BLOCK')
+            files_elt = etree.SubElement(data_block_elt, 'FILES')
+            etree.SubElement(files_elt, 'FILE', filename=filename,
+                             filetype=filetype,
+                             checksum_method=checksum_method, checksum=checksum)
             if paired:
-                result += f'\t\t\t\t<FILE filename="{filename_pair}" ' \
-                          f'filetype="{filetype_pair}" ' \
-                          f'checksum_method="{checksum_method_pair}" ' \
-                          f'checksum="{checksum_pair}"/>\n'
-
-            result += '\t\t\t</FILES>\n'
-            result += '\t\t</DATA_BLOCK>\n'
-
-            result += '\t</RUN>\n'
-        result += '</RUN_SET>'
-        return result
+                etree.SubElement(files_elt, 'FILE', filename=filename_pair,
+                                 filetype=filetype_pair,
+                                 checksum_method=checksum_method_pair,
+                                 checksum=checksum_pair)
+        run_xml.write(f"{self.room_id}_run.xml", pretty_print=True,
+                      xml_declaration=True, encoding='UTF-8')
 
     def generate_study_xml(self):
         """
@@ -198,33 +178,24 @@ class ExperimentFileConverter:
         """
         if 'study' not in self.json_to_convert:
             return 'Error: table should have study sheet'
-        result = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        result += '<STUDY_SET xmlns:xsi=' \
-                  '"http://www.w3.org/2001/XMLSchema-instance" ' \
-                  'xsi:noNamespaceSchemaLocation=' \
-                  '"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.study.xsd">\n'
+        study_set = etree.Element('STUDY_SET')
+        study_xml = etree.ElementTree(study_set)
         for record in self.json_to_convert['study']:
             study_alias = record['study_alias']
             study_title = record['study_title']
             study_type = record['study_type']
             study_abstract = record['study_abstract'] \
                 if 'study_abstract' in record else None
-            result += f'\t<STUDY alias="{study_alias}">\n'
-
-            result += '\t\t<DESCRIPTOR>\n'
-
-            result += f'\t\t\t<STUDY_TITLE>{study_title}</STUDY_TITLE>\n'
-            result += f'\t\t\t<STUDY_TYPE existing_study_type=' \
-                      f'"{study_type}"/>\n'
+            study_elt = etree.SubElement(study_set, 'STUDY', alias=study_alias)
+            descriptor_elt = etree.SubElement(study_elt, 'DESCRIPTOR')
+            etree.SubElement(descriptor_elt, 'STUDY_TITLE').text = study_title
+            etree.SubElement(descriptor_elt, 'STUDY_TYPE',
+                             existing_study_type=study_type)
             if study_abstract is not None:
-                result += f'\t\t\t<STUDY_ABSTRACT>' \
-                          f'{study_abstract}</STUDY_ABSTRACT>\n'
-
-            result += '\t\t</DESCRIPTOR>\n'
-
-            result += '\t</STUDY>\n'
-        result += '</STUDY_SET>'
-        return result
+                etree.SubElement(descriptor_elt,
+                                 'STUDY_ABSTRACT').text = study_abstract
+        study_xml.write(f"{self.room_id}_study.xml", pretty_print=True,
+                        xml_declaration=True, encoding='UTF-8')
 
     def generate_submission_xml(self):
         """
@@ -233,28 +204,17 @@ class ExperimentFileConverter:
         """
         if 'submission' not in self.json_to_convert:
             return 'Error: table should have submission sheet'
-        result = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        result += '<SUBMISSION_SET xmlns:xsi=' \
-                  '"http://www.w3.org/2001/XMLSchema-instance" ' \
-                  'xsi:noNamespaceSchemaLocation=' \
-                  '"ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/' \
-                  'SRA.submission.xsd">\n'
+        submission_set = etree.Element('SUBMISSION_SET')
+        submission_xml = etree.ElementTree(submission_set)
         for record in self.json_to_convert['submission']:
-            alias = record['alias']
-            result += f'\t<SUBMISSION alias="{alias}">\n'
+            submission_elt = etree.SubElement(submission_set, 'SUBMISSION',
+                                              alias=record['alias'])
+            actions_elt = etree.SubElement(submission_elt, 'ACTIONS')
+            action_elt = etree.SubElement(actions_elt, 'ACTION')
+            etree.SubElement(action_elt, 'ADD')
+            action_elt = etree.SubElement(actions_elt, 'ACTION')
+            etree.SubElement(action_elt, 'RELEASE')
 
-            result += '\t\t<ACTIONS>\n'
-
-            result += '\t\t\t<ACTION>\n'
-            result += '\t\t\t\t<ADD/>\n'
-            result += '\t\t\t</ACTION>\n'
-
-            result += '\t\t\t<ACTION>\n'
-            result += '\t\t\t\t<RELEASE/>\n'
-            result += '\t\t\t</ACTION>\n'
-
-            result += '\t\t</ACTIONS>\n'
-
-            result += '\t</SUBMISSION>\n'
-        result += '</SUBMISSION_SET>'
-        return result
+        submission_xml.write(f"{self.room_id}_submission.xml",
+                             pretty_print=True, xml_declaration=True,
+                             encoding='UTF-8')
