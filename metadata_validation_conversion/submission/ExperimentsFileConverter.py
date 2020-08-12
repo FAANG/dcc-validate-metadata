@@ -44,12 +44,12 @@ class ExperimentFileConverter:
                                               alias=alias)
             if title is not None:
                 etree.SubElement(experiment_elt, 'TITLE').text = title
-            etree.SubElement(experiment_elt, 'STUDY_REF').text = study_ref
+            etree.SubElement(experiment_elt, 'STUDY_REF', refname=study_ref)
             design_elt = etree.SubElement(experiment_elt, 'DESIGN')
             etree.SubElement(design_elt,
                              'DESIGN_DESCRIPTION').text = design_description
-            etree.SubElement(design_elt,
-                             'SAMPLE_DESCRIPTOR').text = sample_descriptor
+            etree.SubElement(design_elt, 'SAMPLE_DESCRIPTOR',
+                             refname=sample_descriptor)
             library_descriptor_elt = etree.SubElement(design_elt,
                                                       'LIBRARY_DESCRIPTOR')
             if library_name is not None:
@@ -65,7 +65,7 @@ class ExperimentFileConverter:
                                                   'LIBRARY_LAYOUT')
             if nominal_length is not None:
                 etree.SubElement(library_layout_elt, library_layout,
-                                 NOMINAL_LENGTH=nominal_length)
+                                 NOMINAL_LENGTH=str(nominal_length))
             else:
                 etree.SubElement(library_layout_elt, library_layout)
             if library_construction_protocol is not None:
@@ -123,7 +123,8 @@ class ExperimentFileConverter:
                 value = attr_value['value']
             elif 'text' in attr_value:
                 value = attr_value['text']
-            etree.SubElement(experiment_attribute_elt, 'VALUE').text = value
+            etree.SubElement(experiment_attribute_elt,
+                             'VALUE').text = str(value)
             if 'units' in attr_value:
                 etree.SubElement(experiment_attribute_elt,
                                  'UNITS').text = attr_value['units']
