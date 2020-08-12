@@ -94,7 +94,7 @@ def prepare_analyses_data(json_to_convert, room_id):
 
 @app.task
 def prepare_experiments_data(json_to_convert, room_id):
-    conversion_results = ExperimentFileConverter(json_to_convert[0])
+    conversion_results = ExperimentFileConverter(json_to_convert[0], room_id)
     experiment_xml, run_xml, study_xml, submission_xml = \
         conversion_results.start_conversion()
     if 'Error' in experiment_xml:
