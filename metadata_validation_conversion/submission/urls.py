@@ -12,7 +12,7 @@ urlpatterns = [
          name='submit_records'),
     path('samples/<str:task_id>/<str:room_id>', views.samples_conversion,
          name='samples_submission'),
-    path('experiments/<str:task_id>/<str:room_id>',
+    path('experiments/<str:task_id>/<str:room_id>/submit_experiments',
          views.experiments_submission, name='experiments_submission'),
     path('analyses/<str:task_id>/<str:room_id>', views.analyses_submission,
          name='analyses_submission'),
@@ -21,6 +21,6 @@ urlpatterns = [
          views.get_template, name='get_template'),
     path('download_template/<str:room_id>', views.download_template,
          name='download_template'),
-    path('download_submission_results/<str:task_id>',
+    path('download_submission_results/<str:submission_type>/<str:task_id>',
          views.download_submission_results, name='download_submission_results')
 ]

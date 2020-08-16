@@ -1,5 +1,7 @@
 from lxml import etree
 
+import datetime
+
 from .helpers import check_field_existence, remove_underscores
 
 
@@ -65,7 +67,7 @@ class ExperimentFileConverter:
                                                   'LIBRARY_LAYOUT')
             if nominal_length is not None:
                 etree.SubElement(library_layout_elt, library_layout,
-                                 NOMINAL_LENGTH=str(nominal_length))
+                                 NOMINAL_LENGTH=str(int(nominal_length)))
             else:
                 etree.SubElement(library_layout_elt, library_layout)
             if library_construction_protocol is not None:
@@ -94,6 +96,7 @@ class ExperimentFileConverter:
         experiment_xml.write(f"{self.room_id}_experiment.xml",
                              pretty_print=True, xml_declaration=True,
                              encoding='UTF-8')
+        return 'Success'
 
     def find_faang_experiment(self, sample_descriptor):
         """
@@ -141,7 +144,8 @@ class ExperimentFileConverter:
         for record in self.json_to_convert['run']:
             run_alias = record['alias']
             run_center = record['run_center']
-            run_date = record['run_date']
+            run_date = datetime.datetime.strptime(record['run_date'],
+                                                  '%Y-%m-%d').isoformat()
             experiment_ref = record['experiment_ref']
             filename = record['filename']
             filetype = record['filetype']
@@ -171,6 +175,7 @@ class ExperimentFileConverter:
                                  checksum=checksum_pair)
         run_xml.write(f"{self.room_id}_run.xml", pretty_print=True,
                       xml_declaration=True, encoding='UTF-8')
+        return 'Success'
 
     def generate_study_xml(self):
         """
@@ -197,6 +202,7 @@ class ExperimentFileConverter:
                                  'STUDY_ABSTRACT').text = study_abstract
         study_xml.write(f"{self.room_id}_study.xml", pretty_print=True,
                         xml_declaration=True, encoding='UTF-8')
+        return 'Success'
 
     def generate_submission_xml(self):
         """
@@ -219,3 +225,4 @@ class ExperimentFileConverter:
         submission_xml.write(f"{self.room_id}_submission.xml",
                              pretty_print=True, xml_declaration=True,
                              encoding='UTF-8')
+        return 'Success'

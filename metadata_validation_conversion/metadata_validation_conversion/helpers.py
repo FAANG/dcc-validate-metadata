@@ -42,7 +42,7 @@ def send_message(room_id, conversion_status=None, validation_status=None,
                  submission_status=None, errors=None, validation_results=None,
                  conversion_errors=None, table_data=None,
                  annotation_status=None, domains=None,
-                 submission_message=None, biosamples=None):
+                 submission_message=None, submission_results=None):
     """
     This function will send message to channel layer
     :param room_id: room id to construct ws url
@@ -56,7 +56,7 @@ def send_message(room_id, conversion_status=None, validation_status=None,
     :param annotation_status: annotation status to send
     :param domains: list of user domains
     :param submission_message: submission message to send
-    :param biosamples: list of biosamples ids
+    :param submission_results: list of submission results
     """
     response = {
         'conversion_status': conversion_status,
@@ -69,7 +69,7 @@ def send_message(room_id, conversion_status=None, validation_status=None,
         'table_data': table_data,
         'annotation_status': annotation_status,
         'domains': domains,
-        'biosamples': biosamples
+        'submission_results': submission_results
     }
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(f"submission_{room_id}", {
