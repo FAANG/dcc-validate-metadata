@@ -1,6 +1,10 @@
+from lxml import etree
+
+
 class AnalysesFileConverter:
-    def __init__(self, json_to_convert):
+    def __init__(self, json_to_convert, room_id):
         self.json_to_convert = json_to_convert
+        self.room_id = room_id
 
     def start_conversion(self):
         analysis_xml = self.generate_analysis_xml()
@@ -12,7 +16,8 @@ class AnalysesFileConverter:
         This function will generate xml file with analyses
         :return: xml file for analyses
         """
-        result = '<?xml version="1.0" encoding="UTF-8"?>\n<ANALYSIS_SET>\n'
+        analysis_set = etree.Element('ANALYSIS_SET')
+        analysis_xml = etree.ElementTree(analysis_set)
         number_of_records = len(self.json_to_convert['ena'])
         for record_number in range(number_of_records):
             title = self.json_to_convert['ena'][record_number]['title']['value']
@@ -48,93 +53,95 @@ class AnalysesFileConverter:
             analysis_date_units = self.json_to_convert['ena'][record_number][
                 'analysis_date']['units']
 
-            result += f'\t<ANALYSIS alias="{alias}">\n'
-
-            result += f'\t\t<TITLE>{title}</TITLE>\n'
-
-            result += f'\t\t<DESCRIPTION>{description}</DESCRIPTION>\n'
-
-            result += f'\t\t<STUDY_REF accession="{study}"/>\n'
-
+            analysis_elt = etree.SubElement(analysis_set, 'ANALYSIS',
+                                            alias=alias)
+            etree.SubElement(analysis_elt, 'TITLE').text = title
+            etree.SubElement(analysis_elt, 'DESCRIPTION').text = description
+            etree.SubElement(analysis_elt, 'STUDY_REF', accession=study)
             for sample in samples:
                 sample_ref = sample['value']
-                result += f'\t\t<SAMPLE_REF accession="{sample_ref}"/>\n'
-
+                etree.SubElement(analysis_elt, 'SAMPLE_REF',
+                                 accession=sample_ref)
             for experiment in experiments:
                 exp_ref = experiment['value']
-                result += f'\t\t<EXPERIMENT_REF accession="{exp_ref}"/>\n'
-
+                etree.SubElement(analysis_elt, 'EXPERIMENT_REF',
+                                 accession=exp_ref)
             for run in runs:
                 run_ref = run['value']
-                result += f'\t\t<RUN_REF accession="{run_ref}"/>\n'
-
-            result += '\t\t<ANALYSIS_TYPE>\n'
-            result += f'\t\t\t<{analysis_type}>\n'
-            result += f'\t\t\t</{analysis_type}>\n'
-            result += '\t\t</ANALYSIS_TYPE>\n'
-
-            result += '\t\t<FILES>\n'
+                etree.SubElement(analysis_elt, 'RUN_REF', accession=run_ref)
+            analysis_type_elt = etree.SubElement(analysis_elt, 'ANALYSIS_TYPE')
+            etree.SubElement(analysis_type_elt, analysis_type)
+            files_elt = etree.SubElement(analysis_elt, 'FILES')
             for index, file_name in enumerate(file_names):
                 filename = file_name['value']
                 filetype = file_types[index]['value']
                 checksum_method = checksum_methods[index]['value']
                 checksum = checksums[index]['value']
-                result += f'\t\t\t<FILE filename="{filename}" ' \
-                          f'filetype="{filetype}" ' \
-                          f'checksum_method="{checksum_method}" ' \
-                          f'checksum="{checksum}"/>\n'
-            result += '\t\t</FILES>\n'
+                etree.SubElement(files_elt, 'FILE', filename=filename,
+                                 filetype=filetype,
+                                 checksum_method=checksum_method,
+                                 checksum=checksum)
+            analysis_attributes_elt = etree.SubElement(analysis_elt,
+                                                       'ANALYSIS_ATTRIBUTES')
+            analysis_attribute_elt = etree.SubElement(analysis_attributes_elt,
+                                                      'ANALYSIS_ATTRIBUTE')
+            etree.SubElement(analysis_attribute_elt, 'TAG').text = 'Project'
+            etree.SubElement(analysis_attribute_elt, 'VALUE').text = project
 
-            result += '\t\t<ANALYSIS_ATTRIBUTES>\n'
+            analysis_attribute_elt = etree.SubElement(analysis_attributes_elt,
+                                                      'ANALYSIS_ATTRIBUTE')
+            etree.SubElement(analysis_attribute_elt, 'TAG').text = 'Assay Type'
+            etree.SubElement(analysis_attribute_elt, 'VALUE').text = assay_type
 
-            result += '\t\t\t<ANALYSIS_ATTRIBUTE>\n'
-            result += '\t\t\t\t<TAG>Project</TAG>\n'
-            result += f'\t\t\t\t<VALUE>{project}</VALUE>\n'
-            result += '\t\t\t</ANALYSIS_ATTRIBUTE>\n'
+            analysis_attribute_elt = etree.SubElement(analysis_attributes_elt,
+                                                      'ANALYSIS_ATTRIBUTE')
+            etree.SubElement(analysis_attribute_elt,
+                             'TAG').text = 'Analysis Protocol'
+            etree.SubElement(analysis_attribute_elt,
+                             'VALUE').text = analysis_protocol
 
-            result += '\t\t\t<ANALYSIS_ATTRIBUTE>\n'
-            result += '\t\t\t\t<TAG>Assay Type</TAG>\n'
-            result += f'\t\t\t\t<VALUE>{assay_type}</VALUE>\n'
-            result += '\t\t\t</ANALYSIS_ATTRIBUTE>\n'
+            analysis_attribute_elt = etree.SubElement(analysis_attributes_elt,
+                                                      'ANALYSIS_ATTRIBUTE')
+            etree.SubElement(analysis_attribute_elt,
+                             'TAG').text = 'Reference genome'
+            etree.SubElement(analysis_attribute_elt,
+                             'VALUE').text = reference_genome
 
-            result += '\t\t\t<ANALYSIS_ATTRIBUTE>\n'
-            result += '\t\t\t\t<TAG>Analysis Protocol</TAG>\n'
-            result += f'\t\t\t\t<VALUE>{analysis_protocol}</VALUE>\n'
-            result += '\t\t\t</ANALYSIS_ATTRIBUTE>\n'
+            analysis_attribute_elt = etree.SubElement(analysis_attributes_elt,
+                                                      'ANALYSIS_ATTRIBUTE')
+            etree.SubElement(analysis_attribute_elt,
+                             'TAG').text = 'Analysis center'
+            etree.SubElement(analysis_attribute_elt,
+                             'VALUE').text = analysis_center
 
-            result += '\t\t\t<ANALYSIS_ATTRIBUTE>\n'
-            result += '\t\t\t\t<TAG>Reference genome</TAG>\n'
-            result += f'\t\t\t\t<VALUE>{reference_genome}</VALUE>\n'
-            result += '\t\t\t</ANALYSIS_ATTRIBUTE>\n'
+            analysis_attribute_elt = etree.SubElement(analysis_attributes_elt,
+                                                      'ANALYSIS_ATTRIBUTE')
+            etree.SubElement(analysis_attribute_elt,
+                             'TAG').text = 'Analysis date'
+            etree.SubElement(analysis_attribute_elt,
+                             'VALUE').text = analysis_date_value
+            etree.SubElement(analysis_attribute_elt,
+                             'UNITS').text = analysis_date_units
+        analysis_xml.write(f"{self.room_id}_analysis.xml",
+                           pretty_print=True, xml_declaration=True,
+                           encoding='UTF-8')
+        return 'Success'
 
-            result += '\t\t\t<ANALYSIS_ATTRIBUTE>\n'
-            result += '\t\t\t\t<TAG>Analysis center</TAG>\n'
-            result += f'\t\t\t\t<VALUE>{analysis_center}</VALUE>\n'
-            result += '\t\t\t</ANALYSIS_ATTRIBUTE>\n'
-
-            result += '\t\t\t<ANALYSIS_ATTRIBUTE>\n'
-            result += '\t\t\t\t<TAG>Analysis date</TAG>\n'
-            result += f'\t\t\t\t<VALUE>{analysis_date_value}</VALUE>\n'
-            result += f'\t\t\t\t<UNITS>{analysis_date_units}</UNITS>\n'
-            result += '\t\t\t</ANALYSIS_ATTRIBUTE>\n'
-
-            result += '\t\t</ANALYSIS_ATTRIBUTES>\n'
-
-            result += '\t</ANALYSIS>\n'
-        result += '</ANALYSIS_SET>'
-        return result
-
-    @staticmethod
-    def generate_submission_xml():
+    def generate_submission_xml(self):
         """
         This function will generate xml file with submission
         :return: xml file for submission
         """
-        result = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        result += '<SUBMISSION_SET>\n\t<SUBMISSION alias=\"analysis\">\n'
-        result += '\t\t<ACTIONS>\n\t\t\t<ACTION>\n\t\t\t\t<ADD/>\n\t\t\t' \
-                  '</ACTION>\n'
-        result += '\t\t\t<ACTION>\n\t\t\t\t<RELEASE/>\n\t\t\t</ACTION>\n\t\t' \
-                  '</ACTIONS>\n'
-        result += '\t</SUBMISSION>\n</SUBMISSION_SET>\n'
-        return result
+        submission_set = etree.Element('SUBMISSION_SET')
+        submission_xml = etree.ElementTree(submission_set)
+        submission_elt = etree.SubElement(submission_set, 'SUBMISSION',
+                                          alias="analysis")
+        actions_elt = etree.SubElement(submission_elt, 'ACTIONS')
+        action_elt = etree.SubElement(actions_elt, 'ACTION')
+        etree.SubElement(action_elt, 'ADD')
+        action_elt = etree.SubElement(actions_elt, 'ACTION')
+        etree.SubElement(action_elt, 'RELEASE')
+        submission_xml.write(f"{self.room_id}_submission.xml",
+                             pretty_print=True, xml_declaration=True,
+                             encoding='UTF-8')
+        return 'Success'
