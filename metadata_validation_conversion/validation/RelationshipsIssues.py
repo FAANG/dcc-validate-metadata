@@ -160,7 +160,9 @@ class RelationshipsIssues:
             self.add_errors_to_relationships(
                 relationship_to_return, results_holder[-1],
                 relation_organism_name)
-        if current_organism_name in relation_organism_value['relationships']:
+        if 'relationships' in relation_organism_value and  \
+                current_organism_name in \
+                relation_organism_value['relationships']:
             results_holder.append(f"Relationships part: parent "
                                   f"'{relation_organism_name}' is listing "
                                   f"the child as its parent")

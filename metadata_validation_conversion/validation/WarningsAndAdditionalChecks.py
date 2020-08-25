@@ -371,7 +371,7 @@ class WarningsAndAdditionalChecks:
             else:
                 for k, v in field_value.items():
                     record_to_return_ref = record_to_return[field_name][index] \
-                        if index else record_to_return[field_name]
+                        if index is not None else record_to_return[field_name]
                     if field_name in mandatory_fields:
                         self.check_single_missing_value(k, v,
                                                         MISSING_VALUES[
