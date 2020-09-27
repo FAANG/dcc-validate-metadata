@@ -427,6 +427,8 @@ class WarningsAndAdditionalChecks:
             organism_term = record['organism']['term']
         except KeyError:
             return
+        if organism_term not in SPECIES_BREED_LINKS:
+            return
         schema = {
             "type": "string",
             "graph_restriction": {
