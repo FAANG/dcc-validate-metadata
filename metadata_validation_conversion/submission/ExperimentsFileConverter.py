@@ -152,9 +152,10 @@ class ExperimentFileConverter:
             checksum_method = record['checksum_method']
             checksum = record['checksum']
             paired = False
-            if 'filename_pair' in record and 'filetype_pair' in record \
-                    and 'checksum_method_pair' in record \
-                    and 'checksum_pair' in record:
+            if check_field_existence('filename_pair', record) \
+                    and check_field_existence('filetype_pair', record) \
+                    and check_field_existence('checksum_method_pair', record) \
+                    and check_field_existence('checksum_pair', record):
                 paired = True
                 filename_pair = record['filename_pair']
                 filetype_pair = record['filetype_pair']
