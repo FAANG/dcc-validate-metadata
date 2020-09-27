@@ -27,7 +27,10 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool, default=False)
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost'
+]
 
 
 # Application definition
@@ -42,10 +45,12 @@ INSTALLED_APPS = [
     'conversion',
     'validation',
     'channels',
-    'ws'
+    'ws',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -138,3 +143,5 @@ CHANNEL_LAYERS = {
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
 
 CELERY_TIMEZONE = TIME_ZONE
+
+CORS_ALLOW_ALL_ORIGINS = True
