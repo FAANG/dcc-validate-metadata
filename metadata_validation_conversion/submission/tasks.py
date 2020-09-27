@@ -165,6 +165,7 @@ def submit_data_to_ena(results, credentials, room_id, submission_type):
         else:
             send_message(
                 submission_message="Success: submission was successful",
+                submission_results=[submission_info_messages],
                 room_id=room_id)
     subprocess.run(f"rm {room_id}*.xml", shell=True)
     return submission_results.decode('utf-8')

@@ -81,7 +81,7 @@ class ExperimentFileConverter:
                                  'INSTRUMENT_MODEL').text = instrument_model
             experiment_attributes_elt = etree.SubElement(
                 experiment_elt, 'EXPERIMENT_ATTRIBUTES')
-            faang_experiment = self.find_faang_experiment(sample_descriptor)
+            faang_experiment = self.find_faang_experiment(alias)
             self.parse_faang_experiment(faang_experiment['experiments_core'],
                                         experiment_attributes_elt)
             if 'dna-binding_proteins' in faang_experiment:
@@ -108,7 +108,7 @@ class ExperimentFileConverter:
             if exp_type not in ['submission', 'study', 'run',
                                 'experiment_ena']:
                 for record in exp_value:
-                    record_id = record['custom']['sample_descriptor']['value']
+                    record_id = record['custom']['experiment_alias']['value']
                     if sample_descriptor == record_id:
                         return record
 
@@ -116,7 +116,7 @@ class ExperimentFileConverter:
     def parse_faang_experiment(faang_experiment, experiment_attributes_elt):
         for attr_name, attr_value in faang_experiment.items():
             if attr_name in ['experiments_core', 'dna-binding_proteins',
-                             'input_dna']:
+                             'input_dna', 'custom']:
                 continue
             experiment_attribute_elt = etree.SubElement(
                 experiment_attributes_elt, 'EXPERIMENT_ATTRIBUTE')
