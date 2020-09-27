@@ -67,13 +67,13 @@ def check_issues(record):
     :return: True if any issues and False otherwise
     """
     for key, value in record.items():
+        if key in ['samples_core', 'custom', 'experiments_core',
+                   'input_dna', 'dna-binding_proteins']:
+            if check_issues(value):
+                return True
         if isinstance(value, list):
             for item in value:
                 if 'errors' in item and len(item['errors']) > 0:
-                    return True
-        elif key in ['samples_core', 'custom', 'experiments_core', 'module']:
-            for k, v in value.items():
-                if 'errors' in v and len(v['errors']) > 0:
                     return True
         else:
             if 'errors' in value and len(value['errors']) > 0:
