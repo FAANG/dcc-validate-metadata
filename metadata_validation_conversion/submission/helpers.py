@@ -5,7 +5,8 @@ def check_field_existence(field_to_check, record_to_check):
     :param record_to_check: record to search field in
     :return:
     """
-    if field_to_check in record_to_check:
+    if field_to_check in record_to_check \
+            and record_to_check[field_to_check] != "":
         return record_to_check[field_to_check]
     else:
         return None
