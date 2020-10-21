@@ -340,8 +340,8 @@ class WarningsAndAdditionalChecks:
                 try:
                     datetime.datetime.strptime(field_value['value'], units)
                 except ValueError:
-                    record_to_return[field_name].setdefault('warnings', list())
-                    record_to_return[field_name]['warnings'].append(
+                    record_to_return[field_name].setdefault('errors', list())
+                    record_to_return[field_name]['errors'].append(
                         f"Date units: {field_value['units']} should be "
                         f"consistent with date value: {field_value['value']}"
                     )
