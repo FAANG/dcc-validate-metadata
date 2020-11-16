@@ -26,5 +26,9 @@ def read_excel_file(room_id, conversion_type, file):
         send_message(
             room_id=room_id, conversion_status='Error', errors=results[0])
     else:
-        send_message(room_id=room_id, conversion_status='Success')
+        if results[2]:
+            send_message(room_id=room_id, conversion_status='Success',
+                         bovreg_submission=True)
+        else:
+            send_message(room_id=room_id, conversion_status='Success')
     return results[0], results[1]

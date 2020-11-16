@@ -1,40 +1,26 @@
-import datetime
+import json
+from celery import chain
+from decouple import config
 
 from django.http import HttpResponse
-
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
 
-from metadata_validation_conversion.helpers import send_message
-from metadata_validation_conversion.constants import ORGANIZATIONS
-from .tasks import upload
+from .tasks import validate, upload
 
 
 @csrf_exempt
-def upload_protocol(request, task_id):
+def upload_protocol(request, protocol_type):
     if request.method == 'POST':
-        errors = list()
         fileid = list(request.FILES.keys())[0]
-        send_message(submission_message="Starting to validate protocol",
-                     room_id=fileid)
         filename = str(request.FILES[fileid]).split("_")
-        if filename[0] not in ORGANIZATIONS:
-            errors.append(f"Your organization {filename[0]} was not found")
-        if filename[1] != 'SOP':
-            errors.append("Please add SOP tag in your protocol name")
-        protocol_date = filename[-1].split('.pdf')[0]
-        try:
-            datetime.datetime.strptime(protocol_date, '%Y%m%d')
-        except ValueError:
-            errors.append("Incorrect date format, should be YYYYMMDD")
-        if len(errors) != 0:
-            send_message(submission_message="Protocol upload failed",
-                         errors=errors, room_id=fileid)
-        else:
-            send_message(submission_message='Success',
-                         submission_results=f"https://data.faang.org/api/"
-                                            f"fire_api/samples/"
-                                            f"{str(request.FILES[fileid])}",
-                         room_id=fileid)
-        return HttpResponse("Success")
+        firepath = protocol_type
+        with open(f'/data/{fileid}.pdf', 'wb+') as destination:
+            for chunk in request.FILES[fileid].chunks():
+                destination.write(chunk)
+        validate_task = validate.s(fileid, filename).set(queue='upload')
+        upload_task = upload.s(fileid, firepath).set(
+            queue='upload')
+        upload_protocol_chain = chain(validate_task | upload_task)
+        res = upload_protocol_chain.apply_async()
+        return HttpResponse(json.dumps({"id": res.id}))
     return HttpResponse("Please use POST method for protocols upload")

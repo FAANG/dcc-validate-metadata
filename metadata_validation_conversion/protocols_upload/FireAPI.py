@@ -1,69 +1,40 @@
-import json
 import subprocess
-import sys
 import hashlib
 import os
-from decouple import config
-from argparse import ArgumentParser
 
 
 class FireAPI:
-    def __init__(self, username, password, archive_name, api_endpoint,
-                 filename=None, path=None):
+    def __init__(self, username, password, filepath, firepath):
         self.username = username
         self.password = password
-        self.archive_name = archive_name
-        self.api_endpoint = api_endpoint
-        if filename:
-            self.filepath = filename
-            self.filename = filename.split('/')[-1]
-        if path:
-            self.path = path
+        self.filepath = filepath
+        self.filename = os.path.basename(filepath)
+        self.firepath = f"ftp/protocols/{firepath}"
 
     def upload_object(self):
         """This function will upload object to Fire database"""
-        cmd = f"curl {self.api_endpoint}/objects " \
+        cmd = f"curl https://hh.fire.sdo.ebi.ac.uk/fire/objects " \
             f"-F file=@{self.filepath} " \
-            f"-H 'x-fire-path: {self.path}/{self.filename}' " \
+            f"-H 'x-fire-path: {self.firepath}/{self.filename}' " \
             f"-H 'x-fire-publish: true' " \
             f"-u {self.username}:{self.password} " \
               f"-H 'x-fire-size: {self.get_file_size()}' " \
               f"-H 'x-fire-md5: {self.get_md5_of_file()}'"
         proc = subprocess.run(cmd, shell=True, capture_output=True)
+        if proc.returncode != 0:
+            return "Error"
+        else:
+            self.write_to_es()
+            return self.get_public_link()
 
     def get_public_link(self):
         """This function will return public link to uploaded file"""
-        link = f"https://data.faang.org/api/fire_api/" \
-               f"{self.path.split('/')[-1]}/{self.filename}"
-        print(link)
+        return f"https://data.faang.org/api/fire_api/" \
+               f"{self.firepath.split('/')[-1]}/{self.filename}"
 
-    def list_objects(self):
-        """This function will list all objects in archive"""
-        cmd = f"curl {self.api_endpoint}/objects?total=1000000 " \
-            f"-u {self.username}:{self.password}"
-        proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
-        (out, err) = proc.communicate()
-        out = json.loads(out.decode('utf-8'))
-        print(f"{'File path':150}\t{'Published':10}\t{'FireOId':30}")
-        for file in out:
-            if file['filesystemEntry']:
-                print(f"{file['filesystemEntry']['path']:150}\t"
-                      f"{file['filesystemEntry']['published']}\t"
-                      f"{file['fireOid']:30}")
-
-    def delete_objects(self, fire_id):
-        """This function will delete object from Fire database"""
-        cmd = f"curl {self.api_endpoint}/objects/{fire_id} " \
-            f"-u {self.username}:{self.password} " \
-            f"-X DELETE"
-        proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
-        (out, err) = proc.communicate()
-        self.list_objects()
-
-    def replace_object(self, fire_id):
-        """This function will replace existing object in Fire API"""
-        self.delete_objects(fire_id)
-        self.upload_object()
+    def write_to_es(self):
+        """This function will write new protocol to protocols index in ES"""
+        pass
 
     def get_md5_of_file(self):
         """

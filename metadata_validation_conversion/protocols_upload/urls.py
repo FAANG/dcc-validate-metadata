@@ -3,5 +3,5 @@ from . import views
 
 app_name = 'protocols_upload'
 urlpatterns = [
-    path('<str:task_id>', views.upload_protocol, name='upload_protocol'),
+    path('<str:protocol_type>', views.upload_protocol, name='upload_protocol'),
 ]

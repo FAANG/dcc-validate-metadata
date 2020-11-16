@@ -14,10 +14,11 @@ def convert_template(request, task_id):
     if request.method == 'POST':
         fileid = list(request.FILES.keys())[0]
         send_message(room_id=fileid, conversion_status="Waiting")
-        with open(f'{fileid}.xlsx', 'wb+') as destination:
+        with open(f'/data/{fileid}.xlsx', 'wb+') as destination:
             for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
-        res = read_excel_file.apply_async((fileid, task_id, f'{fileid}.xlsx'),
+        res = read_excel_file.apply_async((fileid, task_id,
+                                           f'/data/{fileid}.xlsx'),
                                           queue='conversion')
         res.get()
         return HttpResponse(res.id)

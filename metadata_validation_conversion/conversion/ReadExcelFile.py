@@ -24,6 +24,7 @@ class ReadExcelFile:
         Main function that will convert xlsx file to proper json format
         :return: submitted data in proper json format
         """
+        bovreg_submission = False
         wb = xlrd.open_workbook(self.file_path)
         self.wb_datemode = wb.datemode
         data = dict()
@@ -77,11 +78,14 @@ class ReadExcelFile:
                         return material_consistency, structure
 
                     tmp.append(sample_data)
+                    # if 'secondary_project' in sample_data['samples_core']:
+                    #     if sample_data['samples_core']['secondary_project'][0]['value'] == 'BovReg':
+                    #         bovreg_submission = True
 
                 if len(tmp) > 0:
                     data[convert_to_snake_case(sh.name)] = tmp
         os.remove(self.file_path)
-        return data, structure
+        return data, structure, bovreg_submission
 
     @staticmethod
     def get_additional_data(table_object, sheet_name,
