@@ -2,17 +2,28 @@ import subprocess
 import hashlib
 import os
 
+from elasticsearch import Elasticsearch
+
+from metadata_validation_conversion.constants import ORGANIZATIONS
+
 
 class FireAPI:
-    def __init__(self, username, password, filepath, firepath):
+    def __init__(self, username, password, filepath, firepath, filename):
         self.username = username
         self.password = password
         self.filepath = filepath
-        self.filename = os.path.basename(filepath)
+        self.filename = filename
         self.firepath = f"ftp/protocols/{firepath}"
+        self.protocol_index = self.get_protocol_index(firepath)
+        self.es = Elasticsearch(['elasticsearch-master-headless:9200'])
 
     def upload_object(self):
         """This function will upload object to Fire database"""
+        # Check that protocol doesn't exist in es, otherwise return Error
+        write_to_es_result = self.write_to_es()
+        if write_to_es_result == 'Error':
+            return 'Error'
+        # curl request to upload protocol to FIRE service
         cmd = f"curl https://hh.fire.sdo.ebi.ac.uk/fire/objects " \
             f"-F file=@{self.filepath} " \
             f"-H 'x-fire-path: {self.firepath}/{self.filename}' " \
@@ -22,10 +33,20 @@ class FireAPI:
               f"-H 'x-fire-md5: {self.get_md5_of_file()}'"
         proc = subprocess.run(cmd, shell=True, capture_output=True)
         if proc.returncode != 0:
+            # Remove protocol from ES
+            self.delete_from_es()
             return "Error"
         else:
-            self.write_to_es()
             return self.get_public_link()
+
+    @staticmethod
+    def get_protocol_index(firepath):
+        if firepath == 'samples':
+            return 'protocols_samples'
+        elif firepath == 'experiments':
+            return 'protocols_experiments'
+        elif firepath == 'analyses':
+            return 'protocol_analyses'
 
     def get_public_link(self):
         """This function will return public link to uploaded file"""
@@ -34,7 +55,28 @@ class FireAPI:
 
     def write_to_es(self):
         """This function will write new protocol to protocols index in ES"""
-        pass
+        parsed = self.filename.split("_")
+        university_name = ORGANIZATIONS[parsed[0]]
+        protocol_name = " ".join(parsed[2:-1])
+        url = self.get_public_link()
+        date = parsed[-1].split(".pdf")[0]
+        protocol_data = {
+            "specimens": [],
+            "universityName": university_name,
+            "protocolDate": date,
+            "protocolName": protocol_name,
+            "key": self.filename,
+            "url": url
+        }
+        if self.es.exists(self.protocol_index, id=self.filename):
+            return 'Error'
+        else:
+            self.es.create(self.protocol_index, id=self.filename,
+                           body=protocol_data)
+
+    def delete_from_es(self):
+        """This function will delete protocol from ES"""
+        self.es.delete(self.protocol_index, id=self.filename)
 
     def get_md5_of_file(self):
         """

@@ -30,12 +30,12 @@ def validate(fileid, filename):
 
 
 @app.task
-def upload(validation_results, fileid, firepath):
+def upload(validation_results, fileid, firepath, filename):
     send_message(submission_message="Uploading protocol", room_id=fileid)
     if validation_results == 'Success':
         filepath = f"/data/{fileid}.pdf"
         fire_api_object = FireAPI(FIRE_USERNAME, FIRE_PASSWORD, filepath,
-                                  firepath)
+                                  firepath, filename)
         results = fire_api_object.upload_object()
         if results == 'Error':
             send_message(submission_message="Protocol upload failed, "
