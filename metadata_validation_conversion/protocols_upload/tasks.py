@@ -15,11 +15,14 @@ def validate(fileid, filename):
         errors.append(f"Your organization {filename[0]} was not found")
     if filename[1] != 'SOP':
         errors.append("Please add SOP tag in your protocol name")
-    protocol_date = filename[-1].split('.pdf')[0]
-    try:
-        datetime.datetime.strptime(protocol_date, '%Y%m%d')
-    except ValueError:
-        errors.append("Incorrect date format, should be YYYYMMDD")
+    if '.pdf' not in filename[-1]:
+        errors.append("Please use PDF format only")
+    else:
+        protocol_date = filename[-1].split('.pdf')[0]
+        try:
+            datetime.datetime.strptime(protocol_date, '%Y%m%d')
+        except ValueError:
+            errors.append("Incorrect date format, should be YYYYMMDD")
     if len(errors) != 0:
         send_message(submission_message="Protocol upload failed, "
                                         "please contact faang-dcc@ebi.ac.uk",
@@ -46,4 +49,8 @@ def upload(validation_results, fileid, firepath, filename):
             send_message(submission_message='Success',
                          submission_results=results,
                          room_id=fileid)
+    else:
+        send_message(submission_message="Protocol upload failed, please "
+                                        "contact faang-dcc@ebi.ac.uk",
+                     room_id=fileid)
     return 'Success'

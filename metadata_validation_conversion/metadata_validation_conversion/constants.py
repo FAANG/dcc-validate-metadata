@@ -344,6 +344,7 @@ ORGANIZATIONS = {
     "AGS": "Agroscope (Switzerland)",
     "DEDJTR": "Department of Economic Development, Jobs, Transport and "
               "Resources (Bundoora, Australia)",
+    "DIAGENODE": "Diagenode (Liège, Belgium)",
     "EHU": "University of the Basque Country (Spain)",
     "ESTEAM": "ESTeam Paris SUD (France)",
     "FBN": "Leibniz Institute for Farm Animal Biology (Dummerstorf, Germany)",

@@ -1,6 +1,5 @@
 import json
 from celery import chain
-from decouple import config
 
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
