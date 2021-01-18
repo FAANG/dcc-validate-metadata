@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import datetime
 
 from decouple import config
 
@@ -22,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool, default=False)
@@ -42,7 +43,10 @@ INSTALLED_APPS = [
     'conversion',
     'validation',
     'channels',
+    'submission',
+    'protocols_upload',
     'ws',
+    'rest_framework',
     'corsheaders'
 ]
 
@@ -83,8 +87,12 @@ WSGI_APPLICATION = 'metadata_validation_conversion.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'kubernetes_django',
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('POSTGRES_HOST'),
+        'PORT': os.getenv('POSTGRES_PORT', 5432)
     }
 }
 
@@ -124,7 +132,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
-
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 STATIC_URL = '/static/'
 
 ASGI_APPLICATION = 'metadata_validation_conversion.routing.application'
@@ -141,7 +150,32 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
 
 CELERY_TIMEZONE = TIME_ZONE
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+
+JWT_AUTH = {
+    'JWT_ALLOW_REFRESH': True,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3600),
+}
+
 CORS_ALLOW_ALL_ORIGINS = True
 
-FIRE_USERNAME = config('USERNAME')
-FIRE_PASSWORD = config('PASSWORD')
+FIRE_USERNAME = os.getenv('FIRE_USERNAME')
+FIRE_PASSWORD = os.getenv('FIRE_PASSWORD')
+
+BOVREG_USERNAME = os.getenv('BOVREG_USERNAME')
+BOVREG_PASSWORD = os.getenv('BOVREG_PASSWORD')
+
+BOVREG_BIOSAMPLES_USERNAME_TEST = os.getenv('BOVREG_BIOSAMPLES_USERNAME_TEST')
+BOVREG_BIOSAMPLES_PASSWORD_TEST = os.getenv('BOVREG_BIOSAMPLES_PASSWORD_TEST')
+
+BOVREG_BIOSAMPLES_USERNAME_PROD = os.getenv('BOVREG_BIOSAMPLES_USERNAME_PROD')
+BOVREG_BIOSAMPLES_PASSWORD_PROD = os.getenv('BOVREG_BIOSAMPLES_PASSWORD_PROD')

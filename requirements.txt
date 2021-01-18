@@ -1,5 +1,5 @@
 daphne==3.0.0
-celery==5.0.2
+celery==4.4.7
 python-decouple
 Django==3.1.3
 channels==3.0.1
@@ -12,3 +12,7 @@ xlsxwriter==1.3.7
 redis==3.5.3
 channels-redis
 elasticsearch
+psycopg2-binary
+djangorestframework
+djangorestframework-jwt
+flower==0.9.5
