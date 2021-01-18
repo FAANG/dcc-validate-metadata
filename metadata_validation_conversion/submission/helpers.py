@@ -1,3 +1,8 @@
+from metadata_validation_conversion.settings import \
+    BOVREG_BIOSAMPLES_USERNAME_TEST, BOVREG_BIOSAMPLES_PASSWORD_TEST, \
+    BOVREG_BIOSAMPLES_USERNAME_PROD, BOVREG_BIOSAMPLES_PASSWORD_PROD
+
+
 def check_field_existence(field_to_check, record_to_check):
     """
     This function will check for existence of field in record
@@ -28,3 +33,23 @@ def convert_to_uppercase(value_to_convert):
     :return: value in uppercase
     """
     return ' '.join([word.capitalize() for word in value_to_convert.split('_')])
+
+
+def get_credentials(credentials):
+    """
+    This function will return username and password for private BioSamples
+    submission
+    :param credentials: body of request with credentials data
+    :return: appropriate username and password
+    """
+    if credentials['private_submission']:
+        if credentials['mode'] == 'test':
+            username = BOVREG_BIOSAMPLES_USERNAME_TEST
+            password = BOVREG_BIOSAMPLES_PASSWORD_TEST
+        else:
+            username = BOVREG_BIOSAMPLES_USERNAME_PROD
+            password = BOVREG_BIOSAMPLES_PASSWORD_PROD
+    else:
+        username = credentials['username']
+        password = credentials['password']
+    return username, password

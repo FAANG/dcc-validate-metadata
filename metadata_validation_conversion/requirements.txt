@@ -8,3 +8,4 @@ requests==2.22.0
 asgiref==3.2.3
 aiohttp==3.6.2
 xlsxwriter
+psycopg2-binary==2.8.6

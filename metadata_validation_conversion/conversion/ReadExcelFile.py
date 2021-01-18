@@ -1,5 +1,6 @@
 import xlrd
 import os
+import re
 from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, \
     SAMPLES_SPECIFIC_JSON_TYPES, EXPERIMENTS_SPECIFIC_JSON_TYPES, \
@@ -8,7 +9,6 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
-import json
 
 
 class ReadExcelFile:
@@ -78,9 +78,20 @@ class ReadExcelFile:
                         return material_consistency, structure
 
                     tmp.append(sample_data)
-                    # if 'secondary_project' in sample_data['samples_core']:
-                    #     if sample_data['samples_core']['secondary_project'][0]['value'] == 'BovReg':
-                    #         bovreg_submission = True
+
+                    # Check for BovReg private submission
+                    sc_prj = None
+                    if self.json_type == 'samples' and 'secondary_project' in \
+                            sample_data['samples_core']:
+                        sc_prj = \
+                            sample_data['samples_core']['secondary_project']
+                    elif self.json_type == 'experiments' \
+                            and 'secondary_project' in \
+                            sample_data['experiments_core']:
+                        sc_prj = \
+                            sample_data['experiments_core']['secondary_project']
+                    if sc_prj and sc_prj[0]['value'] == 'BovReg':
+                        bovreg_submission = True
 
                 if len(tmp) > 0:
                     data[convert_to_snake_case(sh.name)] = tmp
@@ -406,6 +417,11 @@ class ReadExcelFile:
                 # Convert date data to string (as Excel stores date in float
                 # format)
                 if date_field is True and isinstance(cell_value, float) \
+                        and field_name == 'value' \
+                        and re.match(r'.*([1-2][0-9]{3})',
+                                     str(int(cell_value))) is not None:
+                    cell_value = str(int(cell_value))
+                elif date_field is True and isinstance(cell_value, float) \
                         and field_name == 'value':
                     y, m, d, _, _, _ = xlrd.xldate_as_tuple(cell_value,
                                                             self.wb_datemode)

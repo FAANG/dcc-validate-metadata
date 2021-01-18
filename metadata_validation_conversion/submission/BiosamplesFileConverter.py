@@ -7,13 +7,19 @@ from submission.helpers import remove_underscores
 
 
 class BiosamplesFileConverter:
-    def __init__(self, json_to_convert):
+    def __init__(self, json_to_convert, private):
         self.json_to_convert = json_to_convert
+        self.private_submission = private
 
     def start_conversion(self):
         data_to_send = list()
         taxon_ids, taxons = self.get_taxon_information()
-        current_date = datetime.datetime.now().isoformat()
+        # If private submission move date for two years in the future
+        if self.private_submission:
+            two_years = datetime.timedelta(days=365) * 2
+            date = (datetime.datetime.now() + two_years).isoformat()
+        else:
+            date = datetime.datetime.now().isoformat()
         # Collect additional data, submission information
         additional_fields = dict()
         for additional_field in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
@@ -35,7 +41,7 @@ class BiosamplesFileConverter:
                 data_to_send.append(
                     {
                         "name": record_name,
-                        "release": current_date,
+                        "release": date,
                         "contact": person_info,
                         "organization": organization_info,
                         "characteristics": self.get_sample_attributes(
