@@ -365,6 +365,8 @@ ORGANIZATIONS = {
     "ULE": "University of León (León, Spain)",
     "USDA": "The United States Department of Agriculture (USA)",
     "USMARC": "United States Meat Animal Research Center (USA)",
+    "UAL": "University of Alberta (Canada)",
+    "UIDAHO": "University of Idaho (USA)",
     "USU": "Utah State University (USA)",
     "WSU": "Washington State University(USA)"
 }
