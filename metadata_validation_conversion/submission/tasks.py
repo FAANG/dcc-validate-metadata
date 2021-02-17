@@ -1,4 +1,5 @@
 import subprocess
+import json
 
 from lxml import etree
 
@@ -150,7 +151,7 @@ def submit_data_to_ena(results, credentials, room_id, submission_type):
             # 1. submit study and parse study id
             private_submission_xml = f"{room_id}_private_study_submission.xml"
             submit_to_ena_process = subprocess.run(
-                f'curl -u {credentials["username"]}:{credentials["password"]} '
+                f'curl -u {BOVREG_USERNAME}:{BOVREG_PASSWORD} '
                 f'-F "SUBMISSION=@{private_submission_xml}" '
                 f'-F "STUDY=@{study_xml}" '
                 f'"{submission_path}"',
@@ -165,17 +166,22 @@ def submit_data_to_ena(results, credentials, room_id, submission_type):
                 "projectId": study_id,
                 "dcc": "dcc_korman"
             }
+            with open(f"{room_id}_project.json", 'w') as w:
+                json.dump(project_json, w)
             link_study_process = subprocess.run(
                 f'curl -X POST --header "Content-Type: application/json" '
                 f'--header "Accept: application/json" '
                 f'-u "{BOVREG_USERNAME}:{BOVREG_PASSWORD}" '
-                f'-d {project_json} '
-                f'"https://www.ebi.ac.uk/ena/portal/ams/webin/project/add"')
-            if link_study_process.returncode != 0:
+                f'-d @{room_id}_project.json '
+                f'"https://www.ebi.ac.uk/ena/portal/ams/webin/project/add"',
+                shell=True, capture_output=True)
+            if 'errorMessage' in link_study_process.stdout.decode('utf-8'):
+                error_message = json.loads(
+                    link_study_process.stdout.decode('utf-8'))['errorMessage']
                 send_message(
                     submission_message="Error: submission failed",
                     submission_results=[[],
-                                        ["Couldn't link project to data hub"]],
+                                        [error_message]],
                     room_id=room_id)
                 return 'Error'
             # 3. submit other xml files referencing this study
@@ -183,7 +189,9 @@ def submit_data_to_ena(results, credentials, room_id, submission_type):
             sub_command = f's/<STUDY_REF refname=.*>/<STUDY_REF ' \
                           f'refname="{study_id}">/g'
             change_study_id_process = subprocess.run(f"sed -i '{sub_command}' "
-                                                     f"{experiment_xml}")
+                                                     f"{experiment_xml}",
+                                                     shell=True,
+                                                     capture_output=True)
             # submit experiment and run xml
             if change_study_id_process.returncode != 0:
                 send_message(
@@ -193,7 +201,7 @@ def submit_data_to_ena(results, credentials, room_id, submission_type):
                     room_id=room_id)
                 return 'Error'
             submit_to_ena_process = subprocess.run(
-                f'curl -u {credentials["username"]}:{credentials["password"]} '
+                f'curl -u {BOVREG_USERNAME}:{BOVREG_PASSWORD} '
                 f'-F "SUBMISSION=@{submission_xml}" '
                 f'-F "EXPERIMENT=@{experiment_xml}" '
                 f'-F "RUN=@{run_xml}" '
@@ -233,7 +241,7 @@ def fetch_project_id(submission_results):
     :return: project id in format 'PRJEB20767'
     """
     root = etree.fromstring(submission_results)
-    return root.find('PROJECT').attrib['accession']
+    return root.find('STUDY').attrib['accession']
 
 
 def parse_submission_results(submission_results, room_id):
