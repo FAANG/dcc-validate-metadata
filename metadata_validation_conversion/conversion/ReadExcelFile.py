@@ -34,7 +34,8 @@ class ReadExcelFile:
                 if sh.name == 'faang_field_values':
                     continue
                 elif sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES \
-                        and self.json_type == 'experiments':
+                        and self.json_type == 'experiments' \
+                        or self.json_type == 'analyses':
                     special_sheet_data = self.get_additional_data(
                         sh, sh.name, EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES)
                     if 'Error' in special_sheet_data:

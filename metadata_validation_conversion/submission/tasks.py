@@ -88,7 +88,14 @@ def submit_to_biosamples(results, credentials, room_id):
 @app.task
 def prepare_analyses_data(json_to_convert, room_id, private=False):
     conversion_results = AnalysesFileConverter(json_to_convert[0], room_id)
+    xml_files = list()
     analysis_xml, submission_xml = conversion_results.start_conversion()
+    xml_files.extend([analysis_xml, submission_xml])
+    for xml_file in xml_files:
+        if 'Error' in xml_file:
+            send_message(submission_message='Failed to convert data',
+                         conversion_errors=xml_file, room_id=room_id)
+            return 'Error'
     send_message(submission_status='Data is ready', room_id=room_id)
     return 'Success'
 
