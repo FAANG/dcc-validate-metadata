@@ -202,6 +202,8 @@ class BiosamplesFileConverter:
                 'ontologyTerms': [f"http://purl.obolibrary.org/obo/{taxon_id}"]
             }
             sample_attributes['organism'] = [organism_object]
+        if self.private_submission:
+            sample_attributes['BovReg private submission'] = [{'text': 'TRUE'}]
         return sample_attributes
 
     def parse_attribute(self, value_to_parse):
