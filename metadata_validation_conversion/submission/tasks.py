@@ -88,7 +88,8 @@ def submit_to_biosamples(results, credentials, room_id):
 
 @app.task
 def prepare_analyses_data(json_to_convert, room_id, private=False):
-    conversion_results = AnalysesFileConverter(json_to_convert[0], room_id)
+    conversion_results = AnalysesFileConverter(json_to_convert[0], room_id,
+                                               private)
     xml_files = list()
     analysis_xml, submission_xml = conversion_results.start_conversion()
     xml_files.extend([analysis_xml, submission_xml])
@@ -106,21 +107,8 @@ def prepare_experiments_data(json_to_convert, room_id, private=False):
     conversion_results = ExperimentFileConverter(json_to_convert[0], room_id,
                                                  private)
     xml_files = list()
-    # generate submission.xml for study submission and another submission.xml
-    # for other xml files submission
-    if private:
-        study_xml = conversion_results.generate_study_xml()
-        private_study_submission_xml = \
-            conversion_results.generate_submission_xml(
-                private_study_submission=True
-            )
-        submission_xml = conversion_results.generate_submission_xml()
-        run_xml = conversion_results.generate_run_xml()
-        experiment_xml = conversion_results.generate_experiment_xml()
-        xml_files.append(private_study_submission_xml)
-    else:
-        experiment_xml, run_xml, study_xml, submission_xml = \
-            conversion_results.start_conversion()
+    experiment_xml, run_xml, study_xml, submission_xml = \
+        conversion_results.start_conversion()
     xml_files.extend([experiment_xml, run_xml, study_xml, submission_xml])
     for xml_file in xml_files:
         if 'Error' in xml_file:
@@ -142,94 +130,66 @@ def submit_data_to_ena(results, credentials, room_id, submission_type):
     submission_path = ENA_TEST_SERVER if credentials['mode'] == 'test' else \
         ENA_PROD_SERVER
     submission_xml = f"{room_id}_submission.xml"
+
+    # Use BOVREG private account or get credentials from request
+    if credentials['private_submission']:
+        username = BOVREG_USERNAME
+        password = BOVREG_PASSWORD
+    else:
+        username = credentials["username"]
+        password = credentials["password"]
     if submission_type == 'experiments':
         experiment_xml = f"{room_id}_experiment.xml"
         run_xml = f"{room_id}_run.xml"
         study_xml = f"{room_id}_study.xml"
-        # Private data hubs submission
-        if credentials['private_submission']:
-            # 1. submit study and parse study id
-            private_submission_xml = f"{room_id}_private_study_submission.xml"
-            submit_to_ena_process = subprocess.run(
-                f'curl -u {BOVREG_USERNAME}:{BOVREG_PASSWORD} '
-                f'-F "SUBMISSION=@{private_submission_xml}" '
-                f'-F "STUDY=@{study_xml}" '
-                f'"{submission_path}"',
-                shell=True, capture_output=True)
-            submission_results = parse_submission_results(
-                submit_to_ena_process.stdout, room_id)
-            if submission_results == 'Error':
-                return 'Error'
-            study_id = fetch_project_id(submit_to_ena_process.stdout)
-            # 2. link study id with private data hub
-            project_json = {
-                "projectId": study_id,
-                "dcc": "dcc_korman"
-            }
-            with open(f"{room_id}_project.json", 'w') as w:
-                json.dump(project_json, w)
-            link_study_process = subprocess.run(
-                f'curl -X POST --header "Content-Type: application/json" '
-                f'--header "Accept: application/json" '
-                f'-u "{BOVREG_USERNAME}:{BOVREG_PASSWORD}" '
-                f'-d @{room_id}_project.json '
-                f'"https://www.ebi.ac.uk/ena/portal/ams/webin/project/add"',
-                shell=True, capture_output=True)
-            if 'errorMessage' in link_study_process.stdout.decode('utf-8'):
-                error_message = json.loads(
-                    link_study_process.stdout.decode('utf-8'))['errorMessage']
-                send_message(
-                    submission_message="Error: submission failed",
-                    submission_results=[[],
-                                        [error_message]],
-                    room_id=room_id)
-                return 'Error'
-            # 3. submit other xml files referencing this study
-            # Change internal study id on study id that we got in step 1
-            sub_command = f's/<STUDY_REF refname=.*>/<STUDY_REF ' \
-                          f'refname="{study_id}">/g'
-            change_study_id_process = subprocess.run(f"sed -i '{sub_command}' "
-                                                     f"{experiment_xml}",
-                                                     shell=True,
-                                                     capture_output=True)
-            # submit experiment and run xml
-            if change_study_id_process.returncode != 0:
-                send_message(
-                    submission_message="Error: submission failed",
-                    submission_results=[[],
-                                        ["Couldn't change internal study id"]],
-                    room_id=room_id)
-                return 'Error'
-            submit_to_ena_process = subprocess.run(
-                f'curl -u {BOVREG_USERNAME}:{BOVREG_PASSWORD} '
-                f'-F "SUBMISSION=@{submission_xml}" '
-                f'-F "EXPERIMENT=@{experiment_xml}" '
-                f'-F "RUN=@{run_xml}" '
-                f'"{submission_path}"',
-                shell=True, capture_output=True
-            )
-        # Public submission
-        else:
-            submit_to_ena_process = subprocess.run(
-                f'curl -u {credentials["username"]}:{credentials["password"]} '
-                f'-F "SUBMISSION=@{submission_xml}" '
-                f'-F "EXPERIMENT=@{experiment_xml}" '
-                f'-F "RUN=@{run_xml}" '
-                f'-F "STUDY=@{study_xml}" '
-                f'"{submission_path}"',
-                shell=True, capture_output=True)
+        submit_to_ena_process = subprocess.run(
+            f'curl -u {username}:{password} '
+            f'-F "SUBMISSION=@{submission_xml}" '
+            f'-F "EXPERIMENT=@{experiment_xml}" '
+            f'-F "RUN=@{run_xml}" '
+            f'-F "STUDY=@{study_xml}" '
+            f'"{submission_path}"',
+            shell=True, capture_output=True)
     else:
-        # Should work for both private and public submission
+        # Submit analysis
         analysis_xml = f"{room_id}_analysis.xml"
         submit_to_ena_process = subprocess.run(
-            f'curl -u {credentials["username"]}:{credentials["password"]} '
+            f'curl -u {username}:{password} '
             f'-F "SUBMISSION=@{submission_xml}" '
             f'-F "ANALYSIS=@{analysis_xml}" '
             f'"{submission_path}"',
             shell=True, capture_output=True)
 
     submission_results = submit_to_ena_process.stdout
-    _ = parse_submission_results(submission_results, room_id)
+    parsed_results = parse_submission_results(submission_results, room_id)
+
+    # Adding project to the private data hub
+    if parsed_results == 'Success' and credentials['private_submission'] \
+            and submission_type == 'experiments':
+        project_id = fetch_project_id(submit_to_ena_process.stdout)
+        project_json = {
+            "projectId": project_id,
+            "dcc": "dcc_korman"
+        }
+        with open(f"{room_id}_project.json", 'w') as w:
+            json.dump(project_json, w)
+        link_study_process = subprocess.run(
+            f'curl -X POST --header "Content-Type: application/json" '
+            f'--header "Accept: application/json" '
+            f'-u "{BOVREG_USERNAME}:{BOVREG_PASSWORD}" '
+            f'-d @{room_id}_project.json '
+            f'"https://www.ebi.ac.uk/ena/portal/ams/webin/project/add"',
+            shell=True, capture_output=True)
+        if 'errorMessage' in link_study_process.stdout.decode('utf-8'):
+            error_message = json.loads(
+                link_study_process.stdout.decode('utf-8'))['errorMessage']
+            send_message(
+                submission_message="Error: submission failed",
+                submission_results=[[],
+                                    [error_message]],
+                room_id=room_id)
+            return 'Error'
+    # TODO: uncomment after testing
     # subprocess.run(f"rm {room_id}*.xml", shell=True)
     return submission_results.decode('utf-8')
 

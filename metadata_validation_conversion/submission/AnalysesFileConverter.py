@@ -1,14 +1,10 @@
 from lxml import etree
-import json
 
 from .helpers import check_field_existence
+from .FileConverter import FileConverter
 
 
-class AnalysesFileConverter:
-    def __init__(self, json_to_convert, room_id):
-        self.json_to_convert = json_to_convert
-        self.room_id = room_id
-
+class AnalysesFileConverter(FileConverter):
     def start_conversion(self):
         analysis_xml = self.generate_analysis_xml()
         submission_xml = self.generate_submission_xml()
@@ -26,6 +22,8 @@ class AnalysesFileConverter:
             title = check_field_existence(
                 'title', self.json_to_convert['ena'][record_number])
             alias = self.json_to_convert['ena'][record_number]['alias']['value']
+            analysis_type = self.json_to_convert['ena'][record_number][
+                'analysis_type']['value']
             description = check_field_existence(
                 'description', self.json_to_convert['ena'][record_number])
             study = self.json_to_convert['ena'][record_number]['study']['value']
@@ -35,9 +33,8 @@ class AnalysesFileConverter:
                 'experiments', self.json_to_convert['ena'][record_number])
             runs = check_field_existence(
                 'runs', self.json_to_convert['ena'][record_number])
-            # TODO: add related analyses
-            analysis_type = self.json_to_convert['ena'][record_number][
-                'analysis_type']['value']
+            related_analyses = check_field_existence(
+                'related_analyses', self.json_to_convert['ena'][record_number])
             file_names = self.json_to_convert['ena'][record_number][
                 'file_names']
             file_types = self.json_to_convert['ena'][record_number][
@@ -87,6 +84,11 @@ class AnalysesFileConverter:
             for run in runs:
                 run_ref = run['value']
                 etree.SubElement(analysis_elt, 'RUN_REF', accession=run_ref)
+
+            for analysis in related_analyses:
+                analysis_ref = analysis['value']
+                etree.SubElement(analysis_elt, 'ANALYSIS_REF',
+                                 accession=analysis_ref)
             analysis_type_elt = etree.SubElement(analysis_elt, 'ANALYSIS_TYPE')
             etree.SubElement(analysis_type_elt, analysis_type)
             files_elt = etree.SubElement(analysis_elt, 'FILES')
@@ -107,13 +109,13 @@ class AnalysesFileConverter:
             etree.SubElement(analysis_attribute_elt, 'VALUE').text = project
 
             if secondary_project is not None:
-                # TODO: allow multiple secondary projects
-                analysis_attribute_elt = etree.SubElement(
-                    analysis_attributes_elt, 'ANALYSIS_ATTRIBUTE')
-                etree.SubElement(analysis_attribute_elt,
-                                 'TAG').text = 'Secondary Project'
-                etree.SubElement(analysis_attribute_elt, 'VALUE').text = \
-                    secondary_project[0]['value']
+                for item in secondary_project:
+                    analysis_attribute_elt = etree.SubElement(
+                        analysis_attributes_elt, 'ANALYSIS_ATTRIBUTE')
+                    etree.SubElement(analysis_attribute_elt,
+                                     'TAG').text = 'Secondary Project'
+                    etree.SubElement(analysis_attribute_elt, 'VALUE').text = \
+                        item['value']
 
             analysis_attribute_elt = etree.SubElement(analysis_attributes_elt,
                                                       'ANALYSIS_ATTRIBUTE')
@@ -163,26 +165,4 @@ class AnalysesFileConverter:
         analysis_xml.write(f"{self.room_id}_analysis.xml",
                            pretty_print=True, xml_declaration=True,
                            encoding='UTF-8')
-        return 'Success'
-
-    def generate_submission_xml(self):
-        """
-        This function will generate xml file with submission
-        :return: xml file for submission
-        """
-        if 'submission' not in self.json_to_convert:
-            return 'Error: table should have submission sheet'
-        submission_set = etree.Element('SUBMISSION_SET')
-        submission_xml = etree.ElementTree(submission_set)
-        for record in self.json_to_convert['submission']:
-            submission_elt = etree.SubElement(submission_set, 'SUBMISSION',
-                                              alias=record['alias'])
-            actions_elt = etree.SubElement(submission_elt, 'ACTIONS')
-            action_elt = etree.SubElement(actions_elt, 'ACTION')
-            etree.SubElement(action_elt, 'ADD')
-            action_elt = etree.SubElement(actions_elt, 'ACTION')
-            etree.SubElement(action_elt, 'RELEASE')
-        submission_xml.write(f"{self.room_id}_submission.xml",
-                             pretty_print=True, xml_declaration=True,
-                             encoding='UTF-8')
         return 'Success'
