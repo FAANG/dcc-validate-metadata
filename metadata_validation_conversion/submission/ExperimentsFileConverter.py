@@ -148,8 +148,12 @@ class ExperimentFileConverter:
         for record in self.json_to_convert['run']:
             run_alias = record['alias']
             run_center = record['run_center']
-            run_date = datetime.datetime.strptime(record['run_date'],
-                                                  '%Y-%m-%d').isoformat()
+            try:
+                run_date = datetime.datetime.strptime(record['run_date'],
+                                                      '%Y-%m-%d').isoformat()
+            except ValueError:
+                run_date = datetime.datetime.strptime(record['run_date'],
+                                                      '%Y-%m').isoformat()
             experiment_ref = record['experiment_ref']
             filename = record['filename']
             filetype = record['filetype']

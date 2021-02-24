@@ -1,4 +1,7 @@
 from lxml import etree
+import json
+
+from .helpers import check_field_existence
 
 
 class AnalysesFileConverter:
@@ -20,15 +23,19 @@ class AnalysesFileConverter:
         analysis_xml = etree.ElementTree(analysis_set)
         number_of_records = len(self.json_to_convert['ena'])
         for record_number in range(number_of_records):
-            title = self.json_to_convert['ena'][record_number]['title']['value']
+            title = check_field_existence(
+                'title', self.json_to_convert['ena'][record_number])
             alias = self.json_to_convert['ena'][record_number]['alias']['value']
-            description = self.json_to_convert['ena'][record_number][
-                'description']['value']
+            description = check_field_existence(
+                'description', self.json_to_convert['ena'][record_number])
             study = self.json_to_convert['ena'][record_number]['study']['value']
-            samples = self.json_to_convert['ena'][record_number]['samples']
-            experiments = self.json_to_convert['ena'][record_number][
-                'experiments']
-            runs = self.json_to_convert['ena'][record_number]['runs']
+            samples = check_field_existence(
+                'samples', self.json_to_convert['ena'][record_number])
+            experiments = check_field_existence(
+                'experiments', self.json_to_convert['ena'][record_number])
+            runs = check_field_existence(
+                'runs', self.json_to_convert['ena'][record_number])
+            # TODO: add related analyses
             analysis_type = self.json_to_convert['ena'][record_number][
                 'analysis_type']['value']
             file_names = self.json_to_convert['ena'][record_number][
@@ -38,25 +45,36 @@ class AnalysesFileConverter:
             checksum_methods = self.json_to_convert['ena'][record_number][
                 'checksum_methods']
             checksums = self.json_to_convert['ena'][record_number]['checksums']
+            analysis_center = check_field_existence(
+                'analysis_center', self.json_to_convert['ena'][record_number])
+            analysis_date = check_field_existence(
+                'analysis_date', self.json_to_convert['ena'][record_number])
+            faang_alias = self.json_to_convert['faang'][record_number][
+                'alias']['value']
+            if faang_alias != alias:
+                return 'Error'
             project = self.json_to_convert['faang'][record_number]['project'][
                 'value']
+            secondary_project = check_field_existence(
+                'secondary_project',
+                self.json_to_convert['faang'][record_number])
             assay_type = self.json_to_convert['faang'][record_number][
                 'assay_type']['value']
             analysis_protocol = self.json_to_convert['faang'][record_number][
                 'analysis_protocol']['value']
-            reference_genome = self.json_to_convert['faang'][record_number][
-                'reference_genome']['value']
-            analysis_center = self.json_to_convert['ena'][record_number][
-                'analysis_center']['value']
-            analysis_date_value = self.json_to_convert['ena'][record_number][
-                'analysis_date']['value']
-            analysis_date_units = self.json_to_convert['ena'][record_number][
-                'analysis_date']['units']
+            analysis_code = check_field_existence(
+                'analysis_code', self.json_to_convert['faang'][record_number])
+            reference_genome = check_field_existence(
+                'reference_genome',
+                self.json_to_convert['faang'][record_number])
 
             analysis_elt = etree.SubElement(analysis_set, 'ANALYSIS',
                                             alias=alias)
-            etree.SubElement(analysis_elt, 'TITLE').text = title
-            etree.SubElement(analysis_elt, 'DESCRIPTION').text = description
+            if title is not None:
+                etree.SubElement(analysis_elt, 'TITLE').text = title['value']
+            if description is not None:
+                etree.SubElement(analysis_elt,
+                                 'DESCRIPTION').text = description['value']
             etree.SubElement(analysis_elt, 'STUDY_REF', accession=study)
             for sample in samples:
                 sample_ref = sample['value']
@@ -88,6 +106,15 @@ class AnalysesFileConverter:
             etree.SubElement(analysis_attribute_elt, 'TAG').text = 'Project'
             etree.SubElement(analysis_attribute_elt, 'VALUE').text = project
 
+            if secondary_project is not None:
+                # TODO: allow multiple secondary projects
+                analysis_attribute_elt = etree.SubElement(
+                    analysis_attributes_elt, 'ANALYSIS_ATTRIBUTE')
+                etree.SubElement(analysis_attribute_elt,
+                                 'TAG').text = 'Secondary Project'
+                etree.SubElement(analysis_attribute_elt, 'VALUE').text = \
+                    secondary_project[0]['value']
+
             analysis_attribute_elt = etree.SubElement(analysis_attributes_elt,
                                                       'ANALYSIS_ATTRIBUTE')
             etree.SubElement(analysis_attribute_elt, 'TAG').text = 'Assay Type'
@@ -100,28 +127,39 @@ class AnalysesFileConverter:
             etree.SubElement(analysis_attribute_elt,
                              'VALUE').text = analysis_protocol
 
-            analysis_attribute_elt = etree.SubElement(analysis_attributes_elt,
-                                                      'ANALYSIS_ATTRIBUTE')
-            etree.SubElement(analysis_attribute_elt,
-                             'TAG').text = 'Reference genome'
-            etree.SubElement(analysis_attribute_elt,
-                             'VALUE').text = reference_genome
+            if analysis_code is not None:
+                analysis_attribute_elt = etree.SubElement(
+                    analysis_attributes_elt, 'ANALYSIS_ATTRIBUTE')
+                etree.SubElement(analysis_attribute_elt,
+                                 'TAG').text = 'Analysis code'
+                etree.SubElement(analysis_attribute_elt,
+                                 'VALUE').text = analysis_code['value']
 
-            analysis_attribute_elt = etree.SubElement(analysis_attributes_elt,
-                                                      'ANALYSIS_ATTRIBUTE')
-            etree.SubElement(analysis_attribute_elt,
-                             'TAG').text = 'Analysis center'
-            etree.SubElement(analysis_attribute_elt,
-                             'VALUE').text = analysis_center
+            if reference_genome is not None:
+                analysis_attribute_elt = etree.SubElement(
+                    analysis_attributes_elt, 'ANALYSIS_ATTRIBUTE')
+                etree.SubElement(analysis_attribute_elt,
+                                 'TAG').text = 'Reference genome'
+                etree.SubElement(analysis_attribute_elt,
+                                 'VALUE').text = reference_genome['value']
 
-            analysis_attribute_elt = etree.SubElement(analysis_attributes_elt,
-                                                      'ANALYSIS_ATTRIBUTE')
-            etree.SubElement(analysis_attribute_elt,
-                             'TAG').text = 'Analysis date'
-            etree.SubElement(analysis_attribute_elt,
-                             'VALUE').text = analysis_date_value
-            etree.SubElement(analysis_attribute_elt,
-                             'UNITS').text = analysis_date_units
+            if analysis_center is not None:
+                analysis_attribute_elt = etree.SubElement(
+                    analysis_attributes_elt, 'ANALYSIS_ATTRIBUTE')
+                etree.SubElement(analysis_attribute_elt,
+                                 'TAG').text = 'Analysis center'
+                etree.SubElement(analysis_attribute_elt,
+                                 'VALUE').text = analysis_center['value']
+
+            if analysis_date is not None:
+                analysis_attribute_elt = etree.SubElement(
+                    analysis_attributes_elt, 'ANALYSIS_ATTRIBUTE')
+                etree.SubElement(analysis_attribute_elt,
+                                 'TAG').text = 'Analysis date'
+                etree.SubElement(analysis_attribute_elt,
+                                 'VALUE').text = analysis_date['value']
+                etree.SubElement(analysis_attribute_elt,
+                                 'UNITS').text = analysis_date['units']
         analysis_xml.write(f"{self.room_id}_analysis.xml",
                            pretty_print=True, xml_declaration=True,
                            encoding='UTF-8')

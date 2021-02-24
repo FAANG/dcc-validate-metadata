@@ -241,7 +241,7 @@ def fetch_project_id(submission_results):
     :return: project id in format 'PRJEB20767'
     """
     root = etree.fromstring(submission_results)
-    return root.find('STUDY').attrib['accession']
+    return root.find('STUDY').find('EXT_ID').attrib['accession']
 
 
 def parse_submission_results(submission_results, room_id):
