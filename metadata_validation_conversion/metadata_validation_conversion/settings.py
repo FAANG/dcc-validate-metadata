@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'submission',
     'protocols_upload',
     'ws',
+    'private_portal',
     'rest_framework',
     'corsheaders'
 ]
