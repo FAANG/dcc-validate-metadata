@@ -73,22 +73,27 @@ class AnalysesFileConverter(FileConverter):
                 etree.SubElement(analysis_elt,
                                  'DESCRIPTION').text = description['value']
             etree.SubElement(analysis_elt, 'STUDY_REF', accession=study)
-            for sample in samples:
-                sample_ref = sample['value']
-                etree.SubElement(analysis_elt, 'SAMPLE_REF',
-                                 accession=sample_ref)
-            for experiment in experiments:
-                exp_ref = experiment['value']
-                etree.SubElement(analysis_elt, 'EXPERIMENT_REF',
-                                 accession=exp_ref)
-            for run in runs:
-                run_ref = run['value']
-                etree.SubElement(analysis_elt, 'RUN_REF', accession=run_ref)
+            if samples is not None:
+                for sample in samples:
+                    sample_ref = sample['value']
+                    etree.SubElement(analysis_elt, 'SAMPLE_REF',
+                                     accession=sample_ref)
+            if experiments is not None:
+                for experiment in experiments:
+                    exp_ref = experiment['value']
+                    etree.SubElement(analysis_elt, 'EXPERIMENT_REF',
+                                     accession=exp_ref)
+            if runs is not None:
+                for run in runs:
+                    run_ref = run['value']
+                    etree.SubElement(analysis_elt, 'RUN_REF', accession=run_ref)
 
-            for analysis in related_analyses:
-                analysis_ref = analysis['value']
-                etree.SubElement(analysis_elt, 'ANALYSIS_REF',
-                                 accession=analysis_ref)
+            if related_analyses is not None:
+                for analysis in related_analyses:
+                    analysis_ref = analysis['value']
+                    etree.SubElement(analysis_elt, 'ANALYSIS_REF',
+                                     accession=analysis_ref)
+
             analysis_type_elt = etree.SubElement(analysis_elt, 'ANALYSIS_TYPE')
             etree.SubElement(analysis_type_elt, analysis_type)
             files_elt = etree.SubElement(analysis_elt, 'FILES')

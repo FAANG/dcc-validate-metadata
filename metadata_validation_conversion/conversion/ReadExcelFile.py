@@ -10,6 +10,8 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
 
+import json
+
 
 class ReadExcelFile:
     def __init__(self, file_path, json_type):
@@ -91,6 +93,9 @@ class ReadExcelFile:
                             sample_data['experiments_core']:
                         sc_prj = \
                             sample_data['experiments_core']['secondary_project']
+                    elif self.json_type == 'analyses' \
+                            and 'secondary_project' in sample_data:
+                        sc_prj = sample_data['secondary_project']
                     if sc_prj and sc_prj[0]['value'] == 'BovReg':
                         bovreg_submission = True
 
