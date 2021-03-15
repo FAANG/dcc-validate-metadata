@@ -196,7 +196,11 @@ class BiosamplesFileConverter:
         sample_attributes.update(additional_fields)
         # BioSamples require for every sample to have organism object
         if 'organism' not in sample_attributes:
-            taxon_id = "_".join(taxon_ids[record_name].split(":"))
+            if ':' in str(taxon_ids[record_name]):
+                taxon_id = "_".join(taxon_ids[record_name].split(":"))
+            else:
+                # Need this to create appropriate taxon id from BioSamples id
+                taxon_id = f"NCBITaxon:{taxon_ids[record_name]}"
             organism_object = {
                 'text': taxons[record_name],
                 'ontologyTerms': [f"http://purl.obolibrary.org/obo/{taxon_id}"]

@@ -434,6 +434,12 @@ class ReadExcelFile:
                     m = self.add_leading_zero(m)
                     d = self.add_leading_zero(d)
                     cell_value = f"{y}-{m}-{d}"
+                elif date_field is True and isinstance(cell_value, int) \
+                        and field_name == 'value':
+                    y, m, d, _, _, _ = xlrd.xldate_as_tuple(cell_value, 0)
+                    m = self.add_leading_zero(m)
+                    d = self.add_leading_zero(d)
+                    cell_value = f"{y}-{m}-{d}"
                 data_to_return[field_name] = cell_value
         return data_to_return
 
