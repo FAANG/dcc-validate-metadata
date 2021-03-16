@@ -1,6 +1,7 @@
 import subprocess
 import hashlib
 import os
+import json
 
 from elasticsearch import Elasticsearch
 
@@ -15,6 +16,7 @@ class FireAPI:
         self.filename = filename
         self.firepath = f"ftp/protocols/{firepath}"
         self.protocol_index = self.get_protocol_index(firepath)
+        self.fire_api = 'https://hh.fire.sdo.ebi.ac.uk/fire/objects'
         self.es = Elasticsearch(['elasticsearch-master-headless:9200'])
 
     def upload_object(self):
@@ -24,20 +26,37 @@ class FireAPI:
         if write_to_es_result == 'Error':
             return 'Error'
         # curl request to upload protocol to FIRE service
-        cmd = f"curl https://hh.fire.sdo.ebi.ac.uk/fire/objects " \
-            f"-F file=@{self.filepath} " \
-            f"-H 'x-fire-path: {self.firepath}/{self.filename}' " \
-            f"-H 'x-fire-publish: true' " \
+        cmd = f"curl {self.fire_api} -F file=@{self.filepath} " \
             f"-u {self.username}:{self.password} " \
               f"-H 'x-fire-size: {self.get_file_size()}' " \
               f"-H 'x-fire-md5: {self.get_md5_of_file()}'"
-        proc = subprocess.run(cmd, shell=True, capture_output=True)
-        if proc.returncode != 0:
-            # Remove protocol from ES
+        upload_file_process = subprocess.run(cmd, shell=True,
+                                             capture_output=True)
+        try:
+            fire_id = json.loads(
+                upload_file_process.stdout.decode('utf-8'))['fireOid']
+            cmd = f"curl {self.fire_api}/{fire_id}/firePath " \
+                  f"-u {self.username}:{self.password} " \
+                  f"-H 'x-fire-path: {self.firepath}/{self.filename}' -X PUT"
+            fire_path_process = subprocess.run(cmd, shell=True,
+                                               capture_output=True)
+            _ = json.loads(
+                fire_path_process.stdout.decode('utf-8')
+            )['filesystemEntry']['path']
+            cmd = f"curl {self.fire_api}/{fire_id}/publish " \
+                  f"-u {self.username}:{self.password} -X PUT"
+            publish_process = subprocess.run(cmd, shell=True,
+                                             capture_output=True)
+            published = json.loads(
+                publish_process.stdout.decode('utf-8')
+            )['filesystemEntry']['published']
+            if published:
+                return self.get_public_link()
+            else:
+                raise KeyError
+        except KeyError:
             self.delete_from_es()
-            return "Error"
-        else:
-            return self.get_public_link()
+            return 'Error'
 
     @staticmethod
     def get_protocol_index(firepath):
