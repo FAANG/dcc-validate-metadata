@@ -33,7 +33,7 @@ class ReadExcelFile:
         structure = dict()
         for sh in wb.sheets():
             if sh.name not in ALLOWED_SHEET_NAMES:
-                if sh.name == 'faang_field_values':
+                if sh.name == 'faang_field_values' or sh.name == 'organoid' or sh.name == 'teleostei embryo' or sh.name == 'teleostei post-hatching' or sh.name == 'single cell specimen':
                     continue
                 elif sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES \
                         and self.json_type == 'experiments' \
@@ -423,20 +423,9 @@ class ReadExcelFile:
                 # Convert date data to string (as Excel stores date in float
                 # format)
                 if date_field is True and isinstance(cell_value, float) \
-                        and field_name == 'value' \
-                        and re.match(r'.*([1-2][0-9]{3})',
-                                     str(int(cell_value))) is not None:
-                    cell_value = str(int(cell_value))
-                elif date_field is True and isinstance(cell_value, float) \
                         and field_name == 'value':
                     y, m, d, _, _, _ = xlrd.xldate_as_tuple(cell_value,
                                                             self.wb_datemode)
-                    m = self.add_leading_zero(m)
-                    d = self.add_leading_zero(d)
-                    cell_value = f"{y}-{m}-{d}"
-                elif date_field is True and isinstance(cell_value, int) \
-                        and field_name == 'value':
-                    y, m, d, _, _, _ = xlrd.xldate_as_tuple(cell_value, 0)
                     m = self.add_leading_zero(m)
                     d = self.add_leading_zero(d)
                     cell_value = f"{y}-{m}-{d}"

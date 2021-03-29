@@ -8,8 +8,19 @@ EXPERIMENT_CORE_URL = f"{BASE_URL}/core/experiments/" \
                       f"faang_experiments_core.metadata_rules.json"
 ORGANISM_URL = f"{BASE_URL}type/samples/" \
                f"faang_samples_organism.metadata_rules.json"
+ORGANOID_URL = f"{BASE_URL}type/samples/" \
+               f"faang_samples_organoid.metadata_rules.json"
 SPECIMEN_FROM_ORGANISM_URL = f"{BASE_URL}type/samples/" \
                              f"faang_samples_specimen.metadata_rules.json"
+TELEOSTEI_EMBRYO_URL = f"{BASE_URL}module/samples/" \
+                       f"faang_samples_specimen_teleost_embryo" \
+                       f".metadata_rules.json"
+TELEOSTEI_POST_HATCHING_URL = f"{BASE_URL}module/samples/" \
+                              f"faang_samples_specimen_teleost_post-hatching" \
+                              f".metadata_rules.json"
+SINGLE_CELL_SPECIMEN_URL = f"{BASE_URL}type/samples/" \
+                           f"faang_samples_single_cell_specimen" \
+                           f".metadata_rules.json"
 POOL_OF_SPECIMENS_URL = f"{BASE_URL}type/samples/" \
                         f"faang_samples_pool_of_specimens.metadata_rules.json"
 CELL_SPECIMEN_URL = f"{BASE_URL}type/samples/" \
