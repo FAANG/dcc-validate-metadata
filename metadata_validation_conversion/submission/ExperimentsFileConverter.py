@@ -119,6 +119,9 @@ class ExperimentFileConverter(FileConverter):
                 experiment_attributes_elt, 'EXPERIMENT_ATTRIBUTE')
             etree.SubElement(experiment_attribute_elt,
                              'TAG').text = remove_underscores(attr_name)
+            # TODO: check for other projects in a list
+            if attr_name == 'secondary_project':
+                attr_value = attr_value[0]
             if 'value' in attr_value:
                 value = attr_value['value']
             elif 'text' in attr_value:

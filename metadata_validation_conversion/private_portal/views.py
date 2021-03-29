@@ -16,12 +16,15 @@ class BovRegView(APIView):
     def get(self, request, data_type):
         query = request.GET.get('q', '')
         es = Elasticsearch(['elasticsearch-master-headless:9200'])
-        index = 'bovreg_organism' if data_type == 'organism' \
-            else 'bovreg_specimen'
+        index = f'bovreg_{data_type}'
+        if index == 'bovreg_file':
+            sort = 'private:desc'
+        else:
+            sort = 'releaseDate:desc'
         if query != '':
             data = es.search(index=index, q=query)
         else:
-            data = es.search(index=index, sort='releaseDate:desc', size=1000)
+            data = es.search(index=index, sort=sort, size=1000)
         return Response(data)
 
 
@@ -33,7 +36,6 @@ class BovRegDetailsView(APIView):
 
     def get(self, request, data_type, item_id):
         es = Elasticsearch(['elasticsearch-master-headless:9200'])
-        index = 'bovreg_organism' if data_type == 'organism' \
-            else 'bovreg_specimen'
+        index = f'bovreg_{data_type}'
         data = es.search(index=index, q=f'_id:{item_id}')
         return Response(data)
