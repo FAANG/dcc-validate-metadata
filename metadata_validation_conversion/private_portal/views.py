@@ -17,7 +17,7 @@ class BovRegView(APIView):
         query = request.GET.get('q', '')
         es = Elasticsearch(['elasticsearch-master-headless:9200'])
         index = f'bovreg_{data_type}'
-        if index == 'bovreg_file':
+        if index == 'bovreg_file' or index == 'bovreg_dataset':
             sort = 'private:desc'
         else:
             sort = 'releaseDate:desc'
