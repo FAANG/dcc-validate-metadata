@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'protocols_upload',
     'ws',
     'private_portal',
+    'ontology_improver',
     'rest_framework',
     'corsheaders'
 ]
