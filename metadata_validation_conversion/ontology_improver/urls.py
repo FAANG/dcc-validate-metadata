@@ -3,5 +3,7 @@ from . import views
 
 app_name = 'ontology_improver'
 urlpatterns = [
-    path('submit/', views.submit_ontology, name='submit_ontology'),
+    path('search/', views.search_terms, name='search_terms'),
+    path('get_matches/', views.get_zooma_ontologies, name='get_zooma_ontologies'),
+    path('validate/', views.validate_terms, name='validate_terms')
 ]
