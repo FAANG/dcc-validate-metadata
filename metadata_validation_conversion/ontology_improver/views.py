@@ -3,8 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 import json
-import pprint 
-pp = pprint.PrettyPrinter(indent=4)
+from ontology_improver.models import Ontologies
 
 def parse_zooma_response(response_list):
     annotations = []
@@ -36,12 +35,16 @@ def search_terms(request):
         terms = json.loads(request.body)['terms']
         response = {'found': [], 'not_found': []}
         for term in terms:
-            # search db for term
-            pass
+            matches = list(Ontologies.objects.filter(ontology_term__iexact=term).values())
+            if len(matches):
+                response['found'].append(matches[0])
+            else:
+                response['not_found'].append(term)
         return JsonResponse(response)
     elif request.method == 'GET':
-        response = []
-        # get all records from db
+        response = {
+            'ontologies': list(Ontologies.objects.all().values())
+        }
         return JsonResponse(response)
     else:
         return HttpResponse("This method is not allowed!\n")
@@ -60,7 +63,6 @@ def get_zooma_ontologies(request):
             "http://www.ebi.ac.uk/spot/zooma/v2/api/services/annotate?propertyValue={}&filter=preferred:[FAANG]".format(
              term)).json()
         response[term] = parse_zooma_response(data)
-    pp.pprint(response)
     return JsonResponse(response)
 
 @csrf_exempt
@@ -68,5 +70,7 @@ def validate_terms(request):
     if request.method != 'POST':
         return HttpResponse("This method is not allowed!\n")
     data = json.loads(request.body)
-    # create/update data in db
+    for record in data:
+        # create/update records
+        pass
     return JsonResponse(response)
