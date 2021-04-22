@@ -4,6 +4,8 @@ from django.views.decorators.csrf import csrf_exempt
 import requests
 import json
 from ontology_improver.models import Ontologies
+from datetime import datetime
+from django.utils import timezone
 
 def parse_zooma_response(response_list):
     annotations = []
@@ -15,7 +17,7 @@ def parse_zooma_response(response_list):
             if 'propertyValue' in response['annotatedProperty']:
                 data['ontology_label'] = response['annotatedProperty']['propertyValue']
         if 'semanticTags' in response:
-            data['ontology_id'] = list(map(lambda tag: tag.split('/')[-1], response['semanticTags']))
+            data['ontology_id'] = ','.join(list(map(lambda tag: tag.split('/')[-1], response['semanticTags'])))
         if 'confidence' in response:
             data['mapping_confidence'] = response['confidence']
         if 'derivedFrom' in response and 'provenance' in response['derivedFrom']:
@@ -23,6 +25,19 @@ def parse_zooma_response(response_list):
                 data['source'] = response['derivedFrom']['provenance']['generator']
         annotations.append(data)
     return annotations
+
+def getColourCode(ontology_support, ontology_status):
+    if ontology_status == 'Verified':
+        if ontology_support == 'https://www.ebi.ac.uk/vg/faang':
+            return 'green'
+        else:
+            return 'yellow'
+    elif ontology_status == 'Awaiting Assessment':
+        return 'blue'
+    elif ontology_status == 'Needs Improvement':
+        return 'yellow'
+    else:
+        return 'red'
 
 @csrf_exempt
 def search_terms(request):
@@ -56,9 +71,6 @@ def get_zooma_ontologies(request):
     terms = json.loads(request.body)['terms']
     response = {}
     for term in terms:
-        # data = requests.get(
-        #     "http://snarf.ebi.ac.uk:8580/spot/zooma/v2/api/services/annotate?propertyValue={}&filter=preferred:[FAANG]".format(
-        #      term)).json()
         data = requests.get(
             "http://www.ebi.ac.uk/spot/zooma/v2/api/services/annotate?propertyValue={}&filter=preferred:[FAANG]".format(
              term)).json()
@@ -70,7 +82,31 @@ def validate_terms(request):
     if request.method != 'POST':
         return HttpResponse("This method is not allowed!\n")
     data = json.loads(request.body)
-    for record in data:
-        # create/update records
+    ontologies = data['ontologies']
+    user = data['user']
+    for record in ontologies:
+        matches = list(Ontologies.objects.filter(ontology_term__iexact=record['ontology_term']).values())
+        if len(matches):
+            # update record if already exists
+            ontology = Ontologies.objects.get(id=matches[0]['id'])
+            ontology.ontology_term = record['ontology_term']
+            ontology.ontology_type = record['ontology_type']
+            ontology.ontology_id = record['ontology_id']
+            ontology.ontology_support = record['ontology_support']
+            ontology.ontology_status = record['ontology_status']
+            ontology.users = ontology.users + ',' + user
+            ontology.colour_code = getColourCode(record['ontology_support'], record['ontology_status'])
+            ontology.last_updated = datetime.now(tz=timezone.utc)
+            if record['ontology_status'] == 'Verified':
+                ontology.verified_count  = ontology.verified_count + 1
+            ontology.save()
+        else:
+            # create record if not found
+            verified_num  = 1 if record['ontology_status'] == 'Verified' else 0
+            Ontologies(ontology_term=record['ontology_term'], ontology_type=record['ontology_type'], \
+                ontology_id=record['ontology_id'], ontology_support=record['ontology_support'], \
+                ontology_status=record['ontology_status'], users=user, \
+                colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
+                last_updated=datetime.now(tz=timezone.utc), verified_count=verified_num).save()   
         pass
-    return JsonResponse(response)
+    return HttpResponse(status=201)
