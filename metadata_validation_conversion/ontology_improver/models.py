@@ -9,4 +9,5 @@ class Ontologies(models.Model):
     ontology_status = models.TextField()
     colour_code = models.TextField()
     users = models.TextField()
+    verified_count = models.IntegerField()
     last_updated = models.DateTimeField(default=datetime.now, blank=True)
