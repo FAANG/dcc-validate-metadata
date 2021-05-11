@@ -57,8 +57,13 @@ def search_terms(request):
                 response['not_found'].append(term)
         return JsonResponse(response)
     elif request.method == 'GET':
+        size = int(request.GET.get('size', 0))
+        if size:
+            records = list(Ontologies.objects.all().values()[:size])
+        else:
+            records = list(Ontologies.objects.all().values())
         response = {
-            'ontologies': list(Ontologies.objects.all().values())
+            'ontologies': records
         }
         return JsonResponse(response)
     else:
