@@ -83,6 +83,17 @@ def get_zooma_ontologies(request):
     return JsonResponse(response)
 
 @csrf_exempt
+def authentication(request):
+    if request.method != 'POST':
+        return HttpResponse("This method is not allowed!\n")
+    headers = {
+        'Accept': 'text/plain',
+        'Authorization': json.loads(request.body)['auth']
+    }
+    token = requests.get("https://explore.api.aai.ebi.ac.uk/auth", headers=headers).text
+    return JsonResponse({'token': token})
+
+@csrf_exempt
 def validate_terms(request):
     if request.method != 'POST':
         return HttpResponse("This method is not allowed!\n")
