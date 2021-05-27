@@ -2,7 +2,8 @@ import datetime
 from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
     SKIP_PROPERTIES, MISSING_VALUES, SPECIES_BREED_LINKS, \
     ALLOWED_EXPERIMENTS_TYPES, ALLOWED_ANALYSES_TYPES, \
-    CHIP_SEQ_INPUT_DNA_URL, CHIP_SEQ_DNA_BINDING_PROTEINS_URL
+    CHIP_SEQ_INPUT_DNA_URL, CHIP_SEQ_DNA_BINDING_PROTEINS_URL, \
+    TELEOSTEI_EMBRYO_URL, TELEOSTEI_POST_HATCHING_URL
 from metadata_validation_conversion.helpers import get_rules_json
 from .get_ontology_text_async import collect_ids
 from .helpers import validate, get_record_structure
@@ -49,6 +50,15 @@ class WarningsAndAdditionalChecks:
                 get_rules_json(url, self.rules_type,
                                CHIP_SEQ_DNA_BINDING_PROTEINS_URL)
             module_name = name.split("chip-seq_")[-1]
+        elif name == 'teleostei_embryo':
+            samples_type_json, samples_core_json, samples_module_json = \
+                get_rules_json(url, self.rules_type, TELEOSTEI_EMBRYO_URL)
+            module_name = name
+        elif name == 'teleostei_post-hatching':
+            samples_type_json, samples_core_json, samples_module_json = \
+                get_rules_json(url, self.rules_type,
+                               TELEOSTEI_POST_HATCHING_URL)
+            module_name = name
         elif name in ['faang', 'ena', 'eva']:
             samples_type_json = get_rules_json(url, self.rules_type)
             samples_core_json, samples_module_json, module_name = \

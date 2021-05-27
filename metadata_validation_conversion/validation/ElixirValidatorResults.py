@@ -1,7 +1,7 @@
 import requests
 from metadata_validation_conversion.constants import SAMPLE_CORE_URL, \
     ALLOWED_SAMPLES_TYPES, ALLOWED_EXPERIMENTS_TYPES, EXPERIMENT_CORE_URL, \
-    ALLOWED_ANALYSES_TYPES, CHIP_SEQ_MODULE_RULES
+    ALLOWED_ANALYSES_TYPES, MODULE_RULES
 from .helpers import validate, get_record_structure
 import json
 
@@ -39,10 +39,12 @@ class ElixirValidatorResults:
                 type_schema = requests.get(url).json()
                 module_schema = None
                 module_name = None
-                if name in CHIP_SEQ_MODULE_RULES:
-                    module_schema = requests.get(
-                        CHIP_SEQ_MODULE_RULES[name]).json()
-                    module_name = name.split("chip-seq_")[-1]
+                if name in MODULE_RULES:
+                    module_schema = requests.get(MODULE_RULES[name]).json()
+                    if 'chip-seq' in name:
+                        module_name = name.split("chip-seq_")[-1]
+                    else:
+                        module_name = name
 
                 # Elixir validator complains about links
                 if core_name:
