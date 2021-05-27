@@ -1,3 +1,4 @@
+import json
 import xlrd
 import os
 import re
@@ -5,12 +6,11 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     SKIP_PROPERTIES, SPECIAL_PROPERTIES, JSON_TYPES, \
     SAMPLES_SPECIFIC_JSON_TYPES, EXPERIMENTS_SPECIFIC_JSON_TYPES, \
     CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, \
-    EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, CHIP_SEQ_MODULE_RULES, \
-    SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES
+    EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, MODULE_RULES, \
+    SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES, SPECIMEN_TELEOST_EMBRYO_JSON_TYPES, \
+    SPECIMEN_TELEOST_POST_HATCHING_JSON_TYPES
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
-
-import json
 
 
 class ReadExcelFile:
@@ -33,8 +33,14 @@ class ReadExcelFile:
         structure = dict()
         for sh in wb.sheets():
             if sh.name not in ALLOWED_SHEET_NAMES:
-                if sh.name == 'faang_field_values' or sh.name == 'organoid' or sh.name == 'teleostei embryo' or sh.name == 'teleostei post-hatching' or sh.name == 'single cell specimen':
+                if sh.name == 'faang_field_values':
                     continue
+                elif sh.name == 'organoid' or sh.name == 'teleostei embryo' or sh.name == 'teleostei post-hatching' or sh.name == 'single cell specimen':
+                    try:
+                        sh.row_values(1)
+                        return 'Error: internal error', structure
+                    except IndexError:
+                        continue
                 elif sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES \
                         and self.json_type == 'experiments' \
                         or self.json_type == 'analyses':
@@ -149,10 +155,10 @@ class ReadExcelFile:
         field_names_and_indexes = dict()
 
         url = ALLOWED_SHEET_NAMES[sheet_name]
-        # Check for chip-seq module rules
-        if sheet_name in CHIP_SEQ_MODULE_RULES:
+        # Check for module rules
+        if sheet_name in MODULE_RULES:
             type_json, core_json, module_json = get_rules_json(
-                url, self.json_type, CHIP_SEQ_MODULE_RULES[sheet_name])
+                url, self.json_type, MODULE_RULES[sheet_name])
             field_names['module'], tmp = self.parse_json(module_json)
             array_fields.extend(tmp)
             field_names['core'], tmp = self.parse_json(core_json)
@@ -211,7 +217,7 @@ class ReadExcelFile:
         """
         custom_data_fields_indexes = dict()
         array_fields = list()
-        if sheet_name in CHIP_SEQ_MODULE_RULES:
+        if sheet_name in MODULE_RULES:
             headers_to_check = {**field_names['core'], **field_names['type'],
                                 **field_names['module']}
         elif sheet_name in ['faang', 'ena', 'eva']:
@@ -251,6 +257,7 @@ class ReadExcelFile:
         :param array_fields
         :return: dict with positions of types of field
         """
+        field_name = field_name.lower()
         if field_name not in self.headers:
             raise ValueError(
                 f"Error: can't find this property '{field_name}' in "
@@ -344,6 +351,12 @@ class ReadExcelFile:
         elif name == 'chip-seq dna-binding proteins':
             json_types = {**EXPERIMENTS_SPECIFIC_JSON_TYPES, **JSON_TYPES,
                           **CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES}
+        elif name == 'teleostei embryo':
+            json_types = {**SAMPLES_SPECIFIC_JSON_TYPES, **JSON_TYPES,
+                          **SPECIMEN_TELEOST_EMBRYO_JSON_TYPES}
+        elif name == 'teleostei post-hatching':
+            json_types = {**SAMPLES_SPECIFIC_JSON_TYPES, **JSON_TYPES,
+                          **SPECIMEN_TELEOST_POST_HATCHING_JSON_TYPES}
         else:
             if self.json_type == 'samples':
                 json_types = {**SAMPLES_SPECIFIC_JSON_TYPES, **JSON_TYPES}
@@ -469,8 +482,12 @@ class ReadExcelFile:
                 sample_data['samples_core']['material']:
             material = sample_data['samples_core']['material']['text']
             if material != name:
-                return f"Error: '{name}' sheet contains record with " \
-                       f"inconsistent material '{material}'"
+                if name in ['teleostei embryo', 'teleostei post-hatching'] \
+                        and material == 'specimen from organism':
+                    return False
+                else:
+                    return f"Error: '{name}' sheet contains record with " \
+                           f"inconsistent material '{material}'"
             else:
                 return False
         else:

@@ -68,7 +68,8 @@ def check_issues(record):
     """
     for key, value in record.items():
         if key in ['samples_core', 'custom', 'experiments_core',
-                   'input_dna', 'dna-binding_proteins']:
+                   'input_dna', 'dna-binding_proteins', 'teleostei_embryo',
+                   'teleostei_post-hatching']:
             if check_issues(value):
                 return True
         if isinstance(value, list):

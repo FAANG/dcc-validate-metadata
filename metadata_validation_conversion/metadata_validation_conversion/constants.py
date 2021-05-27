@@ -1,7 +1,7 @@
 from decouple import config
 
-BASE_URL = "https://raw.githubusercontent.com/FAANG/dcc-metadata/" \
-           "switch_to_json-schema/json_schema/"
+BASE_URL = "https://raw.githubusercontent.com/FAANG/dcc-metadata/master/" \
+           "json_schema/"
 SAMPLE_CORE_URL = f"{BASE_URL}core/samples/" \
                   f"faang_samples_core.metadata_rules.json"
 EXPERIMENT_CORE_URL = f"{BASE_URL}/core/experiments/" \
@@ -66,6 +66,8 @@ ALLOWED_TEMPLATES = ['samples', 'experiments', 'analyses']
 ALLOWED_SHEET_NAMES = {
     'organism': ORGANISM_URL,
     'specimen from organism': SPECIMEN_FROM_ORGANISM_URL,
+    "teleostei embryo": SPECIMEN_FROM_ORGANISM_URL,
+    "teleostei post-hatching": SPECIMEN_FROM_ORGANISM_URL,
     'pool of specimens': POOL_OF_SPECIMENS_URL,
     'cell specimen': CELL_SPECIMEN_URL,
     'cell culture': CELL_CULTURE_URL,
@@ -87,6 +89,8 @@ ALLOWED_SHEET_NAMES = {
 ALLOWED_SAMPLES_TYPES = {
     'organism': ORGANISM_URL,
     'specimen_from_organism': SPECIMEN_FROM_ORGANISM_URL,
+    'teleostei_embryo': SPECIMEN_FROM_ORGANISM_URL,
+    'teleostei_post-hatching': SPECIMEN_FROM_ORGANISM_URL,
     'pool_of_specimens': POOL_OF_SPECIMENS_URL,
     'cell_specimen': CELL_SPECIMEN_URL,
     'cell_culture': CELL_CULTURE_URL,
@@ -114,6 +118,8 @@ ALLOWED_ANALYSES_TYPES = {
 ALLOWED_RELATIONSHIPS = {
     'organism': ['organism'],
     'specimen_from_organism': ['organism'],
+    'teleostei_embryo': ['organism'],
+    'teleostei_post-hatching': ['organism'],
     'pool_of_specimens': ['specimen_from_organism'],
     'cell_specimen': ['specimen_from_organism'],
     'cell_culture': ['specimen_from_organism', 'cell_specimen'],
@@ -140,6 +146,14 @@ JSON_TYPES = {
 
 SAMPLES_SPECIFIC_JSON_TYPES = {
     'core': 'samples_core'
+}
+
+SPECIMEN_TELEOST_EMBRYO_JSON_TYPES = {
+    'module': 'teleostei_embryo'
+}
+
+SPECIMEN_TELEOST_POST_HATCHING_JSON_TYPES = {
+    'module': 'teleostei_post-hatching'
 }
 
 EXPERIMENTS_SPECIFIC_JSON_TYPES = {
@@ -309,7 +323,11 @@ SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES = {
     'submission': SAMPLES_SUBMISSION_FIELDS
 }
 
-CHIP_SEQ_MODULE_RULES = {
+MODULE_RULES = {
+    'teleostei embryo': TELEOSTEI_EMBRYO_URL,
+    'teleostei_embryo': TELEOSTEI_EMBRYO_URL,
+    'teleostei post-hatching': TELEOSTEI_POST_HATCHING_URL,
+    'teleostei_post-hatching': TELEOSTEI_POST_HATCHING_URL,
     'chip-seq input dna': CHIP_SEQ_INPUT_DNA_URL,
     'chip-seq_input_dna': CHIP_SEQ_INPUT_DNA_URL,
     'chip-seq dna-binding proteins': CHIP_SEQ_DNA_BINDING_PROTEINS_URL,
