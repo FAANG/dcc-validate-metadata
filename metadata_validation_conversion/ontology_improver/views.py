@@ -17,7 +17,7 @@ def parse_zooma_response(response_list):
             if 'propertyValue' in response['annotatedProperty']:
                 data['ontology_label'] = response['annotatedProperty']['propertyValue']
         if 'semanticTags' in response:
-            data['ontology_id'] = ','.join(list(map(lambda tag: tag.split('/')[-1], response['semanticTags'])))
+            data['ontology_id'] = ','.join(response['semanticTags'])
         if 'confidence' in response:
             data['mapping_confidence'] = response['confidence']
         if 'derivedFrom' in response and 'provenance' in response['derivedFrom']:
