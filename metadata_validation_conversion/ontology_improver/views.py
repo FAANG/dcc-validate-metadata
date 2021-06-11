@@ -126,3 +126,30 @@ def validate_terms(request):
                 last_updated=datetime.now(tz=timezone.utc), verified_count=verified_num).save()   
         pass
     return HttpResponse(status=201)
+
+@csrf_exempt
+def get_ontology_details(id):
+    response = {}
+    res = requests.get(
+        "http://www.ebi.ac.uk/ols/api/terms/findByIdAndIsDefiningOntology?short_form={}".format(
+            id)).json()
+    if '_embedded' in res:
+        res = res['_embedded']['terms'][0]
+        response['iri'] = res['iri'] # string
+        response['label'] = res['label'] # string
+        if 'description' in res and res['description'] is not None:
+            response['summary'] = res['description'][0] # string
+        if 'synonyms' in res:
+            response['synonyms'] = res['synonyms'] # list
+        if 'annotation' in res:
+            if 'id' in res['annotation']:
+                response['id'] = res['annotation']['id'][0] # string 
+            if 'has_alternative_id' in res['annotation']:
+                response['alternative_id'] = res['annotation']['has_alternative_id'] # list
+            if 'summary' not in response and 'definition' in res['annotation']:
+                response['summary'] = res['annotation']['definition'][0] # string
+            if 'database_cross_reference' in res['annotation']:
+                response['database_cross_reference'] = res['annotation']['database_cross_reference'] # list
+            if 'has_related_synonym' in res['annotation']:
+                response['related_synonyms'] = res['annotation']['has_related_synonym'] # list
+    return JsonResponse(response)
