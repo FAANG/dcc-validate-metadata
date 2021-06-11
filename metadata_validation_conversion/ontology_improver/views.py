@@ -127,31 +127,49 @@ def validate_terms(request):
         pass
     return HttpResponse(status=201)
 
+def hasAttribute(res, att):
+    if att in res and res[att] is not None:
+        if type(res[att]) is list:
+            if len(res[att]):
+                return True
+            else:
+                return False    
+        return True
+    return False
+
 @csrf_exempt
 def get_ontology_details(request, id):
     if request.method != 'GET':
         return HttpResponse("This method is not allowed!\n")
     response = {}
+    # get ontology type, status etc from FAANG Ontology Database
+    response['faang_data'] = list(Ontologies.objects.filter(ontology_id__iexact=id).values())[0]
+    # parse ontology details from EBI OLS
     res = requests.get(
-        "http://www.ebi.ac.uk/ols/api/terms/findByIdAndIsDefiningOntology?short_form={}".format(
+        "http://www.ebi.ac.uk/ols/api/terms?short_form={}".format(
             id)).json()
     if '_embedded' in res:
         res = res['_embedded']['terms'][0]
-        response['iri'] = res['iri'] # string
-        response['label'] = res['label'] # string
-        if 'description' in res and res['description'] is not None:
+        if hasAttribute(res, 'iri'):
+            response['iri'] = res['iri'] # string
+        if hasAttribute(res, 'label'):
+            response['label'] = res['label'] # string
+        if hasAttribute(res, 'description'):
             response['summary'] = res['description'][0] # string
-        if 'synonyms' in res:
+        if hasAttribute(res, 'synonyms'):
             response['synonyms'] = res['synonyms'] # list
         if 'annotation' in res:
-            if 'id' in res['annotation']:
+            if hasAttribute(res['annotation'], 'id'):
                 response['id'] = res['annotation']['id'][0] # string 
-            if 'has_alternative_id' in res['annotation']:
+            if hasAttribute(res['annotation'], 'has_alternative_id'):
                 response['alternative_id'] = res['annotation']['has_alternative_id'] # list
-            if 'summary' not in response and 'definition' in res['annotation']:
+            if 'summary' not in response and hasAttribute(res['annotation'], 'definition'):
                 response['summary'] = res['annotation']['definition'][0] # string
-            if 'database_cross_reference' in res['annotation']:
+            if hasAttribute(res['annotation'], 'database_cross_reference'):
                 response['database_cross_reference'] = res['annotation']['database_cross_reference'] # list
-            if 'has_related_synonym' in res['annotation']:
+            if hasAttribute(res['annotation'], 'has_related_synonym'):
                 response['related_synonyms'] = res['annotation']['has_related_synonym'] # list
+            if 'synonyms' not in response and hasAttribute(res['annotation'], 'has_exact_synonym'):
+                response['synonyms'] = res['annotation']['has_exact_synonym'] # list
+                
     return JsonResponse(response)
