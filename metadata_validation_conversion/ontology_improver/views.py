@@ -128,7 +128,9 @@ def validate_terms(request):
     return HttpResponse(status=201)
 
 @csrf_exempt
-def get_ontology_details(id):
+def get_ontology_details(request, id):
+    if request.method != 'GET':
+        return HttpResponse("This method is not allowed!\n")
     response = {}
     res = requests.get(
         "http://www.ebi.ac.uk/ols/api/terms/findByIdAndIsDefiningOntology?short_form={}".format(
