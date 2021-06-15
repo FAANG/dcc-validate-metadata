@@ -3,7 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 import json
-from ontology_improver.models import Ontologies
+from ontology_improver.models import Ontologies, User
 from datetime import datetime
 from django.utils import timezone
 
@@ -100,31 +100,16 @@ def validate_terms(request):
     data = json.loads(request.body)
     ontologies = data['ontologies']
     user = data['user']
+    # create a new row/record in db for each ontology
     for record in ontologies:
-        matches = list(Ontologies.objects.filter(ontology_term__iexact=record['ontology_term']).values())
-        if len(matches):
-            # update record if already exists
-            ontology = Ontologies.objects.get(id=matches[0]['id'])
-            ontology.ontology_term = record['ontology_term']
-            ontology.ontology_type = record['ontology_type']
-            ontology.ontology_id = record['ontology_id']
-            ontology.ontology_support = record['ontology_support']
-            ontology.ontology_status = record['ontology_status']
-            ontology.users = ontology.users + ',' + user
-            ontology.colour_code = getColourCode(record['ontology_support'], record['ontology_status'])
-            ontology.last_updated = datetime.now(tz=timezone.utc)
-            if record['ontology_status'] == 'Verified':
-                ontology.verified_count  = ontology.verified_count + 1
-            ontology.save()
-        else:
-            # create record if not found
-            verified_num  = 1 if record['ontology_status'] == 'Verified' else 0
-            Ontologies(ontology_term=record['ontology_term'], ontology_type=record['ontology_type'], \
-                ontology_id=record['ontology_id'], ontology_support=record['ontology_support'], \
-                ontology_status=record['ontology_status'], users=user, \
-                colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
-                last_updated=datetime.now(tz=timezone.utc), verified_count=verified_num).save()   
-        pass
+        verified_num  = 1 if record['ontology_status'] == 'Verified' else 0
+        Ontologies(ontology_term=record['ontology_term'], ontology_type=record['ontology_type'], \
+            ontology_id=record['ontology_id'], ontology_support=record['ontology_support'], \
+            ontology_status=record['ontology_status'], \
+            colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
+            project=record['project'], species=record['species'], \
+            user = User.objects.get(username=user),
+            created_date=datetime.now(tz=timezone.utc), verified_count=verified_num).save()   
     return HttpResponse(status=201)
 
 def hasAttribute(res, att):
