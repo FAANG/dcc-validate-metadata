@@ -16,8 +16,9 @@ class Ontologies(models.Model):
     ontology_status = models.TextField()
     colour_code = models.TextField()
     project = models.TextField()
-    species = models.TextField()
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
-    verified_count = models.IntegerField()
+    tags = models.TextField()
+    created_by_user = models.ForeignKey(User, on_delete=models.PROTECT)
     created_date = models.DateTimeField(default=datetime.now, blank=True)
+    verified_by_users = models.ManyToManyField(User, related_name='verified_ontologies')
+    verified_count = models.IntegerField()
 

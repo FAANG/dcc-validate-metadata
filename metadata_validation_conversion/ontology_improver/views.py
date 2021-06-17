@@ -50,7 +50,7 @@ def search_terms(request):
         terms = json.loads(request.body)['terms']
         response = {'found': [], 'not_found': []}
         for term in terms:
-            matches = list(Ontologies.objects.filter(ontology_term__iexact=term).values())
+            matches = list(Ontologies.objects.filter(ontology_term__iexact=term).order_by('-created_date').values())
             if len(matches):
                 response['found'].append(matches[0])
             else:
@@ -59,9 +59,9 @@ def search_terms(request):
     elif request.method == 'GET':
         size = int(request.GET.get('size', 0))
         if size:
-            records = list(Ontologies.objects.all().values()[:size])
+            records = list(Ontologies.objects.all().order_by('-created_date').values()[:size])
         else:
-            records = list(Ontologies.objects.all().values())
+            records = list(Ontologies.objects.all().order_by('-created_date').values())
         response = {
             'ontologies': records
         }
@@ -99,17 +99,61 @@ def validate_terms(request):
         return HttpResponse("This method is not allowed!\n")
     data = json.loads(request.body)
     ontologies = data['ontologies']
+
+    # if user does not exist in user table, create new user
     user = data['user']
-    # create a new row/record in db for each ontology
+    try:
+        user_obj = User.objects.get(username=user)
+    except User.DoesNotExist:
+        user_obj = User.objects.create(username=user)
+    # TODO: get user details from AAP profile service and to user table
+
+    # create/ update ontology records
     for record in ontologies:
-        verified_num  = 1 if record['ontology_status'] == 'Verified' else 0
-        Ontologies(ontology_term=record['ontology_term'], ontology_type=record['ontology_type'], \
-            ontology_id=record['ontology_id'], ontology_support=record['ontology_support'], \
-            ontology_status=record['ontology_status'], \
-            colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
-            project=record['project'], species=record['species'], \
-            user = User.objects.get(username=user),
-            created_date=datetime.now(tz=timezone.utc), verified_count=verified_num).save()   
+        if record['ontology_status'] == 'Verified':
+            # if status is verified and record already exists, increment verified count and add user
+            try:
+                obj = Ontologies.objects.get(pk=record['id'])
+                obj.verified_count = obj.verified_count + 1
+                obj.ontology_status = 'Verified'
+                obj.save()
+                obj.verified_by_users.add(user_obj)
+            # if status is verified and record doesnt exist, create new record
+            except Ontologies.DoesNotExist:
+                obj = Ontologies.objects.create(
+                    ontology_term=record['ontology_term'], \
+                    ontology_type=record['ontology_type'], \
+                    ontology_id=record['ontology_id'], \
+                    ontology_support=record['ontology_support'], \
+                    ontology_status=record['ontology_status'], \
+                    colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
+                    created_by_user = user_obj, \
+                    created_date=datetime.now(tz=timezone.utc), 
+                    verified_count=1)
+                if 'project' in record:
+                    obj.project = record['project']
+                if 'tags' in record:
+                    obj.tags = record['tags']
+                obj.save()
+                obj.verified_by_users.add(user_obj)
+        # if status is not verified, always create a new record
+        else:
+            obj = Ontologies.objects.create(
+                ontology_term=record['ontology_term'], \
+                ontology_type=record['ontology_type'], \
+                ontology_id=record['ontology_id'], \
+                ontology_support=record['ontology_support'], \
+                ontology_status=record['ontology_status'], \
+                colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
+                created_by_user = user_obj, \
+                created_date=datetime.now(tz=timezone.utc), 
+                verified_count=0) 
+            if 'project' in record:
+                obj.project = record['project']
+            if 'tags' in record:
+                obj.tags = record['tags']
+            obj.save()
+
     return HttpResponse(status=201)
 
 def hasAttribute(res, att):
