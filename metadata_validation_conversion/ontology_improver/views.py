@@ -173,7 +173,9 @@ def get_ontology_details(request, id):
         return HttpResponse("This method is not allowed!\n")
     response = {}
     # get ontology type, status etc from FAANG Ontology Database
-    response['faang_data'] = model_to_dict(Ontologies.objects.get(pk=id))
+    faang_data = model_to_dict(Ontologies.objects.get(pk=id))
+    del faang_data['verified_by_users']
+    response['faang_data'] = faang_data
     # parse ontology details from EBI OLS
     res = requests.get(
         "http://www.ebi.ac.uk/ols/api/terms?short_form={}".format(
