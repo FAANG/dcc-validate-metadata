@@ -6,6 +6,7 @@ import json
 from ontology_improver.models import Ontologies, User
 from datetime import datetime
 from django.utils import timezone
+from django.forms.models import model_to_dict
 
 def parse_zooma_response(response_list):
     annotations = []
@@ -172,11 +173,11 @@ def get_ontology_details(request, id):
         return HttpResponse("This method is not allowed!\n")
     response = {}
     # get ontology type, status etc from FAANG Ontology Database
-    response['faang_data'] = list(Ontologies.objects.filter(ontology_id__iexact=id).values())[0]
+    response['faang_data'] = model_to_dict(Ontologies.objects.get(pk=id))
     # parse ontology details from EBI OLS
     res = requests.get(
         "http://www.ebi.ac.uk/ols/api/terms?short_form={}".format(
-            id)).json()
+            response['faang_data']['ontology_id'])).json()
     if '_embedded' in res:
         res = res['_embedded']['terms'][0]
         if hasAttribute(res, 'iri'):
