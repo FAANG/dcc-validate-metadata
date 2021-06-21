@@ -53,7 +53,7 @@ def search_terms(request):
         for term in terms:
             matches = list(Ontologies.objects.filter(ontology_term__iexact=term).order_by('-created_date').values())
             if len(matches):
-                response['found'].append(matches[0])
+                response['found'] += matches
             else:
                 response['not_found'].append(term)
         return JsonResponse(response)
@@ -120,7 +120,7 @@ def validate_terms(request):
                 obj.save()
                 obj.verified_by_users.add(user_obj)
             # if status is verified and record doesnt exist, create new record
-            except Ontologies.DoesNotExist:
+            except (Ontologies.DoesNotExist, KeyError):
                 obj = Ontologies.objects.create(
                     ontology_term=record['ontology_term'], \
                     ontology_type=record['ontology_type'], \
