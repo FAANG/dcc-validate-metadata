@@ -93,26 +93,24 @@ def registration(request):
     }
     # parse user info for creating AAP account
     request = json.loads(request.body)
+    password = base64.b64decode(request['password'])
+    password = password.decode("utf-8")
     post_data = {
-        'username': request['username'],
-        'password': base64.b64decode(request['password']),
+        'username': request['username'], 
+        'password': password,
         'name': request['first_name'] + ' ' + request['last_name'],
         'email': request['email'],
         'organisation': request['organisation']
     }
     res = requests.post("https://explore.api.aai.ebi.ac.uk/auth", \
-                data=post_data, headers=headers)
+        data=json.dumps(post_data), headers=headers)
     if res.status_code == 200:
         user_id = res.text
         # save user data
-        User.objects.create(
-            user_id = user_id, 
-            username = request['username'], 
-            first_name = request['first_name'],
-            last_name = request['last_name'],
-            email = request['email'],
-            institute = request['organisation']
-            )
+        User.objects.create(user_id = user_id, username = request['username'], \
+            first_name = request['first_name'], \
+            last_name = request['last_name'], \
+            email = request['email'], institute = request['organisation'])
         return HttpResponse(user_id, status=200)
     else:
         return HttpResponse(res.text, status=res.status_code)
