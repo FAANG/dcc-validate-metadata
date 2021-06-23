@@ -3,6 +3,7 @@ from datetime import datetime
 
 class User(models.Model):
     username = models.TextField(primary_key=True)
+    user_id = models.TextField()
     first_name = models.TextField()
     last_name = models.TextField()
     email = models.EmailField()
