@@ -7,6 +7,7 @@ from ontology_improver.models import Ontologies, User
 from datetime import datetime
 from django.utils import timezone
 from django.forms.models import model_to_dict
+import base64
 
 def parse_zooma_response(response_list):
     annotations = []
@@ -84,6 +85,39 @@ def get_zooma_ontologies(request):
     return JsonResponse(response)
 
 @csrf_exempt
+def registration(request):
+    if request.method != 'POST':
+        return HttpResponse("This method is not allowed!\n")
+    headers = {
+        'Content-Type': 'application/json;charset=UTF-8',
+    }
+    # parse user info for creating AAP account
+    request = json.loads(request.body)
+    post_data = {
+        'username': request['username'],
+        'password': base64.b64decode(request['password']),
+        'name': request['first_name'] + ' ' + request['last_name'],
+        'email': request['email'],
+        'organisation': request['organisation']
+    }
+    res = requests.post("https://explore.api.aai.ebi.ac.uk/auth", \
+                data=post_data, headers=headers)
+    if res.status_code == 200:
+        user_id = res.text
+        # save user data
+        User.objects.create(
+            user_id = user_id, 
+            username = request['username'], 
+            first_name = request['first_name'],
+            last_name = request['last_name'],
+            email = request['email'],
+            institute = request['organisation']
+            )
+        return HttpResponse(user_id, status=200)
+    else:
+        return HttpResponse(res.text, status=res.status_code)
+
+@csrf_exempt
 def authentication(request):
     if request.method != 'POST':
         return HttpResponse("This method is not allowed!\n")
@@ -100,15 +134,9 @@ def validate_terms(request):
         return HttpResponse("This method is not allowed!\n")
     data = json.loads(request.body)
     ontologies = data['ontologies']
-
-    # if user does not exist in user table, create new user
+    # get user info
     user = data['user']
-    try:
-        user_obj = User.objects.get(username=user)
-    except User.DoesNotExist:
-        user_obj = User.objects.create(username=user)
-    # TODO: get user details from AAP profile service and to user table
-
+    user_obj = User.objects.get(username=user)
     # create/ update ontology records
     for record in ontologies:
         if record['ontology_status'] == 'Verified':
