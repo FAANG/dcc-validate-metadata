@@ -111,7 +111,7 @@ def registration(request):
             first_name = request['first_name'], \
             last_name = request['last_name'], \
             email = request['email'], institute = request['organisation'])
-        return HttpResponse(user_id, status=200)
+        return JsonResponse({'user_id':user_id})
     else:
         return HttpResponse(res.text, status=res.status_code)
 
