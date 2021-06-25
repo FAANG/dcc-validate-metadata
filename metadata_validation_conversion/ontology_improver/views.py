@@ -137,15 +137,16 @@ def validate_terms(request):
     user_obj = User.objects.get(username=user)
     # create/ update ontology records
     for record in ontologies:
-        if record['ontology_status'] == 'Verified':
-            # if status is verified and record already exists, increment verified count and add user
+        # if status is verified or needs improvement, update existing record if it exists
+        if record['ontology_status'] == 'Verified' or record['ontology_status'] == 'Needs Improvement':
             try:
                 obj = Ontologies.objects.get(pk=record['id'])
-                obj.verified_count = obj.verified_count + 1
-                obj.ontology_status = 'Verified'
+                if record['ontology_status'] == 'Verified':
+                    obj.verified_count = obj.verified_count + 1
+                obj.ontology_status = record['ontology_status']
                 obj.save()
-                obj.verified_by_users.add(user_obj)
-            # if status is verified and record doesnt exist, create new record
+                if record['ontology_status'] == 'Verified':
+                    obj.verified_by_users.add(user_obj)
             except (Ontologies.DoesNotExist, KeyError):
                 obj = Ontologies.objects.create(
                     ontology_term=record['ontology_term'], \
@@ -155,15 +156,16 @@ def validate_terms(request):
                     ontology_status=record['ontology_status'], \
                     colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
                     created_by_user = user_obj, \
-                    created_date=datetime.now(tz=timezone.utc), 
-                    verified_count=1)
+                    created_date = datetime.now(tz=timezone.utc), 
+                    verified_count = 1 if record['ontology_status'] == 'Verified' else 0)
                 if 'project' in record:
                     obj.project = record['project']
                 if 'tags' in record:
                     obj.tags = record['tags']
                 obj.save()
-                obj.verified_by_users.add(user_obj)
-        # if status is not verified, always create a new record
+                if record['ontology_status'] == 'Verified':
+                    obj.verified_by_users.add(user_obj)
+        # if status is not verified or needs improvement, always create a new record
         else:
             obj = Ontologies.objects.create(
                 ontology_term=record['ontology_term'], \
