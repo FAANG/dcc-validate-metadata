@@ -139,16 +139,22 @@ def validate_terms(request):
     for record in ontologies:
         try:
             obj = Ontologies.objects.get(pk=record['id'])
+            obj.ontology_status = record['ontology_status']
+            obj.colour_code = getColourCode(obj.ontology_support, record['ontology_status'])
             if record['ontology_status'] == 'Verified':
                 obj.verified_count = obj.verified_count + 1
-            obj.ontology_status = record['ontology_status']
-            obj.ontology_term = record['ontology_term']
-            obj.ontology_type = record['ontology_type']
-            obj.ontology_id = record['ontology_id']
-            obj.colour_code = getColourCode(record['ontology_support'], record['ontology_status'])
-            obj.project = record['project']
-            obj.species = record['species']
-            obj.tags = record['tags']
+            if 'ontology_term' in record:
+                obj.ontology_term = record['ontology_term']
+            if 'ontology_type' in record:
+                obj.ontology_type = record['ontology_type']
+            if 'ontology_id' in record:
+                obj.ontology_id = record['ontology_id']
+            if 'project' in record:
+                obj.project = record['project']
+            if 'species' in record:
+                obj.species = record['species']
+            if 'tags' in record:
+                obj.tags = record['tags']
             obj.save()
             if record['ontology_status'] == 'Verified':
                 obj.verified_by_users.add(user_obj)
