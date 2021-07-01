@@ -26,7 +26,8 @@ class JoinedResults:
         for record in records:
             for name, value in record.items():
                 if name in ['samples_core', 'custom', 'dna-binding_proteins',
-                            'input_dna', 'experiments_core']:
+                            'input_dna', 'experiments_core',
+                            'teleostei_embryo', 'teleostei_post-hatching']:
                     results_to_return.setdefault(name, dict())
                     for k, v in record[name].items():
                         if isinstance(v, dict):

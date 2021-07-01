@@ -40,7 +40,11 @@ class RelationshipsIssues:
         records = self.json_to_test[name]
         structure_to_use = self.structure[name]
         for index, record in enumerate(records):
-            record_to_return = get_record_structure(structure_to_use, record)
+            module_name = None
+            if name in ['teleostei_embryo', 'teleostei_post-hatching']:
+                module_name = name
+            record_to_return = get_record_structure(structure_to_use, record,
+                                                    module_name)
             record_name = get_record_name(record, index, name)
             relationships.setdefault(record_name, dict())
             relationship_name = 'child_of' if name == 'organism' else \
@@ -61,6 +65,8 @@ class RelationshipsIssues:
                     record[relationship_name]['value']]
             relationships[record_name]['material'] = \
                 record['samples_core']['material']['text']
+            if module_name:
+                relationships[record_name]['material'] = module_name
             if relationship_name == 'child_of':
                 try:
                     relationships[record_name]['organism'] = \
@@ -79,6 +85,9 @@ class RelationshipsIssues:
         :param validation_document: document to send to front-end
         :return: issues in dict format
         """
+        print(relationships)
+        print(biosample_data)
+        print(validation_document)
         for k, v in relationships.items():
             name = convert_to_snake_case(v['material'])
             record_to_return = self.find_record(validation_document, name, k)

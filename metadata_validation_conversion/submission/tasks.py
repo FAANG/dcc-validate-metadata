@@ -1,5 +1,6 @@
 import subprocess
 import json
+import re
 
 from lxml import etree
 
@@ -142,6 +143,7 @@ def submit_data_to_ena(results, credentials, room_id, submission_type):
         experiment_xml = f"{room_id}_experiment.xml"
         run_xml = f"{room_id}_run.xml"
         study_xml = f"{room_id}_study.xml"
+        password = re.escape(password)
         submit_to_ena_process = subprocess.run(
             f'curl -u {username}:{password} '
             f'-F "SUBMISSION=@{submission_xml}" '
