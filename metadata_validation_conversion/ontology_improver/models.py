@@ -17,6 +17,7 @@ class Ontologies(models.Model):
     ontology_status = models.TextField()
     colour_code = models.TextField()
     project = models.TextField()
+    species = models.TextField()
     tags = models.TextField()
     created_by_user = models.ForeignKey(User, on_delete=models.PROTECT)
     created_date = models.DateTimeField(default=datetime.now, blank=True)

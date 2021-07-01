@@ -137,36 +137,22 @@ def validate_terms(request):
     user_obj = User.objects.get(username=user)
     # create/ update ontology records
     for record in ontologies:
-        # if status is verified or needs improvement, update existing record if it exists
-        if record['ontology_status'] == 'Verified' or record['ontology_status'] == 'Needs Improvement':
-            try:
-                obj = Ontologies.objects.get(pk=record['id'])
-                if record['ontology_status'] == 'Verified':
-                    obj.verified_count = obj.verified_count + 1
-                obj.ontology_status = record['ontology_status']
-                obj.save()
-                if record['ontology_status'] == 'Verified':
-                    obj.verified_by_users.add(user_obj)
-            except (Ontologies.DoesNotExist, KeyError):
-                obj = Ontologies.objects.create(
-                    ontology_term=record['ontology_term'], \
-                    ontology_type=record['ontology_type'], \
-                    ontology_id=record['ontology_id'], \
-                    ontology_support=record['ontology_support'], \
-                    ontology_status=record['ontology_status'], \
-                    colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
-                    created_by_user = user_obj, \
-                    created_date = datetime.now(tz=timezone.utc), 
-                    verified_count = 1 if record['ontology_status'] == 'Verified' else 0)
-                if 'project' in record:
-                    obj.project = record['project']
-                if 'tags' in record:
-                    obj.tags = record['tags']
-                obj.save()
-                if record['ontology_status'] == 'Verified':
-                    obj.verified_by_users.add(user_obj)
-        # if status is not verified or needs improvement, always create a new record
-        else:
+        try:
+            obj = Ontologies.objects.get(pk=record['id'])
+            if record['ontology_status'] == 'Verified':
+                obj.verified_count = obj.verified_count + 1
+            obj.ontology_status = record['ontology_status']
+            obj.ontology_term = record['ontology_term']
+            obj.ontology_type = record['ontology_type']
+            obj.ontology_id = record['ontology_id']
+            obj.colour_code = getColourCode(record['ontology_support'], record['ontology_status'])
+            obj.project = record['project']
+            obj.species = record['species']
+            obj.tags = record['tags']
+            obj.save()
+            if record['ontology_status'] == 'Verified':
+                obj.verified_by_users.add(user_obj)
+        except (Ontologies.DoesNotExist, KeyError):
             obj = Ontologies.objects.create(
                 ontology_term=record['ontology_term'], \
                 ontology_type=record['ontology_type'], \
@@ -175,13 +161,17 @@ def validate_terms(request):
                 ontology_status=record['ontology_status'], \
                 colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
                 created_by_user = user_obj, \
-                created_date=datetime.now(tz=timezone.utc), 
-                verified_count=0) 
+                created_date = datetime.now(tz=timezone.utc),
+                verified_count = 1 if record['ontology_status'] == 'Verified' else 0)
             if 'project' in record:
                 obj.project = record['project']
+            if 'species' in record:
+                obj.species = record['species']
             if 'tags' in record:
                 obj.tags = record['tags']
             obj.save()
+            if record['ontology_status'] == 'Verified':
+                obj.verified_by_users.add(user_obj)
 
     return HttpResponse(status=201)
 
