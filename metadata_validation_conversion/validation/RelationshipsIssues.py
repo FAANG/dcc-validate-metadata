@@ -85,9 +85,6 @@ class RelationshipsIssues:
         :param validation_document: document to send to front-end
         :return: issues in dict format
         """
-        print(relationships)
-        print(biosample_data)
-        print(validation_document)
         for k, v in relationships.items():
             name = convert_to_snake_case(v['material'])
             record_to_return = self.find_record(validation_document, name, k)

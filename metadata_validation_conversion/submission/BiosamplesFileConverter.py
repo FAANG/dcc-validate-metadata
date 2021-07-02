@@ -190,6 +190,16 @@ class BiosamplesFileConverter:
                         record['custom'].items():
                     sample_attributes[remove_underscores(sc_attribute_name)] = \
                         self.parse_attribute(sc_attribute_value)
+            elif attribute_name == 'teleostei_post-hatching':
+                for sc_attribute_name, sc_attribute_value in \
+                        record['teleostei_post-hatching'].items():
+                    sample_attributes[remove_underscores(sc_attribute_name)] = \
+                        self.parse_attribute(sc_attribute_value)
+            elif attribute_name == 'teleostei_embryo':
+                for sc_attribute_name, sc_attribute_value in \
+                        record['teleostei_embryo'].items():
+                    sample_attributes[remove_underscores(sc_attribute_name)] = \
+                        self.parse_attribute(sc_attribute_value)
             else:
                 sample_attributes[remove_underscores(attribute_name)] = \
                     self.parse_attribute(attribute_value)
