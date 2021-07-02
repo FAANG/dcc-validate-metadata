@@ -98,6 +98,12 @@ class ElixirValidatorResults:
             keys = paths[i].split('.')
             # Check that returned path was for fields that allow to have
             # multiple values
+            if '[' in keys[0]:
+                key = keys[0].split('[')[1].split(']')[0]
+                key = key.split("'")[1]
+                self.update_record_to_return(record_to_return, key, error,
+                                             additional_field=additional_field)
+                continue
             if '[' in keys[1]:
                 # parsing values like 'health_status[0]'
                 key = keys[1].split('[')[0]
@@ -130,5 +136,10 @@ class ElixirValidatorResults:
             pointer = record_to_return[additional_field][key]
         else:
             pointer = record_to_return[key]
-        pointer.setdefault('errors', list())
-        pointer['errors'].append(error)
+        if isinstance(pointer, list):
+            for second_pointer in pointer:
+                second_pointer.setdefault('errors', list())
+                second_pointer['errors'].append(error)
+        else:
+            pointer.setdefault('errors', list())
+            pointer['errors'].append(error)

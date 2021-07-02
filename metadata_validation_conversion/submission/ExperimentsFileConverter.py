@@ -4,6 +4,7 @@ from lxml import etree
 
 from .helpers import check_field_existence, remove_underscores
 from .FileConverter import FileConverter
+import json
 
 
 class ExperimentFileConverter(FileConverter):
@@ -79,6 +80,8 @@ class ExperimentFileConverter(FileConverter):
             experiment_attributes_elt = etree.SubElement(
                 experiment_elt, 'EXPERIMENT_ATTRIBUTES')
             faang_experiment = self.find_faang_experiment(alias)
+            if not faang_experiment:
+                return f"Error: {alias} experiment doesn't have FAANG data"
             self.parse_faang_experiment(faang_experiment['experiments_core'],
                                         experiment_attributes_elt)
             if 'dna-binding_proteins' in faang_experiment:

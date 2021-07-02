@@ -369,13 +369,15 @@ class ReadExcelFile:
                 organism_to_validate.setdefault(v, dict())
                 for field_name, indexes in field_names_indexes[k].items():
                     date_field = self.check_cell_is_date(field_name)
+                    time_field = self.check_cell_is_time(field_name)
                     self.add_row(field_name, indexes, organism_to_validate[v],
-                                 input_data, date_field)
+                                 input_data, date_field, time_field)
             else:
                 for field_name, indexes in field_names_indexes[k].items():
                     date_field = self.check_cell_is_date(field_name)
+                    time_field = self.check_cell_is_time(field_name)
                     self.add_row(field_name, indexes, organism_to_validate,
-                                 input_data, date_field)
+                                 input_data, date_field, time_field)
         return organism_to_validate
 
     @staticmethod
@@ -390,8 +392,17 @@ class ReadExcelFile:
         else:
             return False
 
+    @staticmethod
+    def check_cell_is_time(field_name):
+        """
+        This function will check that current column is time field
+        :param field_name: name of column
+        :return: True if column is time field and False otherwise
+        """
+        return field_name in ['sampling_day_start_time', 'sampling_day_end_time']
+
     def add_row(self, field_name, indexes, organism_to_validate, input_data,
-                date_field):
+                date_field, time_field):
         """
         High-level function to get data from table
         :param field_name: name of the field to add
@@ -399,26 +410,29 @@ class ReadExcelFile:
         :param organism_to_validate: results holder
         :param input_data: row from table
         :param date_field: date field to check
+        :param time_field: time field to check
         """
         if isinstance(indexes, list):
             tmp_list = list()
             for index in indexes:
-                tmp_data = self.get_data(input_data, date_field, **index)
+                tmp_data = self.get_data(input_data, date_field, time_field,
+                                         **index)
                 if len(tmp_data) != 0:
                     tmp_list.append(tmp_data)
             if len(tmp_list) != 0:
                 organism_to_validate[field_name] = tmp_list
         else:
             self.check_existence(field_name, organism_to_validate,
-                                 self.get_data(input_data, date_field,
+                                 self.get_data(input_data, date_field, time_field,
                                                **indexes))
 
-    def get_data(self, input_data, date_field, **fields):
+    def get_data(self, input_data, date_field, time_field, **fields):
         """
         This function will create dict with required fields and required
         information
         :param input_data: row from template
         :param date_field: boolean value is this data is date data
+        :param time_field: boolean value is this data is time data
         :param fields: dict with field name as key and field index as value
         :return: dict with required information
         """
