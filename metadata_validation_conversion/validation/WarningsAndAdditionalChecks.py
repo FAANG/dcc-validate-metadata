@@ -175,6 +175,10 @@ class WarningsAndAdditionalChecks:
             self.check_ontology_text(record['custom'], ontology_ids,
                                      record_to_return['custom'])
 
+            # check linked Biosample
+            if self.rules_type == 'experiments' or self.rules_type == 'analyses':
+                self.check_biosample_for_ena(record, record_to_return)
+
             data_to_return.append(record_to_return)
         return data_to_return
 
@@ -456,3 +460,46 @@ class WarningsAndAdditionalChecks:
                 f"Breed '{record['breed']['text']}' doesn't match the animal "
                 f"specie: '{record['organism']['text']}'"
             )
+
+    @staticmethod
+    def check_biosample_for_ena(record, record_to_return):
+        '''
+        This function will check that the linked Biosample is not organism,
+        for ENA submission (experiements and analyses)
+        :param record: record to check
+        :param record_to_return: dict to send to front-end
+        :return:
+        '''
+        for field_name, field_value in record.items():
+            # for experiments
+            if 'sample_descriptor' in field_value:
+                # check if biosample if organism
+                record_to_return[field_name]['sample_descriptor'].setdefault('errors', list())
+                record_to_return[field_name]['sample_descriptor']['errors'].append(
+                    "Linked Biosample should be a specimen")
+            # for analyses
+            elif field_name == 'samples':
+                if isinstance(record['samples'], list):
+                    for index, sample in enumerate(record['samples']):
+                        # check if biosample if organism
+                        record_to_return['samples'][index].setdefault('errors', list())
+                        record_to_return['samples'][index]['errors'].append(
+                        "Linked Biosample should be a specimen")
+                else:
+                    # check if biosample if organism
+                    record_to_return['samples'].setdefault('errors', list())
+                    record_to_return['samples']['errors'].append(
+                    "Linked Biosample should be a specimen")
+            # for analyses
+            elif 'samples' in field_value:
+                if isinstance(record[field_name]['samples'], list):
+                    for index, sample in enumerate(record[field_name]['samples']):
+                        # check if biosample if organism
+                        record_to_return[field_name]['samples'][index].setdefault('errors', list())
+                        record_to_return[field_name]['samples'][index]['errors'].append(
+                        "Linked Biosample should be a specimen")
+                else:
+                    # check if biosample if organism
+                    record_to_return[field_name]['samples'].setdefault('errors', list())
+                    record_to_return[field_name]['samples']['errors'].append(
+                    "Linked Biosample should be a specimen")
