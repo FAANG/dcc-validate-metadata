@@ -7,6 +7,8 @@ from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
 from metadata_validation_conversion.helpers import get_rules_json
 from .get_ontology_text_async import collect_ids
 from .helpers import validate, get_record_structure
+import requests
+import json
 
 
 class WarningsAndAdditionalChecks:
@@ -461,8 +463,7 @@ class WarningsAndAdditionalChecks:
                 f"specie: '{record['organism']['text']}'"
             )
 
-    @staticmethod
-    def check_biosample_for_ena(record, record_to_return):
+    def check_biosample_for_ena(self, record, record_to_return):
         '''
         This function will check that the linked Biosample is not organism,
         for ENA submission (experiements and analyses)
@@ -473,33 +474,52 @@ class WarningsAndAdditionalChecks:
         for field_name, field_value in record.items():
             # for experiments
             if 'sample_descriptor' in field_value:
-                # check if biosample if organism
-                record_to_return[field_name]['sample_descriptor'].setdefault('errors', list())
-                record_to_return[field_name]['sample_descriptor']['errors'].append(
-                    "Linked Biosample should be a specimen")
+                if self.biosample_is_not_specimen(record_to_return[field_name]['sample_descriptor']['value']):
+                    record_to_return[field_name]['sample_descriptor'].setdefault('errors', list())
+                    record_to_return[field_name]['sample_descriptor']['errors'].append(
+                        "Linked Biosample should be a specimen")
             # for analyses
             elif field_name == 'samples':
                 if isinstance(record['samples'], list):
                     for index, sample in enumerate(record['samples']):
-                        # check if biosample if organism
-                        record_to_return['samples'][index].setdefault('errors', list())
-                        record_to_return['samples'][index]['errors'].append(
-                        "Linked Biosample should be a specimen")
+                        if self.biosample_is_not_specimen(record_to_return['samples'][index]['value']):
+                            record_to_return['samples'][index].setdefault('errors', list())
+                            record_to_return['samples'][index]['errors'].append(
+                            "Linked Biosample should be a specimen")
                 else:
-                    # check if biosample if organism
-                    record_to_return['samples'].setdefault('errors', list())
-                    record_to_return['samples']['errors'].append(
-                    "Linked Biosample should be a specimen")
+                    if self.biosample_is_not_specimen(record_to_return['samples']['value']):
+                        record_to_return['samples'].setdefault('errors', list())
+                        record_to_return['samples']['errors'].append(
+                        "Linked Biosample should be a specimen")
             # for analyses
             elif 'samples' in field_value:
                 if isinstance(record[field_name]['samples'], list):
                     for index, sample in enumerate(record[field_name]['samples']):
-                        # check if biosample if organism
-                        record_to_return[field_name]['samples'][index].setdefault('errors', list())
-                        record_to_return[field_name]['samples'][index]['errors'].append(
-                        "Linked Biosample should be a specimen")
+                        if self.biosample_is_not_specimen(record_to_return[field_name]['samples'][index]['value']):
+                            record_to_return[field_name]['samples'][index].setdefault('errors', list())
+                            record_to_return[field_name]['samples'][index]['errors'].append(
+                            "Linked Biosample should be a specimen")
                 else:
-                    # check if biosample if organism
-                    record_to_return[field_name]['samples'].setdefault('errors', list())
-                    record_to_return[field_name]['samples']['errors'].append(
-                    "Linked Biosample should be a specimen")
+                    if self.biosample_is_not_specimen(record_to_return[field_name]['samples']['value']):
+                        record_to_return[field_name]['samples'].setdefault('errors', list())
+                        record_to_return[field_name]['samples']['errors'].append(
+                        "Linked Biosample should be a specimen")
+
+    @staticmethod
+    def biosample_is_not_specimen(biosample_id):
+        '''
+        Check if Biosample associated with the id is organism,
+        by querying biosample API
+        :param biosample_id: id to query biosamples API and get info
+        :return: boolean
+        '''
+        url = 'https://www.ebi.ac.uk/biosamples/samples/' + biosample_id
+        res = requests.get(url)
+        try:
+            data = json.loads(res.content)
+            for material in data['characteristics']['material']:
+                if material['text'] == 'organism':
+                    return True
+            return False
+        except:
+            return True
