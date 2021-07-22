@@ -31,6 +31,10 @@ class ReadExcelFile:
         self.wb_datemode = wb.datemode
         data = dict()
         structure = dict()
+        if self.json_type == 'experiments' or self.json_type == 'analyses':
+            sheets = [sheet.name for sheet in wb.sheets()]
+            if 'submission' not in sheets:
+                return 'Error: table should have submission sheet', structure
         for sh in wb.sheets():
             if sh.name not in ALLOWED_SHEET_NAMES:
                 if sh.name == 'faang_field_values':
