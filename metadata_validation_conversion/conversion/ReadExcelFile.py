@@ -8,7 +8,7 @@ from metadata_validation_conversion.constants import ALLOWED_SHEET_NAMES, \
     CHIP_SEQ_INPUT_DNA_JSON_TYPES, CHIP_SEQ_DNA_BINDING_PROTEINS_JSON_TYPES, \
     EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES, MODULE_RULES, \
     SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES, SPECIMEN_TELEOST_EMBRYO_JSON_TYPES, \
-    SPECIMEN_TELEOST_POST_HATCHING_JSON_TYPES
+    SPECIMEN_TELEOST_POST_HATCHING_JSON_TYPES, ANALYSES_ALLOWED_SPECIAL_SHEET_NAMES
 from metadata_validation_conversion.helpers import convert_to_snake_case, \
     get_rules_json
 
@@ -42,10 +42,18 @@ class ReadExcelFile:
                     except IndexError:
                         continue
                 elif sh.name in EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES \
-                        and self.json_type == 'experiments' \
-                        or self.json_type == 'analyses':
+                        and self.json_type == 'experiments':
                     special_sheet_data = self.get_additional_data(
                         sh, sh.name, EXPERIMENT_ALLOWED_SPECIAL_SHEET_NAMES)
+                    if 'Error' in special_sheet_data:
+                        os.remove(self.file_path)
+                        return special_sheet_data, structure
+                    data[convert_to_snake_case(sh.name)] = special_sheet_data
+                    continue
+                elif sh.name in ANALYSES_ALLOWED_SPECIAL_SHEET_NAMES \
+                        and self.json_type == 'analyses':
+                    special_sheet_data = self.get_additional_data(
+                        sh, sh.name, ANALYSES_ALLOWED_SPECIAL_SHEET_NAMES)
                     if 'Error' in special_sheet_data:
                         os.remove(self.file_path)
                         return special_sheet_data, structure
