@@ -24,3 +24,9 @@ class Ontologies(models.Model):
     verified_by_users = models.ManyToManyField(User, related_name='verified_ontologies')
     verified_count = models.IntegerField()
 
+class Summary(models.Model):
+    project = models.TextField()
+    species = models.TextField()
+    ontology_type_count = models.JSONField()
+    status_count = models.JSONField()
+
