@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'ws',
     'private_portal',
     'ontology_improver',
+    'trackhubs',
     'rest_framework',
     'corsheaders'
 ]
