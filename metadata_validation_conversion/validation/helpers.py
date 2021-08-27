@@ -1,6 +1,5 @@
 import requests
 from metadata_validation_conversion.constants import ELIXIR_VALIDATOR_URL
-import json
 
 
 def validate(data, schema):
