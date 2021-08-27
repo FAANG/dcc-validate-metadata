@@ -3,7 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 import json
-from ontology_improver.models import Ontologies, User
+from ontology_improver.models import Ontologies, Summary, User
 from datetime import datetime
 from django.utils import timezone
 from django.forms.models import model_to_dict
@@ -229,3 +229,18 @@ def get_ontology_details(request, id):
                 response['synonyms'] = res['annotation']['has_exact_synonym'] # list
                 
     return JsonResponse(response)
+
+@csrf_exempt
+def summary(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        ontologies = data['ontologies']
+        for record in ontologies:
+            Summary.objects.create(
+                project=record['project'], \
+                species=record['species'], \
+                ontology_type_count=record['ontology_type_count'], \
+                status_count=record['status_count'])
+    elif request.method == 'GET':
+        records = list(Summary.objects.all().values())
+        return JsonResponse(records, safe=False)
