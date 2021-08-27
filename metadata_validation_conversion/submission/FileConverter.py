@@ -8,6 +8,7 @@ class FileConverter:
         self.json_to_convert = json_to_convert
         self.room_id = room_id
         self.private_submission = private
+        self.proxy_samples_mappings = dict()
 
     def generate_submission_xml(self):
         """
