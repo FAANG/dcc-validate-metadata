@@ -2,17 +2,37 @@ from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from metadata_validation_conversion.settings import FIRE_USERNAME, FIRE_PASSWORD
 from .FireAPI import FireAPI
-
+import requests
 
 @app.task
-def validate(fileid, filename):
+def validate(fileid, filename, genome):
     send_message(submission_message="Starting to validate file",
                  room_id=fileid)
     errors = list()
-    if '.txt' not in filename[-1]:
-        errors.append("Please use txt format only")
     # check that genome name in genomes.txt is consistent with genome name provided
+    if filename == 'genomes.txt':
+        with open(f'/data/{fileid}.bb', 'r') as f:
+            data = f.readlines()
+        flag = False
+        for line in data:
+            text_line = line.split()
+            if text_line[0] == 'genome' and text_line[1] == genome:
+                flag = True
+                break
+        if not flag:
+            errors.append("Genome name in genomes.txt is not consistent with genome name provided")
     # check that links provided in trackDB.txt exist in FAANG FIRE service
+    if filename == 'trackDB.txt':
+        with open(f'/data/{fileid}.bb', 'r') as f:
+            data = f.readlines()
+        for line in data:
+            text_line = line.split()
+            if len(text_line) and text_line[0] == 'bigDataUrl':
+                link = text_line[1]
+                res = requests.get(link)
+                if res.status_code != 200:
+                    errors.append(f"{link} does not exist in FAANG FIRE Service")
+                    break
     if len(errors) != 0:
         send_message(submission_message="Validation failed",
                      errors=errors, room_id=fileid)
@@ -23,8 +43,8 @@ def validate(fileid, filename):
 
 @app.task
 def upload(validation_results, fileid, firepath, filename):
-    send_message(submission_message="Uploading file", room_id=fileid)
     if validation_results == 'Success':
+        send_message(submission_message="Uploading file", room_id=fileid)
         filepath = f"/data/{fileid}.bb"
         fire_api_object = FireAPI(FIRE_USERNAME, FIRE_PASSWORD, filepath,
                                   firepath, filename)
