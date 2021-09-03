@@ -9,7 +9,7 @@ class FireAPI:
         self.password = password
         self.filepath = filepath
         self.filename = filename
-        self.firepath = f"ftp/trackhubregistry_test/{firepath}"
+        self.firepath = f"ftp/trackhubregistry/{firepath}"
         self.fire_api = 'https://hh.fire.sdo.ebi.ac.uk/fire/objects'
 
     def upload_object(self):
