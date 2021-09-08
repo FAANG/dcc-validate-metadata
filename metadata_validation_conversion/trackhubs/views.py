@@ -7,15 +7,18 @@ from .tasks import validate, upload, upload_without_val
 @csrf_exempt
 def upload_tracks(request, genome_id, directory):
     if request.method == 'POST':
-        fileid = list(request.FILES.keys())[0]
         firepath = genome_id + '/' + directory
-        with open(f'/data/{fileid}.bb', 'wb+') as destination:
-            for chunk in request.FILES[fileid].chunks():
-                destination.write(chunk)
-        upload_task = upload_without_val.s(fileid, firepath,
-                               str(request.FILES[fileid])).set(queue='upload')
-        res = upload_task.apply_async()
-        return HttpResponse(json.dumps({"id": res.id}))
+        fileid_list = list(request.FILES.keys())
+        res_ids = []
+        for fileid in fileid_list:
+            with open(f'/data/{fileid}.bb', 'wb+') as destination:
+                for chunk in request.FILES[fileid].chunks():
+                    destination.write(chunk)
+            upload_task = upload_without_val.s(fileid, firepath,
+                                str(request.FILES[fileid])).set(queue='upload')
+            res = upload_task.apply_async()
+            res_ids.append(res.id)
+        return HttpResponse(json.dumps({"id": res_ids}))
     return HttpResponse("Please use POST method for uploading tracks")
 
 @csrf_exempt
