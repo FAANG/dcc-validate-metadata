@@ -10,19 +10,20 @@ def validate(fileid, filename, genome):
                  room_id=fileid)
     errors = list()
     # check that genome name in genomes.txt is consistent with genome name provided
+    # check that path of trackDb.txt file is correct
     if filename == 'genomes.txt':
         with open(f'/data/{fileid}.bb', 'r') as f:
             data = f.readlines()
-        flag = False
         for line in data:
             text_line = line.split()
-            if text_line[0] == 'genome' and text_line[1] == genome:
-                flag = True
-                break
-        if not flag:
-            errors.append("Genome name in genomes.txt is not consistent with genome name provided")
+            if text_line[0] == 'genome' and text_line[1] != genome:
+                errors.append("Genome name in genomes.txt is not consistent with genome name provided")
+            elif text_line[0] == 'trackDb' and text_line[1] != 'trackDB.txt': 
+                errors.append("trackDb should have value trackDb.txt")
+            
+        
     # check that links provided in trackDB.txt exist in FAANG FIRE service
-    if filename == 'trackDB.txt':
+    elif filename == 'trackDB.txt':
         with open(f'/data/{fileid}.bb', 'r') as f:
             data = f.readlines()
         for line in data:
@@ -33,6 +34,16 @@ def validate(fileid, filename, genome):
                 if res.status_code != 200:
                     errors.append(f"{link} does not exist in FAANG FIRE Service")
                     break
+
+    # check that path of genomes.txt file is correct
+    elif filename == 'hub.txt':
+        with open(f'/data/{fileid}.bb', 'r') as f:
+            data = f.readlines()
+        for line in data:
+            text_line = line.split()
+            if text_line[0] == 'genomesFile' and text_line[1] != 'genomes.txt':
+                errors.append("genomesFile should have value genomes.txt")
+
     if len(errors) != 0:
         send_message(submission_message="Validation failed",
                      errors=errors, room_id=fileid)
