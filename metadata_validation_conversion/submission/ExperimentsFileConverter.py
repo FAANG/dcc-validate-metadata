@@ -1,19 +1,54 @@
 import datetime
+import requests
 
 from lxml import etree
 
-from .helpers import check_field_existence, remove_underscores
+from .helpers import check_field_existence, remove_underscores, get_header
 from .FileConverter import FileConverter
-import json
 
 
 class ExperimentFileConverter(FileConverter):
     def start_conversion(self):
+        if self.private_submission:
+            sample_xml = self.generate_sample_xml()
+        else:
+            sample_xml = None
         experiment_xml = self.generate_experiment_xml()
         run_xml = self.generate_run_xml()
         study_xml = self.generate_study_xml()
         submission_xml = self.generate_submission_xml()
-        return experiment_xml, run_xml, study_xml, submission_xml
+        return experiment_xml, run_xml, study_xml, submission_xml, sample_xml
+
+    def generate_sample_xml(self):
+        if 'experiment_ena' not in self.json_to_convert:
+            return 'Error: table should have experiment_ena sheet'
+        sample_set = etree.Element('SAMPLE_SET')
+        sample_xml = etree.ElementTree(sample_set)
+        for record in self.json_to_convert['experiment_ena']:
+            sample_descriptor = record['sample_descriptor']
+            samples_response = requests.get(
+                f"https://www.ebi.ac.uk/biosamples/samples/{sample_descriptor}",
+                headers=get_header()).json()
+            alias = f"{samples_response['name']} experiment " \
+                    f"{record['experiment_alias']} proxy sample"
+            self.proxy_samples_mappings[sample_descriptor] = alias
+            title = f"{alias} submission"
+            tax_id = str(samples_response['taxId'])
+            sample_elt = etree.SubElement(sample_set, 'SAMPLE', alias=alias)
+            etree.SubElement(sample_elt, 'TITLE').text = title
+            sample_name_elt = etree.SubElement(sample_elt, 'SAMPLE_NAME')
+            etree.SubElement(sample_name_elt, 'TAXON_ID').text = tax_id
+            sample_attributes_elt = etree.SubElement(sample_elt,
+                                                     'SAMPLE_ATTRIBUTES')
+            sample_attribute_elt = etree.SubElement(sample_attributes_elt,
+                                                    'SAMPLE_ATTRIBUTE')
+            etree.SubElement(sample_attribute_elt, 'TAG').text = 'same as'
+            etree.SubElement(sample_attribute_elt, 'VALUE').text = \
+                samples_response['accession']
+        sample_xml.write(f"{self.room_id}_sample.xml",
+                         pretty_print=True, xml_declaration=True,
+                         encoding='UTF-8')
+        return 'Success'
 
     def generate_experiment_xml(self):
         """
@@ -29,7 +64,11 @@ class ExperimentFileConverter(FileConverter):
             title = check_field_existence('title', record)
             study_ref = record['study_ref']
             design_description = record['design_description']
-            sample_descriptor = record['sample_descriptor']
+            if self.private_submission:
+                sample_descriptor = self.proxy_samples_mappings[
+                    record['sample_descriptor']]
+            else:
+                sample_descriptor = record['sample_descriptor']
             library_name = check_field_existence('library_name', record)
             library_strategy = record['library_strategy']
             library_source = record['library_source']

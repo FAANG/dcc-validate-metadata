@@ -108,9 +108,11 @@ def prepare_experiments_data(json_to_convert, room_id, private=False):
     conversion_results = ExperimentFileConverter(json_to_convert[0], room_id,
                                                  private)
     xml_files = list()
-    experiment_xml, run_xml, study_xml, submission_xml = \
+    experiment_xml, run_xml, study_xml, submission_xml, sample_xml = \
         conversion_results.start_conversion()
     xml_files.extend([experiment_xml, run_xml, study_xml, submission_xml])
+    if sample_xml is not None:
+        xml_files.append(sample_xml)
     for xml_file in xml_files:
         if 'Error' in xml_file:
             send_message(submission_message='Failed to convert data',
@@ -139,7 +141,9 @@ def submit_data_to_ena(results, credentials, room_id, submission_type):
     else:
         username = credentials["username"]
         password = credentials["password"]
-    if submission_type == 'experiments':
+    # public experiments submission
+    if submission_type == 'experiments' and \
+            not credentials['private_submission']:
         experiment_xml = f"{room_id}_experiment.xml"
         run_xml = f"{room_id}_run.xml"
         study_xml = f"{room_id}_study.xml"
@@ -152,13 +156,40 @@ def submit_data_to_ena(results, credentials, room_id, submission_type):
             f'-F "STUDY=@{study_xml}" '
             f'"{submission_path}"',
             shell=True, capture_output=True)
-    else:
-        # Submit analysis
+    # private experiments submission
+    elif submission_type == 'experiments' and credentials['private_submission']:
+        experiment_xml = f"{room_id}_experiment.xml"
+        run_xml = f"{room_id}_run.xml"
+        study_xml = f"{room_id}_study.xml"
+        sample_xml = f"{room_id}_sample.xml"
+        password = re.escape(password)
+        submit_to_ena_process = subprocess.run(
+            f'curl -u {username}:{password} '
+            f'-F "SUBMISSION=@{submission_xml}" '
+            f'-F "EXPERIMENT=@{experiment_xml}" '
+            f'-F "RUN=@{run_xml}" '
+            f'-F "STUDY=@{study_xml}" '
+            f'-F "SAMPLE=@{sample_xml}" '
+            f'"{submission_path}"',
+            shell=True, capture_output=True)
+    elif submission_type == 'analyses' \
+            and not credentials['private_submission']:
         analysis_xml = f"{room_id}_analysis.xml"
         submit_to_ena_process = subprocess.run(
             f'curl -u {username}:{password} '
             f'-F "SUBMISSION=@{submission_xml}" '
             f'-F "ANALYSIS=@{analysis_xml}" '
+            f'"{submission_path}"',
+            shell=True, capture_output=True)
+    elif submission_type == 'analyses' and credentials['private_submission']:
+        # Submit analysis
+        analysis_xml = f"{room_id}_analysis.xml"
+        sample_xml = f"{room_id}_sample.xml"
+        submit_to_ena_process = subprocess.run(
+            f'curl -u {username}:{password} '
+            f'-F "SUBMISSION=@{submission_xml}" '
+            f'-F "ANALYSIS=@{analysis_xml}" '
+            f'-F "SAMPLE=@{sample_xml}" '
             f'"{submission_path}"',
             shell=True, capture_output=True)
 

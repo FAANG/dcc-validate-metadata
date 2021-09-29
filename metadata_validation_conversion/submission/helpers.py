@@ -1,3 +1,7 @@
+import requests
+
+from requests.auth import HTTPBasicAuth
+
 from metadata_validation_conversion.settings import \
     BOVREG_BIOSAMPLES_USERNAME_TEST, BOVREG_BIOSAMPLES_PASSWORD_TEST, \
     BOVREG_BIOSAMPLES_USERNAME_PROD, BOVREG_BIOSAMPLES_PASSWORD_PROD
@@ -53,3 +57,25 @@ def get_credentials(credentials):
         username = credentials['username']
         password = credentials['password']
     return username, password
+
+
+def get_token():
+    response = requests.get(
+        f"https://api.aai.ebi.ac.uk/auth",
+        auth=HTTPBasicAuth(
+            BOVREG_BIOSAMPLES_USERNAME_PROD, BOVREG_BIOSAMPLES_PASSWORD_PROD))
+    return response.text
+
+
+def get_header():
+    """
+    This function will return header required for every request to server
+    :return: header as dict
+    """
+    token = get_token()
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/hal+json',
+        'Authorization': f'Bearer {token}'
+    }
+    return headers
