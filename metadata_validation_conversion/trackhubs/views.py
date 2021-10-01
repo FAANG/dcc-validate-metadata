@@ -62,7 +62,7 @@ def register_trackhub(request):
 
         # add track hub url to relevant records
         trackdb_url = f"https://data.faang.org/api/fire_api/trackhubregistry/{genome_name}/trackDB.txt"
-        update_payload = { "doc": { "track_hub_url": hub_url } }
+        update_payload = { "doc": { "trackhubUrl": hub_url } }
         biosample_ids = []
         response = requests.get(trackdb_url)
         text_lines = response.text.split('\n')
