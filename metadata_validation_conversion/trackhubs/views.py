@@ -45,9 +45,10 @@ def register_trackhub(request):
         # login and get auth token
         user = TRACKHUBS_USERNAME
         pwd = TRACKHUBS_PASSWORD
+        hub_dir = json.loads(request.body)['hub_dir']
         genome_name = json.loads(request.body)['genome_name']
         genome_id = json.loads(request.body)['genome_id']
-        hub_url = f"https://data.faang.org/api/fire_api/trackhubregistry/{genome_name}/hub.txt"
+        hub_url = f"https://data.faang.org/api/fire_api/trackhubregistry/{hub_dir}/hub.txt"
         r = requests.get('https://www.trackhubregistry.org/api/login', auth=(user, pwd), verify=True)
         if not r.ok:
             return HttpResponse(f"Authentication failed: {r.text}", status=r.status_code)
@@ -61,7 +62,7 @@ def register_trackhub(request):
             return HttpResponse(f"Registration failed: {r.text}", status=r.status_code)
 
         # add track hub url to relevant records
-        trackdb_url = f"https://data.faang.org/api/fire_api/trackhubregistry/{genome_name}/trackDB.txt"
+        trackdb_url = f"https://data.faang.org/api/fire_api/trackhubregistry/{hub_dir}/{genome_name}/trackDB.txt"
         update_payload = { "doc": { "trackhubUrl": hub_url } }
         biosample_ids = []
         response = requests.get(trackdb_url)
