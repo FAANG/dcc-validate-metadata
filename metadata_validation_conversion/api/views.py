@@ -160,7 +160,7 @@ def index(request, name):
     #     set_cache = True
 
     if not data:
-        es = Elasticsearch([settings.NODE1], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
         if request.body:
             data = es.search(index=name, size=size, body=json.loads(
                 request.body.decode("utf-8")))
@@ -220,7 +220,7 @@ def update(request, name, id):
         response.status_code = 404
         return response    
 
-    es = Elasticsearch([settings.NODE1], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
     if request.body:
         print(request.body.decode("utf-8"))
         data = es.update(index=name, id=id, doc_type="_doc",
@@ -265,7 +265,7 @@ def detail(request, name, id):
             json.dumps(context), content_type='application/json')
         response.status_code = 404
         return response
-    es = Elasticsearch([settings.NODE1], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
     results = es.search(index=name, q="_id:{}".format(id))
     if results['hits']['total'] == 0:
         results = es.search(index=name, q="alternativeId:{}".format(id),

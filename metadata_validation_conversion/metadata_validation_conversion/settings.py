@@ -156,8 +156,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
 CELERY_TIMEZONE = TIME_ZONE
 
 # Nodes with elasticsearch to connect
-NODE1 = config('NODE1')
-NODE2 = config('NODE2')
+NODE = config('NODE')
 
 # Datacenter for fire api
 DATACENTER = config('DATACENTER')
