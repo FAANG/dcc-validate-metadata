@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'api.apps.ApiConfig',
     'conversion',
     'validation',
     'channels',
@@ -50,7 +51,8 @@ INSTALLED_APPS = [
     'ontology_improver',
     'trackhubs',
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
+    'drf_yasg'
 ]
 
 MIDDLEWARE = [
@@ -153,6 +155,20 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
 
 CELERY_TIMEZONE = TIME_ZONE
 
+# Nodes with elasticsearch to connect
+NODE1 = config('NODE1')
+NODE2 = config('NODE2')
+
+# Datacenter for fire api
+DATACENTER = config('DATACENTER')
+
+# Cache options
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache"
+    }
+}
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
@@ -185,3 +201,10 @@ BOVREG_BIOSAMPLES_PASSWORD_TEST = os.getenv('BOVREG_BIOSAMPLES_PASSWORD_TEST')
 
 BOVREG_BIOSAMPLES_USERNAME_PROD = os.getenv('BOVREG_BIOSAMPLES_USERNAME_PROD')
 BOVREG_BIOSAMPLES_PASSWORD_PROD = os.getenv('BOVREG_BIOSAMPLES_PASSWORD_PROD')
+
+ES_USER = os.getenv('ES_USER')
+ES_PASSWORD = os.getenv('ES_PASSWORD')
+
+SWAGGER_SETTINGS = {
+    'TAGS_SORTER': 'alpha'
+}

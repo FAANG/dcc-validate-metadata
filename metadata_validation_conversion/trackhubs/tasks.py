@@ -18,8 +18,8 @@ def validate(fileid, filename, genome):
             text_line = line.split()
             if text_line[0] == 'genome' and text_line[1] != genome:
                 errors.append("Genome name in genomes.txt is not consistent with genome name provided")
-            elif text_line[0] == 'trackDb' and text_line[1] != 'trackDB.txt': 
-                errors.append("trackDb should have value trackDb.txt")
+            elif text_line[0] == 'trackDb' and text_line[1] != genome + '/trackDB.txt': 
+                errors.append("trackDb should have value <genome>/trackDB.txt")
             
         
     # check that links provided in trackDB.txt exist in FAANG FIRE service

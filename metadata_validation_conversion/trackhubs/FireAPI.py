@@ -47,7 +47,7 @@ class FireAPI:
 
     def get_public_link(self):
         """This function will return public link to uploaded file"""
-        return f"https://data.faang.org/api/fire_api/trackhubregistry/" \
+        return f"https://data.faang.org/api/data/fire_api/trackhubregistry/" \
             f"{'/'.join(self.firepath.split('/')[2:])}/{self.filename}"
 
     def get_md5_of_file(self):
