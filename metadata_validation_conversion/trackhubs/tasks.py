@@ -14,35 +14,35 @@ def validate(fileid, filename, genome):
     if filename == 'genomes.txt':
         with open(f'/data/{fileid}.bb', 'r') as f:
             data = f.readlines()
-        for line in data:
-            text_line = line.split()
-            if text_line[0] == 'genome' and text_line[1] != genome:
-                errors.append("Genome name in genomes.txt is not consistent with genome name provided")
-            elif text_line[0] == 'trackDb' and text_line[1] != genome + '/trackDB.txt': 
-                errors.append("trackDb should have value <genome>/trackDB.txt")
+            for line in data:
+                text_line = line.split()
+                if text_line[0] == 'genome' and text_line[1] != genome:
+                    errors.append("Genome name in genomes.txt is not consistent with genome name provided")
+                elif text_line[0] == 'trackDb' and text_line[1] != genome + '/trackDB.txt': 
+                    errors.append("trackDb should have value <genome>/trackDB.txt")
             
         
     # check that links provided in trackDB.txt exist in FAANG FIRE service
     elif filename == 'trackDB.txt':
         with open(f'/data/{fileid}.bb', 'r') as f:
             data = f.readlines()
-        for line in data:
-            text_line = line.split()
-            if len(text_line) and text_line[0] == 'bigDataUrl':
-                link = text_line[1]
-                res = requests.get(link)
-                if res.status_code != 200:
-                    errors.append(f"{link} does not exist in FAANG FIRE Service")
-                    break
+            for line in data:
+                text_line = line.split()
+                if len(text_line) and text_line[0] == 'bigDataUrl':
+                    link = text_line[1]
+                    res = requests.get(link)
+                    if res.status_code != 200:
+                        errors.append(f"{link} does not exist in FAANG FIRE Service")
+                        break
 
     # check that path of genomes.txt file is correct
     elif filename == 'hub.txt':
         with open(f'/data/{fileid}.bb', 'r') as f:
             data = f.readlines()
-        for line in data:
-            text_line = line.split()
-            if text_line[0] == 'genomesFile' and text_line[1] != 'genomes.txt':
-                errors.append("genomesFile should have value genomes.txt")
+            for line in data:
+                text_line = line.split()
+                if text_line[0] == 'genomesFile' and text_line[1] != 'genomes.txt':
+                    errors.append("genomesFile should have value genomes.txt")
 
     if len(errors) != 0:
         send_message(submission_message="Validation failed",

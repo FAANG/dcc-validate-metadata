@@ -69,7 +69,7 @@ class FireAPI:
 
     def get_public_link(self):
         """This function will return public link to uploaded file"""
-        return f"https://data.faang.org/api/data/fire_api/" \
+        return f"https://apifaang.org.uk/data/fire_api/" \
                f"{self.firepath.split('/')[-1]}/{self.filename}"
 
     def write_to_es(self):

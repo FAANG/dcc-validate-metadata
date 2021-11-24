@@ -163,14 +163,14 @@ def index(request, name):
         es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
         if request.body:
             data = es.search(index=name, size=size, body=json.loads(
-                request.body.decode("utf-8")))
+                request.body.decode("utf-8"), track_total_hits=True))
         else:
             if query != '':
                 data = es.search(index=name, from_=from_, size=size, _source=field,
-                                 sort=sort, q=query, body=filters)
+                                 sort=sort, q=query, body=filters, track_total_hits=True)
             else:
                 data = es.search(index=name, from_=from_, size=size, _source=field,
-                                 sort=sort, body=filters)
+                                 sort=sort, body=filters, track_total_hits=True)
         if set_cache:
             cache.set(cache_key, data, cache_time)
 
@@ -415,7 +415,7 @@ def summary_api(request):
     final_results = ''
     for item in FIELD_NAMES.keys():
         data = requests.get(
-            "https://data.faang.org/api/summary_{}/summary_{}".format(
+            "https://apifaang.org.uk/summary_{}/summary_{}".format(
                 item, item)).json()
         data = data['hits']['hits'][0]['_source']
         results = list()
