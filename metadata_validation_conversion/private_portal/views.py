@@ -23,10 +23,9 @@ class BovRegView(APIView):
             use_ssl=True, verify_certs=False)
         index = f'bovreg_{data_type}'
         if index == 'bovreg_file' or index == 'bovreg_dataset':
-            sort = [{'private': {'order': 'desc'}}]
+            sort = 'private:desc'
         else:
-            sort = [{'releaseDate': {'order': 'desc'}}]
-
+            sort = 'releaseDate:desc'
         if query != '':
             data = es.search(index=index, q=query)
         else:
