@@ -210,7 +210,7 @@ class BiosamplesFileConverter:
                 taxon_id = "_".join(taxon_ids[record_name].split(":"))
             else:
                 # Need this to create appropriate taxon id from BioSamples id
-                taxon_id = f"NCBITaxon:{taxon_ids[record_name]}"
+                taxon_id = f"NCBITaxon_{taxon_ids[record_name]}"
             organism_object = {
                 'text': taxons[record_name],
                 'ontologyTerms': [f"http://purl.obolibrary.org/obo/{taxon_id}"]
