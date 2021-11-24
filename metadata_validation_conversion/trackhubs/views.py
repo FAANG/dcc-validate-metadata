@@ -51,7 +51,7 @@ def register_trackhub(request):
         hub_dir = json.loads(request.body)['hub_dir']
         genome_name = json.loads(request.body)['genome_name']
         genome_id = json.loads(request.body)['genome_id']
-        hub_url = f"https://apifaang.org.uk/data/fire_api/trackhubregistry/{hub_dir}/hub.txt"
+        hub_url = f"https://apifaang.org.uk/trackhubs/{hub_dir}/hub.txt"
         r = requests.get('https://www.trackhubregistry.org/api/login', auth=(user, pwd), verify=True)
         if not r.ok:
             return HttpResponse(f"Authentication failed: {r.text}", status=r.status_code)
@@ -65,7 +65,7 @@ def register_trackhub(request):
             return HttpResponse(f"Registration failed: {r.text}", status=r.status_code)
 
         # add track hub url to relevant records
-        trackdb_url = f"https://apifaang.org.uk/data/fire_api/trackhubregistry/{hub_dir}/{genome_name}/trackDB.txt"
+        trackdb_url = f"https://apifaang.org.uk/trackhubs/{hub_dir}/{genome_name}/trackDB.txt"
         update_payload = { "doc": { "trackhubUrl": hub_url } }
         biosample_ids = []
         response = requests.get(trackdb_url)
@@ -73,7 +73,7 @@ def register_trackhub(request):
         for line in text_lines:
             line = line.split(' ')
             if line[0] == 'bigDataUrl':
-                biosample_ids.append(line[1].split('_')[-3])
+                biosample_ids.append(line[1].split('_')[-4])
         biosample_ids = list(set(biosample_ids))
         for id in biosample_ids:
             update_url = f"https://apifaang.org.uk/data/specimen/{id}/update"
