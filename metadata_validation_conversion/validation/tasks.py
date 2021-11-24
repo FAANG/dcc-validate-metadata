@@ -5,6 +5,7 @@ from .JoinedResults import JoinedResults
 from .RelationshipsIssues import RelationshipsIssues
 from .WarningsAndAdditionalChecks import WarningsAndAdditionalChecks
 from .helpers import get_submission_status
+import json
 
 
 @app.task
