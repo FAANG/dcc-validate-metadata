@@ -53,6 +53,7 @@ class RelationshipsIssues:
                     record[relationship_name], list):
                 tmp = list()
                 for child in record[relationship_name]:
+                    child['value'] = str(child['value'])
                     if 'SAM' in child['value']:
                         biosample_ids.add(child['value'])
                     tmp.append(child['value'])
@@ -141,7 +142,7 @@ class RelationshipsIssues:
             relationship_to_return['errors'].append(error)
         else:
             for index, entity in enumerate(relationship_to_return):
-                if entity['value'] == relation:
+                if str(entity['value']) == relation:
                     relationship_to_return[index].setdefault('errors', list())
                     relationship_to_return[index]['errors'].append(error)
 
