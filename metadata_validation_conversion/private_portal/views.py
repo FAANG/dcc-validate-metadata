@@ -26,6 +26,7 @@ class BovRegView(APIView):
             sort = [{'private': {'order': 'desc'}}]
         else:
             sort = [{'releaseDate': {'order': 'desc'}}]
+
         if query != '':
             data = es.search(index=index, q=query)
         else:
