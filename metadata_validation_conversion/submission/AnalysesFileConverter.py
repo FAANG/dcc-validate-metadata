@@ -49,7 +49,8 @@ class AnalysesFileConverter(FileConverter):
             faang_alias = self.json_to_convert['faang'][record_number][
                 'alias']['value']
             if faang_alias != alias:
-                return 'Error'
+                return 'Error: Experiment alias is not consistent between ' \
+                       'ENA and FAANG tabs'
             project = self.json_to_convert['faang'][record_number]['project'][
                 'value']
             secondary_project = check_field_existence(
@@ -67,6 +68,7 @@ class AnalysesFileConverter(FileConverter):
 
             analysis_elt = etree.SubElement(analysis_set, 'ANALYSIS',
                                             alias=alias)
+
             if title is not None:
                 etree.SubElement(analysis_elt, 'TITLE').text = title['value']
             if description is not None:

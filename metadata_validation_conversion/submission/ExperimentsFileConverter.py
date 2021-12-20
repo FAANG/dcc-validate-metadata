@@ -1,5 +1,6 @@
 import datetime
 import requests
+import xlrd
 
 from lxml import etree
 
@@ -174,6 +175,18 @@ class ExperimentFileConverter(FileConverter):
                 etree.SubElement(experiment_attribute_elt,
                                  'UNITS').text = attr_value['units']
 
+    @staticmethod
+    def add_leading_zero(date_item):
+        """
+        This function will add leading zero if date is just one number
+        :param date_item: item to check
+        :return: date item in proper format (01, 02, etc...)
+        """
+        if date_item < 10:
+            return f"0{date_item}"
+        else:
+            return date_item
+
     def generate_run_xml(self):
         """
         This function will generate xml file for run
@@ -192,6 +205,13 @@ class ExperimentFileConverter(FileConverter):
             except ValueError:
                 run_date = datetime.datetime.strptime(record['run_date'],
                                                       '%Y-%m').isoformat()
+            except TypeError:
+                y, m, d, _, _, _ = xlrd.xldate_as_tuple(record['run_date'], 0)
+                m = self.add_leading_zero(m)
+                d = self.add_leading_zero(d)
+                run_date = datetime.datetime.strptime(f"{y}-{m}-{d}",
+                                                      '%Y-%m-%d').isoformat()
+
             experiment_ref = record['experiment_ref']
             filename = record['filename']
             filetype = record['filetype']
