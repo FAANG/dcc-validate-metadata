@@ -1,7 +1,6 @@
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from metadata_validation_conversion.settings import FIRE_USERNAME, FIRE_PASSWORD
-from .FireAPI import FireAPI
 import requests
 
 @app.task
@@ -57,35 +56,43 @@ def upload(validation_results, fileid, firepath, filename):
     if validation_results == 'Success':
         send_message(submission_message="Uploading file", room_id=fileid)
         filepath = f"/data/{fileid}.bb"
-        fire_api_object = FireAPI(FIRE_USERNAME, FIRE_PASSWORD, filepath,
-                                  firepath, filename)
-        results = fire_api_object.upload_object()
-        if results == 'Error':
+        url = 'https://api.faang.org/trackhubs/upload'
+        data = {
+            'path': firepath,
+            'name': filename
+        }
+        res = requests.post(url, files={'file': open(filepath,'rb')}, data=data)
+        if res.status_code != 200:
             send_message(submission_message="Upload failed, "
                                             "please contact "
                                             "faang-dcc@ebi.ac.uk",
-                         room_id=fileid)
+                            submission_results=res, room_id=fileid)
+            return 'Error'
         else:
+            send_message(submission_message=res, room_id=fileid)
             send_message(submission_message='Success',
-                         submission_results=results,
-                         room_id=fileid)
+                            submission_results=res, room_id=fileid)
+            return 'Success'
     return 'Success'
 
 @app.task
 def upload_without_val(fileid, firepath, filename):
     send_message(submission_message="Uploading file", room_id=fileid)
     filepath = f"/data/{fileid}.bb"
-    fire_api_object = FireAPI(FIRE_USERNAME, FIRE_PASSWORD, filepath,
-                                firepath, filename)
-    results = fire_api_object.upload_object()
-    send_message(submission_message=results, room_id=fileid)
-    if results == 'Error':
+    url = 'https://api.faang.org/trackhubs/upload'
+    data = {
+        'path': firepath,
+        'name': filename
+    }
+    res = requests.post(url, files={'file': open(filepath,'rb')}, data=data)
+    if res.status_code != 200:
         send_message(submission_message="Upload failed, "
                                         "please contact "
                                         "faang-dcc@ebi.ac.uk",
-                        room_id=fileid)
+                        submission_results=res, room_id=fileid)
+        return 'Error'
     else:
+        send_message(submission_message=res, room_id=fileid)
         send_message(submission_message='Success',
-                        submission_results=results,
-                        room_id=fileid)
-    return 'Success'
+                        submission_results=res, room_id=fileid)
+        return 'Success'
