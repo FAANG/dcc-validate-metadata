@@ -56,7 +56,7 @@ def upload(validation_results, fileid, firepath, filename):
     if validation_results == 'Success':
         send_message(submission_message="Uploading file", room_id=fileid)
         filepath = f"/data/{fileid}.bb"
-        url = 'https://api.faang.org/trackhubs/upload'
+        url = 'http://nginx-svc:80/trackhubs_upload'
         data = {
             'path': firepath,
             'name': filename
@@ -66,20 +66,18 @@ def upload(validation_results, fileid, firepath, filename):
             send_message(submission_message="Upload failed, "
                                             "please contact "
                                             "faang-dcc@ebi.ac.uk",
-                            submission_results=res, room_id=fileid)
+                        room_id=fileid)
             return 'Error'
         else:
-            send_message(submission_message=res, room_id=fileid)
-            send_message(submission_message='Success',
-                            submission_results=res, room_id=fileid)
+            send_message(submission_message='Success',room_id=fileid)
             return 'Success'
-    return 'Success'
+    return 'Error'
 
 @app.task
 def upload_without_val(fileid, firepath, filename):
     send_message(submission_message="Uploading file", room_id=fileid)
     filepath = f"/data/{fileid}.bb"
-    url = 'https://api.faang.org/trackhubs/upload'
+    url = 'http://nginx-svc:80/trackhubs_upload'
     data = {
         'path': firepath,
         'name': filename
@@ -89,10 +87,8 @@ def upload_without_val(fileid, firepath, filename):
         send_message(submission_message="Upload failed, "
                                         "please contact "
                                         "faang-dcc@ebi.ac.uk",
-                        submission_results=res, room_id=fileid)
+                        room_id=fileid)
         return 'Error'
     else:
-        send_message(submission_message=res, room_id=fileid)
-        send_message(submission_message='Success',
-                        submission_results=res, room_id=fileid)
+        send_message(submission_message='Success',room_id=fileid)
         return 'Success'
