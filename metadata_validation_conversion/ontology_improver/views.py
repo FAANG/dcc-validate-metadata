@@ -232,15 +232,7 @@ def get_ontology_details(request, id):
 
 @csrf_exempt
 def summary(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        ontologies = data['ontologies']
-        for record in ontologies:
-            Summary.objects.create(
-                project=record['project'], \
-                species=record['species'], \
-                ontology_type_count=record['ontology_type_count'], \
-                status_count=record['status_count'])
-    elif request.method == 'GET':
-        records = list(Summary.objects.all().values())
-        return JsonResponse(records, safe=False)
+    if request.method != 'GET':
+        return HttpResponse("This method is not allowed!\n")
+    records = list(Summary.objects.all().values())
+    return JsonResponse(records, safe=False)
