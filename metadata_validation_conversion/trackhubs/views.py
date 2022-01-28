@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .tasks import validate, upload, upload_without_val
 from metadata_validation_conversion.settings import TRACKHUBS_USERNAME, TRACKHUBS_PASSWORD
 import requests
+import os
 
 @csrf_exempt
 def upload_tracks(request, hub_dir, genome, sub_dir):
@@ -43,40 +44,13 @@ def upload_text_files(request, hub_dir, genome):
     return HttpResponse("Please use POST method for uploading files")
 
 @csrf_exempt
-def register_trackhub(request):
+def submit_trackhub(request):
     if request.method == 'POST':
-        # login and get auth token
-        user = TRACKHUBS_USERNAME
-        pwd = TRACKHUBS_PASSWORD
-        hub_dir = json.loads(request.body)['hub_dir']
-        genome_name = json.loads(request.body)['genome_name']
-        genome_id = json.loads(request.body)['genome_id']
-        hub_url = f"https://api.faang.org/trackhubs/{hub_dir}/hub.txt"
-        r = requests.get('https://www.trackhubregistry.org/api/login', auth=(user, pwd), verify=True)
-        if not r.ok:
-            return HttpResponse(f"Authentication failed: {r.text}", status=r.status_code)
-        auth_token = r.json()[u'auth_token']
-
-        # register tracks with trackhubs registry
-        headers = { 'user': user, 'auth_token': auth_token }
-        payload = { 'url': hub_url, 'assemblies': { genome_name: genome_id } }
-        r = requests.post('https://www.trackhubregistry.org/api/trackhub', headers=headers, json=payload, verify=True)
-        if not r.ok:
-            return HttpResponse(f"Registration failed: {r.text}", status=r.status_code)
-
-        # add track hub url to relevant records
-        trackdb_url = f"https://api.faang.org/trackhubs/{hub_dir}/{genome_name}/trackDB.txt"
-        update_payload = { "doc": { "trackhubUrl": hub_url } }
-        biosample_ids = []
-        response = requests.get(trackdb_url)
-        text_lines = response.text.split('\n')
-        for line in text_lines:
-            line = line.split(' ')
-            if line[0] == 'bigDataUrl':
-                biosample_ids.append(line[1].split('_')[-4])
-        biosample_ids = list(set(biosample_ids))
-        for id in biosample_ids:
-            update_url = f"https://api.faang.org/data/specimen/{id}/update"
-            res = requests.put(update_url, data=json.dumps(update_payload))
-        return JsonResponse("Track Hub Registered", safe=False)
+        path = json.loads(request.body)['hub_path']
+        hub_url = f"https://api.faang.org/trackhubs/{path}/hub.txt"
+        msg_payload = {"text": f"New Track Hub Submitted at {hub_url}"}
+        cmd = f"curl -X POST -H 'Content-type: application/json' --data '{json.dumps(msg_payload)}'" \
+            f" https://hooks.slack.com/services/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"
+        os.system(cmd)
+        return JsonResponse({"message":"Track Hub Sumbitted"})
     return HttpResponse("Please use POST method for registering trackhubs")
