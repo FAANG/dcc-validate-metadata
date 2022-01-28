@@ -97,7 +97,8 @@ class BiosamplesFileConverter:
             return taxon_ids[id_to_fetch], taxons[id_to_fetch]
         else:
             # TODO: return error in taxon is not in biosamples
-            if 'SAM' in id_to_fetch:
+            # check that id is Biosample id
+            if 'SAM' in id_to_fetch and '_' not in id_to_fetch:
                 try:
                     results = requests.get(
                         f"https://www.ebi.ac.uk/biosamples/samples/"
