@@ -1,6 +1,5 @@
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
-from metadata_validation_conversion.settings import FIRE_USERNAME, FIRE_PASSWORD
 import requests
 
 @app.task

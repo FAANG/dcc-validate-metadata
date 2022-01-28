@@ -3,7 +3,7 @@ from celery import chain
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .tasks import validate, upload, upload_without_val
-from metadata_validation_conversion.settings import TRACKHUBS_USERNAME, TRACKHUBS_PASSWORD
+from metadata_validation_conversion.settings import SLACK_WEBHOOK
 import requests
 import os
 
@@ -50,7 +50,7 @@ def submit_trackhub(request):
         hub_url = f"https://api.faang.org/trackhubs/{path}/hub.txt"
         msg_payload = {"text": f"New Track Hub Submitted at {hub_url}"}
         cmd = f"curl -X POST -H 'Content-type: application/json' --data '{json.dumps(msg_payload)}'" \
-            f" https://hooks.slack.com/services/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"
+            f" {SLACK_WEBHOOK}"
         os.system(cmd)
         return JsonResponse({"message":"Track Hub Sumbitted"})
     return HttpResponse("Please use POST method for registering trackhubs")
