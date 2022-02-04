@@ -1,6 +1,7 @@
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 import requests
+import os
 
 @app.task
 def validate(fileid, filename, genome):
@@ -69,6 +70,10 @@ def upload(validation_results, fileid, firepath, filename):
             return 'Error'
         else:
             send_message(submission_message='Success',room_id=fileid)
+            # backup to s3
+            cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
+                f"{filepath} s3://trackhubs/{firepath}/{filename}"
+            os.system(cmd)
             return 'Success'
     return 'Error'
 
@@ -90,4 +95,8 @@ def upload_without_val(fileid, firepath, filename):
         return 'Error'
     else:
         send_message(submission_message='Success',room_id=fileid)
+        # backup to s3
+        cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
+            f"{filepath} s3://trackhubs/{firepath}/{filename}"
+        os.system(cmd)
         return 'Success'
