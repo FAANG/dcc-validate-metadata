@@ -7,6 +7,7 @@ urlpatterns = [
     path('<str:name>/_search/', views.index, name='index'),
     path('<str:name>/<str:id>/update', views.update, name='update'),
     path('<str:name>/<str:id>', views.detail, name='detail'),
+    path('<str:name>/download/', views.download, name='download'),
     path('fire_api/trackhubregistry/<str:hub_dir>/<str:genome_id>/<str:folder>/<str:doc_id>',
          views.trackhubregistry_with_dirs_fire_api,
          name='trackhubregistry_with_dirs_fire_api'),

@@ -18,12 +18,14 @@ from api.swagger_custom import TextFileRenderer, PdfFileRenderer
 from api.swagger_custom import HTMLAutoSchema, PlainTextAutoSchema, PdfAutoSchema
 from api.swagger_custom import index_search_request_example, \
     index_search_response_example, index_detail_response_example
+import csv
 
 ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
                    'protocol_files', 'protocol_samples', 'article',
                    'protocol_analysis', 'analysis', 'summary_organism',
                    'summary_specimen', 'summary_dataset', 'summary_file']
 
+ALLOWED_DOWNLOADS = ['file', 'organism', 'specimen', 'dataset']
 
 @swagger_auto_schema(method='get', tags=['Search'],
         operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc",
@@ -113,6 +115,7 @@ def index(request, name):
     field = request.GET.get('_source', '')
     sort = request.GET.get('sort', '')
     query = request.GET.get('q', '')
+    search = request.GET.get('search', '')
     from_ = request.GET.get('from_', 0)
     # Example: {field1: [val1, val2], field2: [val1, val2], ...}
     filters = request.GET.get('filters', '{}')    
@@ -127,12 +130,25 @@ def index(request, name):
         if filters[key][0] != 'false':
             filter_values.append({"terms": {key: filters[key]}})
         else:
-            not_filter_values.append({"terms": {key: ["true"]}})
+            not_filter_values.append({"match": {key: "true"}})
     filter_val = {}
     if filter_values:
         filter_val['must'] = filter_values
     if not_filter_values:
         filter_val['must_not'] = not_filter_values
+    if search:
+        if 'must' in filter_val:
+            filter_val['must']['multi_match'] = {
+                "query": search,
+                "fields" : [ "*" ]
+            }
+        else:
+            filter_val['must'] = {
+                "multi_match": {
+                    "query": search,
+                    "fields" : [ "*" ]
+                }
+            }
     if filter_val:
         filters = {"query": {"bool": filter_val}}
 
@@ -275,6 +291,142 @@ def detail(request, name, id):
                             doc_type="_doc")
     return JsonResponse(results)
 
+
+@swagger_auto_schema(method='get', tags=['Download'],
+        operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc",
+        manual_parameters=[
+            openapi.Parameter('columns_names', openapi.IN_QUERY, 
+                description="List of column headers", 
+                type=openapi.TYPE_STRING, default='[]'),
+            openapi.Parameter('file_format', openapi.IN_QUERY, 
+                description="csv or tabular text file", 
+                type=openapi.TYPE_STRING, default='csv'),
+            openapi.Parameter('_source', openapi.IN_QUERY, 
+                description="fields (comma-separated) to fetch", 
+                type=openapi.TYPE_STRING),
+            openapi.Parameter('sort', openapi.IN_QUERY, 
+                description="field to sort on, with :asc or :desc appended \
+                    to specify order, eg - id:asc", 
+                type=openapi.TYPE_STRING),
+            openapi.Parameter('filters', openapi.IN_QUERY, 
+                description="properties and list of values to filter on, \
+                    in the format {prop1: [val1, val2], prop2: [val1, val2], ...} ", 
+                type=openapi.TYPE_STRING, default='{}'),
+            openapi.Parameter('name', openapi.IN_PATH, 
+                description="type of records to fetch",
+                type=openapi.TYPE_STRING,
+                enum=ALLOWED_INDICES)
+        ],
+        responses={
+            200: openapi.Response(description='OK', 
+                examples={"application/json": index_search_response_example},
+                schema=openapi.Schema(type=openapi.TYPE_OBJECT)
+            ),
+            404: openapi.Response('Not Found')
+        })
+@api_view(['GET'])
+@csrf_exempt
+def download(request, name):
+    if request.method != 'GET':
+        return HttpResponse("This method is not allowed!\n")
+    if name not in ALLOWED_DOWNLOADS:
+        return HttpResponse("This download doesn't exist!\n")
+
+    # Request params
+    file_format = request.GET.get('file_format', '')
+    field = request.GET.get('_source', '')
+    column_names = request.GET.get('columns', '[]')
+    sort = request.GET.get('sort', '')
+    filters = request.GET.get('filters', '{}')
+
+    columns = field.split(',')
+    request_fields = []
+    for col in columns:
+        cols = col.split('.')
+        if cols[0] == '_source':
+            request_fields.append('.'.join(cols[1:]))
+    request_fields = ','.join(request_fields)
+    column_names = json.loads(column_names)
+
+    # generate query for filtering
+    filter_values = []
+    not_filter_values = []
+    filters = json.loads(filters)
+    for key in filters.keys():
+        if filters[key][0] != 'false':
+            filter_values.append({"terms": {key: filters[key]}})
+        else:
+            not_filter_values.append({"terms": {key: ["true"]}})
+    filter_val = {}
+    if filter_values:
+        filter_val['must'] = filter_values
+    if not_filter_values:
+        filter_val['must_not'] = not_filter_values
+    if filter_val:
+        filters = {"query": {"bool": filter_val}}
+
+    # Get records from elasticsearch
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+    count = 0
+    records = []
+    while True:
+        data = es.search(index=name, _source=request_fields, sort=sort, 
+                        body=filters, from_=count, size=10000, track_total_hits=True)
+        hits = data['hits']['hits']
+        records += hits
+        count += 10000
+        if count > data['hits']['total']['value']:
+            break
+
+    # generate response payload
+    if file_format == 'csv':
+        filename = 'faang_data.csv'
+        content_type = 'text/csv'
+    else:
+        filename = 'faang_data.txt'
+        content_type = 'text/plain'
+    response = HttpResponse(content_type=content_type)
+    response['Content-Disposition'] = 'attachment; filename=' + filename
+
+    # generate csv data
+    writer = csv.DictWriter(response, fieldnames=columns)
+    headers = {}
+    i = 0
+    for col in columns:
+        headers[col] = column_names[i]
+        i += 1
+    writer.writerow(headers)
+    for row in records:
+        record = {}
+        for col in columns:
+            cols = col.split('.')
+            record[col] = ''
+            source = row
+            for c in cols:
+                if  isinstance(source, dict) and c in source.keys():
+                    record[col] = source[c]
+                    source = source[c]
+                else:
+                    record[col] = ''
+                    break
+        writer.writerow(record)
+
+    # return formatted data
+    if file_format == 'csv':
+        return response
+    else:
+        # add padding to align with max length data in a column
+        def space(i, d):
+            max_len = len(max(list(zip(*row_data))[i], key=len))
+            return d+b' '*(max_len-len(d))
+
+        # create fixed width and '|' separated tabular text file
+        data = response.content
+        row_data = [i.rstrip(b'\r\n').split(b',') for i in filter(None, data.split(b'\n'))]
+        align = [b' | '.join(space(*c) for c in enumerate(b)) for b in row_data]
+        tab_data = b'\n'.join(align)
+        response.content = tab_data
+        return response
 
 @swagger_auto_schema(method='get', tags=['Protocols'],
         auto_schema=PdfAutoSchema,
