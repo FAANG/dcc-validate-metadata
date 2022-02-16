@@ -176,7 +176,7 @@ def index(request, name):
 
     return JsonResponse(data)
 
-@swagger_auto_schema(method='put', tags=['Update'],
+@swagger_auto_schema(method='put', auto_schema=None, tags=['Update'],
         operation_summary="Update records",
         operation_description="Update records by queries",
         manual_parameters=[
