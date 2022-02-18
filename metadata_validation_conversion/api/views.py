@@ -25,8 +25,6 @@ ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
                    'protocol_analysis', 'analysis', 'summary_organism',
                    'summary_specimen', 'summary_dataset', 'summary_file']
 
-ALLOWED_DOWNLOADS = ['file', 'organism', 'specimen', 'dataset']
-
 @swagger_auto_schema(method='get', tags=['Search'],
         operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc",
         manual_parameters=[
@@ -329,7 +327,7 @@ def detail(request, name, id):
 def download(request, name):
     if request.method != 'GET':
         return HttpResponse("This method is not allowed!\n")
-    if name not in ALLOWED_DOWNLOADS:
+    if name not in ALLOWED_INDICES:
         return HttpResponse("This download doesn't exist!\n")
 
     # Request params
