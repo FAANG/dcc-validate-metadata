@@ -190,7 +190,7 @@ def index(request, name):
 
     return JsonResponse(data)
 
-@swagger_auto_schema(method='put', tags=['Update'],
+@swagger_auto_schema(method='put', auto_schema=None, tags=['Update'],
         operation_summary="Update records",
         operation_description="Update records by queries",
         manual_parameters=[
@@ -456,102 +456,6 @@ def protocols_fire_api(request, protocol_type, id):
         return response
     else:
         return HttpResponse(status=404)
-
-
-@swagger_auto_schema(method='get', tags=['Trackhubs'],
-        auto_schema=PlainTextAutoSchema,
-        operation_summary="Get trackhubs by doc ID",
-        manual_parameters=[
-            openapi.Parameter('doc_id', openapi.IN_PATH, 
-                description="Document ID",
-                type=openapi.TYPE_STRING)
-        ],
-        responses={
-            200: openapi.Response('OK', 
-                schema=openapi.Schema(type=openapi.TYPE_FILE)),
-            404: openapi.Response('Not Found')
-        })
-@api_view(['GET'])
-@renderer_classes([TextFileRenderer])
-def trackhubregistry_fire_api(request, hub_dir, doc_id):
-    url = "https://{}.fire.sdo.ebi.ac.uk/fire/public/faang/ftp/" \
-          "trackhubregistry/{}/{}".format(settings.DATACENTER, hub_dir, doc_id)
-    res = requests.get(url)
-    if res.status_code == 200:
-        file = res.content
-        response = HttpResponse(file, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(doc_id)
-        return response
-    else:
-        return HttpResponse(status=404)
-
-
-@swagger_auto_schema(method='get', tags=['Trackhubs'],
-        auto_schema=PlainTextAutoSchema,
-        operation_summary="Get trackhubs by Genome and doc ID",
-        manual_parameters=[
-            openapi.Parameter('genome_id', openapi.IN_PATH, 
-                description="Genome ID",
-                type=openapi.TYPE_STRING),
-            openapi.Parameter('doc_id', openapi.IN_PATH, 
-                description="Document ID",
-                type=openapi.TYPE_STRING)
-        ],
-        responses={
-            200: openapi.Response('OK', 
-                schema=openapi.Schema(type=openapi.TYPE_FILE)),
-            404: openapi.Response('Not Found')
-        })
-@api_view(['GET'])
-@renderer_classes([TextFileRenderer])
-def trackhubregistry_with_dir_fire_api(request, hub_dir, genome_id, doc_id):
-    url = "https://{}.fire.sdo.ebi.ac.uk/fire/public/faang/ftp/" \
-          "trackhubregistry/{}/{}/{}".format(settings.DATACENTER, hub_dir, genome_id,
-                                          doc_id)
-    res = requests.get(url)
-    if res.status_code == 200:
-        file = res.content
-        response = HttpResponse(file, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(doc_id)
-        return response
-    else:
-        return HttpResponse(status=404)
-
-
-@swagger_auto_schema(method='get', tags=['Trackhubs'],
-        auto_schema=PlainTextAutoSchema,
-        operation_summary="Get trackhubs by Genome ID, folder and doc ID",
-        manual_parameters=[
-            openapi.Parameter('genome_id', openapi.IN_PATH, 
-                description="Genome ID",
-                type=openapi.TYPE_STRING),
-            openapi.Parameter('folder', openapi.IN_PATH, 
-                description="Folder name",
-                type=openapi.TYPE_STRING),
-            openapi.Parameter('doc_id', openapi.IN_PATH, 
-                description="Document ID",
-                type=openapi.TYPE_STRING)
-        ],
-        responses={
-            200: openapi.Response('OK', 
-                schema=openapi.Schema(type=openapi.TYPE_FILE)),
-            404: openapi.Response('Not Found')
-        })
-@api_view(['GET'])
-@renderer_classes([TextFileRenderer])
-def trackhubregistry_with_dirs_fire_api(request, hub_dir, genome_id, folder, doc_id):
-    url = "https://{}.fire.sdo.ebi.ac.uk/fire/public/faang/ftp/" \
-          "trackhubregistry/{}/{}/{}/{}".format(settings.DATACENTER, hub_dir, genome_id,
-                                             folder, doc_id)
-    res = requests.get(url)
-    if res.status_code == 200:
-        file = res.content
-        response = HttpResponse(file, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(doc_id)
-        return response
-    else:
-        return HttpResponse(status=404)
-
 
 @swagger_auto_schema(method='get', tags=['Summary'],
         auto_schema=HTMLAutoSchema,
