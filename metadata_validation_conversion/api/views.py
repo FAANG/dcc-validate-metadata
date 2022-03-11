@@ -416,13 +416,16 @@ def download(request, name):
         # add padding to align with max length data in a column
         def space(i, d):
             max_len = len(max(list(zip(*row_data))[i], key=len))
-            return d+b' '*(max_len-len(d))
+            return d+' '*(max_len-len(d))
 
         # create fixed width and '|' separated tabular text file
         data = response.content
-        row_data = [i.rstrip(b'\r\n').split(b',') for i in filter(None, data.split(b'\n'))]
-        align = [b' | '.join(space(*c) for c in enumerate(b)) for b in row_data]
-        tab_data = b'\n'.join(align)
+        lines = [i.rstrip(b'\r\n') for i in filter(None, data.split(b'\n'))]
+        lines = [line.decode("utf-8") for line in lines]
+        row_data = csv.reader(lines, quotechar='"', delimiter=',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
+        row_data = list(row_data)
+        tab_rows = [' | '.join(space(*c) for c in enumerate(b)) for b in row_data]
+        tab_data = '\n'.join(tab_rows)
         response.content = tab_data
         return response
 
