@@ -112,13 +112,15 @@ def index(request, name):
     size = request.GET.get('size', 10)
     field = request.GET.get('_source', '')
     sort = request.GET.get('sort', '')
+    sort_by_count = request.GET.get('sort_by_count', '')
     query = request.GET.get('q', '')
     search = request.GET.get('search', '')
     from_ = request.GET.get('from_', 0)
     # Example: {field1: [val1, val2], field2: [val1, val2], ...}
     filters = request.GET.get('filters', '{}')    
     # Example: {aggName1: field1, aggName2: field2, ...}  
-    aggregations = request.GET.get('aggs', '{}')    
+    aggregations = request.GET.get('aggs', '{}')  
+    body = {}  
 
     # generate query for filtering
     filter_values = []
@@ -134,21 +136,29 @@ def index(request, name):
         filter_val['must'] = filter_values
     if not_filter_values:
         filter_val['must_not'] = not_filter_values
+
+    if filter_val:
+        body['query'] = {'bool': filter_val}
+
+    # generate query for search
     if search:
-        if 'must' in filter_val:
-            filter_val['must']['multi_match'] = {
-                "query": search,
-                "fields" : [ "*" ]
+        match = {
+            'multi_match': {
+                'query': search,
+                'fields': ['*']
             }
+        }
+        if filter_val:
+            if 'must' in filter_val:
+                body['query']['bool']['must'].append(match)
+            else:
+                body['query']['bool']['must'] = [match]
         else:
-            filter_val['must'] = {
-                "multi_match": {
-                    "query": search,
-                    "fields" : [ "*" ]
+            body['query'] = {
+                'bool': {
+                    'must': [match]
                 }
             }
-    if filter_val:
-        filters = {"query": {"bool": filter_val}}
 
     # generate query for aggregations
     agg_values = {}
@@ -161,32 +171,32 @@ def index(request, name):
             agg_values["paper_published_missing"] = {
                 "missing": {"field": "paperPublished"}}
 
-    filters['aggs'] = agg_values
+    if agg_values:
+        body['aggs'] = agg_values
 
-    set_cache = False
-    data = None
+    # generate query for sort script
+    # sorts by length of field array
+    if sort_by_count:
+        sort_field, order = sort_by_count.split(':')
+        body['sort'] = {
+            "_script": {
+                "type": "number",
+                "script": f"params._source?.{sort_field}?.length ?: 0",
+                "order": f"{order}"
+            }
+        }
 
-    # Get cache if request goes to file or specimen
-    # if int(size) == 100000 and query == '':
-    #     cache_key = "{}_key".format(name)
-    #     cache_time = 86400
-    #     data = cache.get(cache_key)
-    #     set_cache = True
-
-    if not data:
-        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
-        if request.body:
-            data = es.search(index=name, size=size, body=json.loads(
-                request.body.decode("utf-8"), track_total_hits=True))
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+    if request.body:
+        data = es.search(index=name, size=size, body=json.loads(
+            request.body.decode("utf-8"), track_total_hits=True))
+    else:
+        if query != '':
+            data = es.search(index=name, from_=from_, size=size, _source=field,
+                                sort=sort, q=query, body=body, track_total_hits=True)
         else:
-            if query != '':
-                data = es.search(index=name, from_=from_, size=size, _source=field,
-                                 sort=sort, q=query, body=filters, track_total_hits=True)
-            else:
-                data = es.search(index=name, from_=from_, size=size, _source=field,
-                                 sort=sort, body=filters, track_total_hits=True)
-        if set_cache:
-            cache.set(cache_key, data, cache_time)
+            data = es.search(index=name, from_=from_, size=size, _source=field,
+                                sort=sort, body=body, track_total_hits=True)
 
     return JsonResponse(data)
 
