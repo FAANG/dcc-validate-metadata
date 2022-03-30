@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'private_portal',
     'ontology_improver',
     'trackhubs',
+    'nextflow_upload',
     'rest_framework',
     'corsheaders',
     'drf_yasg'
