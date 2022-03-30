@@ -10,6 +10,7 @@ urlpatterns = [
     path('private_portal/', include('private_portal.urls')),
     path('ontology_improver/', include('ontology_improver.urls')),
     path('trackhub/', include('trackhubs.urls')),
+    path('nextflow_upload/', include('nextflow_upload.urls')),
     path('admin_panel/', admin.site.urls),
     path('data/', include('api.urls')),
     path(r'api-token-auth/', obtain_jwt_token),
