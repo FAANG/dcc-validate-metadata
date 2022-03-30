@@ -8,7 +8,7 @@ import os
 def upload_to_nginx(fileid, dir_name, filename):
     send_message(submission_message="Uploading file", room_id=fileid)
     filepath = f'/data/{fileid}'
-    url = 'http://nginx-svc:80/nextflow_upload'
+    url = 'http://nginx-nf-svc:80/nextflow_upload'
     download_url = f'https://api.faang.org/nextflow_files_upload/{dir_name}/{filename}'
     data = {
         'path': dir_name,
