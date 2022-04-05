@@ -92,7 +92,8 @@ def prepare_analyses_data(json_to_convert, room_id, private=False):
     conversion_results = AnalysesFileConverter(json_to_convert[0], room_id,
                                                private)
     xml_files = list()
-    analysis_xml, submission_xml = conversion_results.start_conversion()
+    analysis_xml, submission_xml, sample_xml = \
+        conversion_results.start_conversion()
     xml_files.extend([analysis_xml, submission_xml])
     for xml_file in xml_files:
         if 'Error' in xml_file:

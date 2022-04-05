@@ -260,7 +260,6 @@ RUN_FIELDS = {
     'mandatory': [
         'alias',
         'run_center',
-        'run_date',
         'experiment_ref',
         'filename',
         'filetype',

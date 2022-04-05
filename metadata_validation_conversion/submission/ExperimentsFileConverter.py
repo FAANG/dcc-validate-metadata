@@ -199,18 +199,21 @@ class ExperimentFileConverter(FileConverter):
         for record in self.json_to_convert['run']:
             run_alias = record['alias']
             run_center = record['run_center']
-            try:
-                run_date = datetime.datetime.strptime(record['run_date'],
-                                                      '%Y-%m-%d').isoformat()
-            except ValueError:
-                run_date = datetime.datetime.strptime(record['run_date'],
-                                                      '%Y-%m').isoformat()
-            except TypeError:
-                y, m, d, _, _, _ = xlrd.xldate_as_tuple(record['run_date'], 0)
-                m = self.add_leading_zero(m)
-                d = self.add_leading_zero(d)
-                run_date = datetime.datetime.strptime(f"{y}-{m}-{d}",
-                                                      '%Y-%m-%d').isoformat()
+            run_date = None
+            if record['run_date']:
+                try:
+                    run_date = datetime.datetime.strptime(
+                        record['run_date'], '%Y-%m-%d').isoformat()
+                except ValueError:
+                    run_date = datetime.datetime.strptime(
+                        record['run_date'], '%Y-%m').isoformat()
+                except TypeError:
+                    y, m, d, _, _, _ = xlrd.xldate_as_tuple(
+                        record['run_date'], 0)
+                    m = self.add_leading_zero(m)
+                    d = self.add_leading_zero(d)
+                    run_date = datetime.datetime.strptime(
+                        f"{y}-{m}-{d}", '%Y-%m-%d').isoformat()
 
             experiment_ref = record['experiment_ref']
             filename = record['filename']
@@ -227,8 +230,13 @@ class ExperimentFileConverter(FileConverter):
                 filetype_pair = record['filetype_pair']
                 checksum_method_pair = record['checksum_method_pair']
                 checksum_pair = record['checksum_pair']
-            run_elt = etree.SubElement(run_set, 'RUN', alias=run_alias,
-                                       run_center=run_center, run_date=run_date)
+            if run_date:
+                run_elt = etree.SubElement(
+                    run_set, 'RUN', alias=run_alias, run_center=run_center,
+                    run_date=run_date)
+            else:
+                run_elt = etree.SubElement(
+                    run_set, 'RUN', alias=run_alias, run_center=run_center)
             etree.SubElement(run_elt, 'EXPERIMENT_REF', refname=experiment_ref)
             data_block_elt = etree.SubElement(run_elt, 'DATA_BLOCK')
             files_elt = etree.SubElement(data_block_elt, 'FILES')

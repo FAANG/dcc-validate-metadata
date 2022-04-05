@@ -1,14 +1,52 @@
+import requests
+
 from lxml import etree
 
-from .helpers import check_field_existence
+from .helpers import check_field_existence, get_header
 from .FileConverter import FileConverter
+
+import json
 
 
 class AnalysesFileConverter(FileConverter):
     def start_conversion(self):
+        if self.private_submission:
+            sample_xml = self.generate_sample_xml()
+        else:
+            sample_xml = None
         analysis_xml = self.generate_analysis_xml()
         submission_xml = self.generate_submission_xml()
-        return analysis_xml, submission_xml
+        return analysis_xml, submission_xml, sample_xml
+
+    def generate_sample_xml(self):
+        sample_set = etree.Element('SAMPLE_SET')
+        sample_xml = etree.ElementTree(sample_set)
+        print(json.dumps(self.json_to_convert))
+        for record in self.json_to_convert['ena']:
+            sample_descriptor = record['samples'][0]['value']
+            samples_response = requests.get(
+                f"https://www.ebi.ac.uk/biosamples/samples/{sample_descriptor}",
+                headers=get_header()).json()
+            alias = f"{samples_response['name']} analysis " \
+                    f"{record['alias']['value']} proxy sample"
+            self.proxy_samples_mappings[sample_descriptor] = alias
+            title = f"{alias} submission"
+            tax_id = str(samples_response['taxId'])
+            sample_elt = etree.SubElement(sample_set, 'SAMPLE', alias=alias)
+            etree.SubElement(sample_elt, 'TITLE').text = title
+            sample_name_elt = etree.SubElement(sample_elt, 'SAMPLE_NAME')
+            etree.SubElement(sample_name_elt, 'TAXON_ID').text = tax_id
+            sample_attributes_elt = etree.SubElement(sample_elt,
+                                                     'SAMPLE_ATTRIBUTES')
+            sample_attribute_elt = etree.SubElement(sample_attributes_elt,
+                                                    'SAMPLE_ATTRIBUTE')
+            etree.SubElement(sample_attribute_elt, 'TAG').text = 'same as'
+            etree.SubElement(sample_attribute_elt, 'VALUE').text = \
+                samples_response['accession']
+        sample_xml.write(f"{self.room_id}_sample.xml",
+                         pretty_print=True, xml_declaration=True,
+                         encoding='UTF-8')
+        return 'Success'
 
     def generate_analysis_xml(self):
         """
@@ -77,9 +115,15 @@ class AnalysesFileConverter(FileConverter):
             etree.SubElement(analysis_elt, 'STUDY_REF', accession=study)
             if samples is not None:
                 for sample in samples:
-                    sample_ref = sample['value']
-                    etree.SubElement(analysis_elt, 'SAMPLE_REF',
-                                     accession=sample_ref)
+                    if self.private_submission:
+                        sample_ref = self.proxy_samples_mappings[
+                            sample['value']]
+                        etree.SubElement(analysis_elt, 'SAMPLE_REF',
+                                         refname=sample_ref)
+                    else:
+                        sample_ref = sample['value']
+                        etree.SubElement(analysis_elt, 'SAMPLE_REF',
+                                         accession=sample_ref)
             if experiments is not None:
                 for experiment in experiments:
                     exp_ref = experiment['value']
