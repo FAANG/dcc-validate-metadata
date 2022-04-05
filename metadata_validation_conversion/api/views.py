@@ -18,12 +18,12 @@ from api.swagger_custom import TextFileRenderer, PdfFileRenderer
 from api.swagger_custom import HTMLAutoSchema, PlainTextAutoSchema, PdfAutoSchema
 from api.swagger_custom import index_search_request_example, \
     index_search_response_example, index_detail_response_example
+import csv
 
 ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
                    'protocol_files', 'protocol_samples', 'article',
                    'protocol_analysis', 'analysis', 'summary_organism',
                    'summary_specimen', 'summary_dataset', 'summary_file']
-
 
 @swagger_auto_schema(method='get', tags=['Search'],
         operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc",
@@ -112,12 +112,15 @@ def index(request, name):
     size = request.GET.get('size', 10)
     field = request.GET.get('_source', '')
     sort = request.GET.get('sort', '')
+    sort_by_count = request.GET.get('sort_by_count', '')
     query = request.GET.get('q', '')
+    search = request.GET.get('search', '')
     from_ = request.GET.get('from_', 0)
     # Example: {field1: [val1, val2], field2: [val1, val2], ...}
     filters = request.GET.get('filters', '{}')    
     # Example: {aggName1: field1, aggName2: field2, ...}  
-    aggregations = request.GET.get('aggs', '{}')    
+    aggregations = request.GET.get('aggs', '{}')  
+    body = {}  
 
     # generate query for filtering
     filter_values = []
@@ -127,14 +130,35 @@ def index(request, name):
         if filters[key][0] != 'false':
             filter_values.append({"terms": {key: filters[key]}})
         else:
-            not_filter_values.append({"terms": {key: ["true"]}})
+            not_filter_values.append({"match": {key: "true"}})
     filter_val = {}
     if filter_values:
         filter_val['must'] = filter_values
     if not_filter_values:
         filter_val['must_not'] = not_filter_values
+
     if filter_val:
-        filters = {"query": {"bool": filter_val}}
+        body['query'] = {'bool': filter_val}
+
+    # generate query for search
+    if search:
+        match = {
+            'multi_match': {
+                'query': search,
+                'fields': ['*']
+            }
+        }
+        if filter_val:
+            if 'must' in filter_val:
+                body['query']['bool']['must'].append(match)
+            else:
+                body['query']['bool']['must'] = [match]
+        else:
+            body['query'] = {
+                'bool': {
+                    'must': [match]
+                }
+            }
 
     # generate query for aggregations
     agg_values = {}
@@ -147,32 +171,32 @@ def index(request, name):
             agg_values["paper_published_missing"] = {
                 "missing": {"field": "paperPublished"}}
 
-    filters['aggs'] = agg_values
+    if agg_values:
+        body['aggs'] = agg_values
 
-    set_cache = False
-    data = None
+    # generate query for sort script
+    # sorts by length of field array
+    if sort_by_count:
+        sort_field, order = sort_by_count.split(':')
+        body['sort'] = {
+            "_script": {
+                "type": "number",
+                "script": f"params._source?.{sort_field}?.length ?: 0",
+                "order": f"{order}"
+            }
+        }
 
-    # Get cache if request goes to file or specimen
-    # if int(size) == 100000 and query == '':
-    #     cache_key = "{}_key".format(name)
-    #     cache_time = 86400
-    #     data = cache.get(cache_key)
-    #     set_cache = True
-
-    if not data:
-        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
-        if request.body:
-            data = es.search(index=name, size=size, body=json.loads(
-                request.body.decode("utf-8"), track_total_hits=True))
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+    if request.body:
+        data = es.search(index=name, size=size, body=json.loads(
+            request.body.decode("utf-8"), track_total_hits=True))
+    else:
+        if query != '':
+            data = es.search(index=name, from_=from_, size=size, _source=field,
+                                sort=sort, q=query, body=body, track_total_hits=True)
         else:
-            if query != '':
-                data = es.search(index=name, from_=from_, size=size, _source=field,
-                                 sort=sort, q=query, body=filters, track_total_hits=True)
-            else:
-                data = es.search(index=name, from_=from_, size=size, _source=field,
-                                 sort=sort, body=filters, track_total_hits=True)
-        if set_cache:
-            cache.set(cache_key, data, cache_time)
+            data = es.search(index=name, from_=from_, size=size, _source=field,
+                                sort=sort, body=body, track_total_hits=True)
 
     return JsonResponse(data)
 
@@ -275,6 +299,145 @@ def detail(request, name, id):
                             doc_type="_doc")
     return JsonResponse(results)
 
+
+@swagger_auto_schema(method='get', tags=['Download'],
+        operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc",
+        manual_parameters=[
+            openapi.Parameter('columns_names', openapi.IN_QUERY, 
+                description="List of column headers", 
+                type=openapi.TYPE_STRING, default='[]'),
+            openapi.Parameter('file_format', openapi.IN_QUERY, 
+                description="csv or tabular text file", 
+                type=openapi.TYPE_STRING, default='csv'),
+            openapi.Parameter('_source', openapi.IN_QUERY, 
+                description="fields (comma-separated) to fetch", 
+                type=openapi.TYPE_STRING),
+            openapi.Parameter('sort', openapi.IN_QUERY, 
+                description="field to sort on, with :asc or :desc appended \
+                    to specify order, eg - id:asc", 
+                type=openapi.TYPE_STRING),
+            openapi.Parameter('filters', openapi.IN_QUERY, 
+                description="properties and list of values to filter on, \
+                    in the format {prop1: [val1, val2], prop2: [val1, val2], ...} ", 
+                type=openapi.TYPE_STRING, default='{}'),
+            openapi.Parameter('name', openapi.IN_PATH, 
+                description="type of records to fetch",
+                type=openapi.TYPE_STRING,
+                enum=ALLOWED_INDICES)
+        ],
+        responses={
+            200: openapi.Response(description='OK', 
+                examples={"application/json": index_search_response_example},
+                schema=openapi.Schema(type=openapi.TYPE_OBJECT)
+            ),
+            404: openapi.Response('Not Found')
+        })
+@api_view(['GET'])
+@csrf_exempt
+def download(request, name):
+    if request.method != 'GET':
+        return HttpResponse("This method is not allowed!\n")
+    if name not in ALLOWED_INDICES:
+        return HttpResponse("This download doesn't exist!\n")
+
+    # Request params
+    file_format = request.GET.get('file_format', '')
+    field = request.GET.get('_source', '')
+    column_names = request.GET.get('columns', '[]')
+    sort = request.GET.get('sort', '')
+    filters = request.GET.get('filters', '{}')
+
+    columns = field.split(',')
+    request_fields = []
+    for col in columns:
+        cols = col.split('.')
+        if cols[0] == '_source':
+            request_fields.append('.'.join(cols[1:]))
+    request_fields = ','.join(request_fields)
+    column_names = json.loads(column_names)
+
+    # generate query for filtering
+    filter_values = []
+    not_filter_values = []
+    filters = json.loads(filters)
+    for key in filters.keys():
+        if filters[key][0] != 'false':
+            filter_values.append({"terms": {key: filters[key]}})
+        else:
+            not_filter_values.append({"terms": {key: ["true"]}})
+    filter_val = {}
+    if filter_values:
+        filter_val['must'] = filter_values
+    if not_filter_values:
+        filter_val['must_not'] = not_filter_values
+    if filter_val:
+        filters = {"query": {"bool": filter_val}}
+
+    # Get records from elasticsearch
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+    count = 0
+    records = []
+    while True:
+        data = es.search(index=name, _source=request_fields, sort=sort, 
+                        body=filters, from_=count, size=10000, track_total_hits=True)
+        hits = data['hits']['hits']
+        records += hits
+        count += 10000
+        if count > data['hits']['total']['value']:
+            break
+
+    # generate response payload
+    if file_format == 'csv':
+        filename = 'faang_data.csv'
+        content_type = 'text/csv'
+    else:
+        filename = 'faang_data.txt'
+        content_type = 'text/plain'
+    response = HttpResponse(content_type=content_type)
+    response['Content-Disposition'] = 'attachment; filename=' + filename
+
+    # generate csv data
+    writer = csv.DictWriter(response, fieldnames=columns)
+    headers = {}
+    i = 0
+    for col in columns:
+        headers[col] = column_names[i]
+        i += 1
+    writer.writerow(headers)
+    for row in records:
+        record = {}
+        for col in columns:
+            cols = col.split('.')
+            record[col] = ''
+            source = row
+            for c in cols:
+                if  isinstance(source, dict) and c in source.keys():
+                    record[col] = source[c]
+                    source = source[c]
+                else:
+                    record[col] = ''
+                    break
+        writer.writerow(record)
+
+    # return formatted data
+    if file_format == 'csv':
+        return response
+    else:
+        # add padding to align with max length data in a column
+        def space(i, d):
+            max_len = len(max(list(zip(*row_data))[i], key=len))
+            return d+' '*(max_len-len(d))
+
+        # create fixed width and '|' separated tabular text file
+        data = response.content
+        lines = [i.rstrip(b'\r\n') for i in filter(None, data.split(b'\n'))]
+        lines = [line.decode("utf-8") for line in lines]
+        row_data = csv.reader(lines, quotechar='"', delimiter=',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
+        row_data = list(row_data)
+        tab_rows = [' | '.join(space(*c) for c in enumerate(b)) for b in row_data]
+        tab_data = '\n'.join(tab_rows)
+        response.content = tab_data
+        return response
 
 @swagger_auto_schema(method='get', tags=['Protocols'],
         auto_schema=PdfAutoSchema,
