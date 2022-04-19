@@ -19,6 +19,21 @@ class BovRegView(APIView):
         size = request.GET.get('size', 10)
         query = request.GET.get('q', '')
         from_ = request.GET.get('from_', 0)
+        search = request.GET.get('search', '')
+
+        # generate query for search
+        body = {}
+        if search:
+            body['query'] = {
+                'bool': {
+                    'must': [{
+                        'multi_match': {
+                            'query': search,
+                            'fields': ['*']
+                        }
+                    }]
+                }
+            }
         es = Elasticsearch([NODE], 
             connection_class=RequestsHttpConnection, 
             http_auth=(ES_USER, ES_PASSWORD), 
@@ -29,9 +44,9 @@ class BovRegView(APIView):
         else:
             sort = 'releaseDate:desc'
         if query != '':
-            data = es.search(index=index, from_=from_, size=size, sort=sort, q=query, track_total_hits=True)
+            data = es.search(index=index, from_=from_, size=size, sort=sort, body=body, q=query, track_total_hits=True)
         else:
-            data = es.search(index=index, from_=from_, size=size, sort=sort, track_total_hits=True)
+            data = es.search(index=index, from_=from_, size=size, sort=sort, body=body, track_total_hits=True)
         return Response(data)
 
 
