@@ -290,6 +290,7 @@ def detail(request, name, id):
         response.status_code = 404
         return response
     es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+    id = f"\"{id}\""
     results = es.search(index=name, q="_id:{}".format(id))
     if results['hits']['total'] == 0:
         results = es.search(index=name, q="alternativeId:{}".format(id),
