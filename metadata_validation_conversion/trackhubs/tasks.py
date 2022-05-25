@@ -52,13 +52,13 @@ def validate(fileid, filename, genome):
 
 
 @app.task
-def upload(validation_results, fileid, firepath, filename):
+def upload(validation_results, fileid, fileserver_path, filename):
     if validation_results == 'Success':
         send_message(submission_message="Uploading file", room_id=fileid)
         filepath = f"/data/{fileid}.bb"
-        url = 'http://nginx-svc:80/trackhubs_upload'
+        url = 'http://nginx-svc:80/files_upload'
         data = {
-            'path': firepath,
+            'path': fileserver_path,
             'name': filename
         }
         res = requests.post(url, files={'file': open(filepath,'rb')}, data=data)
@@ -72,18 +72,18 @@ def upload(validation_results, fileid, firepath, filename):
             send_message(submission_message='Success',room_id=fileid)
             # backup to s3
             cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                f"{filepath} s3://trackhubs/{firepath}/{filename}"
+                f"{filepath} s3://{fileserver_path}/{filename}"
             os.system(cmd)
             return 'Success'
     return 'Error'
 
 @app.task
-def upload_without_val(fileid, firepath, filename):
+def upload_without_val(fileid, fileserver_path, filename):
     send_message(submission_message="Uploading file", room_id=fileid)
     filepath = f"/data/{fileid}.bb"
-    url = 'http://nginx-svc:80/trackhubs_upload'
+    url = 'http://nginx-svc:80/files_upload'
     data = {
-        'path': firepath,
+        'path': fileserver_path,
         'name': filename
     }
     res = requests.post(url, files={'file': open(filepath,'rb')}, data=data)
@@ -97,6 +97,6 @@ def upload_without_val(fileid, firepath, filename):
         send_message(submission_message='Success',room_id=fileid)
         # backup to s3
         cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-            f"{filepath} s3://trackhubs/{firepath}/{filename}"
+            f"{filepath} s3://{fileserver_path}/{filename}"
         os.system(cmd)
         return 'Success'
