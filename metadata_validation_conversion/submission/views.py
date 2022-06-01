@@ -26,12 +26,12 @@ def get_template(request, task_id, room_id, data_type):
 
 
 def download_template(request, room_id):
-    with open(f"/metadata_validation_conversion/{room_id}.xlsx", 'rb') as f:
+    with open(f"/data/{room_id}.xlsx", 'rb') as f:
         file_data = f.read()
     response = HttpResponse(file_data,
                             content_type=f'application/{XLSX_CONTENT_TYPE}')
     response['Content-Disposition'] = 'attachment; filename="annotated.xlsx"'
-    os.remove(f"/metadata_validation_conversion/{room_id}.xlsx")
+    os.remove(f"/data/{room_id}.xlsx")
     return response
 
 
