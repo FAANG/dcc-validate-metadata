@@ -1,5 +1,6 @@
 import requests
 from metadata_validation_conversion.constants import ELIXIR_VALIDATOR_URL
+import json
 
 
 def validate(data, schema):
@@ -13,6 +14,7 @@ def validate(data, schema):
         'schema': schema,
         'object': data
     }
+    print(json.dumps(json_to_send))
     response = requests.post(ELIXIR_VALIDATOR_URL, json=json_to_send).json()
     validation_errors = list()
     paths = list()
