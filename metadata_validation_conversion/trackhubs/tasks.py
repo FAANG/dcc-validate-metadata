@@ -1,102 +1,250 @@
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
+from collections import OrderedDict
+from metadata_validation_conversion.settings import \
+    MINIO_ACCESS_KEY, MINIO_SECRET_KEY
 import requests
+import xlrd
+import json
 import os
 
-@app.task
-def validate(fileid, filename, genome):
-    send_message(submission_message="Starting to validate file",
-                 room_id=fileid)
-    errors = list()
-    # check that genome name in genomes.txt is consistent with genome name provided
-    # check that path of trackDb.txt file is correct
-    if filename == 'genomes.txt':
-        with open(f'/data/{fileid}.bb', 'r') as f:
-            data = f.readlines()
-            for line in data:
-                text_line = line.split()
-                if text_line[0] == 'genome' and text_line[1] != genome:
-                    errors.append("Genome name in genomes.txt is not consistent with genome name provided")
-                elif text_line[0] == 'trackDb' and text_line[1] != genome + '/trackDB.txt': 
-                    errors.append("trackDb should have value <genome>/trackDB.txt")
-            
-        
-    # check that links provided in trackDB.txt exist in FAANG FIRE service
-    elif filename == 'trackDB.txt':
-        with open(f'/data/{fileid}.bb', 'r') as f:
-            data = f.readlines()
-            for line in data:
-                text_line = line.split()
-                if len(text_line) and text_line[0] == 'bigDataUrl':
-                    link = text_line[1]
-                    res = requests.get(link)
-                    if res.status_code != 200:
-                        errors.append(f"{link} does not exist in FAANG FIRE Service")
-                        break
+@app.task()
+def read_excel_file(fileid):
+    send_message(room_id=fileid, submission_message="Converting template")
+    wb = xlrd.open_workbook(f'/data/{fileid}.xlsx')
+    data_dict = dict()
+    error_flag = False
+    try:
+        for sh in wb.sheets():
+            data_dict[sh.name] = []
+            for rownum in range(1, sh.nrows):
+                data = OrderedDict()
+                row_values = sh.row_values(rownum)
+                if sh.name == 'Hub Data':
+                    data['Name'] = row_values[0]
+                    data['Short Label'] = row_values[1]
+                    data['Long Label'] = row_values[2]
+                    data['Email'] = row_values[3]
+                    data['Description File Path'] = row_values[4] # optional field
+                elif sh.name == 'Genome Data':
+                    data['UCSC Database Name'] = row_values[0]
+                    data['Assembly Accession'] = row_values[1]
+                    data['Organism'] = row_values[2]    # optional field
+                    data['Description'] = row_values[3] # optional field
+                elif sh.name == 'Tracks Data':
+                    data['Track Name'] = row_values[0]
+                    data['File Path'] = row_values[1]
+                    data['File Type'] = row_values[2]
+                    data['Short Label'] = row_values[3]
+                    data['Long Label'] = row_values[4]
+                    data['Related Specimen ID'] = row_values[5]
+                    data['Subdirectory'] = row_values[6]
+                data_dict[sh.name].append(data)
+        send_message(room_id=fileid, submission_message="Template converted successfully")
+    except:
+        send_message(room_id=fileid, submission_message="Error while converting template")
+        error_flag = True
+    finally:
+        return {'error_flag': error_flag, 'data': data_dict}
 
-    # check that path of genomes.txt file is correct
-    elif filename == 'hub.txt':
-        with open(f'/data/{fileid}.bb', 'r') as f:
-            data = f.readlines()
-            for line in data:
-                text_line = line.split()
-                if text_line[0] == 'genomesFile' and text_line[1] != 'genomes.txt':
-                    errors.append("genomesFile should have value genomes.txt")
-
-    if len(errors) != 0:
-        send_message(submission_message="Validation failed",
-                     errors=errors, room_id=fileid)
-        return 'Error'
-    else:
-        return 'Success'
-
-
-@app.task
-def upload(validation_results, fileid, fileserver_path, filename):
-    if validation_results == 'Success':
-        send_message(submission_message="Uploading file", room_id=fileid)
-        filepath = f"/data/{fileid}.bb"
-        url = 'http://nginx-svc:80/files_upload'
-        data = {
-            'path': fileserver_path,
-            'name': filename
-        }
-        res = requests.post(url, files={'file': open(filepath,'rb')}, data=data)
-        if res.status_code != 200:
-            send_message(submission_message="Upload failed, "
-                                            "please contact "
-                                            "faang-dcc@ebi.ac.uk",
-                        room_id=fileid)
-            return 'Error'
-        else:
-            send_message(submission_message='Success',room_id=fileid)
-            # backup to s3
-            cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                f"{filepath} s3://{fileserver_path}/{filename}"
-            os.system(cmd)
-            return 'Success'
-    return 'Error'
-
-@app.task
-def upload_without_val(fileid, fileserver_path, filename):
-    send_message(submission_message="Uploading file", room_id=fileid)
-    filepath = f"/data/{fileid}.bb"
-    url = 'http://nginx-svc:80/files_upload'
-    data = {
-        'path': fileserver_path,
-        'name': filename
-    }
-    res = requests.post(url, files={'file': open(filepath,'rb')}, data=data)
-    if res.status_code != 200:
-        send_message(submission_message="Upload failed, "
-                                        "please contact "
-                                        "faang-dcc@ebi.ac.uk",
-                        room_id=fileid)
-        return 'Error'
-    else:
-        send_message(submission_message='Success',room_id=fileid)
-        # backup to s3
-        cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-            f"{filepath} s3://{fileserver_path}/{filename}"
+@app.task()
+def validate(result, fileid):
+    error_flag = result['error_flag']
+    if not error_flag:
+        send_message(submission_message="Starting to validate file",
+                    room_id=fileid)
+        error_dict = {}
+        data_dict = result['data']
+        # set alias for minio
+        cmd = f"./mc alias set minio-trackhubs http://minio-svc-trackhubs:80 "\
+            f"{MINIO_ACCESS_KEY} {MINIO_SECRET_KEY}"
         os.system(cmd)
-        return 'Success'
+        for key in data_dict:
+            error_dict[key] = []
+            for row_index in range(len(data_dict[key])):
+                errors = {}
+                if key == 'Hub Data':
+                    for row_prop in data_dict[key][row_index]:
+                        # check that all required fields are present
+                        if not data_dict[key][row_index][row_prop] and row_prop != 'Description File Path':
+                            error_flag = True
+                            errors[row_prop] = f'Required field: {row_prop} cannot be empty'
+                elif key == 'Genome Data':
+                    for row_prop in data_dict[key][row_index]:
+                        # check that all required fields are present
+                        if not data_dict[key][row_index][row_prop] and row_prop != 'Organism' and row_prop != 'Description':
+                            error_flag = True
+                            errors[row_prop] = f'Required field: {row_prop} cannot be empty'
+                        # TODO: check that "UCSC Database Name" is valid
+                        # TODO: check "Assembly Accession" corresponds to UCSC Database Name
+                elif key == 'Tracks Data':
+                    for row_prop in data_dict[key][row_index]:
+                        # check that all required fields are present
+                        if not data_dict[key][row_index][row_prop]:
+                            error_flag = True
+                            errors[row_prop] = f'Required field: {row_prop} cannot be empty'
+                        # check that "File Path" exists in MinIO server
+                        if row_prop == 'File Path':
+                            cmd = f"./mc find minio-trackhubs/{data_dict[key][row_index][row_prop]}"
+                            c = os.system(cmd)
+                            if c != 0:
+                                error_flag = True
+                                errors[row_prop] = f'File {data_dict[key][row_index][row_prop]} not found'
+                        # check that "File Type" is valid
+                        elif row_prop == 'File Type':
+                            valid_types = ['bigWig', 'bigBed', 'bigBarChart', \
+                                'bigGenePred', 'bigInteract', 'bigNarrowPeak',\
+                                'bigChain', 'bigPsl', 'bigMaf', 'hic', 'bam', \
+                                'halSnake', 'vcfTabix']
+                            if data_dict[key][row_index][row_prop] not in valid_types:
+                                error_flag = True
+                                errors[row_prop] = f'File type {data_dict[key][row_index][row_prop]} is not valid. ' \
+                                    f'Please use one of the following types: {", ".join(valid_types)}'
+                        # check that "Related Specimen ID" is a valid BioSamples ID
+                        elif row_prop == 'Related Specimen ID':
+                            url = f'http://daphne-svc:8000/data/specimen/{data_dict[key][row_index][row_prop]}'
+                            res = requests.get(url)
+                            if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
+                                error_flag = True
+                                errors[row_prop] = f'{data_dict[key][row_index][row_prop]} is not a valid FAANG Specimen'
+                error_dict[key].append(errors)
+        if error_flag:
+            send_message(room_id=fileid, submission_message="Error", validation_results=error_dict)
+            print(error_dict)
+            return {'error_flag': error_flag, 'data': error_dict}
+        else:
+            send_message(room_id=fileid, submission_message="Template validation successful")
+            return {'error_flag': error_flag, 'data': data_dict}
+    return {'error_flag': error_flag, 'data': data_dict}
+
+@app.task()
+def generate_hub_files(result, fileid):
+    error_flag = result['error_flag']
+    res_dict = result['data']
+    if not error_flag:
+        try:
+            send_message(room_id=fileid, submission_message="Generating Hub files")
+            hub = res_dict['Hub Data'][0]['Name']
+            genome = res_dict['Genome Data'][0]['UCSC Database Name']
+            file_server = 'https://api.faang.org/files/trackhubs'
+            cmd = f'mkdir /data/{hub}'
+            os.system(cmd)
+            # generate hub.txt
+            with open(f'/data/{hub}/hub.txt', 'w') as f:
+                f.write(f"hub {res_dict['Hub Data'][0]['Name']}\n")
+                f.write(f"shortLabel {res_dict['Hub Data'][0]['Short Label']}\n")
+                f.write(f"longLabel {res_dict['Hub Data'][0]['Long Label']}\n")
+                f.write("genomesFile genomes.txt\n")
+                f.write(f"email {res_dict['Hub Data'][0]['Email']}\n")
+                if res_dict['Hub Data'][0]['Description File Path']:
+                    f.write(f"descriptionUrl {res_dict['Hub Data'][0]['Description File Path']}\n")
+            # generate genomes.txt
+            with open(f'/data/{hub}/genomes.txt', 'w') as f:
+                f.write(f"genome {res_dict['Genome Data'][0]['UCSC Database Name']}\n")
+                f.write(f"trackDb {res_dict['Genome Data'][0]['UCSC Database Name']}/trackDb.txt\n")
+                if res_dict['Genome Data'][0]['Description']:
+                    f.write(f"description {res_dict['Genome Data'][0]['Description']}\n")
+                if res_dict['Genome Data'][0]['Organism']:
+                    f.write(f"organism {res_dict['Genome Data'][0]['Organism']}\n")
+            # generate trackDb.txt
+            with open(f'/data/{hub}/trackDb.txt', 'w') as f:
+                for row in res_dict['Tracks Data']:
+                    file_name = row['File Path'].split('/')[-1]
+                    file_name = f"{file_name.split('.')[0]}_{row['Related Specimen ID']}.{file_name.split('.')[1]}"
+                    track_url = f"{file_server}/{hub}/{genome}/{row['Subdirectory']}/{file_name}"
+                    f.write(f"track {row['Track Name']}\n")
+                    f.write(f"bigDataUrl {track_url}\n")
+                    f.write(f"shortLabel {row['Short Label']}\n")
+                    f.write(f"longLabel {row['Long Label']}\n")
+                    f.write(f"type {row['File Type']}\n\n")
+            send_message(room_id=fileid, submission_message="Track Hub files generated")
+        except:
+            send_message(room_id=fileid, submission_message="Error generating Track Hub files")
+        finally:
+            return {'error_flag': error_flag, 'data': res_dict}
+    return {'error_flag': error_flag, 'data': res_dict}
+
+@app.task()
+def upload_files(result, fileid):
+    error_flag = result['error_flag']
+    res_dict = result['data']
+    if not error_flag:
+        send_message(room_id=fileid, submission_message="Setting up Track Hub")
+        hub = res_dict['Hub Data'][0]['Name']
+        genome = res_dict['Genome Data'][0]['UCSC Database Name']
+        url = 'http://nginx-svc:80/files_upload'
+        files = ['hub.txt', 'genomes.txt', 'trackDb.txt']
+        # upload generated hub files to trackhubs local storage
+        for file in files:
+            filepath = f"/data/{hub}/{file}"
+            if file == 'trackDb.txt':
+                server_path = f"trackhubs/{hub}/{genome}"
+            else:
+                server_path = f"trackhubs/{hub}"
+            data = {
+                'path': server_path,
+                'name': file
+            }
+            res = requests.post(url, files={'file': open(filepath,'rb')}, data=data)
+            if res.status_code != 200:
+                error_flag = True
+            else:
+                # backup to s3
+                cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
+                    f"{filepath} s3://{data['path']}/{data['name']}"
+                os.system(cmd)
+        # copy files from minio and upload to trackhubs local storage
+        for track in res_dict['Tracks Data']:
+            file = track['File Path'].split('/')[-1]
+            filepath = f'/data/{hub}/{file}'
+            cmd = f"./mc cp minio-trackhubs/{track['File Path']} {filepath}"
+            os.system(cmd)
+            data = {
+                'path': f"trackhubs/{hub}/{genome}/{track['Subdirectory']}",
+                'name': f"{file.split('.')[0]}_{track['Related Specimen ID']}.{file.split('.')[1]}"
+            }
+            res = requests.post(url, files={'file': open(filepath,'rb')}, data=data)
+            if res.status_code != 200:
+                error_flag = True
+            else:
+                # backup to s3
+                cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
+                    f"{filepath} s3://{data['path']}/{data['name']}"
+                os.system(cmd)
+        if not error_flag:
+            send_message(room_id=fileid, submission_message="Track Hub set up, starting hubCheck")
+        else:
+            send_message(room_id=fileid, submission_message="Error setting up track hub")
+    return {'error_flag': error_flag, 'data': res_dict}
+
+@app.task()
+def hub_check(result, fileid):
+    error_flag = result['error_flag']
+    res_dict = result['data']
+    res_dict['HubCheck Results'] = {
+        'warnings': [],
+        'errors': []
+    }
+    if not error_flag:
+        hub = res_dict['Hub Data'][0]['Name']
+        cmd = f"./trackhubs/hubCheck -noTracks "\
+                f"http://nginx-svc:80/files/trackhubs/{hub}/hub.txt "\
+                f"> /data/{hub}/hubCheck_results.txt"
+        os.system(cmd)
+        with open(f'/data/{hub}/hubCheck_results.txt', 'r') as f:
+            for line in f:
+                if line.split()[0] != 'Found':
+                    line = line.replace('http://nginx-svc:80', 'https://api.faang.org')
+                    if line.split()[0] == 'warning:':
+                        res_dict['HubCheck Results']['warnings'].append(line)
+                    else:
+                        error_flag = True
+                        res_dict['HubCheck Results']['errors'].append(line)
+        if not error_flag:
+            send_message(room_id=fileid, validation_results=res_dict,
+                submission_message=f"Hub check successful. " \
+                    f"Track Hub set up at https://api.faang.org/files/trackhubs/{hub}/hub.txt")
+        else:
+            send_message(room_id=fileid, validation_results=res_dict,
+                submission_message="Error: Hub check failed")
+    return {'error_flag': error_flag, 'data': res_dict}
