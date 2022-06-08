@@ -2,7 +2,8 @@ from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from collections import OrderedDict
 from metadata_validation_conversion.settings import \
-    MINIO_ACCESS_KEY, MINIO_SECRET_KEY
+    MINIO_ACCESS_KEY, MINIO_SECRET_KEY, \
+        TRACKHUBS_USERNAME, TRACKHUBS_PASSWORD
 import requests
 import xlrd
 import json
@@ -248,3 +249,76 @@ def hub_check(result, fileid):
             send_message(room_id=fileid, validation_results=res_dict,
                 submission_message="Error: Hub check failed")
     return {'error_flag': error_flag, 'data': res_dict}
+
+@app.task()
+def register_trackhub(data, roomid):
+    send_message(room_id=roomid, 
+        submission_message="Registering Track Hub")
+    error_flag = False
+    # login and get auth token
+    user = TRACKHUBS_USERNAME
+    pwd = TRACKHUBS_PASSWORD
+    hub_dir = data['hub_dir']
+    genome_name = data['genome_name']
+    genome_id = data['genome_id']
+    hub_url = f"https://api.faang.org/files/trackhubs/{hub_dir}/hub.txt"
+    r = requests.get('https://www.trackhubregistry.org/api/login', auth=(user, pwd), verify=True)
+    if not r.ok:
+        error_flag = True
+    else:
+        auth_token = r.json()[u'auth_token']
+        # register tracks with trackhubs registry
+        headers = { 'user': user, 'auth_token': auth_token }
+        payload = { 'url': hub_url, 'assemblies': { genome_name: genome_id } }
+        r = requests.post('https://www.trackhubregistry.org/api/trackhub', headers=headers, json=payload, verify=True)
+        if not r.ok:
+            error_flag = True
+    if error_flag:
+        send_message(room_id=roomid, 
+            submission_message="Registration failed, please contact faang-dcc@ebi.ac.uk")
+    else:
+        send_message(room_id=roomid, 
+            submission_message="Track Hub registered successfully!")
+    return {'error_flag': error_flag, 'data': data}
+
+@app.task()
+def associate_specimen(res_dict, roomid):
+    error_flag = res_dict['error_flag']
+    data = res_dict['data']
+    if not error_flag:
+        hub_dir = data['hub_dir']
+        genome_name = data['genome_name']
+        hub_url = f"https://api.faang.org/files/trackhubs/{hub_dir}/hub.txt"
+        trackdb_url = f"http://nginx-svc:80/files/trackhubs/{hub_dir}/{genome_name}/trackDb.txt"
+        update_payload = { "doc": { "trackhubUrl": hub_url } }
+        biosample_ids = []
+        response = requests.get(trackdb_url)
+        text_lines = response.text.split('\n')
+        for line in text_lines:
+            line = line.split(' ')
+            if line[0] == 'bigDataUrl':
+                biosample_ids.append(line[1].split('_')[-1].split('.')[0])
+        biosample_ids = list(set(biosample_ids))
+        errors = []
+        for id in biosample_ids:
+            update_url = f"http://daphne-svc:8000/data/specimen/{id}/update"
+            res = requests.put(update_url, data=json.dumps(update_payload))
+            if res.status == 200:
+                send_message(room_id=roomid, 
+                    submission_message=f"Specimen {id} linked to Track Hub succesfully")
+            else:
+                error_flag = True
+                errors.append(f"Specimen {id} could not be linked")
+        if not error_flag:
+            send_message(room_id=roomid, 
+                submission_message="Track Hub registered successfully!\n" \
+                    "All relevant specimen records linked to Track Hub")
+        else:
+            send_message(room_id=roomid, errors=errors,
+                submission_message=f"Track Hub registered.\n" \
+                    "Some specimen could not be linked, please contact faang-dcc@ebi.ac.uk")
+    return {'error_flag': error_flag, 'errors': errors}
+        
+
+
+
