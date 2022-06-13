@@ -110,7 +110,8 @@ def validate(result, fileid):
                                 errors[row_prop] = f'{data_dict[key][row_index][row_prop]} is not a valid FAANG Specimen'
                 error_dict[key].append(errors)
         if error_flag:
-            send_message(room_id=fileid, submission_message="Error", validation_results=error_dict)
+            data_dict['errors'] = error_dict
+            send_message(room_id=fileid, submission_message="Error", validation_results=data_dict)
             print(error_dict)
             return {'error_flag': error_flag, 'data': error_dict}
         else:
