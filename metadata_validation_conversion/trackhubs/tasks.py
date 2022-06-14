@@ -280,7 +280,7 @@ def register_trackhub(data, roomid):
             error_flag = True
     if error_flag:
         send_message(room_id=roomid, 
-            submission_message="Registration failed, please contact faang-dcc@ebi.ac.uk")
+            errors="Registration failed, please contact faang-dcc@ebi.ac.uk")
     else:
         send_message(room_id=roomid, 
             submission_message="Track Hub registered successfully!")
@@ -319,10 +319,10 @@ def associate_specimen(res_dict, roomid):
                 submission_message="Track Hub registered successfully!\n" \
                     "All relevant specimen records linked to Track Hub")
         else:
-            send_message(room_id=roomid, errors=errors,
-                submission_message=f"Track Hub registered.\n" \
+            send_message(room_id=roomid, submission_results=errors,
+                errors=f"Track Hub registered.\n" \
                     "Some specimen could not be linked, please contact faang-dcc@ebi.ac.uk")
-    return {'error_flag': error_flag, 'errors': errors}
+    return {'error_flag': error_flag, 'data': data}
         
 
 
