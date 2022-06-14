@@ -28,10 +28,9 @@ def read_excel_file(fileid):
                     data['Email'] = row_values[3]
                     data['Description File Path'] = row_values[4] # optional field
                 elif sh.name == 'Genome Data':
-                    data['UCSC Database Name'] = row_values[0]
-                    data['Assembly Accession'] = row_values[1]
-                    data['Organism'] = row_values[2]    # optional field
-                    data['Description'] = row_values[3] # optional field
+                    data['Assembly Accession'] = row_values[0]
+                    data['Organism'] = row_values[1]    # optional field
+                    data['Description'] = row_values[2] # optional field
                 elif sh.name == 'Tracks Data':
                     data['Track Name'] = row_values[0]
                     data['File Path'] = row_values[1]
@@ -71,13 +70,26 @@ def validate(result, fileid):
                             error_flag = True
                             errors[row_prop] = f'Required field: {row_prop} cannot be empty'
                 elif key == 'Genome Data':
+                    assembly_name = ''
                     for row_prop in data_dict[key][row_index]:
                         # check that all required fields are present
                         if not data_dict[key][row_index][row_prop] and row_prop != 'Organism' and row_prop != 'Description':
                             error_flag = True
                             errors[row_prop] = f'Required field: {row_prop} cannot be empty'
-                        # TODO: check that "UCSC Database Name" is valid
-                        # TODO: check "Assembly Accession" corresponds to UCSC Database Name
+                        # check "Assembly Accession" is valid
+                        if row_prop == 'Assembly Accession' and row_prop not in errors:
+                            url = f"https://rest.ensembl.org/info/genomes/assembly/" \
+                                f"{data_dict[key][row_index][row_prop]}?content-type=application/json"
+                            res = requests.get(url)
+                            if res.status_code == 200:
+                                res_json = json.loads(res.content)
+                                assembly_name = res_json['assembly_name']
+                            else:
+                                error_flag = True
+                                errors[row_prop] = f'Assembly Accession {data_dict[key][row_index][row_prop]}' \
+                                    f' is not a valid GCA accession'
+                    if len(assembly_name):
+                        data_dict[key][row_index]['Assembly Name'] = assembly_name
                 elif key == 'Tracks Data':
                     for row_prop in data_dict[key][row_index]:
                         # check that all required fields are present
@@ -85,14 +97,14 @@ def validate(result, fileid):
                             error_flag = True
                             errors[row_prop] = f'Required field: {row_prop} cannot be empty'
                         # check that "File Path" exists in MinIO server
-                        if row_prop == 'File Path':
+                        if row_prop == 'File Path' and row_prop not in errors:
                             cmd = f"./mc find minio-trackhubs/{data_dict[key][row_index][row_prop]}"
                             c = os.system(cmd)
                             if c != 0:
                                 error_flag = True
                                 errors[row_prop] = f'File {data_dict[key][row_index][row_prop]} not found'
                         # check that "File Type" is valid
-                        elif row_prop == 'File Type':
+                        elif row_prop == 'File Type' and row_prop not in errors:
                             valid_types = ['bigWig', 'bigBed', 'bigBarChart', \
                                 'bigGenePred', 'bigInteract', 'bigNarrowPeak',\
                                 'bigChain', 'bigPsl', 'bigMaf', 'hic', 'bam', \
@@ -102,7 +114,7 @@ def validate(result, fileid):
                                 errors[row_prop] = f'File type {data_dict[key][row_index][row_prop]} is not valid. ' \
                                     f'Please use one of the following types: {", ".join(valid_types)}'
                         # check that "Related Specimen ID" is a valid BioSamples ID
-                        elif row_prop == 'Related Specimen ID':
+                        elif row_prop == 'Related Specimen ID' and row_prop not in errors:
                             url = f'http://daphne-svc:8000/data/specimen/{data_dict[key][row_index][row_prop]}'
                             res = requests.get(url)
                             if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
@@ -127,7 +139,7 @@ def generate_hub_files(result, fileid):
         try:
             send_message(room_id=fileid, submission_message="Generating Hub files")
             hub = res_dict['Hub Data'][0]['Name']
-            genome = res_dict['Genome Data'][0]['UCSC Database Name']
+            genome = res_dict['Genome Data'][0]['Assembly Name']
             file_server = 'https://api.faang.org/files/trackhubs'
             cmd = f'mkdir /data/{hub}'
             os.system(cmd)
@@ -142,8 +154,8 @@ def generate_hub_files(result, fileid):
                     f.write(f"descriptionUrl {res_dict['Hub Data'][0]['Description File Path']}\n")
             # generate genomes.txt
             with open(f'/data/{hub}/genomes.txt', 'w') as f:
-                f.write(f"genome {res_dict['Genome Data'][0]['UCSC Database Name']}\n")
-                f.write(f"trackDb {res_dict['Genome Data'][0]['UCSC Database Name']}/trackDb.txt\n")
+                f.write(f"genome {res_dict['Genome Data'][0]['Assembly Name']}\n")
+                f.write(f"trackDb {res_dict['Genome Data'][0]['Assembly Name']}/trackDb.txt\n")
                 if res_dict['Genome Data'][0]['Description']:
                     f.write(f"description {res_dict['Genome Data'][0]['Description']}\n")
                 if res_dict['Genome Data'][0]['Organism']:
@@ -175,7 +187,7 @@ def upload_files(result, fileid):
     if not error_flag:
         send_message(room_id=fileid, submission_message="Setting up Track Hub")
         hub = res_dict['Hub Data'][0]['Name']
-        genome = res_dict['Genome Data'][0]['UCSC Database Name']
+        genome = res_dict['Genome Data'][0]['Assembly Name']
         url = 'http://nginx-svc:80/files_upload'
         files = ['hub.txt', 'genomes.txt', 'trackDb.txt']
         # upload generated hub files to trackhubs local storage
