@@ -57,7 +57,7 @@ def validate(result, fileid):
         error_dict = {}
         data_dict = result['data']
         # set alias for minio
-        cmd = f"./mc alias set minio-trackhubs http://minio-svc-trackhubs:80 "\
+        cmd = f"./mc alias set minio-trackhubs http://minio-svc-trackhubs.default:80 "\
             f"{MINIO_ACCESS_KEY} {MINIO_SECRET_KEY}"
         os.system(cmd)
         for key in data_dict:
@@ -111,7 +111,7 @@ def validate(result, fileid):
                 error_dict[key].append(errors)
         if error_flag:
             data_dict['errors'] = error_dict
-            send_message(room_id=fileid, submission_message="Error", validation_results=data_dict)
+            send_message(room_id=fileid, submission_message="Error: Template validation failed", validation_results=data_dict)
             print(error_dict)
             return {'error_flag': error_flag, 'data': error_dict}
         else:
@@ -159,9 +159,11 @@ def generate_hub_files(result, fileid):
                     f.write(f"shortLabel {row['Short Label']}\n")
                     f.write(f"longLabel {row['Long Label']}\n")
                     f.write(f"type {row['File Type']}\n\n")
-            send_message(room_id=fileid, submission_message="Track Hub files generated")
+            send_message(room_id=fileid, 
+            submission_message="Track Hub files generated")
         except:
-            send_message(room_id=fileid, submission_message="Error generating Track Hub files")
+            send_message(room_id=fileid, 
+            submission_message="Error generating Track Hub files, please contact faang-dcc@ebi.ac.uk")
         finally:
             return {'error_flag': error_flag, 'data': res_dict}
     return {'error_flag': error_flag, 'data': res_dict}
@@ -214,9 +216,11 @@ def upload_files(result, fileid):
                     f"{filepath} s3://{data['path']}/{data['name']}"
                 os.system(cmd)
         if not error_flag:
-            send_message(room_id=fileid, submission_message="Track Hub set up, starting hubCheck")
+            send_message(room_id=fileid, 
+            submission_message="Track Hub set up, starting hubCheck")
         else:
-            send_message(room_id=fileid, submission_message="Error setting up track hub")
+            send_message(room_id=fileid, 
+            submission_message="Error setting up track hub, please contact faang-dcc@ebi.ac.uk")
     return {'error_flag': error_flag, 'data': res_dict}
 
 @app.task()
