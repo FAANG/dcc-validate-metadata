@@ -2,55 +2,43 @@ import json
 from celery import chain
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .tasks import validate, upload, upload_without_val
-from metadata_validation_conversion.settings import SLACK_WEBHOOK
-import requests
-import os
+from .tasks import read_excel_file, validate, \
+    generate_hub_files, upload_files, hub_check, \
+        register_trackhub, associate_specimen
 
 @csrf_exempt
-def upload_tracks(request, hub_dir, genome, sub_dir):
-    if request.method == 'POST':
-        fileserver_path = f'trackhubs/{hub_dir}/{genome}/{sub_dir}'
-        fileid_list = list(request.FILES.keys())
-        res_ids = []
-        for fileid in fileid_list:
-            with open(f'/data/{fileid}.bb', 'wb+') as destination:
-                for chunk in request.FILES[fileid].chunks():
-                    destination.write(chunk)
-            upload_task = upload_without_val.s(fileid, fileserver_path,
-                                str(request.FILES[fileid])).set(queue='upload')
-            res = upload_task.apply_async()
-            res_ids.append(res.id)
-        return HttpResponse(json.dumps({"id": res_ids}))
-    return HttpResponse("Please use POST method for uploading tracks")
-
-@csrf_exempt
-def upload_text_files(request, hub_dir, genome):
+def validation(request):
     if request.method == 'POST':
         fileid = list(request.FILES.keys())[0]
-        filename = str(request.FILES[fileid])
-        if filename == 'trackDB.txt':
-            fileserver_path = f'trackhubs/{hub_dir}/{genome}'
-        else:
-            fileserver_path = f'trackhubs/{hub_dir}'
-        with open(f'/data/{fileid}.bb', 'wb+') as destination:
+        with open(f'/data/{fileid}.xlsx', 'wb+') as destination:
             for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
-        validate_task = validate.s(fileid, filename, genome).set(queue='upload')
-        upload_task = upload.s(fileid, fileserver_path, filename).set(queue='upload')
-        upload_files_chain = chain(validate_task | upload_task)
-        res = upload_files_chain.apply_async()
+        # Convert Excel file to json 
+        read_task = read_excel_file.s(fileid).set(queue='validation')
+        # Validation level #1: validate json, generate error/ warnings list
+        validate_task = validate.s(fileid).set(queue='validation')
+        # Generate hub files
+        generate_task = generate_hub_files.s(fileid).set(queue='validation')
+        # Upload track data files and hub files to file server
+        upload_task = upload_files.s(fileid).set(queue='validation')
+        # Validation level #2: hubcheck, generate error/ warnings list
+        hubcheck_task = hub_check.s(fileid).set(queue='validation')
+        validation_chain = chain(read_task | validate_task \
+             | generate_task | upload_task | hubcheck_task)
+        res = validation_chain.apply_async()
         return HttpResponse(json.dumps({"id": res.id}))
-    return HttpResponse("Please use POST method for uploading files")
+    return HttpResponse("Please use POST method for trackhubs validation")
 
 @csrf_exempt
-def submit_trackhub(request):
+def submission(request):
     if request.method == 'POST':
-        path = json.loads(request.body)['hub_path']
-        hub_url = f"https://api.faang.org/files/trackhubs/{path}/hub.txt"
-        msg_payload = {"text": f"New Track Hub Submitted at {hub_url}"}
-        cmd = f"curl -X POST -H 'Content-type: application/json' --data '{json.dumps(msg_payload)}'" \
-            f" {SLACK_WEBHOOK}"
-        os.system(cmd)
-        return JsonResponse({"message":"Track Hub Sumbitted"})
+        data = json.loads(request.body)
+        roomid = data['hub_dir']
+        # register trackhub with the trackhub registry
+        register_task = register_trackhub.s(data, roomid).set(queue='submission')
+        # add track hub url to relevant specimen records
+        associate_task = associate_specimen.s(roomid).set(queue='submission')
+        submission_chain = chain(register_task | associate_task)
+        res = submission_chain.apply_async()
+        return HttpResponse(json.dumps({"id": res.id}))
     return HttpResponse("Please use POST method for registering trackhubs")
