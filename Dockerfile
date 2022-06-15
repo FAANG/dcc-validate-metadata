@@ -9,4 +9,3 @@ ADD run_celery.sh ./
 ADD run_flower.sh ./
 RUN pip install -r requirements.txt
 RUN pip install --upgrade awscli
-ENV PYTHONUNBUFFERED=1
