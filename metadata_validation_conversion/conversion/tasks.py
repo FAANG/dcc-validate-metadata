@@ -1,26 +1,13 @@
+from abc import ABC
+
 from .ReadExcelFile import ReadExcelFile
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from metadata_validation_conversion.constants import ALLOWED_TEMPLATES
 from celery import Task
-from celery.utils.log import get_task_logger
-from celery.signals import after_setup_logger
-import logging
-import os.path
-
-APP_PATH = os.path.dirname(os.path.realpath(__file__))
-logger = get_task_logger(__name__)
 
 
-@after_setup_logger.connect
-def setup_loggers(logger, *args, **kwargs):
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh = logging.FileHandler(f'{APP_PATH}/logs.log')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-
-
-class LogErrorsTask(Task):
+class LogErrorsTask(Task, ABC):
     abstract = True
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
