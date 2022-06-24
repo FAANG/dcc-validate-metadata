@@ -1,10 +1,21 @@
+from abc import ABC
+
 from .ReadExcelFile import ReadExcelFile
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from metadata_validation_conversion.constants import ALLOWED_TEMPLATES
+from celery import Task
 
 
-@app.task
+class LogErrorsTask(Task, ABC):
+    abstract = True
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        send_message(room_id=args[0], conversion_status='Error',
+                     errors=f'There is a problem with the conversion process. Error: {exc}')
+
+
+@app.task(base=LogErrorsTask)
 def read_excel_file(room_id, conversion_type, file):
     """
     This task will convert excel file to proper json format

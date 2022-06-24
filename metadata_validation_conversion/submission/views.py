@@ -20,7 +20,7 @@ def get_template(request, task_id, room_id, data_type):
     validation_results = app.AsyncResult(task_id)
     json_to_convert = validation_results.get()
     convert_template_task = generate_annotated_template.s(
-        json_to_convert, room_id, data_type).set(queue='submission')
+        json_to_convert, room_id=room_id, data_type=data_type).set(queue='submission')
     res = convert_template_task.apply_async()
     return HttpResponse(json.dumps({'id': res.id}))
 
@@ -56,14 +56,14 @@ def domain_actions(request, room_id, domain_action):
             send_message(submission_message='Waiting: authenticating user',
                          room_id=room_id)
             choose_domain_task = get_domains.s(
-                json.loads(request.body.decode('utf-8')), room_id).set(
+                json.loads(request.body.decode('utf-8')), room_id=room_id).set(
                 queue='submission')
             res = choose_domain_task.apply_async()
         else:
             send_message(submission_message='Submitting new domain',
                          room_id=room_id)
             submit_new_domain_task = submit_new_domain.s(
-                json.loads(request.body.decode('utf-8')), room_id).set(
+                json.loads(request.body.decode('utf-8')), room_id=room_id).set(
                 queue='submission')
             res = submit_new_domain_task.apply_async()
         return HttpResponse(json.dumps({"id": res.id}))
@@ -78,24 +78,24 @@ def submit_records(request, submission_type, task_id, room_id):
         if submission_type == 'samples':
             prepare = prepare_samples_data
             submit = submit_to_biosamples
-            submit_task = submit.s(request_body, room_id).set(
+            submit_task = submit.s(request_body, room_id=room_id).set(
                 queue='submission')
         elif submission_type == 'experiments':
             prepare = prepare_experiments_data
             submit = submit_data_to_ena
-            submit_task = submit.s(request_body, room_id, 'experiments').set(
+            submit_task = submit.s(request_body, room_id=room_id, submission_type='experiments').set(
                 queue='submission')
         elif submission_type == 'analyses':
             prepare = prepare_analyses_data
             submit = submit_data_to_ena
-            submit_task = submit.s(request_body, room_id, 'analyses').set(
+            submit_task = submit.s(request_body, room_id=room_id, submission_type='analyses').set(
                 queue='submission')
         else:
             return HttpResponse("Unknown submission type!")
         validation_result = app.AsyncResult(task_id)
         json_to_send = validation_result.get()
         prepare_task = prepare.s(
-            json_to_send, room_id, request_body['private_submission']
+            json_to_send, room_id=room_id, private=request_body['private_submission']
         ).set(queue='submission')
         my_chord = chord((prepare_task,), submit_task)
         res = my_chord.apply_async()

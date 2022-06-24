@@ -1,6 +1,7 @@
 import subprocess
 import json
 import re
+from abc import ABC
 
 from lxml import etree
 
@@ -16,9 +17,19 @@ from .AnalysesFileConverter import AnalysesFileConverter
 from .ExperimentsFileConverter import ExperimentFileConverter
 from .AnnotateTemplate import AnnotateTemplate
 from .helpers import get_credentials
+from celery import Task
 
 
-@app.task
+class LogErrorsTask(Task, ABC):
+    abstract = True
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        send_message(room_id=kwargs['room_id'], submission_message='Error with the submission process',
+                     errors=f'Error: {exc}')
+
+
+
+@app.task(base=LogErrorsTask)
 def get_domains(credentials, room_id):
     send_message(submission_message="Waiting: getting information about "
                                     "existing domains", room_id=room_id)
@@ -36,7 +47,7 @@ def get_domains(credentials, room_id):
     return 'Success'
 
 
-@app.task
+@app.task(base=LogErrorsTask)
 def submit_new_domain(credentials, room_id):
     username, password = get_credentials(credentials)
     biosamples_submission = BioSamplesSubmission(username, password, {},
@@ -55,7 +66,7 @@ def submit_new_domain(credentials, room_id):
     return 'Success'
 
 
-@app.task
+@app.task(base=LogErrorsTask)
 def prepare_samples_data(json_to_convert, room_id, private=False):
     conversion_results = BiosamplesFileConverter(json_to_convert[0], private)
     results = conversion_results.start_conversion()
@@ -63,7 +74,7 @@ def prepare_samples_data(json_to_convert, room_id, private=False):
     return results
 
 
-@app.task
+@app.task(base=LogErrorsTask)
 def submit_to_biosamples(results, credentials, room_id):
     send_message(
         submission_message="Waiting: submitting records to BioSamples",
@@ -87,7 +98,7 @@ def submit_to_biosamples(results, credentials, room_id):
         return submission_data
 
 
-@app.task
+@app.task(base=LogErrorsTask)
 def prepare_analyses_data(json_to_convert, room_id, private=False):
     conversion_results = AnalysesFileConverter(json_to_convert[0], room_id,
                                                private)
@@ -104,7 +115,7 @@ def prepare_analyses_data(json_to_convert, room_id, private=False):
     return 'Success'
 
 
-@app.task
+@app.task(base=LogErrorsTask)
 def prepare_experiments_data(json_to_convert, room_id, private=False):
     conversion_results = ExperimentFileConverter(json_to_convert[0], room_id,
                                                  private)
@@ -123,7 +134,7 @@ def prepare_experiments_data(json_to_convert, room_id, private=False):
     return 'Success'
 
 
-@app.task
+@app.task(base=LogErrorsTask)
 def submit_data_to_ena(results, credentials, room_id, submission_type):
     if results[0] != 'Success':
         send_message(submission_message="Error: submission failed",
@@ -271,7 +282,7 @@ def parse_submission_results(submission_results, room_id):
             return 'Success'
 
 
-@app.task
+@app.task(base=LogErrorsTask)
 def generate_annotated_template(json_to_convert, room_id, data_type):
     annotation_results = AnnotateTemplate(json_to_convert, room_id, data_type)
     annotation_results.start_conversion()
