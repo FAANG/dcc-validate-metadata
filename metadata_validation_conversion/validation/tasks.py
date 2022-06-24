@@ -77,7 +77,3 @@ def join_validation_results(results, room_id):
                  table_data=results, submission_status=submission_status)
     return results
 
-
-@app.task()
-def on_callback_error(*args, **kwargs):
-    logger.info('Chord callback error during validation process with join_validation_results method')

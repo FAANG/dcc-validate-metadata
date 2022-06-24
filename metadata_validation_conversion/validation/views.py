@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from celery import chord
 import json
 from .tasks import validate_against_schema, collect_warnings_and_additional_checks, join_validation_results, \
-    collect_relationships_issues, on_callback_error
+    collect_relationships_issues
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 
@@ -45,7 +45,7 @@ def validate(request, validation_type, task_id, room_id):
                                                                                                structure,
                                                                                                room_id=room_id).set(queue='validation')
 
-        join_validation_results_task = join_validation_results.s(room_id=room_id).on_error(on_callback_error.s()).set(
+        join_validation_results_task = join_validation_results.s(room_id=room_id).set(
             queue='validation')
         my_chord = chord((validate_against_schema_task,
                           collect_warnings_and_additional_checks_task),
