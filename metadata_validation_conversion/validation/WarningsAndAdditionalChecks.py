@@ -7,6 +7,8 @@ from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
 from metadata_validation_conversion.helpers import get_rules_json
 from .get_ontology_text_async import collect_ids
 from .helpers import validate, get_record_structure
+import requests
+import json
 
 
 class WarningsAndAdditionalChecks:
@@ -174,6 +176,10 @@ class WarningsAndAdditionalChecks:
             # Check custom fields for ontology consistence
             self.check_ontology_text(record['custom'], ontology_ids,
                                      record_to_return['custom'])
+
+            # check linked Biosample
+            if self.rules_type == 'experiments' or self.rules_type == 'analyses':
+                self.check_biosample_for_ena(record, record_to_return)
 
             data_to_return.append(record_to_return)
         return data_to_return
@@ -456,3 +462,64 @@ class WarningsAndAdditionalChecks:
                 f"Breed '{record['breed']['text']}' doesn't match the animal "
                 f"specie: '{record['organism']['text']}'"
             )
+
+    def check_biosample_for_ena(self, record, record_to_return):
+        '''
+        This function will check that the linked Biosample is not organism,
+        for ENA submission (experiements and analyses)
+        :param record: record to check
+        :param record_to_return: dict to send to front-end
+        :return:
+        '''
+        for field_name, field_value in record.items():
+            # for experiments
+            if 'sample_descriptor' in field_value:
+                if self.biosample_is_not_specimen(record_to_return[field_name]['sample_descriptor']['value']):
+                    record_to_return[field_name]['sample_descriptor'].setdefault('errors', list())
+                    record_to_return[field_name]['sample_descriptor']['errors'].append(
+                        "Linked Biosample should be a specimen")
+            # for analyses
+            elif field_name == 'samples':
+                if isinstance(record['samples'], list):
+                    for index, sample in enumerate(record['samples']):
+                        if self.biosample_is_not_specimen(record_to_return['samples'][index]['value']):
+                            record_to_return['samples'][index].setdefault('errors', list())
+                            record_to_return['samples'][index]['errors'].append(
+                            "Linked Biosample should be a specimen")
+                else:
+                    if self.biosample_is_not_specimen(record_to_return['samples']['value']):
+                        record_to_return['samples'].setdefault('errors', list())
+                        record_to_return['samples']['errors'].append(
+                        "Linked Biosample should be a specimen")
+            # for analyses
+            elif 'samples' in field_value:
+                if isinstance(record[field_name]['samples'], list):
+                    for index, sample in enumerate(record[field_name]['samples']):
+                        if self.biosample_is_not_specimen(record_to_return[field_name]['samples'][index]['value']):
+                            record_to_return[field_name]['samples'][index].setdefault('errors', list())
+                            record_to_return[field_name]['samples'][index]['errors'].append(
+                            "Linked Biosample should be a specimen")
+                else:
+                    if self.biosample_is_not_specimen(record_to_return[field_name]['samples']['value']):
+                        record_to_return[field_name]['samples'].setdefault('errors', list())
+                        record_to_return[field_name]['samples']['errors'].append(
+                        "Linked Biosample should be a specimen")
+
+    @staticmethod
+    def biosample_is_not_specimen(biosample_id):
+        '''
+        Check if Biosample associated with the id is organism,
+        by querying biosample API
+        :param biosample_id: id to query biosamples API and get info
+        :return: boolean
+        '''
+        url = 'https://www.ebi.ac.uk/biosamples/samples/' + biosample_id
+        res = requests.get(url)
+        try:
+            data = json.loads(res.content)
+            for material in data['characteristics']['material']:
+                if material['text'] == 'organism':
+                    return True
+            return False
+        except:
+            return True
