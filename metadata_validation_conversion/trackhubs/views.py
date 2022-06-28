@@ -33,7 +33,7 @@ def validation(request):
 def submission(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        roomid = data['hub_dir']
+        roomid = data['Hub Data'][0]['Name']
         # register trackhub with the trackhub registry
         register_task = register_trackhub.s(data, roomid).set(queue='submission')
         # add track hub url to relevant specimen records
