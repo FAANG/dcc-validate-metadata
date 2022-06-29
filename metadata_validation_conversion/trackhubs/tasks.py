@@ -53,7 +53,8 @@ def read_excel_file(fileid):
                     data['File Type'] = row_values[2]
                     data['Short Label'] = row_values[3]
                     data['Long Label'] = row_values[4]
-                    data['Related Specimen ID'] = row_values[5]
+                    id_list = row_values[5].split(',')
+                    data['Related Specimen ID'] = [id.strip() for id in id_list]
                     data['Subdirectory'] = row_values[6]
                 data_dict[sh.name].append(data)
         send_message(room_id=fileid, submission_message="Template converted successfully")
@@ -133,18 +134,22 @@ def validate(result, fileid):
                                                    f'Please use one of the following types: {", ".join(valid_types)}'
                         # check that "Related Specimen ID" is a valid BioSamples ID
                         elif row_prop == 'Related Specimen ID' and row_prop not in errors:
-                            url = f'http://daphne-svc:8000/data/specimen/{data_dict[key][row_index][row_prop]}'
-                            res = requests.get(url)
-                            if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
+                            invalid_ids = []
+                            for id in data_dict[key][row_index][row_prop]:
+                                url = f'http://daphne-svc:8000/data/specimen/{id}'
+                                res = requests.get(url)
+                                if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
+                                    invalid_ids.append(id)
+                            if len(invalid_ids):
                                 error_flag = True
-                                errors[
-                                    row_prop] = f'{data_dict[key][row_index][row_prop]} is not a valid FAANG Specimen'
+                                if len(invalid_ids) == 1:
+                                    errors[row_prop] = f"{invalid_ids[0]} is not a valid FAANG Specimen ID"
+                                else:
+                                    errors[row_prop] = f"{', '.join(invalid_ids)} are not valid FAANG Specimen IDs"
                 error_dict[key].append(errors)
         if error_flag:
             data_dict['errors'] = error_dict
-            send_message(room_id=fileid, submission_message="Error: Template validation failed",
-                         validation_results=data_dict)
-            print(error_dict)
+            send_message(room_id=fileid, submission_message="Error: Template validation failed", validation_results=data_dict)
             return {'error_flag': error_flag, 'data': error_dict}
         else:
             send_message(room_id=fileid, submission_message="Template validation successful")
@@ -185,7 +190,6 @@ def generate_hub_files(result, fileid):
             with open(f'/data/{hub}/trackDb.txt', 'w') as f:
                 for row in res_dict['Tracks Data']:
                     file_name = row['File Path'].split('/')[-1]
-                    file_name = f"{file_name.split('.')[0]}_{row['Related Specimen ID']}.{file_name.split('.')[1]}"
                     track_url = f"{file_server}/{hub}/{genome}/{row['Subdirectory']}/{file_name}"
                     f.write(f"track {row['Track Name']}\n")
                     f.write(f"bigDataUrl {track_url}\n")
@@ -239,7 +243,7 @@ def upload_files(result, fileid):
             os.system(cmd)
             data = {
                 'path': f"trackhubs/{hub}/{genome}/{track['Subdirectory']}",
-                'name': f"{file.split('.')[0]}_{track['Related Specimen ID']}.{file.split('.')[1]}"
+                'name': file
             }
             res = requests.post(url, files={'file': open(filepath, 'rb')}, data=data)
             if res.status_code != 200:
@@ -299,9 +303,9 @@ def register_trackhub(data, roomid):
     # login and get auth token
     user = TRACKHUBS_USERNAME
     pwd = TRACKHUBS_PASSWORD
-    hub_dir = data['hub_dir']
-    genome_name = data['genome_name']
-    genome_id = data['genome_id']
+    hub_dir = data['Hub Data'][0]['Name']
+    genome_name = data['Genome Data'][0]['Assembly Name']
+    genome_id = data['Genome Data'][0]['Assembly Accession']
     hub_url = f"https://api.faang.org/files/trackhubs/{hub_dir}/hub.txt"
     r = requests.get('https://www.trackhubregistry.org/api/login', auth=(user, pwd), verify=True)
     if not r.ok:
@@ -328,19 +332,13 @@ def associate_specimen(res_dict, roomid):
     error_flag = res_dict['error_flag']
     data = res_dict['data']
     if not error_flag:
-        hub_dir = data['hub_dir']
-        genome_name = data['genome_name']
+        hub_dir = data['Hub Data'][0]['Name']
         hub_url = f"https://api.faang.org/files/trackhubs/{hub_dir}/hub.txt"
-        trackdb_url = f"http://nginx-svc:80/files/trackhubs/{hub_dir}/{genome_name}/trackDb.txt"
-        update_payload = {"doc": {"trackhubUrl": hub_url}}
+        update_payload = { "doc": { "trackhubUrl": hub_url } }
         biosample_ids = []
-        response = requests.get(trackdb_url)
-        text_lines = response.text.split('\n')
-        for line in text_lines:
-            line = line.split(' ')
-            if line[0] == 'bigDataUrl':
-                biosample_ids.append(line[1].split('_')[-1].split('.')[0])
-        biosample_ids = list(set(biosample_ids))
+        for track in data['Tracks Data']:
+            biosample_ids = biosample_ids + track['Related Specimen ID']
+            biosample_ids = list(set(biosample_ids))
         errors = []
         for id in biosample_ids:
             update_url = f"http://daphne-svc:8000/data/specimen/{id}/update"
