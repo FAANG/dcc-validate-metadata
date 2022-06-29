@@ -121,7 +121,7 @@ ALLOWED_RELATIONSHIPS = {
     'teleostei_embryo': ['organism'],
     'teleostei_post-hatching': ['organism'],
     'pool_of_specimens': ['specimen_from_organism', 'teleostei_embryo',
-                          'teleostei_post-hatching'],
+                          'teleostei_post-hatching', 'cell_specimen'],
     'cell_specimen': ['specimen_from_organism'],
     'cell_culture': ['specimen_from_organism', 'cell_specimen'],
     'cell_line': ['organism', 'specimen_from_organism', 'pool_of_specimens',
