@@ -16,9 +16,9 @@ def upload_protocol(request, protocol_type):
         with open(f'/data/{fileid}.pdf', 'wb+') as destination:
             for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
-        validate_task = validate.s(fileid, filename).set(queue='upload')
-        upload_task = upload.s(fileid, fileserver_path,
-                               str(request.FILES[fileid])).set(queue='upload')
+        validate_task = validate.s(filename, fileid=fileid).set(queue='upload')
+        upload_task = upload.s(fileserver_path,
+                               str(request.FILES[fileid]), fileid=fileid).set(queue='upload')
         upload_protocol_chain = chain(validate_task | upload_task)
         res = upload_protocol_chain.apply_async()
         return HttpResponse(json.dumps({"id": res.id}))

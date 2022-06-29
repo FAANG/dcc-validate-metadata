@@ -1,15 +1,31 @@
+from abc import ABC
+
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from collections import OrderedDict
 from metadata_validation_conversion.settings import \
     MINIO_ACCESS_KEY, MINIO_SECRET_KEY, \
-        TRACKHUBS_USERNAME, TRACKHUBS_PASSWORD
+    TRACKHUBS_USERNAME, TRACKHUBS_PASSWORD
 import requests
 import xlrd
 import json
 import os
+from celery import Task
 
-@app.task()
+
+class LogErrorsTask(Task, ABC):
+    abstract = True
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        if 'fileid' in kwargs:
+            send_message(room_id=kwargs['fileid'], submission_message='Error with trackhub upload',
+                         errors=f'Error: {exc}')
+        if 'roomid' in kwargs:
+            send_message(room_id=kwargs['roomid'], submission_message='Error with trackhub upload',
+                         errors=f'Error: {exc}')
+
+
+@app.task(base=LogErrorsTask)
 def read_excel_file(fileid):
     send_message(room_id=fileid, submission_message="Converting template")
     wb = xlrd.open_workbook(f'/data/{fileid}.xlsx')
@@ -26,11 +42,11 @@ def read_excel_file(fileid):
                     data['Short Label'] = row_values[1]
                     data['Long Label'] = row_values[2]
                     data['Email'] = row_values[3]
-                    data['Description File Path'] = row_values[4] # optional field
+                    data['Description File Path'] = row_values[4]  # optional field
                 elif sh.name == 'Genome Data':
                     data['Assembly Accession'] = row_values[0]
-                    data['Organism'] = row_values[1]    # optional field
-                    data['Description'] = row_values[2] # optional field
+                    data['Organism'] = row_values[1]  # optional field
+                    data['Description'] = row_values[2]  # optional field
                 elif sh.name == 'Tracks Data':
                     data['Track Name'] = row_values[0]
                     data['File Path'] = row_values[1]
@@ -48,17 +64,18 @@ def read_excel_file(fileid):
     finally:
         return {'error_flag': error_flag, 'data': data_dict}
 
-@app.task()
+
+@app.task(base=LogErrorsTask)
 def validate(result, fileid):
     error_flag = result['error_flag']
     if not error_flag:
         send_message(submission_message="Starting to validate file",
-                    room_id=fileid)
+                     room_id=fileid)
         error_dict = {}
         data_dict = result['data']
         # set alias for minio
-        cmd = f"./mc alias set minio-trackhubs http://minio-svc-trackhubs.default:80 "\
-            f"{MINIO_ACCESS_KEY} {MINIO_SECRET_KEY}"
+        cmd = f"./mc alias set minio-trackhubs http://minio-svc-trackhubs.default:80 " \
+              f"{MINIO_ACCESS_KEY} {MINIO_SECRET_KEY}"
         os.system(cmd)
         for key in data_dict:
             error_dict[key] = []
@@ -74,13 +91,14 @@ def validate(result, fileid):
                     assembly_name = ''
                     for row_prop in data_dict[key][row_index]:
                         # check that all required fields are present
-                        if not data_dict[key][row_index][row_prop] and row_prop != 'Organism' and row_prop != 'Description':
+                        if not data_dict[key][row_index][
+                            row_prop] and row_prop != 'Organism' and row_prop != 'Description':
                             error_flag = True
                             errors[row_prop] = f'Required field: {row_prop} cannot be empty'
                         # check "Assembly Accession" is valid
                         if row_prop == 'Assembly Accession' and row_prop not in errors:
                             url = f"https://rest.ensembl.org/info/genomes/assembly/" \
-                                f"{data_dict[key][row_index][row_prop]}?content-type=application/json"
+                                  f"{data_dict[key][row_index][row_prop]}?content-type=application/json"
                             res = requests.get(url)
                             if res.status_code == 200:
                                 res_json = json.loads(res.content)
@@ -88,7 +106,7 @@ def validate(result, fileid):
                             else:
                                 error_flag = True
                                 errors[row_prop] = f'Assembly Accession {data_dict[key][row_index][row_prop]}' \
-                                    f' is not a valid GCA accession'
+                                                   f' is not a valid GCA accession'
                     if len(assembly_name):
                         data_dict[key][row_index]['Assembly Name'] = assembly_name
                 elif key == 'Tracks Data':
@@ -107,13 +125,13 @@ def validate(result, fileid):
                         # check that "File Type" is valid
                         elif row_prop == 'File Type' and row_prop not in errors:
                             valid_types = ['bigWig', 'bigBed', 'bigBarChart', \
-                                'bigGenePred', 'bigInteract', 'bigNarrowPeak',\
-                                'bigChain', 'bigPsl', 'bigMaf', 'hic', 'bam', \
-                                'halSnake', 'vcfTabix']
+                                           'bigGenePred', 'bigInteract', 'bigNarrowPeak', \
+                                           'bigChain', 'bigPsl', 'bigMaf', 'hic', 'bam', \
+                                           'halSnake', 'vcfTabix']
                             if data_dict[key][row_index][row_prop] not in valid_types:
                                 error_flag = True
                                 errors[row_prop] = f'File type {data_dict[key][row_index][row_prop]} is not valid. ' \
-                                    f'Please use one of the following types: {", ".join(valid_types)}'
+                                                   f'Please use one of the following types: {", ".join(valid_types)}'
                         # check that "Related Specimen ID" is a valid BioSamples ID
                         elif row_prop == 'Related Specimen ID' and row_prop not in errors:
                             invalid_ids = []
@@ -138,7 +156,8 @@ def validate(result, fileid):
             return {'error_flag': error_flag, 'data': data_dict}
     return {'error_flag': error_flag, 'data': data_dict}
 
-@app.task()
+
+@app.task(base=LogErrorsTask)
 def generate_hub_files(result, fileid):
     error_flag = result['error_flag']
     res_dict = result['data']
@@ -177,16 +196,17 @@ def generate_hub_files(result, fileid):
                     f.write(f"shortLabel {row['Short Label']}\n")
                     f.write(f"longLabel {row['Long Label']}\n")
                     f.write(f"type {row['File Type']}\n\n")
-            send_message(room_id=fileid, 
-            submission_message="Track Hub files generated")
+            send_message(room_id=fileid,
+                         submission_message="Track Hub files generated")
         except:
-            send_message(room_id=fileid, 
-            submission_message="Error generating Track Hub files, please contact faang-dcc@ebi.ac.uk")
+            send_message(room_id=fileid,
+                         submission_message="Error generating Track Hub files, please contact faang-dcc@ebi.ac.uk")
         finally:
             return {'error_flag': error_flag, 'data': res_dict}
     return {'error_flag': error_flag, 'data': res_dict}
 
-@app.task()
+
+@app.task(base=LogErrorsTask)
 def upload_files(result, fileid):
     error_flag = result['error_flag']
     res_dict = result['data']
@@ -207,13 +227,13 @@ def upload_files(result, fileid):
                 'path': server_path,
                 'name': file
             }
-            res = requests.post(url, files={'file': open(filepath,'rb')}, data=data)
+            res = requests.post(url, files={'file': open(filepath, 'rb')}, data=data)
             if res.status_code != 200:
                 error_flag = True
             else:
                 # backup to s3
                 cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                    f"{filepath} s3://{data['path']}/{data['name']}"
+                      f"{filepath} s3://{data['path']}/{data['name']}"
                 os.system(cmd)
         # copy files from minio and upload to trackhubs local storage
         for track in res_dict['Tracks Data']:
@@ -225,23 +245,24 @@ def upload_files(result, fileid):
                 'path': f"trackhubs/{hub}/{genome}/{track['Subdirectory']}",
                 'name': file
             }
-            res = requests.post(url, files={'file': open(filepath,'rb')}, data=data)
+            res = requests.post(url, files={'file': open(filepath, 'rb')}, data=data)
             if res.status_code != 200:
                 error_flag = True
             else:
                 # backup to s3
                 cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                    f"{filepath} s3://{data['path']}/{data['name']}"
+                      f"{filepath} s3://{data['path']}/{data['name']}"
                 os.system(cmd)
         if not error_flag:
-            send_message(room_id=fileid, 
-            submission_message="Track Hub set up, starting hubCheck")
+            send_message(room_id=fileid,
+                         submission_message="Track Hub set up, starting hubCheck")
         else:
-            send_message(room_id=fileid, 
-            submission_message="Error setting up track hub, please contact faang-dcc@ebi.ac.uk")
+            send_message(room_id=fileid,
+                         submission_message="Error setting up track hub, please contact faang-dcc@ebi.ac.uk")
     return {'error_flag': error_flag, 'data': res_dict}
 
-@app.task()
+
+@app.task(base=LogErrorsTask)
 def hub_check(result, fileid):
     error_flag = result['error_flag']
     res_dict = result['data']
@@ -251,9 +272,9 @@ def hub_check(result, fileid):
     }
     if not error_flag:
         hub = res_dict['Hub Data'][0]['Name']
-        cmd = f"./trackhubs/hubCheck -noTracks "\
-                f"http://nginx-svc:80/files/trackhubs/{hub}/hub.txt "\
-                f"> /data/{hub}/hubCheck_results.txt"
+        cmd = f"./trackhubs/hubCheck -noTracks " \
+              f"http://nginx-svc:80/files/trackhubs/{hub}/hub.txt " \
+              f"> /data/{hub}/hubCheck_results.txt"
         os.system(cmd)
         with open(f'/data/{hub}/hubCheck_results.txt', 'r') as f:
             for line in f:
@@ -266,17 +287,18 @@ def hub_check(result, fileid):
                         res_dict['HubCheck Results']['errors'].append(line)
         if not error_flag:
             send_message(room_id=fileid, validation_results=res_dict,
-                submission_message=f"Hub check successful. " \
-                    f"Track Hub set up at https://api.faang.org/files/trackhubs/{hub}/hub.txt")
+                         submission_message=f"Hub check successful. " \
+                                            f"Track Hub set up at https://api.faang.org/files/trackhubs/{hub}/hub.txt")
         else:
             send_message(room_id=fileid, validation_results=res_dict,
-                submission_message="Error: Hub check failed")
+                         submission_message="Error: Hub check failed")
     return {'error_flag': error_flag, 'data': res_dict}
 
-@app.task()
+
+@app.task(base=LogErrorsTask)
 def register_trackhub(data, roomid):
-    send_message(room_id=roomid, 
-        submission_message="Registering Track Hub")
+    send_message(room_id=roomid,
+                 submission_message="Registering Track Hub")
     error_flag = False
     # login and get auth token
     user = TRACKHUBS_USERNAME
@@ -291,20 +313,21 @@ def register_trackhub(data, roomid):
     else:
         auth_token = r.json()[u'auth_token']
         # register tracks with trackhubs registry
-        headers = { 'user': user, 'auth_token': auth_token }
-        payload = { 'url': hub_url, 'assemblies': { genome_name: genome_id } }
+        headers = {'user': user, 'auth_token': auth_token}
+        payload = {'url': hub_url, 'assemblies': {genome_name: genome_id}}
         r = requests.post('https://www.trackhubregistry.org/api/trackhub', headers=headers, json=payload, verify=True)
         if not r.ok:
             error_flag = True
     if error_flag:
-        send_message(room_id=roomid, 
-            errors="Registration failed, please contact faang-dcc@ebi.ac.uk")
+        send_message(room_id=roomid,
+                     errors="Registration failed, please contact faang-dcc@ebi.ac.uk")
     else:
-        send_message(room_id=roomid, 
-            submission_message="Track Hub registered successfully!")
+        send_message(room_id=roomid,
+                     submission_message="Track Hub registered successfully!")
     return {'error_flag': error_flag, 'data': data}
 
-@app.task()
+
+@app.task(base=LogErrorsTask)
 def associate_specimen(res_dict, roomid):
     error_flag = res_dict['error_flag']
     data = res_dict['data']
@@ -321,21 +344,17 @@ def associate_specimen(res_dict, roomid):
             update_url = f"http://daphne-svc:8000/data/specimen/{id}/update"
             res = requests.put(update_url, data=json.dumps(update_payload))
             if res.status == 200:
-                send_message(room_id=roomid, 
-                    submission_message=f"Specimen {id} linked to Track Hub succesfully")
+                send_message(room_id=roomid,
+                             submission_message=f"Specimen {id} linked to Track Hub succesfully")
             else:
                 error_flag = True
                 errors.append(f"Specimen {id} could not be linked")
         if not error_flag:
-            send_message(room_id=roomid, 
-                submission_message="Track Hub registered successfully!\n" \
-                    "All relevant specimen records linked to Track Hub")
+            send_message(room_id=roomid,
+                         submission_message="Track Hub registered successfully!\n" \
+                                            "All relevant specimen records linked to Track Hub")
         else:
             send_message(room_id=roomid, submission_results=errors,
-                errors=f"Track Hub registered.\n" \
-                    "Some specimen could not be linked, please contact faang-dcc@ebi.ac.uk")
+                         errors=f"Track Hub registered.\n" \
+                                "Some specimen could not be linked, please contact faang-dcc@ebi.ac.uk")
     return {'error_flag': error_flag, 'data': data}
-        
-
-
-

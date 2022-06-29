@@ -1,10 +1,21 @@
+from abc import ABC
+
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 import requests
 import os
+from celery import Task
 
 
-@app.task
+class LogErrorsTask(Task, ABC):
+    abstract = True
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        send_message(room_id=args[0], submission_message='Error with file upload',
+                     errors=f'Error: {exc}')
+
+
+@app.task(base=LogErrorsTask)
 def upload_to_nginx(fileid, dir_name, filename):
     send_message(submission_message="Uploading file", room_id=fileid)
     filepath = f'/data/{fileid}'

@@ -1,12 +1,24 @@
 import datetime
+from abc import ABC
+
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from metadata_validation_conversion.constants import ORGANIZATIONS
 import requests
 import os
+from celery import Task
 
-@app.task
-def validate(fileid, filename):
+
+class LogErrorsTask(Task, ABC):
+    abstract = True
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        send_message(room_id=kwargs['fileid'], submission_message='Error with protocol upload',
+                     errors=f'Error: {exc}')
+
+
+@app.task(base=LogErrorsTask)
+def validate(filename, fileid):
     send_message(submission_message="Starting to validate file",
                  room_id=fileid)
     errors = list()
@@ -26,14 +38,14 @@ def validate(fileid, filename):
         send_message(submission_message="Upload failed, "
                                         "please contact "
                                         "faang-dcc@ebi.ac.uk",
-                    errors=errors, room_id=fileid)
+                     errors=errors, room_id=fileid)
         return 'Error'
     else:
         return 'Success'
 
 
-@app.task
-def upload(validation_results, fileid, fileserver_path, filename):
+@app.task(base=LogErrorsTask)
+def upload(validation_results, fileserver_path, filename, fileid):
     if validation_results == 'Success':
         send_message(submission_message="Uploading file", room_id=fileid)
         filepath = f"/data/{fileid}.pdf"
@@ -42,18 +54,18 @@ def upload(validation_results, fileid, fileserver_path, filename):
             'path': fileserver_path,
             'name': filename
         }
-        res = requests.post(url, files={'file': open(filepath,'rb')}, data=data)
+        res = requests.post(url, files={'file': open(filepath, 'rb')}, data=data)
         if res.status_code != 200:
             send_message(submission_message="Upload failed, "
                                             "please contact "
                                             "faang-dcc@ebi.ac.uk",
-                        room_id=fileid)
+                         room_id=fileid)
             return 'Error'
         else:
-            send_message(submission_message='Success',room_id=fileid)
+            send_message(submission_message='Success', room_id=fileid)
             # backup to s3
             cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                f"{filepath} s3://{fileserver_path}/{filename}"
+                  f"{filepath} s3://{fileserver_path}/{filename}"
             os.system(cmd)
             return 'Success'
     return 'Error'
