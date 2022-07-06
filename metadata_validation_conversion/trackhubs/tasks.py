@@ -4,7 +4,6 @@ from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from collections import OrderedDict
 from metadata_validation_conversion.settings import \
-    MINIO_ACCESS_KEY, MINIO_SECRET_KEY, \
     TRACKHUBS_USERNAME, TRACKHUBS_PASSWORD
 import requests
 import xlrd
@@ -66,17 +65,13 @@ def read_excel_file(fileid):
 
 
 @app.task(base=LogErrorsTask)
-def validate(result, fileid):
+def validate(result, webin_credentials, fileid):
     error_flag = result['error_flag']
     if not error_flag:
         send_message(submission_message="Starting to validate file",
                      room_id=fileid)
         error_dict = {}
         data_dict = result['data']
-        # set alias for minio
-        cmd = f"./mc alias set minio-trackhubs http://minio-svc-trackhubs.default:80 " \
-              f"{MINIO_ACCESS_KEY} {MINIO_SECRET_KEY}"
-        os.system(cmd)
         for key in data_dict:
             error_dict[key] = []
             for row_index in range(len(data_dict[key])):
@@ -115,9 +110,9 @@ def validate(result, fileid):
                         if not data_dict[key][row_index][row_prop]:
                             error_flag = True
                             errors[row_prop] = f'Required field: {row_prop} cannot be empty'
-                        # check that "File Path" exists in MinIO server
+                        # check that "File Path" exists in Webin FTP
                         if row_prop == 'File Path' and row_prop not in errors:
-                            cmd = f"./mc find minio-trackhubs/{data_dict[key][row_index][row_prop]}"
+                            cmd = f"curl -r 0-1 ftp://webin.ebi.ac.uk/{data_dict[key][row_index][row_prop]} --user {webin_credentials['user']}:{webin_credentials['pwd']}"
                             c = os.system(cmd)
                             if c != 0:
                                 error_flag = True
@@ -207,7 +202,7 @@ def generate_hub_files(result, fileid):
 
 
 @app.task(base=LogErrorsTask)
-def upload_files(result, fileid):
+def upload_files(result, webin_credentials, fileid):
     error_flag = result['error_flag']
     res_dict = result['data']
     if not error_flag:
@@ -235,11 +230,11 @@ def upload_files(result, fileid):
                 cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
                       f"{filepath} s3://{data['path']}/{data['name']}"
                 os.system(cmd)
-        # copy files from minio and upload to trackhubs local storage
+        # download files from webin FTP Area and upload to trackhubs local storage
         for track in res_dict['Tracks Data']:
-            file = track['File Path'].split('/')[-1]
+            file = track['File Path']
             filepath = f'/data/{hub}/{file}'
-            cmd = f"./mc cp minio-trackhubs/{track['File Path']} {filepath}"
+            cmd = f"curl -s ftp://webin.ebi.ac.uk/{file} --user {webin_credentials['user']}:{webin_credentials['pwd']} -o {filepath}"
             os.system(cmd)
             data = {
                 'path': f"trackhubs/{hub}/{genome}/{track['Subdirectory']}",
