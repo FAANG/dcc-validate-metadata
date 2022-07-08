@@ -1,5 +1,5 @@
 daphne==3.0.0
-celery==4.4.7
+celery==5.2.2
 python-decouple==3.1
 Django==3.2.4
 channels==3.0.1
