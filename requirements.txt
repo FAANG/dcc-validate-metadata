@@ -2,7 +2,7 @@ daphne==3.0.0
 celery==5.2.2
 python-decouple==3.1
 Django==3.2.14
-channels==3.0.1
+channels==3.0.3
 django-cors-headers==3.5.0
 requests==2.24.0
 xlrd==1.2.0
