@@ -1,10 +1,11 @@
 from abc import ABC
-
+from elasticsearch import Elasticsearch, RequestsHttpConnection
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from collections import OrderedDict
 from metadata_validation_conversion.settings import \
     TRACKHUBS_USERNAME, TRACKHUBS_PASSWORD
+from django.conf import settings
 import requests
 import xlrd
 import json
@@ -335,21 +336,18 @@ def associate_specimen(res_dict, roomid):
             biosample_ids = biosample_ids + track['Related Specimen ID']
             biosample_ids = list(set(biosample_ids))
         errors = []
-        for id in biosample_ids:
-            update_url = f"http://daphne-svc:8000/data/specimen/{id}/update"
-            res = requests.put(update_url, data=json.dumps(update_payload))
-            if res.status == 200:
-                send_message(room_id=roomid,
-                             submission_message=f"Specimen {id} linked to Track Hub succesfully")
-            else:
-                error_flag = True
-                errors.append(f"Specimen {id} could not be linked")
-        if not error_flag:
+        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+        try:
+            for id in biosample_ids:
+                data = es.update(index='specimen', id=id, doc_type="_doc", body=update_payload)
             send_message(room_id=roomid,
                          submission_message="Track Hub registered successfully!\n" \
                                             "All relevant specimen records linked to Track Hub")
-        else:
+        except:
+            error_flag = True
             send_message(room_id=roomid, submission_results=errors,
                          errors=f"Track Hub registered.\n" \
                                 "Some specimen could not be linked, please contact faang-dcc@ebi.ac.uk")
+        finally:
+            return {'error_flag': error_flag, 'data': data}
     return {'error_flag': error_flag, 'data': data}
