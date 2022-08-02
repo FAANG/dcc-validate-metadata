@@ -50,6 +50,7 @@ def upload(validation_results, fileserver_path, filename, fileid):
         send_message(submission_message="Uploading file", room_id=fileid)
         filepath = f"/data/{fileid}.pdf"
         url = 'http://nginx-svc:80/files_upload'
+        download_url = f'https://api.faang.org/files/{fileserver_path}/{filename}'
         data = {
             'path': fileserver_path,
             'name': filename
@@ -62,7 +63,8 @@ def upload(validation_results, fileserver_path, filename, fileid):
                          room_id=fileid)
             return 'Error'
         else:
-            send_message(submission_message='Success', room_id=fileid)
+            send_message(submission_message=f'Success! ' \
+                 f'Please download your file at \n {download_url}', room_id=fileid)
             # backup to s3
             cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
                   f"{filepath} s3://{fileserver_path}/{filename}"
