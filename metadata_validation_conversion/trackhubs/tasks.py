@@ -132,7 +132,7 @@ def validate(result, webin_credentials, fileid):
                         elif row_prop == 'Related Specimen ID' and row_prop not in errors:
                             invalid_ids = []
                             for id in data_dict[key][row_index][row_prop]:
-                                url = f'http://daphne-svc:8000/data/specimen/{id}'
+                                url = f'http://backend-svc:8000/data/specimen/{id}'
                                 res = requests.get(url)
                                 if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
                                     invalid_ids.append(id)
