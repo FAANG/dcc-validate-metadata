@@ -11,6 +11,7 @@ urlpatterns = [
     path('ontology_improver/', include('ontology_improver.urls')),
     path('trackhub/', include('trackhubs.urls')),
     path('nextflow_upload/', include('nextflow_upload.urls')),
+    path('validation_submission_api/', include('validation_submission_api.urls')),
     path('admin_panel/', admin.site.urls),
     path('data/', include('api.urls')),
     path(r'api-token-auth/', obtain_jwt_token),
