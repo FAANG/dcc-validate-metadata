@@ -94,7 +94,7 @@ ALLOWED_SAMPLES_TYPES = {
     'teleostei_post-hatching': SPECIMEN_FROM_ORGANISM_URL,
     'pool_of_specimens': POOL_OF_SPECIMENS_URL,
     'cell_specimen': CELL_SPECIMEN_URL,
-    'single cell specimen': SINGLE_CELL_SPECIMEN_URL,
+    'single_cell_specimen': SINGLE_CELL_SPECIMEN_URL,
     'cell_culture': CELL_CULTURE_URL,
     'cell_line': CELL_LINE_URL
 }

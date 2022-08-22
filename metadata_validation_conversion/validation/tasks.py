@@ -70,14 +70,10 @@ def join_validation_results(results, room_id):
     :param results: list with results of previous two tasks
     :return: joined issues in dict
     """
-    print("Before")
-    print(json.dumps(results))
     joined_results_object = JoinedResults(results)
     results = joined_results_object.join_results()
     submission_status = get_submission_status(results)
     send_message(validation_status='Finished', room_id=room_id,
                  table_data=results, submission_status=submission_status)
-    print("After")
-    print(json.dumps(results))
     return results
 
