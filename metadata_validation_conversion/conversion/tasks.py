@@ -6,7 +6,6 @@ from metadata_validation_conversion.helpers import send_message
 from metadata_validation_conversion.constants import ALLOWED_TEMPLATES
 from celery import Task
 
-import json
 
 
 class LogErrorsTask(Task, ABC):
@@ -35,8 +34,6 @@ def read_excel_file(room_id, conversion_type, file):
     read_excel_file_object = ReadExcelFile(
         file_path=file, json_type=conversion_type)
     results = read_excel_file_object.start_conversion()
-    print("Conversion results:")
-    print(json.dumps(results))
     if 'Error' in results[0]:
         send_message(
             room_id=room_id, conversion_status='Error', errors=results[0])
