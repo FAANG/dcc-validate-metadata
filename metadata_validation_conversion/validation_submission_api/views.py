@@ -1,6 +1,6 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
-from .utils import convert_template
+from .utils import convert_template, validate
 import json
 
 @csrf_exempt
@@ -19,10 +19,11 @@ def validation(request, type):
             }
             response = HttpResponse(
                 json.dumps(context), content_type='application/json')
-            response.status_code = 404
+            response.status_code = 400
             return response
-        # TODO: Validation step
-        return JsonResponse(conversion_results)
+        # Validation step
+        validation_results = validate(conversion_results['result'], type)
+        return JsonResponse(validation_results)
     # Incorrect method
     context = {
         'status': 403, 'reason': 'Please use POST method for validation' 
