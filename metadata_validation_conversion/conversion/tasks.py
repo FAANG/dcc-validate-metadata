@@ -7,6 +7,7 @@ from metadata_validation_conversion.constants import ALLOWED_TEMPLATES
 from celery import Task
 
 
+
 class LogErrorsTask(Task, ABC):
     abstract = True
 

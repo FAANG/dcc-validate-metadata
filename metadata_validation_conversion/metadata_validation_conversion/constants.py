@@ -70,6 +70,7 @@ ALLOWED_SHEET_NAMES = {
     "teleostei post-hatching": SPECIMEN_FROM_ORGANISM_URL,
     'pool of specimens': POOL_OF_SPECIMENS_URL,
     'cell specimen': CELL_SPECIMEN_URL,
+    'single cell specimen': SINGLE_CELL_SPECIMEN_URL,
     'cell culture': CELL_CULTURE_URL,
     'cell line': CELL_LINE_URL,
     'wgs': WGS_URL,
@@ -93,6 +94,7 @@ ALLOWED_SAMPLES_TYPES = {
     'teleostei_post-hatching': SPECIMEN_FROM_ORGANISM_URL,
     'pool_of_specimens': POOL_OF_SPECIMENS_URL,
     'cell_specimen': CELL_SPECIMEN_URL,
+    'single_cell_specimen': SINGLE_CELL_SPECIMEN_URL,
     'cell_culture': CELL_CULTURE_URL,
     'cell_line': CELL_LINE_URL
 }
@@ -123,6 +125,7 @@ ALLOWED_RELATIONSHIPS = {
     'pool_of_specimens': ['specimen_from_organism', 'teleostei_embryo',
                           'teleostei_post-hatching', 'cell_specimen'],
     'cell_specimen': ['specimen_from_organism'],
+    'single_cell_specimen': ['specimen_from_organism'],
     'cell_culture': ['specimen_from_organism', 'cell_specimen'],
     'cell_line': ['organism', 'specimen_from_organism', 'pool_of_specimens',
                   'cell_specimen', 'cell_culture', 'cell_line']
