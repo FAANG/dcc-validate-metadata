@@ -329,7 +329,9 @@ def associate_specimen(res_dict, roomid):
     data = res_dict['data']
     if not error_flag:
         hub_dir = data['Hub Data'][0]['Name']
-        hub_url = f"https://api.faang.org/files/trackhubs/{hub_dir}/hub.txt"
+        gen_acc = data['Genome Data'][0]['Assembly Accession']
+        hub_url = f"https://www.ncbi.nlm.nih.gov/genome/gdv/browser/genome/?acc={gen_acc}" \
+            f"&hub=https://api.faang.org/files/trackhubs/{hub_dir}/hub.txt"
         update_payload = { "doc": { "trackhubUrl": hub_url } }
         biosample_ids = []
         for track in data['Tracks Data']:
