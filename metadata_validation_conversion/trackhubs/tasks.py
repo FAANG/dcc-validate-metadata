@@ -338,9 +338,7 @@ def associate_specimen(res_dict, roomid):
             biosample_ids = biosample_ids + track['Related Specimen ID']
             biosample_ids = list(set(biosample_ids))
         errors = []
-        # TODO: need to replace connection with ES server in cluster 
-        es = Elasticsearch(['http://wp-p1m-e2.ebi.ac.uk:9200'], connection_class=RequestsHttpConnection, verify_certs=False)
-        # es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
         try:
             for id in biosample_ids:
                 es_data = es.update(index='specimen', id=id, doc_type="_doc", body=update_payload)
