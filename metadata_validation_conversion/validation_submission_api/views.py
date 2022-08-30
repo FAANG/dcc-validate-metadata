@@ -22,7 +22,13 @@ def validation(request, type):
             response.status_code = 400
             return response
         # Validation step
-        validation_results = validate(conversion_results['result'], type)
+        annotate_template = request.GET.get('annotate_template', 'false')
+        validation_results = validate(conversion_results['result'], type, annotate_template)
+        if annotate_template == 'true':
+            response = HttpResponse(validation_results,
+                content_type=f'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="validation_results.xlsx"'
+            return response
         return JsonResponse(validation_results)
     # Incorrect method
     context = {
@@ -34,5 +40,27 @@ def validation(request, type):
     return response
 
 @csrf_exempt
-def submission(request):
-    return HttpResponse("Submission successful")
+def domain_actions(request, domain_action):
+    if request.method == 'POST':
+        return HttpResponse("Domain action successful")
+    # Incorrect method
+    context = {
+        'status': 403, 'reason': 'Please use POST method for domain actions' 
+    }
+    response = HttpResponse(
+        json.dumps(context), content_type='application/json')
+    response.status_code = 403
+    return response
+
+@csrf_exempt
+def submission(request, type):
+    if request.method == 'POST':
+        return HttpResponse("Submission successful")
+    # Incorrect method
+    context = {
+        'status': 403, 'reason': 'Please use POST method for submission' 
+    }
+    response = HttpResponse(
+        json.dumps(context), content_type='application/json')
+    response.status_code
+    return response

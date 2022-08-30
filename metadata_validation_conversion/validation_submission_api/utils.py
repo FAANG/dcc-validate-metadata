@@ -4,8 +4,10 @@ from validation.tasks import validate_against_schema, \
     collect_warnings_and_additional_checks, \
         join_validation_results, \
             collect_relationships_issues
+from submission.tasks import generate_annotated_template
 from celery import chord
 from metadata_validation_conversion.celery import app
+import os
 
 def convert_template(file, type):
     errors = []
@@ -24,7 +26,7 @@ def convert_template(file, type):
         else:
             return {'status': 'Success', 'result': results, 'bovreg_submission': False}
 
-def validate(conv_result, type):
+def validate(conv_result, type, annotate_template):
     json_to_test, structure = conv_result[0], conv_result[1]
     room_id = 'room_id'
     if type == 'samples':
@@ -42,4 +44,14 @@ def validate(conv_result, type):
     res = my_chord.apply_async()
     validation_result = app.AsyncResult(res.id)
     result = validation_result.get()
+    if annotate_template == 'true':
+        generate_template_task = generate_annotated_template.s(
+            result, room_id=room_id, data_type=type).set(queue='validation')
+        res = generate_template_task.apply_async()
+        annotation_result = app.AsyncResult(res.id)
+        result = annotation_result.get()
+        with open(f"/data/{room_id}.xlsx", 'rb') as f:
+            file_data = f.read()
+        os.remove(f"/data/{room_id}.xlsx")
+        return file_data
     return result
