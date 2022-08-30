@@ -329,7 +329,9 @@ def associate_specimen(res_dict, roomid):
     data = res_dict['data']
     if not error_flag:
         hub_dir = data['Hub Data'][0]['Name']
-        hub_url = f"https://api.faang.org/files/trackhubs/{hub_dir}/hub.txt"
+        gen_acc = data['Genome Data'][0]['Assembly Accession']
+        hub_url = f"https://www.ncbi.nlm.nih.gov/genome/gdv/browser/genome/?acc={gen_acc}" \
+            f"&hub=https://api.faang.org/files/trackhubs/{hub_dir}/hub.txt"
         update_payload = { "doc": { "trackhubUrl": hub_url } }
         biosample_ids = []
         for track in data['Tracks Data']:
@@ -339,7 +341,7 @@ def associate_specimen(res_dict, roomid):
         es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
         try:
             for id in biosample_ids:
-                data = es.update(index='specimen', id=id, doc_type="_doc", body=update_payload)
+                es_data = es.update(index='specimen', id=id, doc_type="_doc", body=update_payload)
             send_message(room_id=roomid,
                          submission_message="Track Hub registered successfully!\n" \
                                             "All relevant specimen records linked to Track Hub")

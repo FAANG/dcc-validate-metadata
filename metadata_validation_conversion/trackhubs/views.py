@@ -64,7 +64,7 @@ def validation(request):
 def submission(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        roomid = data['Hub Data'][0]['Name']
+        roomid = data['fileid'] + '_submission'
         # register trackhub with the trackhub registry
         register_task = register_trackhub.s(data, roomid=roomid).set(queue='submission')
         # add track hub url to relevant specimen records
