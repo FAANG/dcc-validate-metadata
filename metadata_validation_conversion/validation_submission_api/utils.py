@@ -4,7 +4,8 @@ from validation.tasks import validate_against_schema, \
     collect_warnings_and_additional_checks, \
         join_validation_results, \
             collect_relationships_issues
-from submission.tasks import generate_annotated_template
+from submission.tasks import generate_annotated_template, \
+    get_domains, submit_new_domain
 from celery import chord
 from metadata_validation_conversion.celery import app
 import os
@@ -30,7 +31,6 @@ def validate(conv_result, type, annotate_template):
     json_to_test, structure = conv_result[0], conv_result[1]
     room_id = 'room_id'
     if type == 'samples':
-        # Create three tasks that should be run in parallel and assign callback
         task1 = validate_against_schema.s(json_to_test,'samples', structure, room_id=room_id).set(queue='validation')
         task2 = collect_warnings_and_additional_checks.s(json_to_test, 'samples', structure, room_id=room_id).set(queue='validation')
         task3 = collect_relationships_issues.s(json_to_test, structure, room_id=room_id).set(queue='validation')
@@ -54,4 +54,17 @@ def validate(conv_result, type, annotate_template):
             file_data = f.read()
         os.remove(f"/data/{room_id}.xlsx")
         return file_data
+    return result
+
+def domain_tasks(data, domain_action):
+    room_id = 'room_id'
+    if domain_action == 'choose_domain':
+        domain_task = get_domains.s(data, room_id=room_id).set(
+            queue='submission')
+    else:
+        domain_task = submit_new_domain.s(data, room_id=room_id).set(
+            queue='submission')
+    res = domain_task.apply_async()
+    domain_task_result = app.AsyncResult(res.id)
+    result = domain_task_result.get()
     return result

@@ -1,6 +1,6 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
-from .utils import convert_template, validate
+from .utils import convert_template, validate, domain_tasks
 import json
 
 @csrf_exempt
@@ -42,7 +42,9 @@ def validation(request, type):
 @csrf_exempt
 def domain_actions(request, domain_action):
     if request.method == 'POST':
-        return HttpResponse("Domain action successful")
+        data = json.loads(request.body.decode('utf-8'))
+        result = domain_tasks(data, domain_action)
+        return HttpResponse(result)
     # Incorrect method
     context = {
         'status': 403, 'reason': 'Please use POST method for domain actions' 
