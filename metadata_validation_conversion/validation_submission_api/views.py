@@ -44,7 +44,12 @@ def domain_actions(request, domain_action):
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
         result = domain_tasks(data, domain_action)
-        return HttpResponse(result)
+        if 'Error' in result:
+            response = HttpResponse(
+                json.dumps(result), content_type='application/json')
+            response.status_code = 400
+            return response
+        return JsonResponse(result)
     # Incorrect method
     context = {
         'status': 403, 'reason': 'Please use POST method for domain actions' 

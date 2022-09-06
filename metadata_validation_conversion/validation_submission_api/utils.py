@@ -1,13 +1,14 @@
 from metadata_validation_conversion.constants import ALLOWED_TEMPLATES
+from metadata_validation_conversion.celery import app
 from conversion.ReadExcelFile import ReadExcelFile
 from validation.tasks import validate_against_schema, \
     collect_warnings_and_additional_checks, \
         join_validation_results, \
             collect_relationships_issues
-from submission.tasks import generate_annotated_template, \
-    get_domains, submit_new_domain
+from submission.tasks import generate_annotated_template
+from submission.helpers import get_credentials
+from submission.BiosamplesSubmission import BioSamplesSubmission
 from celery import chord
-from metadata_validation_conversion.celery import app
 import os
 
 def convert_template(file, type):
@@ -57,14 +58,17 @@ def validate(conv_result, type, annotate_template):
     return result
 
 def domain_tasks(data, domain_action):
-    room_id = 'room_id'
+    username, password = get_credentials(data)
+    biosamples_submission = BioSamplesSubmission(username, password, {},
+                                                 data['mode'])
     if domain_action == 'choose_domain':
-        domain_task = get_domains.s(data, room_id=room_id).set(
-            queue='submission')
+        results = biosamples_submission.choose_domain()
+        if 'Error' not in results:
+            return {"domains": results}
     else:
-        domain_task = submit_new_domain.s(data, room_id=room_id).set(
-            queue='submission')
-    res = domain_task.apply_async()
-    domain_task_result = app.AsyncResult(res.id)
-    result = domain_task_result.get()
-    return result
+        results = biosamples_submission.create_domain(
+            data['domain_name'], data['domain_description'])
+        if 'Error' not in results:
+            results = biosamples_submission.choose_domain()
+            return {"domains": results}
+    return results
