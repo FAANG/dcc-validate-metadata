@@ -1,6 +1,6 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
-from .utils import convert_template, validate, domain_tasks
+from .utils import convert_template, validate, domain_tasks, submit_data
 import json
 
 @csrf_exempt
@@ -21,6 +21,9 @@ def validation(request, type):
                 json.dumps(context), content_type='application/json')
             response.status_code = 400
             return response
+        # Save conversion results for submission step
+        with open(f'/data/{fileid}.json', 'w') as f:
+            json.dump(conversion_results['result'][0], f)
         # Validation step
         annotate_template = request.GET.get('annotate_template', 'false')
         validation_results = validate(conversion_results['result'], type, annotate_template)
@@ -60,14 +63,37 @@ def domain_actions(request, domain_action):
     return response
 
 @csrf_exempt
-def submission(request, type):
+def submission(request, type, fileid):
     if request.method == 'POST':
-        return HttpResponse("Submission successful")
+        # Get submision data from request
+        data = json.loads(request.body.decode('utf-8'))
+        # Read conversion results from saved file
+        try:
+            with open(f'/data/{fileid}.json') as f:
+                json_to_convert = json.load(f)
+        except:
+            response = HttpResponse(
+                json.dumps({'Error': f'File {fileid} not found'}), content_type='application/json')
+            response.status_code = 404
+            return response
+        conversion_result = json_to_convert, ''
+        try:
+            file, filename, content_type = submit_data(conversion_result, data, type)
+        except:
+            # Handle submissions with validation errors
+            error_message = {'Error': 'Please make sure that the template has passed all validations'}
+            response = HttpResponse(
+                json.dumps(error_message), content_type='application/json')
+            response.status_code = 400
+            return response
+        response = HttpResponse(file, content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
     # Incorrect method
     context = {
         'status': 403, 'reason': 'Please use POST method for submission' 
     }
     response = HttpResponse(
         json.dumps(context), content_type='application/json')
-    response.status_code
+    response.status_code = 403
     return response

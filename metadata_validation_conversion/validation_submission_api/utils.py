@@ -5,7 +5,9 @@ from validation.tasks import validate_against_schema, \
     collect_warnings_and_additional_checks, \
         join_validation_results, \
             collect_relationships_issues
-from submission.tasks import generate_annotated_template
+from submission.tasks import generate_annotated_template, \
+            prepare_samples_data, prepare_analyses_data, prepare_experiments_data, \
+                submit_to_biosamples, submit_data_to_ena
 from submission.helpers import get_credentials
 from submission.BiosamplesSubmission import BioSamplesSubmission
 from celery import chord
@@ -30,7 +32,7 @@ def convert_template(file, type):
 
 def validate(conv_result, type, annotate_template):
     json_to_test, structure = conv_result[0], conv_result[1]
-    room_id = 'room_id'
+    room_id = 'room'
     if type == 'samples':
         task1 = validate_against_schema.s(json_to_test,'samples', structure, room_id=room_id).set(queue='validation')
         task2 = collect_warnings_and_additional_checks.s(json_to_test, 'samples', structure, room_id=room_id).set(queue='validation')
@@ -72,3 +74,37 @@ def domain_tasks(data, domain_action):
             results = biosamples_submission.choose_domain()
             return {"domains": results}
     return results
+
+def submit_data(conversion_result, data, type):
+    room_id = 'room'
+    if type == 'samples':
+        prepare = prepare_samples_data
+        submit = submit_to_biosamples
+        submit_task = submit.s(data, room_id=room_id).set(
+            queue='submission')
+    elif type == 'experiments':
+        prepare = prepare_experiments_data
+        submit = submit_data_to_ena
+        submit_task = submit.s(data, room_id=room_id, submission_type='experiments').set(
+            queue='submission')
+    elif type == 'analyses':
+        prepare = prepare_analyses_data
+        submit = submit_data_to_ena
+        submit_task = submit.s(data, room_id=room_id, submission_type='analyses').set(
+            queue='submission')
+    else:
+        return "Unknown submission type!"
+    prepare_task = prepare.s(
+        conversion_result, room_id=room_id, private=data['private_submission']
+    ).set(queue='submission')
+    my_chord = chord((prepare_task,), submit_task)
+    res = my_chord.apply_async()
+    submission_results = app.AsyncResult(res.id)
+    file_to_send = submission_results.get()
+    if type == 'samples':
+        content_type = 'text/plain'
+        filename = 'submission_results.txt'
+    elif type == 'experiments' or type == 'analyses':
+        content_type = 'text/xml'
+        filename = 'submission_results.xml'
+    return file_to_send, filename, content_type
