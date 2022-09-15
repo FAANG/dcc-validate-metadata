@@ -63,7 +63,7 @@ def domain_tasks(data, domain_action):
     username, password = get_credentials(data)
     biosamples_submission = BioSamplesSubmission(username, password, {},
                                                  data['mode'])
-    if domain_action == 'choose_domain':
+    if domain_action == 'list_domains':
         results = biosamples_submission.choose_domain()
         if 'Error' not in results:
             return {"domains": results}
