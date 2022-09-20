@@ -252,6 +252,7 @@ def hub_check(result, fileid):
     }
     if not error_flag:
         hub = res_dict['Hub Data'][0]['Name']
+        os.system(f"mkdir -p /data/{hub}")
         cmd = f"./trackhubs/hubCheck -noTracks " \
               f"http://nginx-svc:80/files/trackhubs/{hub}/hub.txt " \
               f"> /data/{hub}/hubCheck_results.txt"
