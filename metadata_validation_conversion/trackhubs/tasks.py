@@ -163,10 +163,12 @@ def generate_hub_files(result, fileid):
             hub = res_dict['Hub Data'][0]['Name']
             genome = res_dict['Genome Data'][0]['Assembly Name']
             file_server = 'https://api.faang.org/files/trackhubs'
-            cmd = f'mkdir /data/{hub}'
+            # create hub directory structure
+            cmd = f"mkdir -p /usr/share/nginx/html/files/trackhubs/{hub}/{genome}"
             os.system(cmd)
+            file_server_path = "/usr/share/nginx/html/files/trackhubs"
             # generate hub.txt
-            with open(f'/data/{hub}/hub.txt', 'w') as f:
+            with open(f'{file_server_path}/{hub}/hub.txt', 'w') as f:
                 f.write(f"hub {res_dict['Hub Data'][0]['Name']}\n")
                 f.write(f"shortLabel {res_dict['Hub Data'][0]['Short Label']}\n")
                 f.write(f"longLabel {res_dict['Hub Data'][0]['Long Label']}\n")
@@ -175,7 +177,7 @@ def generate_hub_files(result, fileid):
                 if res_dict['Hub Data'][0]['Description File Path']:
                     f.write(f"descriptionUrl {res_dict['Hub Data'][0]['Description File Path']}\n")
             # generate genomes.txt
-            with open(f'/data/{hub}/genomes.txt', 'w') as f:
+            with open(f'{file_server_path}/{hub}/genomes.txt', 'w') as f:
                 f.write(f"genome {res_dict['Genome Data'][0]['Assembly Name']}\n")
                 f.write(f"trackDb {res_dict['Genome Data'][0]['Assembly Name']}/trackDb.txt\n")
                 if res_dict['Genome Data'][0]['Description']:
@@ -183,7 +185,7 @@ def generate_hub_files(result, fileid):
                 if res_dict['Genome Data'][0]['Organism']:
                     f.write(f"organism {res_dict['Genome Data'][0]['Organism']}\n")
             # generate trackDb.txt
-            with open(f'/data/{hub}/trackDb.txt', 'w') as f:
+            with open(f'{file_server_path}/{hub}/{genome}/trackDb.txt', 'w') as f:
                 for row in res_dict['Tracks Data']:
                     file_name = row['File Path'].split('/')[-1]
                     track_url = f"{file_server}/{hub}/{genome}/{row['Subdirectory']}/{file_name}"
@@ -192,6 +194,14 @@ def generate_hub_files(result, fileid):
                     f.write(f"shortLabel {row['Short Label']}\n")
                     f.write(f"longLabel {row['Long Label']}\n")
                     f.write(f"type {row['File Type']}\n\n")
+
+            # backup files to s3
+            files = [f"{genome}/trackDb.txt", "hub.txt", "genomes.txt"]
+            for file in files:
+                cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
+                        f"{file_server_path}/{hub}/{file} s3://trackhubs/{hub}/{file}"
+                os.system(cmd)
+
             send_message(room_id=fileid,
                          submission_message="Track Hub files generated")
         except:
@@ -210,45 +220,19 @@ def upload_files(result, webin_credentials, fileid):
         send_message(room_id=fileid, submission_message="Setting up Track Hub")
         hub = res_dict['Hub Data'][0]['Name']
         genome = res_dict['Genome Data'][0]['Assembly Name']
-        url = 'http://nginx-svc:80/files_upload'
-        files = ['hub.txt', 'genomes.txt', 'trackDb.txt']
-        # upload generated hub files to trackhubs local storage
-        for file in files:
-            filepath = f"/data/{hub}/{file}"
-            if file == 'trackDb.txt':
-                server_path = f"trackhubs/{hub}/{genome}"
-            else:
-                server_path = f"trackhubs/{hub}"
-            data = {
-                'path': server_path,
-                'name': file
-            }
-            res = requests.post(url, files={'file': open(filepath, 'rb')}, data=data)
-            if res.status_code != 200:
-                error_flag = True
-            else:
-                # backup to s3
-                cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                      f"{filepath} s3://{data['path']}/{data['name']}"
-                os.system(cmd)
-        # download files from webin FTP Area and upload to trackhubs local storage
+        # upload track files to trackhubs local storage
         for track in res_dict['Tracks Data']:
             file = track['File Path']
-            filepath = f'/data/{hub}/{file}'
+            # create sub-directories
+            os.system(f"mkdir -p /usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{track['Subdirectory']}")
+            # download files from webin FTP area of user
+            filepath = f"/usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{track['Subdirectory']}/{file}"
             cmd = f"curl -s ftp://webin.ebi.ac.uk/{file} --user {webin_credentials['user']}:{webin_credentials['pwd']} -o {filepath}"
             os.system(cmd)
-            data = {
-                'path': f"trackhubs/{hub}/{genome}/{track['Subdirectory']}",
-                'name': file
-            }
-            res = requests.post(url, files={'file': open(filepath, 'rb')}, data=data)
-            if res.status_code != 200:
-                error_flag = True
-            else:
-                # backup to s3
-                cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                      f"{filepath} s3://{data['path']}/{data['name']}"
-                os.system(cmd)
+            # backup files to s3
+            cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
+                    f"{filepath} s3://trackhubs/{hub}/{genome}/{track['Subdirectory']}/{file}"
+            os.system(cmd)
         if not error_flag:
             send_message(room_id=fileid,
                          submission_message="Track Hub set up, starting hubCheck")
