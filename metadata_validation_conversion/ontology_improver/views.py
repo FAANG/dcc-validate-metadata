@@ -102,7 +102,7 @@ def registration(request):
         'email': request['email'],
         'organisation': request['organisation']
     }
-    res = requests.post("https://explore.api.aai.ebi.ac.uk/auth", \
+    res = requests.post("https://api.aai.ebi.ac.uk/auth", \
         data=json.dumps(post_data), headers=headers)
     if res.status_code == 200:
         user_id = res.text
@@ -123,7 +123,7 @@ def authentication(request):
         'Accept': 'text/plain',
         'Authorization': json.loads(request.body)['auth']
     }
-    token = requests.get("https://explore.api.aai.ebi.ac.uk/auth", headers=headers).text
+    token = requests.get("https://api.aai.ebi.ac.uk/auth", headers=headers).text
     return JsonResponse({'token': token})
 
 @csrf_exempt
