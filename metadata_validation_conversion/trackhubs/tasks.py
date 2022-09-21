@@ -154,12 +154,26 @@ def validate(result, webin_credentials, fileid):
 
 
 @app.task(base=LogErrorsTask)
-def generate_hub_files(result, fileid):
+def generate_hub_files(result, fileid, modify):
     error_flag = result['error_flag']
     res_dict = result['data']
     if not error_flag:
-        try:
+        # handle updates
+        if modify == 'true':
+            hub_dir = f"/usr/share/nginx/html/files/trackhubs/{hub}"
+            # if hub dir already exists, move it temporarily
+            if os.path.dir(hub_dir):
+                # if an old backup already exists, replace it
+                old_hub_dir = f"/usr/share/nginx/html/files/trackhubs/{hub}_old"
+                if os.path.dir(old_hub_dir):
+                    os.system(f"rm -rf old_hub_dir")
+                os.system(f"mv {hub_dir} {hub_dir}_old")
+                send_message(room_id=fileid, submission_message="Updating Hub files")
+            else:
+                send_message(room_id=fileid, submission_message="Hub not found, creating new track hub")
+        else:
             send_message(room_id=fileid, submission_message="Generating Hub files")
+        try:
             hub = res_dict['Hub Data'][0]['Name']
             genome = res_dict['Genome Data'][0]['Assembly Name']
             file_server = 'https://api.faang.org/files/trackhubs'

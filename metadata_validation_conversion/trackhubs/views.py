@@ -41,6 +41,7 @@ def validation(request):
             'user': request.POST['user'],
             'pwd': base64.b64decode(request.POST['pwd']).decode("utf-8")
         }
+        modify = request.POST['modify'] if 'modify' in request.POST else 'false'
         with open(f'/data/{fileid}.xlsx', 'wb+') as destination:
             for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
@@ -49,7 +50,7 @@ def validation(request):
         # Validation level #1: validate json, generate error/ warnings list
         validate_task = validate.s(webin_credentials, fileid=fileid).set(queue='validation')
         # Generate hub files
-        generate_task = generate_hub_files.s(fileid=fileid).set(queue='validation')
+        generate_task = generate_hub_files.s(fileid=fileid, modify=modify).set(queue='validation')
         # Upload track data files and hub files to file server
         upload_task = upload_files.s(webin_credentials, fileid=fileid).set(queue='validation')
         # Validation level #2: hubcheck, generate error/ warnings list
