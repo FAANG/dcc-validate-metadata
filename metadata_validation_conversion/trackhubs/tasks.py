@@ -163,7 +163,7 @@ def generate_hub_files(result, fileid, modify):
         # handle updates
         if modify == 'true':
             hub_dir = f"/usr/share/nginx/html/files/trackhubs/{hub}"
-            # if hub dir already exists, move it temporarily
+            # move existing version of trackhub
             if os.path.isdir(hub_dir):
                 # if an old backup already exists, replace it
                 old_hub_dir = f"/usr/share/nginx/html/files/trackhubs/{hub}_old"
@@ -171,58 +171,73 @@ def generate_hub_files(result, fileid, modify):
                     os.system(f"rm -rf old_hub_dir")
                 os.system(f"mv {hub_dir} {hub_dir}_old")
                 send_message(room_id=fileid, submission_message="Updating Hub files")
+            # if hub dir does not exist in update workflow, display error
             else:
-                send_message(room_id=fileid, submission_message="Hub not found, creating new track hub")
+                error_flag = True
+                send_message(room_id=fileid, submission_message=f"Error: Update failed, Track hub {hub} not found. "\
+                    f"Please select 'Submit new trackhub' and re-submit to create a new track hub")
         else:
-            send_message(room_id=fileid, submission_message="Generating Hub files")
-        try:
-            file_server = 'https://api.faang.org/files/trackhubs'
-            # create hub directory structure
-            cmd = f"mkdir -p /usr/share/nginx/html/files/trackhubs/{hub}/{genome}"
-            os.system(cmd)
-            file_server_path = "/usr/share/nginx/html/files/trackhubs"
-            # generate hub.txt
-            with open(f'{file_server_path}/{hub}/hub.txt', 'w') as f:
-                f.write(f"hub {res_dict['Hub Data'][0]['Name']}\n")
-                f.write(f"shortLabel {res_dict['Hub Data'][0]['Short Label']}\n")
-                f.write(f"longLabel {res_dict['Hub Data'][0]['Long Label']}\n")
-                f.write("genomesFile genomes.txt\n")
-                f.write(f"email {res_dict['Hub Data'][0]['Email']}\n")
-                if res_dict['Hub Data'][0]['Description File Path']:
-                    f.write(f"descriptionUrl {res_dict['Hub Data'][0]['Description File Path']}\n")
-            # generate genomes.txt
-            with open(f'{file_server_path}/{hub}/genomes.txt', 'w') as f:
-                f.write(f"genome {res_dict['Genome Data'][0]['Assembly Name']}\n")
-                f.write(f"trackDb {res_dict['Genome Data'][0]['Assembly Name']}/trackDb.txt\n")
-                if res_dict['Genome Data'][0]['Description']:
-                    f.write(f"description {res_dict['Genome Data'][0]['Description']}\n")
-                if res_dict['Genome Data'][0]['Organism']:
-                    f.write(f"organism {res_dict['Genome Data'][0]['Organism']}\n")
-            # generate trackDb.txt
-            with open(f'{file_server_path}/{hub}/{genome}/trackDb.txt', 'w') as f:
-                for row in res_dict['Tracks Data']:
-                    file_name = row['File Path'].split('/')[-1]
-                    track_url = f"{file_server}/{hub}/{genome}/{row['Subdirectory']}/{file_name}"
-                    f.write(f"track {row['Track Name']}\n")
-                    f.write(f"bigDataUrl {track_url}\n")
-                    f.write(f"shortLabel {row['Short Label']}\n")
-                    f.write(f"longLabel {row['Long Label']}\n")
-                    f.write(f"type {row['File Type']}\n\n")
-
-            # backup files to s3
-            files = [f"{genome}/trackDb.txt", "hub.txt", "genomes.txt"]
-            for file in files:
-                cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                        f"{file_server_path}/{hub}/{file} s3://trackhubs/{hub}/{file}"
-                os.system(cmd)
-
-            send_message(room_id=fileid,
-                         submission_message="Track Hub files generated")
-        except:
-            send_message(room_id=fileid,
-                         submission_message="Error generating Track Hub files, please contact faang-dcc@ebi.ac.uk")
-        finally:
+            hub_dir = f"/usr/share/nginx/html/files/trackhubs/{hub}"
+            # if hub dir already exists in new submission workflow, display error
+            if os.path.isdir(hub_dir):
+                error_flag = True
+                send_message(room_id=fileid, submission_message=f"Error: Track hub {hub} already exists, "\
+                    f"please choose a different name for your track hub. If you are trying " \
+                        f"to update {hub}, please select option 'Update existing trackhub' and re-submit")
+            else:
+                send_message(room_id=fileid, submission_message="Generating Hub files")
+        if error_flag:
             return {'error_flag': error_flag, 'data': res_dict}
+        else:
+            try:
+                file_server = 'https://api.faang.org/files/trackhubs'
+                # create hub directory structure
+                cmd = f"mkdir -p /usr/share/nginx/html/files/trackhubs/{hub}/{genome}"
+                os.system(cmd)
+                file_server_path = "/usr/share/nginx/html/files/trackhubs"
+                # generate hub.txt
+                with open(f'{file_server_path}/{hub}/hub.txt', 'w') as f:
+                    f.write(f"hub {res_dict['Hub Data'][0]['Name']}\n")
+                    f.write(f"shortLabel {res_dict['Hub Data'][0]['Short Label']}\n")
+                    f.write(f"longLabel {res_dict['Hub Data'][0]['Long Label']}\n")
+                    f.write("genomesFile genomes.txt\n")
+                    f.write(f"email {res_dict['Hub Data'][0]['Email']}\n")
+                    if res_dict['Hub Data'][0]['Description File Path']:
+                        f.write(f"descriptionUrl {res_dict['Hub Data'][0]['Description File Path']}\n")
+                # generate genomes.txt
+                with open(f'{file_server_path}/{hub}/genomes.txt', 'w') as f:
+                    f.write(f"genome {res_dict['Genome Data'][0]['Assembly Name']}\n")
+                    f.write(f"trackDb {res_dict['Genome Data'][0]['Assembly Name']}/trackDb.txt\n")
+                    if res_dict['Genome Data'][0]['Description']:
+                        f.write(f"description {res_dict['Genome Data'][0]['Description']}\n")
+                    if res_dict['Genome Data'][0]['Organism']:
+                        f.write(f"organism {res_dict['Genome Data'][0]['Organism']}\n")
+                # generate trackDb.txt
+                with open(f'{file_server_path}/{hub}/{genome}/trackDb.txt', 'w') as f:
+                    for row in res_dict['Tracks Data']:
+                        file_name = row['File Path'].split('/')[-1]
+                        track_url = f"{file_server}/{hub}/{genome}/{row['Subdirectory']}/{file_name}"
+                        f.write(f"track {row['Track Name']}\n")
+                        f.write(f"bigDataUrl {track_url}\n")
+                        f.write(f"shortLabel {row['Short Label']}\n")
+                        f.write(f"longLabel {row['Long Label']}\n")
+                        f.write(f"type {row['File Type']}\n\n")
+
+                # backup files to s3
+                files = [f"{genome}/trackDb.txt", "hub.txt", "genomes.txt"]
+                for file in files:
+                    cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
+                            f"{file_server_path}/{hub}/{file} s3://trackhubs/{hub}/{file}"
+                    os.system(cmd)
+
+                send_message(room_id=fileid,
+                            submission_message="Track Hub files generated")
+            except:
+                error_flag = True
+                send_message(room_id=fileid,
+                            submission_message="Error generating Track Hub files, please contact faang-dcc@ebi.ac.uk")
+            finally:
+                return {'error_flag': error_flag, 'data': res_dict}
     return {'error_flag': error_flag, 'data': res_dict}
 
 
@@ -234,25 +249,28 @@ def upload_files(result, webin_credentials, fileid):
         send_message(room_id=fileid, submission_message="Setting up Track Hub")
         hub = res_dict['Hub Data'][0]['Name']
         genome = res_dict['Genome Data'][0]['Assembly Name']
-        # upload track files to trackhubs local storage
-        for track in res_dict['Tracks Data']:
-            file = track['File Path']
-            # create sub-directories
-            os.system(f"mkdir -p /usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{track['Subdirectory']}")
-            # download files from webin FTP area of user
-            filepath = f"/usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{track['Subdirectory']}/{file}"
-            cmd = f"curl -s ftp://webin.ebi.ac.uk/{file} --user {webin_credentials['user']}:{webin_credentials['pwd']} -o {filepath}"
-            os.system(cmd)
-            # backup files to s3
-            cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                    f"{filepath} s3://trackhubs/{hub}/{genome}/{track['Subdirectory']}/{file}"
-            os.system(cmd)
-        if not error_flag:
+        try:
+            # upload track files to trackhubs local storage
+            for track in res_dict['Tracks Data']:
+                file = track['File Path']
+                # create sub-directories
+                os.system(f"mkdir -p /usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{track['Subdirectory']}")
+                # download files from webin FTP area of user
+                filepath = f"/usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{track['Subdirectory']}/{file}"
+                cmd = f"curl -s ftp://webin.ebi.ac.uk/{file} --user {webin_credentials['user']}:{webin_credentials['pwd']} -o {filepath}"
+                os.system(cmd)
+                # backup files to s3
+                cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
+                        f"{filepath} s3://trackhubs/{hub}/{genome}/{track['Subdirectory']}/{file}"
+                os.system(cmd)
             send_message(room_id=fileid,
                          submission_message="Track Hub set up, starting hubCheck")
-        else:
+        except:
+            error_flag = True
             send_message(room_id=fileid,
                          submission_message="Error setting up track hub, please contact faang-dcc@ebi.ac.uk")
+        finally:
+            return {'error_flag': error_flag, 'data': res_dict}
     return {'error_flag': error_flag, 'data': res_dict}
 
 
