@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'ontology_improver',
     'trackhubs',
     'nextflow_upload',
+    'validation_submission_api',
     'rest_framework',
     'corsheaders',
     'drf_yasg'
