@@ -16,7 +16,7 @@ class BovRegView(APIView):
 
     def get(self, request, data_type):
         # Parse request parameters
-        size = request.GET.get('size', 10)
+        size = request.GET.get('size', 10000)
         query = request.GET.get('q', '')
         from_ = request.GET.get('from_', 0)
         search = request.GET.get('search', '')
