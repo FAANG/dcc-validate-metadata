@@ -236,3 +236,64 @@ def summary(request):
         return HttpResponse("This method is not allowed!\n")
     records = list(Summary.objects.all().values())
     return JsonResponse(records, safe=False)
+
+def update_comma_sep_fields(old_val, new_val):
+    if old_val:
+        val = old_val.split(', ') + new_val.split(', ')
+        val = ', '.join(list(set(val)))
+        return val
+    return new_val
+
+@csrf_exempt
+def ontology_updates(request):
+    data = json.loads(request.body)
+    ontologies = data['ontologies']
+    # get user info
+    user = data['user']
+    user_obj = User.objects.get(username=user)
+    for record in ontologies:
+        try:
+            # check if ontology record with same ontology_term already exists
+            # if yes update record, else create new record
+            obj = Ontologies.objects.get(ontology_term=record['ontology_term'])
+            obj.ontology_type = update_comma_sep_fields(obj.ontology_type, record['ontology_type'])
+            obj.ontology_id = update_comma_sep_fields(obj.ontology_id, record['ontology_id'])
+            obj.project = update_comma_sep_fields(obj.project, record['project'])
+            obj.species = update_comma_sep_fields(obj.species, record['species'])
+            obj.save()
+        except (Ontologies.DoesNotExist, KeyError):
+            obj = Ontologies.objects.create(
+                ontology_term=record['ontology_term'], \
+                ontology_type=record['ontology_type'], \
+                ontology_id=record['ontology_id'], \
+                ontology_support=record['ontology_support'], \
+                ontology_status=record['ontology_status'], \
+                colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
+                created_by_user = user_obj, \
+                created_date = datetime.now(tz=timezone.utc),
+                verified_count = 1 if record['ontology_status'] == 'Verified' else 0)
+            if 'project' in record:
+                obj.project = record['project']
+            if 'species' in record:
+                obj.species = record['species']
+            obj.save()
+    return HttpResponse(status=201)
+
+@csrf_exempt
+def summary_updates(request):
+    data = json.loads(request.body)
+    for row in data:
+        try:
+            obj = Summary.objects.get(project=row['project'])
+            obj.species = row['species']
+            obj.ontology_type_count = row['ontology_type_count']
+            obj.status_count = row['status_count']
+            obj.save()
+        except (Summary.DoesNotExist, KeyError):
+            obj = Summary.objects.create(
+                project=row['project'], \
+                species=row['species'], \
+                ontology_type_count=row['ontology_type_count'], \
+                status_count=row['status_count'])
+    return HttpResponse(status=201)
+
