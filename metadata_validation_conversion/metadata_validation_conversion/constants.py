@@ -33,6 +33,8 @@ WGS_URL = f"{BASE_URL}/type/experiments/" \
           f"faang_experiments_wgs.metadata_rules.json"
 RNA_SEQ_URL = f"{BASE_URL}/type/experiments/" \
               f"faang_experiments_rna-seq.metadata_rules.json"
+SCRNA_SEQ_URL = f"{BASE_URL}/type/experiments/" \
+              f"faang_experiments_scrna-seq.metadata_rules.json"
 HI_C_URL = f"{BASE_URL}/type/experiments/" \
            f"faang_experiments_hi-c.metadata_rules.json"
 DNASE_SEQ_URL = f"{BASE_URL}/type/experiments/" \
@@ -75,6 +77,7 @@ ALLOWED_SHEET_NAMES = {
     'cell line': CELL_LINE_URL,
     'wgs': WGS_URL,
     'rna-seq': RNA_SEQ_URL,
+    'scrna-seq': SCRNA_SEQ_URL,
     'hi-c': HI_C_URL,
     'dnase-seq': DNASE_SEQ_URL,
     'chip-seq input dna': CHIP_SEQ_URL,
@@ -102,6 +105,7 @@ ALLOWED_SAMPLES_TYPES = {
 ALLOWED_EXPERIMENTS_TYPES = {
     'wgs': WGS_URL,
     'rna-seq': RNA_SEQ_URL,
+    'scrna-seq': SCRNA_SEQ_URL,
     'hi-c': HI_C_URL,
     'dnase-seq': DNASE_SEQ_URL,
     'chip-seq_input_dna': CHIP_SEQ_URL,
