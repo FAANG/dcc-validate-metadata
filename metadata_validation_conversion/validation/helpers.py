@@ -18,14 +18,14 @@ def validate(data, schema):
     response = requests.post(ELIXIR_VALIDATOR_URL, json=json_to_send).json()
     validation_errors = list()
     paths = list()
-    # if 'validationErrors' in response and len(
-    #         response['validationErrors']) > 0:
-    #     for error in response['validationErrors']:
-    #         validation_errors.append(error['userFriendlyMessage'])
-    #         paths.append(error['absoluteDataPath'])
-    for item in response:
-        validation_errors.extend(item['errors'])
-        paths.extend(item['dataPath'])
+    if 'validationErrors' in response and len(
+            response['validationErrors']) > 0:
+        for error in response['validationErrors']:
+            validation_errors.append(error['userFriendlyMessage'])
+            paths.append(error['absoluteDataPath'])
+    # for item in response:
+    #     validation_errors.extend(item['errors'])
+    #     paths.extend(item['dataPath'])
     return validation_errors, paths
 
 
