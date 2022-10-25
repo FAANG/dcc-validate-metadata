@@ -89,11 +89,6 @@ class ElixirValidatorResults:
         :param paths: list of paths of errors
         :param additional_field: could be core field or modular field
         """
-        print("Inside attach_errors")
-        print(record_to_return)
-        print(errors)
-        print(paths)
-        print(additional_field)
         for i, error in enumerate(errors):
             if '.' in paths[i]:
                 key = paths[i].split(".")[1]
@@ -101,14 +96,6 @@ class ElixirValidatorResults:
                                              additional_field=additional_field)
                 continue
             keys = paths[i].split('/')
-            # Check that returned path was for fields that allow to have
-            # multiple values
-            # if '[' in keys[0]:
-            #     key = keys[0].split('[')[1].split(']')[0]
-            #     key = key.split("'")[1]
-            #     self.update_record_to_return(record_to_return, key, error,
-            #                                  additional_field=additional_field)
-            #     continue
             if len(keys) == 4:
                 # parsing values like 'health_status[0]'
                 key = keys[1]
