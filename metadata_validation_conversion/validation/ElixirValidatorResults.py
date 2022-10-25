@@ -95,24 +95,24 @@ class ElixirValidatorResults:
         print(paths)
         print(additional_field)
         for i, error in enumerate(errors):
-            if 'root of document' in error:
-                key = error.split("'")[1]
+            if '.' in error:
+                key = error.split(".")[1]
                 self.update_record_to_return(record_to_return, key, error,
                                              additional_field=additional_field)
                 continue
-            keys = paths[i].split('.')
+            keys = paths[i].split('/')
             # Check that returned path was for fields that allow to have
             # multiple values
-            if '[' in keys[0]:
-                key = keys[0].split('[')[1].split(']')[0]
-                key = key.split("'")[1]
-                self.update_record_to_return(record_to_return, key, error,
-                                             additional_field=additional_field)
-                continue
-            if '[' in keys[1]:
+            # if '[' in keys[0]:
+            #     key = keys[0].split('[')[1].split(']')[0]
+            #     key = key.split("'")[1]
+            #     self.update_record_to_return(record_to_return, key, error,
+            #                                  additional_field=additional_field)
+            #     continue
+            if len(keys) == 4:
                 # parsing values like 'health_status[0]'
-                key = keys[1].split('[')[0]
-                additional_key = int(keys[1].split('[')[-1].split(']')[0])
+                key = keys[1]
+                additional_key = int(keys[2])
                 self.update_record_to_return(record_to_return, key, error,
                                              additional_key=additional_key,
                                              additional_field=additional_field)
