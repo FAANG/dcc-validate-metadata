@@ -89,6 +89,11 @@ class ElixirValidatorResults:
         :param paths: list of paths of errors
         :param additional_field: could be core field or modular field
         """
+        print("Inside attach_errors")
+        print(record_to_return)
+        print(errors)
+        print(paths)
+        print(additional_field)
         for i, error in enumerate(errors):
             if 'root of document' in error:
                 key = error.split("'")[1]
