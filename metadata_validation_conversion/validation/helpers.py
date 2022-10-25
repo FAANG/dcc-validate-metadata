@@ -24,7 +24,7 @@ def validate(data, schema):
     #         validation_errors.append(error['userFriendlyMessage'])
     #         paths.append(error['absoluteDataPath'])
     for item in response:
-        validation_errors.extend(item['errors'])
+        validation_errors.append(', '.join(item['errors']))
         paths.append(item['dataPath'])
     return validation_errors, paths
 

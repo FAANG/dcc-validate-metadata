@@ -96,6 +96,7 @@ class ElixirValidatorResults:
         print(additional_field)
         for i, error in enumerate(errors):
             if '.' in error:
+                print('here')
                 key = error.split(".")[1]
                 self.update_record_to_return(record_to_return, key, error,
                                              additional_field=additional_field)
