@@ -1,3 +1,5 @@
+import copy
+from datetime import datetime
 import requests
 import json
 from requests.auth import HTTPBasicAuth
@@ -116,6 +118,87 @@ class BioSamplesSubmission:
         for domain in choose_domain_response.json():
             domains.append(domain['domainName'])
         return domains
+
+
+    def fetch_biosample_data(self, id):
+        response = requests.get(f"{self.submission_server}/biosamples"
+                                f"/samples/{id}").json()
+        return response
+
+
+    def update_records(self):
+        if self.domain_name is None:
+            return 'Error: domain name was not specified'
+
+        updated_biosamples_ids = dict()
+
+        for item in self.json_to_submit:
+            tmp = dict()
+            for key, value in item.items():
+                # replace name with accession for update
+                if key == 'name':
+                    tmp['accession'] = value
+                else:
+                    tmp[key] = value
+
+            tmp['domain'] = self.domain_name
+            tmp['update'] = str(datetime.now().isoformat())
+            accession = tmp['accession']
+
+
+            # fetch the existing entry from the database
+            existing_biosample_entry = self.fetch_biosample_data(accession)
+
+            if existing_biosample_entry:
+                """
+                In BioSamples, updating a sample overwrites its existing content with the new one. 
+                To preserve existing attributes, first download the sample, 
+                build a new version including existing and new attributes, and resubmit the new content.
+                """
+                updated_biosample_entry = copy.deepcopy(existing_biosample_entry)
+                tmp['characteristics']['sample name'] = existing_biosample_entry['characteristics']['sample name']
+
+                if 'derived from' in tmp['characteristics']:
+                    # replace with sample name it is derived from
+                    derived_from_biosampleid = tmp['characteristics']['derived from']
+                    derived_from_name = list()
+
+                    for id in derived_from_biosampleid:
+                        if id['text'] in updated_biosamples_ids:
+                            derived_from_name.append({'text': updated_biosamples_ids[id['text']]})
+                        else:
+                            derivedfrom_biosample_entry = self.fetch_biosample_data(id['text'])
+                            if derivedfrom_biosample_entry:
+                                derived_from_name.append({'text': derivedfrom_biosample_entry['name']})
+                            else:
+                                return f"Error: derived_from BioSample Id ({id['text']}) is incorrect , " \
+                                       "please contact faang-dcc@ebi.ac.uk"
+
+                    tmp['characteristics']['derived from'] = derived_from_name
+
+                updated_biosample_entry['characteristics'] = tmp['characteristics']
+                updated_biosample_entry['organization'] = tmp['organization']
+                updated_biosample_entry['contact'] = tmp['contact']
+                updated_biosample_entry['update'] = tmp['update']
+                updated_biosample_entry['relationships'] = tmp['relationships']
+                updated_json = json.dumps(updated_biosample_entry)
+
+                update_submission_response = requests.put(
+                    f"{self.submission_server}/biosamples/samples/{accession}",
+                    headers=self.get_header(),
+                    data=updated_json)
+
+                if update_submission_response.status_code != 200:
+                    return 'Error: relationship part was not updated, ' \
+                           'please contact faang-dcc@ebi.ac.uk'
+
+                updated_biosamples_ids[accession] = update_submission_response.json()[
+                    'name']
+
+        reverted_updated_biosamples_ids = dict((v, k) for k, v in updated_biosamples_ids.items())
+        return reverted_updated_biosamples_ids
+
+
 
     def submit_records(self):
         if self.domain_name is None:

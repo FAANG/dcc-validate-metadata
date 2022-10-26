@@ -7,19 +7,22 @@ from submission.helpers import remove_underscores
 
 
 class BiosamplesFileConverter:
-    def __init__(self, json_to_convert, private):
+    def __init__(self, json_to_convert, private, action):
         self.json_to_convert = json_to_convert
         self.private_submission = private
+        self.action = action
 
     def start_conversion(self):
         data_to_send = list()
         taxon_ids, taxons = self.get_taxon_information()
+
         # If private submission move date for two years in the future
         if self.private_submission:
             two_years = datetime.timedelta(days=365) * 2
             date = (datetime.datetime.now() + two_years).isoformat()
         else:
             date = datetime.datetime.now().isoformat()
+
         # Collect additional data, submission information
         additional_fields = dict()
         for additional_field in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
@@ -31,13 +34,14 @@ class BiosamplesFileConverter:
                         remove_underscores(existing_field), list())
                     additional_fields[remove_underscores(
                         existing_field)].append({'text': existing_value})
+
         organization_info = self.get_additional_data('organization')
         person_info = self.get_additional_data('person')
         for record_type, records in self.json_to_convert.items():
             if record_type in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
                 continue
             for record_index, record in enumerate(records):
-                record_name = get_record_name(record, record_index, record_type)
+                record_name = get_record_name(record, record_index, record_type, self.action)
                 data_to_send.append(
                     {
                         "name": record_name,
@@ -65,7 +69,7 @@ class BiosamplesFileConverter:
             if record_type in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
                 continue
             for record_index, record in enumerate(records):
-                record_name = get_record_name(record, record_index, record_type)
+                record_name = get_record_name(record, record_index, record_type, self.action)
                 if 'organism' in record:
                     taxon_ids[record_name] = \
                         record['organism']['term']

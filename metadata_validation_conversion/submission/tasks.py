@@ -67,15 +67,15 @@ def submit_new_domain(credentials, room_id):
 
 
 @app.task(base=LogErrorsTask)
-def prepare_samples_data(json_to_convert, room_id, private=False):
-    conversion_results = BiosamplesFileConverter(json_to_convert[0], private)
+def prepare_samples_data(json_to_convert, room_id, private=False, action='submission'):
+    conversion_results = BiosamplesFileConverter(json_to_convert[0], private, action)
     results = conversion_results.start_conversion()
     send_message(submission_status='Data is ready', room_id=room_id)
     return results
 
 
 @app.task(base=LogErrorsTask)
-def submit_to_biosamples(results, credentials, room_id):
+def submit_to_biosamples(results, credentials, room_id, action="submission"):
     send_message(
         submission_message="Waiting: submitting records to BioSamples",
         room_id=room_id)
@@ -83,14 +83,18 @@ def submit_to_biosamples(results, credentials, room_id):
     biosamples_submission = BioSamplesSubmission(username, password, results[0],
                                                  credentials['mode'],
                                                  credentials['domain_name'])
-    submission_results = biosamples_submission.submit_records()
+    if action == 'update':
+        submission_results = biosamples_submission.update_records()
+    else:
+        submission_results = biosamples_submission.submit_records()
+
     if 'Error' in submission_results:
         send_message(submission_message=submission_results, room_id=room_id)
         return 'Error'
     else:
         send_message(
             submission_results=submission_results,
-            submission_message="Success: submission was completed",
+            submission_message=f"Success: {action} was completed",
             room_id=room_id)
         submission_data = ''
         for k, v in submission_results.items():
@@ -99,9 +103,9 @@ def submit_to_biosamples(results, credentials, room_id):
 
 
 @app.task(base=LogErrorsTask)
-def prepare_analyses_data(json_to_convert, room_id, private=False):
+def prepare_analyses_data(json_to_convert, room_id, private=False, action='submission'):
     conversion_results = AnalysesFileConverter(json_to_convert[0], room_id,
-                                               private)
+                                               private, action)
     xml_files = list()
     analysis_xml, submission_xml, sample_xml = \
         conversion_results.start_conversion()
@@ -116,9 +120,9 @@ def prepare_analyses_data(json_to_convert, room_id, private=False):
 
 
 @app.task(base=LogErrorsTask)
-def prepare_experiments_data(json_to_convert, room_id, private=False):
+def prepare_experiments_data(json_to_convert, room_id, private=False, action='submission'):
     conversion_results = ExperimentFileConverter(json_to_convert[0], room_id,
-                                                 private)
+                                                 private, action)
     xml_files = list()
     experiment_xml, run_xml, study_xml, submission_xml, sample_xml = \
         conversion_results.start_conversion()
@@ -135,9 +139,9 @@ def prepare_experiments_data(json_to_convert, room_id, private=False):
 
 
 @app.task(base=LogErrorsTask)
-def submit_data_to_ena(results, credentials, room_id, submission_type):
+def submit_data_to_ena(results, credentials, room_id, submission_type, action="submission"):
     if results[0] != 'Success':
-        send_message(submission_message="Error: submission failed",
+        send_message(submission_message=f"Error: {action} failed",
                      room_id=room_id)
         return 'Success'
     send_message(submission_message='Waiting: submitting records to ENA',
@@ -206,7 +210,7 @@ def submit_data_to_ena(results, credentials, room_id, submission_type):
             shell=True, capture_output=True)
 
     submission_results = submit_to_ena_process.stdout
-    parsed_results = parse_submission_results(submission_results, room_id)
+    parsed_results = parse_submission_results(submission_results, room_id, action)
 
     # Adding project to the private data hub
     if parsed_results == 'Success' and credentials['private_submission'] \
@@ -249,11 +253,12 @@ def fetch_project_id(submission_results):
     return root.find('STUDY').find('EXT_ID').attrib['accession']
 
 
-def parse_submission_results(submission_results, room_id):
+def parse_submission_results(submission_results, room_id, action="submission"):
     """
     This function parses submission response
     :param submission_results: submission response
     :param room_id: room id to send messages through django channels
+    :param action: indicates whether submission to ENA was an update or a new submission
     :return: error and info messages
     """
     if 'Access Denied' in submission_results.decode('utf-8'):
@@ -269,14 +274,14 @@ def parse_submission_results(submission_results, room_id):
             for info in messages.findall('INFO'):
                 submission_info_messages.append(info.text)
         if len(submission_error_messages) > 0:
-            send_message(submission_message="Error: submission failed",
+            send_message(submission_message=f"Error: {action} failed",
                          submission_results=[submission_info_messages,
                                              submission_error_messages],
                          room_id=room_id)
             return 'Error'
         else:
             send_message(
-                submission_message="Success: submission was successful",
+                submission_message=f"Success: {action} was successful",
                 submission_results=[submission_info_messages],
                 room_id=room_id)
             return 'Success'
