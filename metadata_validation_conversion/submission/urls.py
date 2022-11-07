@@ -5,7 +5,7 @@ app_name = 'submission'
 urlpatterns = [
     path('samples/<str:room_id>/<str:domain_action>', views.domain_actions,
          name='domain_actions'),
-    path('<str:submission_type>/<str:task_id>/<str:room_id>/submit_records',
+    path('<str:action>/<str:submission_type>/<str:task_id>/<str:room_id>/submit_records',
          views.submit_records, name='submit_records'),
     path('get_template/<str:task_id>/<str:room_id>/<str:data_type>',
          views.get_template, name='get_template'),
