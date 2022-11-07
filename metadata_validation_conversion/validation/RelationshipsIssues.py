@@ -7,10 +7,11 @@ import requests
 import json
 
 class RelationshipsIssues:
-    def __init__(self, json_to_test, validation_type, structure):
+    def __init__(self, json_to_test, validation_type, structure, action):
         self.json_to_test = json_to_test
         self.validation_type = validation_type
         self.structure = structure
+        self.action = action
 
     def collect_relationships_issues(self):
         relationships = dict()
@@ -88,7 +89,7 @@ class RelationshipsIssues:
                 module_name = name
             record_to_return = get_record_structure(structure_to_use, record,
                                                     module_name)
-            record_name = get_record_name(record, index, name)
+            record_name = get_record_name(record, index, name, self.action)
             relationships.setdefault(record_name, dict())
             relationship_name = 'child_of' if name == 'organism' else \
                 'derived_from'
@@ -131,7 +132,7 @@ class RelationshipsIssues:
         """
         for k, v in relationships.items():
             name = convert_to_snake_case(v['material'])
-            record_to_return = self.find_record(validation_document, name, k)
+            record_to_return = self.find_record(validation_document, name, k, self.action)
             relationship_name = 'child_of' if name == 'organism' else \
                 'derived_from'
             relationship_to_return = record_to_return[relationship_name]
@@ -222,14 +223,19 @@ class RelationshipsIssues:
             )
 
     @staticmethod
-    def find_record(validation_document, material, name):
+    def find_record(validation_document, material, name, action):
         """
         This function will find particular record to update from whole document
         :param validation_document: document to search in
         :param material: material to use
         :param name: name of the record
+        :param action: indicates whether it's a new submission or update
         :return: record to update relationships
         """
+        col_name = 'sample_name'
+        if action == 'update':
+            col_name = 'biosample_id'
+
         for record in validation_document[material]:
-            if record['custom']['sample_name']['value'] == name:
+            if record['custom'][col_name]['value'] == name:
                 return record
