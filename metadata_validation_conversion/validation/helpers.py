@@ -16,6 +16,7 @@ def validate(data, schema):
     response = requests.post(ELIXIR_VALIDATOR_URL, json=json_to_send).json()
     validation_errors = list()
     paths = list()
+    print(response)
     for item in response:
         validation_errors.append(', '.join(item['errors']))
         paths.append(item['dataPath'])
