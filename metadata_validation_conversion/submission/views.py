@@ -93,9 +93,15 @@ def submit_records(request, action, submission_type, task_id, room_id):
         validation_result = app.AsyncResult(task_id)
         json_to_send = validation_result.get()
 
-        prepare_task = prepare.s(
-            json_to_send, room_id=room_id, private=request_body['private_submission'], action=action
-        ).set(queue='submission')
+        # mode is required for samples data
+        if submission_type == 'samples':
+            prepare_task = prepare.s(
+                json_to_send, room_id=room_id, private=request_body['private_submission'], action=action,
+                mode=request_body['mode']).set(queue='submission')
+        else:
+            prepare_task = prepare.s(
+                json_to_send, room_id=room_id, private=request_body['private_submission'], action=action)\
+                .set(queue='submission')
 
         my_chord = chord((prepare_task,), submit_task)
         res = my_chord.apply_async()

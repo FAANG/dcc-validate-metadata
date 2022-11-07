@@ -1,16 +1,17 @@
 import datetime
 import requests
-from metadata_validation_conversion.constants import \
-    SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES, ADDITIONAL_INFO_MAPPING
+from metadata_validation_conversion.constants import SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES, ADDITIONAL_INFO_MAPPING, \
+     SUBMISSION_TEST_SERVER, SUBMISSION_PROD_SERVER
 from validation.helpers import get_record_name
 from submission.helpers import remove_underscores
 
 
 class BiosamplesFileConverter:
-    def __init__(self, json_to_convert, private, action):
+    def __init__(self, json_to_convert, private, mode, action):
         self.json_to_convert = json_to_convert
         self.private_submission = private
         self.action = action
+        self.submission_server = SUBMISSION_TEST_SERVER if mode == 'test' else SUBMISSION_PROD_SERVER
 
     def start_conversion(self):
         data_to_send = list()
@@ -105,7 +106,7 @@ class BiosamplesFileConverter:
             if 'SAM' in id_to_fetch and '_' not in id_to_fetch:
                 try:
                     results = requests.get(
-                        f"https://www.ebi.ac.uk/biosamples/samples/"
+                        f"{self.submission_server}/biosamples/samples/"
                         f"{id_to_fetch}").json()
                     return results['taxId'], results['characteristics'][
                         'organism'][0]['text']

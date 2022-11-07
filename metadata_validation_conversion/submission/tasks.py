@@ -67,8 +67,8 @@ def submit_new_domain(credentials, room_id):
 
 
 @app.task(base=LogErrorsTask)
-def prepare_samples_data(json_to_convert, room_id, private=False, action='submission'):
-    conversion_results = BiosamplesFileConverter(json_to_convert[0], private, action)
+def prepare_samples_data(json_to_convert, room_id, private=False, action='submission', mode='prod'):
+    conversion_results = BiosamplesFileConverter(json_to_convert[0], private, mode, action)
     results = conversion_results.start_conversion()
     send_message(submission_status='Data is ready', room_id=room_id)
     return results
