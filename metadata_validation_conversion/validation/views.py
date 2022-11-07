@@ -11,19 +11,20 @@ def validate(request, validation_type, task_id, room_id):
     send_message(room_id=room_id, validation_status="Waiting")
     conversion_result = app.AsyncResult(task_id)
     json_to_test, structure = conversion_result.get()
-    if validation_type == 'samples':
+    if validation_type == 'samples' or validation_type == 'experiments':
         # Create three tasks that should be run in parallel and assign callback
         validate_against_schema_task = validate_against_schema.s(json_to_test,
-                                                                 'samples',
+                                                                 validation_type,
                                                                  structure,
                                                                  room_id=room_id).set(queue='validation')
 
         collect_warnings_and_additional_checks_task = collect_warnings_and_additional_checks.s(json_to_test,
-                                                                                               'samples',
+                                                                                               validation_type,
                                                                                                structure,
                                                                                                room_id=room_id).set(queue='validation')
 
         collect_relationships_issues_task = collect_relationships_issues.s(json_to_test,
+                                                                           validation_type,
                                                                            structure,
                                                                            room_id=room_id).set(queue='validation')
 

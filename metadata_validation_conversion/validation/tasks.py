@@ -51,14 +51,14 @@ def collect_warnings_and_additional_checks(json_to_test, rules_type,
 
 
 @app.task(base=LogErrorsTask)
-def collect_relationships_issues(json_to_test, structure, room_id):
+def collect_relationships_issues(json_to_test, validation_type, structure, room_id):
     """
     This task will do relationships check
     :param json_to_test: json to be tested
     :param structure: structure of original template
     :return: all issues in dict
     """
-    relationships_issues_object = RelationshipsIssues(json_to_test, structure)
+    relationships_issues_object = RelationshipsIssues(json_to_test, validation_type, structure)
     return relationships_issues_object.collect_relationships_issues()
 
 

@@ -3,11 +3,13 @@ from metadata_validation_conversion.constants import ALLOWED_SAMPLES_TYPES, \
 from metadata_validation_conversion.helpers import convert_to_snake_case
 from .helpers import get_record_name, get_record_structure
 from .get_biosample_data_async import fetch_biosample_data_for_ids
-
+import requests
+import json
 
 class RelationshipsIssues:
-    def __init__(self, json_to_test, structure):
+    def __init__(self, json_to_test, validation_type, structure):
         self.json_to_test = json_to_test
+        self.validation_type = validation_type
         self.structure = structure
 
     def collect_relationships_issues(self):
@@ -16,15 +18,56 @@ class RelationshipsIssues:
         validation_document = dict()
 
         # In first iteration need to collect all relationships
-        for name, url in ALLOWED_SAMPLES_TYPES.items():
-            if name in self.json_to_test:
-                new_relationships, biosample_ids, validation_document[name] = \
-                    self.collect_relationships(name)
-                relationships.update(new_relationships)
-                biosamples_ids_to_call.update(biosample_ids)
-        biosample_data = fetch_biosample_data_for_ids(biosamples_ids_to_call)
-        return self.check_relationships(relationships, biosample_data,
-                                        validation_document)
+        if self.validation_type == 'samples':
+            for name, url in ALLOWED_SAMPLES_TYPES.items():
+                if name in self.json_to_test:
+                    new_relationships, biosample_ids, validation_document[name] = \
+                        self.collect_relationships(name)
+                    relationships.update(new_relationships)
+                    biosamples_ids_to_call.update(biosample_ids)
+            biosample_data = fetch_biosample_data_for_ids(biosamples_ids_to_call)
+            return self.check_relationships(relationships, biosample_data,
+                                            validation_document)
+        elif self.validation_type == 'experiments':
+            return self.contextual_validation()
+
+    def contextual_validation(self):
+        """
+        This function will perform contexual validation for experiments
+        :return: record dicts with errors
+        """
+        if 'chip-seq_dna-binding_proteins' in self.json_to_test:
+            records = self.json_to_test['chip-seq_dna-binding_proteins']
+            for index, record in enumerate(records):
+                if 'dna-binding_proteins' in record and \
+                    'control_experiment' in record['dna-binding_proteins']:
+                    control_exp = record['dna-binding_proteins']['control_experiment']['value']
+                    if not self.find_control_experiment(control_exp):
+                        error = f"Control experiment {control_exp} " \
+                            f"not found in this submission or in ENA"
+                        self.add_errors_to_relationships(
+                            record['dna-binding_proteins']['control_experiment'], error, 'control_experiment')
+        return self.json_to_test
+
+    def find_control_experiment(self, exp):
+        """
+        This function checks whether control experiment for ChIP-seq 
+        DNA-binding proteins experiments exists within the submission 
+        (check alias) or in ENA (check accession)
+        :return: boolean indicating whether or not the experiment exists
+        """
+        records = self.json_to_test['chip-seq_dna-binding_proteins']
+        # find control experiment in current submission
+        for index, record in enumerate(records):
+            if record['custom']['experiment_alias']['value'] == exp:
+                return True
+        # find control experiment in existing ENA submission
+        r = requests.get(f'https://www.ebi.ac.uk/ena/browser/api/summary/{exp}')
+        if r.status_code == 200:
+            res = json.loads(r.content)
+            if int(res['total']) > 0:
+                return True
+        return False
 
     def collect_relationships(self, name):
         """
