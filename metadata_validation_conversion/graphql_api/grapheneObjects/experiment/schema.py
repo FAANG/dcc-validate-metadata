@@ -1,27 +1,13 @@
-import json
-
-from graphene import ObjectType, String, Field, ID, relay, List
+from graphene import ObjectType, String, Field, relay
 from graphene.relay import Connection, Node
 from graphql_api.tasks import resolve_all_task
 from celery.result import AsyncResult
-from ..helpers import fetch_index_records, fetch_with_join
+from ..helpers import fetch_with_join
 from .fieldObjects import ATACseqField, BsSeqField, CAGEseqField, ChIPSeqDnaBindingField, \
     ChIPseqInputDNAField, DNaseSeqField, ExperimentCustomFieldField, ExperimentJoinField, HiCField, \
     RNAseqField, WGSField
 from .arguments.filter import ExperimentFilterArgument
 from ..commonFieldObjects import ProtocolField, UnitField, TaskResponse
-
-
-def fetch_single_experiment(args):
-    q = ''
-    if args['id']:
-        q = [{"terms": {"accession": [args['id']]}}]
-    elif args['alternate_id']:
-        q = [{"terms": {"alternateId": [args['alternate_id']]}}]
-
-    res = fetch_index_records('experiment', filter=q)[0]
-    res['id'] = res['accession']
-    return res
 
 
 class ExperimentNode(ObjectType):
@@ -64,11 +50,6 @@ class ExperimentNode(ObjectType):
     join = Field(ExperimentJoinField)
 
 
-    @classmethod
-    def get_node(cls, info, id):
-        return fetch_single_experiment({'id': id})
-
-
 class ExperimentConnection(Connection):
     class Meta:
         node = ExperimentNode
@@ -78,16 +59,9 @@ class ExperimentConnection(Connection):
 
 
 class ExperimentSchema(ObjectType):
-    experiment = Field(ExperimentNode, id=ID(required=True), alternate_id=ID(required=False))
     all_experiments = relay.ConnectionField(ExperimentConnection, filter=ExperimentFilterArgument())
-
     all_experiments_as_task = Field(TaskResponse, filter=ExperimentFilterArgument())
     all_experiments_task_result = relay.ConnectionField(ExperimentConnection, task_id=String())
-    # just an example of relay.connection field and batch loader
-    some_experiments = relay.ConnectionField(ExperimentConnection, ids=List(of_type=String, required=True))
-
-    def resolve_experiment(root, info, **args):
-        return fetch_single_experiment(args)
 
     def resolve_all_experiments(root, info, **kwargs):
         filter_query = kwargs['filter'] if 'filter' in kwargs else {}
