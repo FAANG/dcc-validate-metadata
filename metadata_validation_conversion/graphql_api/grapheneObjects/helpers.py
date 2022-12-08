@@ -1,3 +1,4 @@
+import math
 from collections import defaultdict
 from .constants import MAX_FILTER_QUERY_DEPTH, index_mapping
 import json
@@ -117,8 +118,8 @@ def generate_index_map(index_data, record_key):
             if isinstance(key, list):
                 for k in key:
                     index_map[k].append(rec)
-
-            index_map[key].append(rec)
+            else:
+                index_map[key].append(rec)
 
     return index_map
 
@@ -185,9 +186,26 @@ def fetch_with_join(filter, left_index, prev_index_data=None, key_filter_name=No
             update_experiment_es_fieldnames(filter['basic'])
         generate_es_filters(filter['basic'], es_filter_queries)
 
-    # returns documents of specified index and apply filter conditions
-    left_index_data = fetch_index_records(index_name=left_index, filter=es_filter_queries,
-                                          key_filter=prev_index_data, key_filter_name=key_filter_name)
+    # if condition to deal with situation where Terms Query request exceeds the allowed maximum of [65536]
+    if prev_index_data and len(prev_index_data) > 50000:
+        left_index_data = []
+        start_from = 0
+        every_nth = 50000
+        run_times = math.ceil(len(prev_index_data) / every_nth)
+        for i in range(run_times):
+            fetched_records = fetch_index_records(index_name=left_index, filter=es_filter_queries,
+                                                  key_filter=prev_index_data[start_from:every_nth],
+                                                  key_filter_name=key_filter_name)
+            for dictionary in fetched_records:
+                if dictionary not in left_index_data:
+                    left_index_data.append(dictionary)
+
+            start_from = every_nth
+            every_nth = every_nth + 50000
+
+    else:
+        left_index_data = fetch_index_records(index_name=left_index, filter=es_filter_queries,
+                                              key_filter=prev_index_data, key_filter_name=key_filter_name)
 
     # if left_index_data is empty (we cannot have join in this case)
     # or join not found in filter, return result of the left index only
@@ -214,7 +232,9 @@ def fetch_with_join(filter, left_index, prev_index_data=None, key_filter_name=No
 
 
 def fetch_index_records(index_name, **kwargs):
-    filter_queries = kwargs['filter'] if 'filter' in kwargs else []
+    filter_queries = []
+    if 'filter' in kwargs and kwargs['filter']:
+        filter_queries.extend(kwargs['filter'])
 
     if 'key_filter' in kwargs and kwargs['key_filter'] and 'key_filter_name' in kwargs and kwargs['key_filter_name']:
         filter_queries.append({"terms": {kwargs['key_filter_name']: kwargs['key_filter']}})

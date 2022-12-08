@@ -1,13 +1,26 @@
-from graphene import ObjectType, String, Field, relay, List, Int
+from graphene import ObjectType, String, Field,ID, relay, List, Int
 from graphene.relay import Connection,Node
 from graphql_api.tasks import resolve_all_task
 from celery.result import AsyncResult
-from ..helpers import fetch_with_join
+from ..helpers import fetch_index_records, fetch_with_join
 from .fieldObjects import CellCultureField,SpecimenOrganismField,CellLineField,CellSpecimenField,\
     SpecimenOrganizationField,PoolOfSpecimensField,SpecimenPublishedArticlesField,SpecimenCustomFieldField,\
     SpecimenFromOrganismField,SpecimenJoinField
 from .arguments.filter import SpecimenFilterArgument
 from ..commonFieldObjects import OntologyField, TaskResponse
+
+
+def fetch_single_specimen(args):
+    q = ''
+
+    if args['id']:
+        q = [{"terms": {"biosampleId": [args['id']]}}]
+    elif args['alternate_id']:
+        q = [{"terms": {"alternateId": [args['alternate_id']]}}]
+
+    res = fetch_index_records('specimen', filter=q)[0]
+    res['id'] = res['biosampleId']
+    return res
 
 
 class SpecimenNode(ObjectType):
@@ -43,6 +56,10 @@ class SpecimenNode(ObjectType):
     trackhubUrl = String()
     join = Field(SpecimenJoinField)
 
+    @classmethod
+    def get_node(cls, info, id):
+        args = {'id':id}
+        return fetch_single_specimen(args)
 
 class SpecimenConnection(Connection):
     class Meta:
@@ -53,9 +70,13 @@ class SpecimenConnection(Connection):
 
 
 class SpecimenSchema(ObjectType):
+    specimen = Field(SpecimenNode,id = ID(required=True), alternate_id = ID(required = False))
     all_specimens = relay.ConnectionField(SpecimenConnection, filter=SpecimenFilterArgument())
     all_specimens_as_task = Field(TaskResponse, filter=SpecimenFilterArgument())
     all_specimens_task_result = relay.ConnectionField(SpecimenConnection,task_id=String())
+
+    def resolve_specimen(root,info,**args):
+        return fetch_single_specimen(args)
 
     def resolve_all_specimens(root, info,**kwargs):
         filter_query = kwargs['filter'] if 'filter' in kwargs else {}

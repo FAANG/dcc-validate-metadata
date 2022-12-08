@@ -1,11 +1,25 @@
-from graphene import ObjectType, String, Field, relay, List
+from graphene import ObjectType, String, Field, ID, relay, List
 from graphene.relay import Connection, Node
 from graphql_api.tasks import resolve_all_task
 from celery.result import AsyncResult
-from ..helpers import fetch_with_join
+from ..helpers import fetch_index_records, fetch_with_join
 from .fieldObjects import RelatedDatasets_Field, ArticleJoin_Field
 from .arguments.filter import ArticleFilterArgument
 from ..commonFieldObjects import TaskResponse
+
+
+def fetch_single_article(args):
+    q = [{
+        "bool": {
+            "should": [
+                {"term": {"pmcId": args['id']}},
+                {"term": {"pubmedId": args['id']}}
+            ]
+        }
+    }]
+    res = fetch_index_records('article', filter=q)[0]
+    res['id'] = res['pmcId'] if res['pmcId'] else res['pubmedId']
+    return res
 
 
 class ArticleNode(ObjectType):
@@ -28,6 +42,10 @@ class ArticleNode(ObjectType):
     secondaryProject = List(String)
     join = Field(ArticleJoin_Field)
 
+    @classmethod
+    def get_node(cls, info, id):
+        return fetch_single_article({'id': id})
+
 
 class ArticleConnection(Connection):
     class Meta:
@@ -38,9 +56,13 @@ class ArticleConnection(Connection):
 
 
 class ArticleSchema(ObjectType):
+    article = Field(ArticleNode, id=ID(required=True), alternate_id=ID(required=False))
     all_articles = relay.ConnectionField(ArticleConnection, filter=ArticleFilterArgument())
     all_articles_as_task = Field(TaskResponse, filter=ArticleFilterArgument())
     all_articles_task_result = relay.ConnectionField(ArticleConnection, task_id=String())
+
+    def resolve_article(root, info, **args):
+        return fetch_single_article(args)
 
     def resolve_all_articles(root, info, **kwargs):
         filter_query = kwargs['filter'] if 'filter' in kwargs else {}

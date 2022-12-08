@@ -2,11 +2,25 @@ from graphene import ObjectType, String, Field, ID, relay, List
 from graphene.relay import Connection, Node
 from graphql_api.tasks import resolve_all_task
 from celery.result import AsyncResult
-from ..helpers import fetch_with_join
+from ..helpers import fetch_index_records, fetch_with_join
 from .fieldObjects import FileExperimentField, FileJoinField, FilePublishedArticlesField, RunField, SpeciesField, \
     StudyField
 from .arguments.filter import FileFilterArgument
 from ..commonFieldObjects import TaskResponse
+
+
+def fetch_single_file(args):
+    q = ''
+
+    if args['id']:
+        q = [{"terms": {"_id": [args['id']]}}]
+    elif args['alternate_id']:
+        q = [{"terms": {"alternateId": [args['alternate_id']]}}]
+
+    res = fetch_index_records('file', filter=q)[0]
+
+    res['id'] = res['name'].split('.', 1)[0]
+    return res
 
 
 class FileNode(ObjectType):
@@ -38,6 +52,11 @@ class FileNode(ObjectType):
     submitterEmail = String()
     join = Field(FileJoinField)
 
+    @classmethod
+    def get_node(cls, info, id):
+        args = {'id': id}
+        return fetch_single_file(args)
+
 
 class FileConnection(Connection):
     class Meta:
@@ -48,9 +67,13 @@ class FileConnection(Connection):
 
 
 class FileSchema(ObjectType):
+    file = Field(FileNode, id=ID(required=True), alternate_id=ID(required=False))
     all_files = relay.ConnectionField(FileConnection, filter=FileFilterArgument())
     all_files_as_task = Field(TaskResponse, filter=FileFilterArgument())
     all_files_task_result = relay.ConnectionField(FileConnection, task_id=String())
+
+    def resolve_file(root, info, **args):
+        return fetch_single_file(args)
 
     def resolve_all_files(root, info, **kwargs):
         filter_query = kwargs['filter'] if 'filter' in kwargs else {}

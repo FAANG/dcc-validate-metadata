@@ -2,10 +2,22 @@ from graphene import ObjectType, String, Field, ID, relay, List
 from graphene.relay import Connection, Node
 from graphql_api.tasks import resolve_all_task
 from celery.result import AsyncResult
-from ..helpers import fetch_with_join
+from ..helpers import fetch_index_records, fetch_with_join
 from .fieldObjects import AnalysisDateField, AnalysisJoinField, FilesField, AnalysisOrganismField
 from .arguments.filter import AnalysisFilterArgument
 from ..commonFieldObjects import ProtocolField, TaskResponse
+
+
+def fetch_single_analysis(kwargs):
+    q = ''
+    if kwargs['id']:
+        q = [{"terms": {"accession": [kwargs['id']]}}]
+    elif kwargs['alternate_id']:
+        q = [{"terms": {"alternateId": [kwargs['alternate_id']]}}]
+
+    res = fetch_index_records('analysis', filter=q)[0]
+    res['id'] = res['accession']
+    return res
 
 
 class AnalysisNode(ObjectType):
@@ -44,6 +56,10 @@ class AnalysisNode(ObjectType):
     imputation = String()
     join = Field(AnalysisJoinField)
 
+    @classmethod
+    def get_node(cls, info, id):
+        return fetch_single_analysis({'id': id})
+
 
 class AnalysisConnection(Connection):
     class Meta:
@@ -54,9 +70,13 @@ class AnalysisConnection(Connection):
 
 
 class AnalysisSchema(ObjectType):
+    analysis = Field(AnalysisNode, id=ID(required=True), alternate_id=ID(required=False))
     all_analysis = relay.ConnectionField(AnalysisConnection, filter=AnalysisFilterArgument())
     all_analysis_as_task = Field(TaskResponse, filter=AnalysisFilterArgument())
     all_analysis_task_result = relay.ConnectionField(AnalysisConnection, task_id=String())
+
+    def resolve_analysis(root, info, **kwargs):
+        return fetch_single_analysis(kwargs)
 
     def resolve_all_analysis(root, info, **kwargs):
         filter_query = kwargs['filter'] if 'filter' in kwargs else {}

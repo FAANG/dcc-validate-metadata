@@ -2,11 +2,24 @@ from graphene import ObjectType, String, Field, ID, relay, List
 from graphene.relay import Connection, Node
 from graphql_api.tasks import resolve_all_task
 from celery.result import AsyncResult
-from ..helpers import fetch_with_join
+from ..helpers import fetch_index_records, fetch_with_join
 from .fieldObjects import DatasetJoinField, DatasetExperimentField, FileField, DatasetPublishedArticlesField, \
     SpecimenField
 from .arguments.filter import DatasetFilterArgument
 from ..commonFieldObjects import OntologyField, TaskResponse
+
+
+def fetch_single_dataset(args):
+    q = ''
+
+    if args['id']:
+        q = [{"terms": {"accession": [args['id']]}}]
+    elif args['alternate_id']:
+        q = [{"terms": {"alternateId": [args['alternate_id']]}}]
+
+    res = fetch_index_records('dataset', filter=q)[0]
+    res['id'] = res['accession']
+    return res
 
 
 class DatasetNode(ObjectType):
@@ -35,6 +48,10 @@ class DatasetNode(ObjectType):
     submitterEmail = String()
     join = Field(DatasetJoinField)
 
+    @classmethod
+    def get_node(cls, info, id):
+        return fetch_single_dataset({'id': id})
+
 
 class DatasetConnection(Connection):
     class Meta:
@@ -45,9 +62,13 @@ class DatasetConnection(Connection):
 
 
 class DatasetSchema(ObjectType):
+    dataset = Field(DatasetNode, id=ID(required=True), alternate_id=ID(required=False))
     all_datasets = relay.ConnectionField(DatasetConnection, filter=DatasetFilterArgument())
     all_datasets_as_task = Field(TaskResponse, filter=DatasetFilterArgument())
     all_datasets_task_result = relay.ConnectionField(DatasetConnection, task_id=String())
+
+    def resolve_dataset(root, info, **args):
+        return fetch_single_dataset(args)
 
     def resolve_all_datasets(root, info, **kwargs):
         filter_query = kwargs['filter'] if 'filter' in kwargs else {}
