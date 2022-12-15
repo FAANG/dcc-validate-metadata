@@ -1,5 +1,5 @@
 from graphene import InputObjectType, String, Field, List, Int
-from ...commonInputFieldObject import ProtocolInputField, OntologyInputField, UnitInputField
+from ...common_input_field_object import ProtocolInputField, OntologyInputField, UnitInputField
 
 
 class SpecimenOrganizationInputField(InputObjectType):

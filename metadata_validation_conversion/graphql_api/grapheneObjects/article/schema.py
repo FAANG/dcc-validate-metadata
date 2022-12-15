@@ -3,9 +3,9 @@ from graphene.relay import Connection, Node
 from graphql_api.tasks import resolve_all_task
 from celery.result import AsyncResult
 from ..helpers import fetch_index_records, fetch_with_join
-from .fieldObjects import RelatedDatasets_Field, ArticleJoin_Field
+from .field_objects import RelatedDatasets_Field, ArticleJoin_Field
 from .arguments.filter import ArticleFilterArgument
-from ..commonFieldObjects import TaskResponse
+from ..common_field_objects import TaskResponse
 
 
 def fetch_single_article(args):

@@ -3,9 +3,9 @@ from graphene.relay import Connection, Node
 from graphql_api.tasks import resolve_all_task
 from celery.result import AsyncResult
 from ..helpers import fetch_index_records, fetch_with_join
-from .fieldObjects import ProtocolSamplesJoinField, SpecimensField
+from .field_objects import ProtocolSamplesJoinField, SpecimensField
 from .arguments.filter import ProtocolSamplesFilterArgument
-from ..commonFieldObjects import TaskResponse
+from ..common_field_objects import TaskResponse
 
 
 def fetch_single_protocol_sample(args):

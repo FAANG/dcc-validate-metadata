@@ -1,5 +1,5 @@
 from graphene import ObjectType, String, relay, Field
-from ..commonFieldObjects import OntologyField
+from ..common_field_objects import OntologyField
 
 
 class SpecimenField(ObjectType):

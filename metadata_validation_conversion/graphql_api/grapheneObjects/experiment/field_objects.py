@@ -1,5 +1,5 @@
 from graphene import Field, ObjectType, String, relay
-from ..commonFieldObjects import ProtocolField
+from ..common_field_objects import ProtocolField
 
 
 class ExperimentCustomFieldField(ObjectType):

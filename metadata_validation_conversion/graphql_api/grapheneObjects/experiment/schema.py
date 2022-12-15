@@ -5,11 +5,11 @@ from graphene.relay import Connection, Node
 from graphql_api.tasks import resolve_all_task
 from celery.result import AsyncResult
 from ..helpers import fetch_index_records, fetch_with_join
-from .fieldObjects import ATACseqField, BsSeqField, CAGEseqField, ChIPSeqDnaBindingField, \
+from .field_objects import ATACseqField, BsSeqField, CAGEseqField, ChIPSeqDnaBindingField, \
     ChIPseqInputDNAField, DNaseSeqField, ExperimentCustomFieldField, ExperimentJoinField, HiCField, \
     RNAseqField, WGSField
 from .arguments.filter import ExperimentFilterArgument
-from ..commonFieldObjects import ProtocolField, UnitField, TaskResponse
+from ..common_field_objects import ProtocolField, UnitField, TaskResponse
 
 
 def fetch_single_experiment(args):

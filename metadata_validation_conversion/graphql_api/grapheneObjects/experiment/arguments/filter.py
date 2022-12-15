@@ -1,5 +1,5 @@
 from graphene import Field, String, InputObjectType, List
-from ...commonInputFieldObject import ProtocolInputField, UnitInputField
+from ...common_input_field_object import ProtocolInputField, UnitInputField
 
 
 class CustomFieldInputField(InputObjectType):

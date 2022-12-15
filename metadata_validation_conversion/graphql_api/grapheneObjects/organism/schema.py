@@ -1,9 +1,9 @@
 from graphene import ObjectType, String, Field, ID, relay, List, Int
 from graphene.relay import Connection, Node
-from ..commonFieldObjects import TaskResponse
+from ..common_field_objects import TaskResponse
 from ...tasks import resolve_all_task
 from ..helpers import fetch_index_records, fetch_with_join
-from .fieldObjects import Organism_Field, OrganismCustomFieldField, BirthDate_Field, BirthLocationLatitude_Field, \
+from .field_objects import Organism_Field, OrganismCustomFieldField, BirthDate_Field, BirthLocationLatitude_Field, \
     BirthLocationLongitude_Field, BirthWeight_Field, Breed_Field, HealthStatusField, Material_Field, \
     FileOrganizationField, PlacentalWeight_Field, PregnancyLength_Field, OrganismPublishedArticles_Field, Sex_Field, \
     OrganismJoin_Field

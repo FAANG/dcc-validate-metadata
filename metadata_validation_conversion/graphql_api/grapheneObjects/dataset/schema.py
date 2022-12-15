@@ -3,10 +3,10 @@ from graphene.relay import Connection, Node
 from graphql_api.tasks import resolve_all_task
 from celery.result import AsyncResult
 from ..helpers import fetch_index_records, fetch_with_join
-from .fieldObjects import DatasetJoinField, DatasetExperimentField, FileField, DatasetPublishedArticlesField, \
+from .field_objects import DatasetJoinField, DatasetExperimentField, FileField, DatasetPublishedArticlesField, \
     SpecimenField
 from .arguments.filter import DatasetFilterArgument
-from ..commonFieldObjects import OntologyField, TaskResponse
+from ..common_field_objects import OntologyField, TaskResponse
 
 
 def fetch_single_dataset(args):
