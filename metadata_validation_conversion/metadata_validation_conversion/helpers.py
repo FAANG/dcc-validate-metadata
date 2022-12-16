@@ -78,3 +78,13 @@ def send_message(room_id, conversion_status=None, validation_status=None,
     async_to_sync(channel_layer.group_send)(f"submission_{room_id}", {
         "type": "submission_message",
         "response": response})
+
+
+def send_message_graphql(task_id, data):
+    response = {
+        'data': data
+    }
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(f"graphqltaskstatus-{task_id}", {
+        "type": "graphql_task_result",
+        "response": response})
