@@ -54,7 +54,9 @@ INSTALLED_APPS = [
     'validation_submission_api',
     'rest_framework',
     'corsheaders',
-    'drf_yasg'
+    'drf_yasg',
+    'graphql_ws.django',
+    'graphene_django',
 ]
 
 MIDDLEWARE = [
@@ -67,6 +69,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+GRAPHENE = {
+    "SCHEMA": "graphql_api.schema.schema"
+}
 
 ROOT_URLCONF = 'metadata_validation_conversion.urls'
 
