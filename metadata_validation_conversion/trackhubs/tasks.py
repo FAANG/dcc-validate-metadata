@@ -356,8 +356,7 @@ def update_es_records(data, roomid):
         es.index(index='trackhubs', id=trackhub_data['name'], body=trackhub_data)
         send_message(room_id=roomid,
                         submission_message="Updated track hub records")
-    except Exception as e: 
-        print(e)
+    except:
         error_flag = True
         send_message(room_id=roomid,
                         submission_message="Error updating track hub records, please contact faang-dcc@ebi.ac.uk")
