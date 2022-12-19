@@ -5,7 +5,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .tasks import read_excel_file, validate, \
     generate_hub_files, upload_files, hub_check, \
-        register_trackhub, associate_specimen
+        register_trackhub, associate_specimen, update_es_records
 import base64
 
 @csrf_exempt
@@ -66,11 +66,13 @@ def submission(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         roomid = data['fileid'] + '_submission'
+        # update ES records for local genome browser
+        es_task = update_es_records.s(data, roomid=roomid).set(queue='submission')
         # register trackhub with the trackhub registry
-        register_task = register_trackhub.s(data, roomid=roomid).set(queue='submission')
+        register_task = register_trackhub.s(roomid=roomid).set(queue='submission')
         # add track hub url to relevant specimen records
         associate_task = associate_specimen.s(roomid=roomid).set(queue='submission')
-        submission_chain = chain(register_task | associate_task)
+        submission_chain = chain(es_task | register_task | associate_task)
         res = submission_chain.apply_async()
         return HttpResponse(json.dumps({"id": res.id}))
     return HttpResponse("Please use POST method for registering trackhubs")
