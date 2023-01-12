@@ -27,21 +27,26 @@ def validate(data, schema):
     return validation_errors, paths
 
 
-def get_record_name(record, index, name):
+def get_record_name(record, index, name, action):
     """
     This function will return name of the current record or create it
     :param record: record to search name in
     :param index: index for new name creation
     :param name: name of the record
+    :param action: indicates whether it's a new submission or update
     :return: name of the record
     """
-    if 'sample_name' not in record['custom'] \
+    primary_col_name = 'sample_name'
+    if action == 'update':
+        primary_col_name = 'biosample_id'
+
+    if primary_col_name not in record['custom'] \
             and 'sample_descriptor' not in record['custom'] \
             and 'alias' not in record:
         return f"{name}_{index + 1}"
     else:
-        if 'sample_name' in record['custom']:
-            return record['custom']['sample_name']['value']
+        if primary_col_name in record['custom']:
+            return record['custom'][primary_col_name]['value']
         elif 'sample_descriptor' in record['custom']:
             return f"{record['custom']['sample_descriptor']['value']}-" \
                    f"{record['custom']['experiment_alias']['value']}"

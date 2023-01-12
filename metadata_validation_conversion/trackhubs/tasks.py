@@ -307,12 +307,68 @@ def hub_check(result, fileid):
                          submission_message="Error: Hub check failed")
     return {'error_flag': error_flag, 'data': res_dict}
 
+@app.task(base=LogErrorsTask)
+def update_es_records(data, roomid):
+    error_flag = False
+    send_message(room_id=roomid,
+                 submission_message="Updating Track Hub records")
+    try:
+        # get hub data
+        trackhub_data = {
+            'name': data['Hub Data'][0]['Name'],
+            'shortLabel': data['Hub Data'][0]['Short Label'],
+            'longLabel': data['Hub Data'][0]['Long Label'],
+            'email': data['Hub Data'][0]['Email']
+        }
+        # get genome data
+        trackhub_data['genome'] = {
+            'gcaAccession': data['Genome Data'][0]['Assembly Accession'],
+            'ensemblAssemblyName': data['Genome Data'][0]['Assembly Name']
+        }
+        # get tracks data
+        sub_dirs = {}
+        file_server = 'https://api.faang.org/files/trackhubs'
+        hub = data['Hub Data'][0]['Name']
+        genome = data['Genome Data'][0]['Assembly Name']
+        for track in data['Tracks Data']:
+            file_name = track['File Path'].split('/')[-1]
+            track_data = {
+                "track": track['Track Name'],
+                "bigDataUrl": f"{file_server}/{hub}/{genome}/{track['Subdirectory']}/{file_name}",
+                "shortLabel": track['Short Label'],
+                "longLabel": track['Long Label'],
+                "type": track['File Type']
+            }
+            if track['Subdirectory'] in sub_dirs:
+                sub_dirs[track['Subdirectory']].append(track_data)
+            else:
+                sub_dirs[track['Subdirectory']] = [track_data]
+        sub_dirs_list = []
+        for sub_dir, tracks in sub_dirs.items():
+            sub_dirs_list.append({
+                'name': sub_dir,
+                'tracks': tracks
+            })
+        trackhub_data['subdirectories'] = sub_dirs_list
+        # create ES record
+        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
+            http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+        es.index(index='trackhubs', id=trackhub_data['name'], body=trackhub_data)
+        send_message(room_id=roomid,
+                        submission_message="Updated track hub records")
+    except:
+        error_flag = True
+        send_message(room_id=roomid,
+                        submission_message="Error updating track hub records, please contact faang-dcc@ebi.ac.uk")
+    finally:
+        return {'error_flag': error_flag, 'data': data}
 
 @app.task(base=LogErrorsTask)
-def register_trackhub(data, roomid):
+def register_trackhub(res, roomid):
     send_message(room_id=roomid,
                  submission_message="Registering Track Hub")
-    error_flag = False
+    error_flag = res['error_flag']
+    data = res['data']
     # login and get auth token
     user = TRACKHUBS_USERNAME
     pwd = TRACKHUBS_PASSWORD
@@ -320,13 +376,14 @@ def register_trackhub(data, roomid):
     genome_name = data['Genome Data'][0]['Assembly Name']
     genome_id = data['Genome Data'][0]['Assembly Accession']
     hub_url = f"https://api.faang.org/files/trackhubs/{hub_dir}/hub.txt"
-    r = requests.get('https://www.trackhubregistry.org/api/login', auth=(user, pwd), verify=True)
+    login_payload = {"username": user, "password": pwd}
+    r = requests.post('https://www.trackhubregistry.org/api/login', data=login_payload)
     if not r.ok:
         error_flag = True
     else:
         auth_token = r.json()[u'auth_token']
         # register tracks with trackhubs registry
-        headers = {'user': user, 'auth_token': auth_token}
+        headers = {'user': user, 'Authorization': 'Token ' + auth_token}
         payload = {'url': hub_url, 'assemblies': {genome_name: genome_id}}
         r = requests.post('https://www.trackhubregistry.org/api/trackhub', headers=headers, json=payload, verify=True)
         if not r.ok:
