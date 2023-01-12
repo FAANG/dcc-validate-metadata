@@ -63,7 +63,7 @@ def get_token():
     response = requests.get(
         f"https://api.aai.ebi.ac.uk/auth",
         auth=HTTPBasicAuth(
-            BOVREG_BIOSAMPLES_USERNAME_PROD, BOVREG_BIOSAMPLES_PASSWORD_PROD))
+            "BovRegProd", BOVREG_BIOSAMPLES_PASSWORD_PROD))
     return response.text
 
 

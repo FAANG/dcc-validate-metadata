@@ -4,6 +4,7 @@ from metadata_validation_conversion.constants import \
     SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES, ADDITIONAL_INFO_MAPPING
 from validation.helpers import get_record_name
 from submission.helpers import remove_underscores
+from .helpers import get_header
 
 
 class BiosamplesFileConverter:
@@ -107,6 +108,12 @@ class BiosamplesFileConverter:
                         'organism'][0]['text']
                 except ValueError:
                     pass
+                except KeyError:
+                    results = requests.get(
+                        f"https://www.ebi.ac.uk/biosamples/samples/"
+                        f"{id_to_fetch}", headers=get_header()).json()
+                    return results['taxId'], results['characteristics'][
+                        'organism'][0]['text']
             else:
                 return self.fetch_taxon_information(missing_ids[id_to_fetch],
                                                     taxon_ids,
