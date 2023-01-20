@@ -81,7 +81,6 @@ class CageSeqInputField(InputObjectType):
 
 class ExperimentFilterBasicArgument(InputObjectType):
     accession = List(String)
-    accession = List(String)
     project = List(String)
     secondaryProject = List(String)
     assayType = List(String)
@@ -110,9 +109,8 @@ class ExperimentFilterBasicArgument(InputObjectType):
     RNASeq = Field(RnaSeqInputField)
     WGS = Field(WgsInputField)
     CAGESeq = Field(CageSeqInputField)
-
-    ChIP_seq_input_DNA = Field(ChipSeqInputDnaInputField)
-    DNase_seq = Field(DNaseSeqInputField)
+    ChIPSeqInputDNA = Field(ChipSeqInputDnaInputField)
+    DNaseSeq = Field(DNaseSeqInputField)
 
 
 

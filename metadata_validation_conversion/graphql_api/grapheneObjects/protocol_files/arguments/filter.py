@@ -13,6 +13,7 @@ class ProtocolFilesFilterBasicArgument(InputObjectType):
     assayType = List(String)
     key = List(String)
     url = List(String)
+    secondaryProject = List(String)
     filename = List(String)
     experiments = Field(ExperimentsInputField)
 

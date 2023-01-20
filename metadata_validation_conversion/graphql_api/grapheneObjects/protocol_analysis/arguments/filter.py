@@ -20,7 +20,6 @@ class ProtocolAnalysisFilterBasicArgument(InputObjectType):
     key = List(String)
     url = List(String)
     analyses = Field(AnalysesInputField)
-    analysisProtocol = Field(AnalysisProtocolInputField)
 
 
 class ProtocolAnalysisFilterJoinArgument(InputObjectType):

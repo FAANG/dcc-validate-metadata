@@ -47,7 +47,7 @@ class DNaseSeqField(ObjectType):
 class HiCField(ObjectType):
     restrictionEnzyme = String()
     restrictionSite = String()
-    hi_cProtocol = Field(ProtocolField)
+    hiCProtocol = Field(ProtocolField)
 
 
 class RNAseqField(ObjectType):
