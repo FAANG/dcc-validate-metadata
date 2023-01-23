@@ -80,9 +80,10 @@ def send_message(room_id, conversion_status=None, validation_status=None,
         "response": response})
 
 
-def send_message_graphql(task_id, data):
+def send_message_graphql(task_id, graphql_status=None, errors=None):
     response = {
-        'data': data
+        'graphql_status': graphql_status,
+        'errors': errors
     }
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(f"graphqltaskstatus-{task_id}", {
