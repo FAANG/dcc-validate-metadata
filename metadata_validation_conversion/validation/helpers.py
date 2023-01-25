@@ -16,10 +16,14 @@ def validate(data, schema):
     response = requests.post(ELIXIR_VALIDATOR_URL, json=json_to_send).json()
     validation_errors = list()
     paths = list()
-    print(response)
     for item in response:
-        validation_errors.append(', '.join(item['errors']))
-        paths.append(item['dataPath'])
+        errors_tmp = list()
+        for error in item['errors']:
+            if error != 'should match exactly one schema in oneOf':
+                errors_tmp.append(error)
+        if len(errors_tmp) != 0:
+            validation_errors.append(', '.join(errors_tmp))
+            paths.append(item['dataPath'])
     return validation_errors, paths
 
 
