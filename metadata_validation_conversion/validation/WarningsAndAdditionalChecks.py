@@ -347,8 +347,6 @@ class WarningsAndAdditionalChecks:
                     units = '%Y'
                 else:
                     continue
-                print("======================================")
-                print(f"{field_value['value']}\t{units}")
                 try:
                     datetime.datetime.strptime(field_value['value'], units)
                 except ValueError:

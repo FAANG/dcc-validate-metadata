@@ -2,6 +2,8 @@ import requests
 import aiohttp
 import asyncio
 
+from submission.helpers import get_header
+
 
 def parse_biosample_results(results, results_to_return, my_id):
     # Collect relationships
@@ -34,10 +36,19 @@ def fetch_biosample_data_for_ids(ids):
                 try:
                     response = requests.get(f"https://www.ebi.ac.uk/biosamples"
                                             f"/samples/{my_id}").json()
-                    results.setdefault(my_id, dict())
-                    parse_biosample_results(response, results, my_id)
+                    if 'error' not in response:
+                        results.setdefault(my_id, dict())
+                        parse_biosample_results(response, results, my_id)
                 except ValueError:
                     pass
+    if len(results) < len(ids):
+        for my_id in ids:
+            if my_id not in results:
+                response = requests.get(f"https://www.ebi.ac.uk/biosamples"
+                                        f"/samples/{my_id}",
+                                        headers=get_header()).json()
+                results.setdefault(my_id, dict())
+                parse_biosample_results(response, results, my_id)
     return results
 
 
@@ -66,5 +77,6 @@ async def fetch_biosample(session, my_id, results_to_return):
     url = f"https://www.ebi.ac.uk/biosamples/samples/{my_id}"
     async with session.get(url) as response:
         results = await response.json()
-        results_to_return.setdefault(my_id, dict())
-        parse_biosample_results(results, results_to_return, my_id)
+        if 'error' not in results:
+            results_to_return.setdefault(my_id, dict())
+            parse_biosample_results(results, results_to_return, my_id)
