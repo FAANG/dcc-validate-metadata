@@ -14,57 +14,12 @@ class OrganismCustomFieldInputField(InputObjectType):
     ontologyTerms = List(String)
 
 
-class MaterialInputField(InputObjectType):
+class TextOntologyTermsInputField(InputObjectType):
     text = List(String)
     ontologyTerms = List(String)
 
 
-class OrganismInputField(InputObjectType):
-    text = List(String)
-    ontologyTerms = List(String)
-
-
-class SexInputField(InputObjectType):
-    text = List(String)
-    ontologyTerms = List(String)
-
-
-class BreedInputField(InputObjectType):
-    text = List(String)
-    ontologyTerms = List(String)
-
-
-class BirthDateInputField(InputObjectType):
-    text = List(String)
-    unit = List(String)
-
-
-class HealthStatusInputField(InputObjectType):
-    text = List(String)
-    ontologyTerms = List(String)
-
-
-class BirthLocationLongitudeInputField(InputObjectType):
-    text = List(String)
-    unit = List(String)
-
-
-class BirthLocationLatitudeInputField(InputObjectType):
-    text = List(String)
-    unit = List(String)
-
-
-class BirthWeightInputField(InputObjectType):
-    text = List(String)
-    unit = List(String)
-
-
-class PlacentalWeightInputField(InputObjectType):
-    text = List(String)
-    unit = List(String)
-
-
-class PregnancyLengthInputField(InputObjectType):
+class TextUnitInputField(InputObjectType):
     text = List(String)
     unit = List(String)
 
@@ -91,19 +46,19 @@ class OrganismFilterBasicArgument(InputObjectType):
     secondaryProject = List(String)
     organization = Field(OrganismOrganizationInputField)
     customField = Field(OrganismCustomFieldInputField)
-    material = Field(MaterialInputField)
+    material = Field(TextOntologyTermsInputField)
     availability = List(String)
-    organism = Field(OrganismInputField)
-    sex = Field(SexInputField)
-    breed = Field(BreedInputField)
-    birthDate = Field(BirthDateInputField)
-    healthStatus = Field(HealthStatusInputField)
+    organism = Field(TextOntologyTermsInputField)
+    sex = Field(TextOntologyTermsInputField)
+    breed = Field(TextOntologyTermsInputField)
+    birthDate = Field(TextUnitInputField)
+    healthStatus = Field(TextOntologyTermsInputField)
     birthLocation = List(String)
-    birthLocationLongitude = Field(BirthLocationLongitudeInputField)
-    birthLocationLatitude = Field(BirthLocationLatitudeInputField)
-    birthWeight = Field(BirthWeightInputField)
-    placentalWeight = Field(PlacentalWeightInputField)
-    pregnancyLength = Field(PregnancyLengthInputField)
+    birthLocationLongitude = Field(TextUnitInputField)
+    birthLocationLatitude = Field(TextUnitInputField)
+    birthWeight = Field(TextUnitInputField)
+    placentalWeight = Field(TextUnitInputField)
+    pregnancyLength = Field(TextUnitInputField)
     deliveryTiming = List(String)
     deliveryEase = List(String)
     childOf = List(String)

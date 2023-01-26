@@ -76,25 +76,24 @@ def generate_es_filters(basic_query, es_filter_queries, prefix=''):
 
 
 # in-place editing, no need to return right_index_map
-def update_experiment_fieldnames(right_index_map, mapping_key):
-    key_value_list = right_index_map[mapping_key]
+def update_experiment_fieldnames(dict_ele):
+    if 'ChIP-seq DNA-binding' in dict_ele:
+        dict_ele['ChIPSeqDnaBinding'] = dict_ele.pop('ChIP-seq DNA-binding')
+    if 'Hi-C' in dict_ele:
+        if 'hi-cProtocol' in dict_ele['Hi-C']:
+            dict_ele['Hi-C']['hiCProtocol'] = dict_ele['Hi-C'].pop('hi-cProtocol')
+        dict_ele['HiC'] = dict_ele.pop('Hi-C')
+    if 'RNA-seq' in dict_ele:
+        dict_ele['RNASeq'] = dict_ele.pop('RNA-seq')
+    if 'CAGE-seq' in dict_ele:
+        dict_ele['CAGESeq'] = dict_ele.pop('CAGE-seq')
+    if 'ATAC-seq' in dict_ele:
+        dict_ele['ATACSeq'] = dict_ele.pop('ATAC-seq')
+    if 'BS-seq' in dict_ele:
+        dict_ele['BsSeq'] = dict_ele.pop('BS-seq')
 
-    for ele in key_value_list:
-        if 'ChIP-seq DNA-binding' in ele:
-            ele['ChIPSeqDnaBinding'] = ele.pop('ChIP-seq DNA-binding')
-        if 'Hi-C' in ele:
-            ele['HiC'] = ele.pop('Hi-C')
-        if 'RNA-seq' in ele:
-            ele['RNASeq'] = ele.pop('RNA-seq')
-        if 'CAGE-seq' in ele:
-            ele['CAGESeq'] = ele.pop('CAGE-seq')
-        if 'ATAC-seq' in ele:
-            ele['ATACSeq'] = ele.pop('ATAC-seq')
-        if 'BS-seq' in ele:
-            ele['BsSeq'] = ele.pop('BS-seq')
 
-
-def update_experiment_es_fieldnames(dict_ele):
+def update_experiment_es_filter_fieldnames(dict_ele):
     if 'ChIPSeqDnaBinding' in dict_ele:
         dict_ele['ChIP-seq DNA-binding'] = dict_ele.pop('ChIPSeqDnaBinding')
     if 'HiC' in dict_ele:
@@ -144,6 +143,10 @@ def get_projected_data(left_index, right_index, left_index_data, right_index_dat
     right_index_map = generate_index_map(right_index_data,
                                          index_mapping[(left_index, right_index)]['right_index_key'])
     for left_document in left_index_data:
+
+        # exceptional case in experiment index where field name has space, e.g "ChIP-seq DNA-binding"
+        update_experiment_fieldnames(left_document)
+
         if 'join' not in left_document:
             left_document['join'] = defaultdict(list)
 
@@ -155,7 +158,9 @@ def get_projected_data(left_index, right_index, left_index_data, right_index_dat
                 if key in right_index_map:
                     # exceptional case in experiment index where field name has space, e.g "ChIP-seq DNA-binding"
                     if right_index == "experiment":
-                        update_experiment_fieldnames(right_index_map, key)
+                        rec_list = right_index_map[key]
+                        for dict in rec_list:
+                            update_experiment_fieldnames(dict)
 
                     for rec in right_index_map[key]:
                         left_document['join'][right_index].append(rec)
@@ -183,7 +188,7 @@ def fetch_with_join(filter, left_index, prev_index_data=None, key_filter_name=No
     if 'basic' in filter:
         # exceptional case in experiment index where field name has space, e.g "ChIP-seq DNA-binding"
         if left_index == "experiment":
-            update_experiment_es_fieldnames(filter['basic'])
+            update_experiment_es_filter_fieldnames(filter['basic'])
         generate_es_filters(filter['basic'], es_filter_queries)
 
     # if condition to deal with situation where Terms Query request exceeds the allowed maximum of [65536]

@@ -1,12 +1,10 @@
 from graphene import ObjectType, String, Field, ID, relay, List, Int
 from graphene.relay import Connection, Node
 from ..common_field_objects import TaskResponse
-from ...tasks import resolve_all_task
+from ...tasks import launch_celery_task
 from ..helpers import fetch_index_records, fetch_with_join
-from .field_objects import Organism_Field, OrganismCustomFieldField, BirthDate_Field, BirthLocationLatitude_Field, \
-    BirthLocationLongitude_Field, BirthWeight_Field, Breed_Field, HealthStatusField, Material_Field, \
-    FileOrganizationField, PlacentalWeight_Field, PregnancyLength_Field, OrganismPublishedArticles_Field, Sex_Field, \
-    OrganismJoin_Field
+from .field_objects import OrganismCustomFieldField, FileOrganizationField, OrganismPublishedArticlesField, \
+    OrganismJoinField, TextUnitField, TextOntologyTermsField
 from .arguments.filter import OrganismFilterArgument
 
 from celery.result import AsyncResult
@@ -43,26 +41,26 @@ class OrganismNode(ObjectType):
     secondaryProject = String()
     organization = List(of_type=FileOrganizationField)
     customField = List(of_type=OrganismCustomFieldField)
-    material = Field(Material_Field)
+    material = Field(TextOntologyTermsField)
     availability = String()
-    organism = Field(Organism_Field)
-    sex = Field(Sex_Field)
-    breed = Field(Breed_Field)
-    birthDate = Field(BirthDate_Field)
-    healthStatus = List(of_type=HealthStatusField)
+    organism = Field(TextOntologyTermsField)
+    sex = Field(TextOntologyTermsField)
+    breed = Field(TextOntologyTermsField)
+    birthDate = Field(TextUnitField)
+    healthStatus = List(of_type=TextOntologyTermsField)
     birthLocation = String()
-    birthLocationLongitude = Field(BirthLocationLongitude_Field)
-    birthLocationLatitude = Field(BirthLocationLatitude_Field)
-    birthWeight = Field(BirthWeight_Field)
-    placentalWeight = Field(PlacentalWeight_Field)
-    pregnancyLength = Field(PregnancyLength_Field)
+    birthLocationLongitude = Field(TextUnitField)
+    birthLocationLatitude = Field(TextUnitField)
+    birthWeight = Field(TextUnitField)
+    placentalWeight = Field(TextUnitField)
+    pregnancyLength = Field(TextUnitField)
     deliveryTiming = String()
     deliveryEase = String()
     childOf = String()
     pedigree = String()
     paperPublished = String()
-    publishedArticles = Field(OrganismPublishedArticles_Field)
-    join = Field(OrganismJoin_Field)
+    publishedArticles = Field(OrganismPublishedArticlesField)
+    join = Field(OrganismJoinField)
 
     @classmethod
     def get_node(cls, info, id):
@@ -93,7 +91,7 @@ class OrganismSchema(ObjectType):
         return res
 
     def resolve_all_organisms_as_task(root, info, **kwargs):
-        task = resolve_all_task.apply_async(args=[kwargs, 'organism'], queue='graphql_api')
+        task = launch_celery_task.apply_async(args=[kwargs, 'organism'], queue='graphql_api')
         response = {'id': task.id, 'status': task.status, 'result': task.result}
         return response
 
