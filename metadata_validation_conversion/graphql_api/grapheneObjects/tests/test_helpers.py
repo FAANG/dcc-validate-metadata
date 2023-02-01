@@ -2,7 +2,7 @@ import unittest
 from graphql_api.grapheneObjects.tests import index_data
 
 from ..helpers import is_filter_query_depth_valid, generate_es_filters, update_experiment_fieldnames, \
-    retrieve_mapping_keys, generate_index_map, get_projected_data
+    retrieve_mapping_keys, generate_index_map, get_joined_data
 
 
 
@@ -172,11 +172,11 @@ class TestSum(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_get_projected_data(self):
+    def test_get_joined_data(self):
         left_index = 'dataset'
         right_index = 'file'
         left_index_data = index_data.left_data
         right_index_data = index_data.right_data
-        result = dict(get_projected_data(left_index, right_index, left_index_data, right_index_data)[0]['join'])
+        result = dict(get_joined_data(left_index, right_index, left_index_data, right_index_data)[0]['join'])
 
         self.assertIsInstance(result['file'], list)

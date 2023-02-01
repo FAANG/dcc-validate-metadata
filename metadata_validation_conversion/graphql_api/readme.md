@@ -15,7 +15,7 @@ experiments data is stored in the _experiment_ index.
 
 GraphiQL is an interactive in-browser GraphQL IDE allowing you to easily form queries and explore the schema associated
 with each FAANG index. To use GraphiQL to write GraphQL queries, please use the following link:
-https://api.faang.org/subscriptions/
+https://api.faang.org/graphql/
 
 **Queries format**
 
