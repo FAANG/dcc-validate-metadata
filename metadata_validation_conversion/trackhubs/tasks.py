@@ -363,6 +363,20 @@ def update_es_records(data, roomid):
     finally:
         return {'error_flag': error_flag, 'data': data}
 
+def update_trackhub(hub_dir, headers, payload):
+    # fetch all trackhubs associated with the account
+    r = requests.get("https://www.trackhubregistry.org/api/trackhub", headers=headers, verify=True)
+    hubs = json.loads(r.content)
+    # get the trackhub ID associated with hub_dir
+    for hub in hubs:
+        if hub['name'] == hub_dir:
+            hub_id = hub['hub_id']
+            # update the hub registration for hub_dir
+            r = requests.put(f"https://www.trackhubregistry.org/api/trackhub/{hub_id}", headers=headers, json=payload, verify=True)
+            if r.ok:
+                return True
+    return False
+
 @app.task(base=LogErrorsTask)
 def register_trackhub(res, roomid):
     send_message(room_id=roomid,
@@ -387,7 +401,8 @@ def register_trackhub(res, roomid):
         payload = {'url': hub_url, 'assemblies': {genome_name: genome_id}}
         r = requests.post('https://www.trackhubregistry.org/api/trackhub', headers=headers, json=payload, verify=True)
         if not r.ok:
-            error_flag = True
+            # if hub is already registered, update the hub registration
+            error_flag = not update_trackhub(hub_dir, headers, payload)
     if error_flag:
         send_message(room_id=roomid,
                      errors="Registration failed, please contact faang-dcc@ebi.ac.uk")
