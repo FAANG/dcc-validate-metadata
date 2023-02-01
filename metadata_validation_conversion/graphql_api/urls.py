@@ -6,8 +6,8 @@ from . import views
 
 DEBUG = config('DEBUG', default=False)
 
+app_name = 'graphql_api'
 urlpatterns = [
     path("", csrf_exempt(GraphQLView.as_view(graphiql=True))),
-    path("tasks/<str:task_id>", views.get_task_details)
-
+    path("download", views.download, name='download')
 ]

@@ -137,7 +137,7 @@ def retrieve_mapping_keys(record, record_key):
     return mapping_keys_list
 
 
-def get_projected_data(left_index, right_index, left_index_data, right_index_data):
+def get_joined_data(left_index, right_index, left_index_data, right_index_data):
     resultset = []
 
     right_index_map = generate_index_map(right_index_data,
@@ -230,7 +230,7 @@ def fetch_with_join(filter, left_index, prev_index_data=None, key_filter_name=No
                                            key_filter_name=index_mapping[(left_index, right_index)][
                                                'right_index_key'])
 
-        left_index_data = get_projected_data(left_index, right_index, left_index_data, right_index_data)
+        left_index_data = get_joined_data(left_index, right_index, left_index_data, right_index_data)
 
     # return the joined result data
     return left_index_data
