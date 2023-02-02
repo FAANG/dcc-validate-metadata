@@ -2,7 +2,7 @@ import json
 
 from graphene import ObjectType, String, Field, ID, relay
 from graphene.relay import Connection, Node
-from graphql_api.tasks import resolve_all_task
+from graphql_api.tasks import launch_celery_task
 from celery.result import AsyncResult
 from ..helpers import fetch_index_records, fetch_with_join
 from .field_objects import ATACseqField, BsSeqField, CAGEseqField, ChIPSeqDnaBindingField, \
@@ -57,9 +57,8 @@ class ExperimentNode(ObjectType):
     RNASeq = Field(RNAseqField)
     WGS = Field(WGSField)
     CAGESeq = Field(CAGEseqField)
-
-    ChIP_seq_input_DNA = Field(ChIPseqInputDNAField)
-    DNase_seq = Field(DNaseSeqField)
+    ChIPSeqInputDNA = Field(ChIPseqInputDNAField)
+    DNaseSeq = Field(DNaseSeqField)
 
     join = Field(ExperimentJoinField)
 
@@ -92,7 +91,7 @@ class ExperimentSchema(ObjectType):
         return res
 
     def resolve_all_experiments_as_task(root, info, **kwargs):
-        task = resolve_all_task.apply_async(args=[kwargs, 'experiment'], queue='graphql_api')
+        task = launch_celery_task.apply_async(args=[kwargs, 'experiment'], queue='graphql_api')
         response = {'id': task.id, 'status': task.status, 'result': task.result}
         return response
 

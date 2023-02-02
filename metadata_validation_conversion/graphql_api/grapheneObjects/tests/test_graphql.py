@@ -1,6 +1,6 @@
 class TestGraphQLIntegrationTests(GraphQLTestCase):
     def setUp(self):
-        self.GRAPHQL_URL = "/subscriptions/"
+        self.GRAPHQL_URL = "/graphql/"
 
     def test_endpoint(self):
         response = self.query(
@@ -195,7 +195,7 @@ class TestGraphQLIntegrationTests(GraphQLTestCase):
         self.assertIsNone(result)
 
     # If there is a join query in filter argument, then the value
-    # of join field in corresponding field selection part of query should have a value that is a list        
+    # of join field in corresponding field selection part of query should have a value that is a list
     def test_query_with__left_join(self):
         response_with_left_join = self.query(
             '''
@@ -257,7 +257,7 @@ class TestGraphQLIntegrationTests(GraphQLTestCase):
         content_without_join = json.loads(response_without_join.content)
 
         # for left join the number of records of left index should be equal to
-        # number of records without any join   
+        # number of records without any join
         self.assertTrue(len(content_without_join['data']['allOrganisms']['edges']) == len(
             content_with_left_join['data']['allOrganisms']['edges']))
 

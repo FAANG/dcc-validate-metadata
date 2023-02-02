@@ -1,6 +1,6 @@
 from graphene import ObjectType, String, Field,ID, relay, List, Int
 from graphene.relay import Connection,Node
-from graphql_api.tasks import resolve_all_task
+from graphql_api.tasks import launch_celery_task
 from celery.result import AsyncResult
 from ..helpers import fetch_index_records, fetch_with_join
 from .field_objects import CellCultureField,SpecimenOrganismField,CellLineField,CellSpecimenField,\
@@ -45,7 +45,7 @@ class SpecimenNode(ObjectType):
     allDeriveFromSpecimens = String()
     availability = String()
     cellType = Field(OntologyField)
-    specimen = Field(SpecimenOrganismField)
+    organism = Field(SpecimenOrganismField)
     specimenFromOrganism = Field(SpecimenFromOrganismField)
     poolOfSpecimens = Field(PoolOfSpecimensField)
     cellSpecimen = Field(CellSpecimenField)
@@ -84,7 +84,7 @@ class SpecimenSchema(ObjectType):
         return res
 
     def resolve_all_specimens_as_task(root, info,**kwargs):
-        task = resolve_all_task.apply_async(args=[kwargs,'specimen'],queue='graphql_api')
+        task = launch_celery_task.apply_async(args=[kwargs, 'specimen'], queue='graphql_api')
         response = {'id':task.id,'status':task.status,'result':task.result}
         return response
 

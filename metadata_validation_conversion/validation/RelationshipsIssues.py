@@ -54,10 +54,10 @@ class RelationshipsIssues:
         """
         This function checks whether control experiment for ChIP-seq 
         DNA-binding proteins experiments exists within the submission 
-        (check alias) or in ENA (check accession)
+        (check ChIP-seq Input DNA alias) or in ENA (check accession)
         :return: boolean indicating whether or not the experiment exists
         """
-        records = self.json_to_test['chip-seq_dna-binding_proteins']
+        records = self.json_to_test['chip-seq_input_dna']
         # find control experiment in current submission
         for index, record in enumerate(records):
             if record['custom']['experiment_alias']['value'] == exp:

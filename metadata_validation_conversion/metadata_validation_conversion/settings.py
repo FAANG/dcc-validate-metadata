@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'graphql_ws.django',
     'graphene_django',
+    'graphql_api',
 ]
 
 MIDDLEWARE = [
