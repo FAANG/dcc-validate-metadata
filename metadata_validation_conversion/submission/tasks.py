@@ -114,8 +114,8 @@ def prepare_analyses_data(json_to_convert, room_id, private=False, action='submi
     xml_files.extend([analysis_xml, submission_xml])
     for xml_file in xml_files:
         if 'Error' in xml_file:
-            send_message(submission_message='Failed to convert data',
-                         conversion_errors=xml_file, room_id=room_id)
+            send_message(submission_message='Error: Failed to convert data',
+                         errors=xml_file, room_id=room_id)
             return 'Error'
     send_message(submission_status='Data is ready', room_id=room_id)
     return 'Success'
@@ -133,8 +133,8 @@ def prepare_experiments_data(json_to_convert, room_id, private=False, action='su
         xml_files.append(sample_xml)
     for xml_file in xml_files:
         if 'Error' in xml_file:
-            send_message(submission_message='Failed to convert data',
-                         conversion_errors=xml_file, room_id=room_id)
+            send_message(submission_message='Error: Failed to convert data',
+                         errors=xml_file, room_id=room_id)
             return 'Error'
     send_message(submission_status='Data is ready', room_id=room_id)
     return 'Success'
@@ -143,9 +143,7 @@ def prepare_experiments_data(json_to_convert, room_id, private=False, action='su
 @app.task(base=LogErrorsTask)
 def submit_data_to_ena(results, credentials, room_id, submission_type, action="submission"):
     if results[0] != 'Success':
-        send_message(submission_message=f"Error: {action} failed",
-                     room_id=room_id)
-        return 'Success'
+        return 'Error'
     send_message(submission_message='Waiting: submitting records to ENA',
                  room_id=room_id)
     submission_path = ENA_TEST_SERVER if credentials['mode'] == 'test' else \

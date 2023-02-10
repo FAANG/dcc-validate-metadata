@@ -12,7 +12,7 @@ def download(request):
     query_name = request.GET.get('query_name', '')
     query_string = request.GET.get('query', '')
     query = f'{json.loads(query_string)}'
-    url = 'https://api.faang.org/graphql/'
+    url = 'http://backend-svc:8000/graphql/'
     res = requests.post(url, json={'query': query})
 
     if res and res.status_code == 200:
