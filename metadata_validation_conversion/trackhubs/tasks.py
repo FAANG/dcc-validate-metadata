@@ -252,12 +252,12 @@ def upload_files(result, webin_credentials, fileid):
         try:
             # upload track files to trackhubs local storage
             for track in res_dict['Tracks Data']:
-                file = track['File Path']
+                file = track['File Path'].split('/')[-1]
                 # create sub-directories
                 os.system(f"mkdir -p /usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{track['Subdirectory']}")
                 # download files from webin FTP area of user
                 filepath = f"/usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{track['Subdirectory']}/{file}"
-                cmd = f"curl -s ftp://webin.ebi.ac.uk/{file} --user {webin_credentials['user']}:{webin_credentials['pwd']} -o {filepath}"
+                cmd = f"curl -s ftp://webin.ebi.ac.uk/{track['File Path']} --user {webin_credentials['user']}:{webin_credentials['pwd']} -o {filepath}"
                 os.system(cmd)
                 # backup files to s3
                 cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
