@@ -4,6 +4,7 @@ import re
 from abc import ABC
 
 from lxml import etree
+from elasticsearch import Elasticsearch, RequestsHttpConnection
 
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
@@ -18,6 +19,7 @@ from .ExperimentsFileConverter import ExperimentFileConverter
 from .AnnotateTemplate import AnnotateTemplate
 from .helpers import get_credentials
 from celery import Task
+from django.conf import settings
 
 
 class LogErrorsTask(Task, ABC):
@@ -271,6 +273,8 @@ def parse_submission_results(submission_results, room_id, action="submission"):
                 submission_error_messages.append(error.text)
             for info in messages.findall('INFO'):
                 submission_info_messages.append(info.text)
+            # Save submission data to ES
+            save_submission_data(root)
         if len(submission_error_messages) > 0:
             send_message(submission_message=f"Error: {action} failed",
                          submission_results=[submission_info_messages,
@@ -283,6 +287,37 @@ def parse_submission_results(submission_results, room_id, action="submission"):
                 submission_results=[submission_info_messages],
                 room_id=room_id)
             return 'Success'
+
+
+def save_submission_data(root):
+    object_types = {
+    'EXPERIMENT': 'experiments',
+    'ANALYSIS': 'analyses',
+    'RUN': 'runs',
+    'STUDY': 'studies',
+    'SAMPLE': 'samples'
+    }
+    if root.get('success') == 'true':
+        submission = root.findall('SUBMISSION')[0]
+        submission_data = {
+            'alias': submission.get('alias') if submission.get('alias') else '',
+            'accession': submission.get('accession') if submission.get('accession') else ''
+        }
+        for type in object_types:
+            objects = root.findall(type)
+            if len(objects):
+                prop = object_types[type]
+                submission_data[prop] = []
+                for object in objects:
+                    obj_data = {
+                        'alias': object.get('alias') if object.get('alias') else '',
+                        'accession': object.get('accession') if object.get('accession') else '',
+                        'status': object.get('status') if object.get('status') else '',
+                    }
+                    submission_data[prop].append(obj_data)
+        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
+                    http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+        es.index(index='submissions', id=submission_data['alias'], body=submission_data)
 
 
 @app.task(base=LogErrorsTask)
