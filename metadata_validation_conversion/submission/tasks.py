@@ -275,8 +275,6 @@ def parse_submission_results(submission_results, submission_type, room_id, actio
                 submission_error_messages.append(error.text)
             for info in messages.findall('INFO'):
                 submission_info_messages.append(info.text)
-            # Save submission data to ES
-            save_submission_data(root, submission_type, room_id)
         if len(submission_error_messages) > 0:
             send_message(submission_message=f"Error: {action} failed",
                          submission_results=[submission_info_messages,
@@ -284,6 +282,8 @@ def parse_submission_results(submission_results, submission_type, room_id, actio
                          room_id=room_id)
             return 'Error'
         else:
+            # Save submission data to ES
+            save_submission_data(root, submission_type, room_id)
             send_message(
                 submission_message=f"Success: {action} was successful",
                 submission_results=[submission_info_messages],
@@ -325,7 +325,8 @@ def parse_experiments_data(root, submission_id):
                 'study_alias': study['alias'],
                 'experiments': [],
                 'runs': [],
-                'files': []
+                'files': [],
+                'available_in_portal': 'false'
             }
             # get experiments associated with each study
             experiment_xml = f'{submission_id}_experiment.xml'
@@ -424,7 +425,8 @@ def parse_analysis_data(root, submission_id):
                         'study_id': analysis['study_id'],
                         'study_alias': '',
                         'assay_type': [],
-                        'analyses': []
+                        'analyses': [],
+                        'available_in_portal': 'false'
                     }
                 study_objs_dict[analysis['study_id']]['analyses'].append({
                     'alias': analysis['alias'],
@@ -439,13 +441,13 @@ def parse_analysis_data(root, submission_id):
 
 def save_submission_data(root, submission_type, room_id):
     if root.get('success') == 'true':
+        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
+                http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
         if submission_type == 'experiments':
             study_objs = parse_experiments_data(root, room_id)
         else:
             study_objs = parse_analysis_data(root, room_id)
         for study_obj in study_objs:
-            es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
-                    http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
             es.index(index='submissions', id=study_obj['study_id'], body=study_obj)
 
 
