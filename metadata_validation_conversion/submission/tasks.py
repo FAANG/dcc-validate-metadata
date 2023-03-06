@@ -3,7 +3,7 @@ import json
 import re
 import os
 from abc import ABC
-
+from datetime import datetime
 from lxml import etree
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 
@@ -283,7 +283,7 @@ def parse_submission_results(submission_results, submission_type, room_id, actio
             return 'Error'
         else:
             # Save submission data to ES
-            save_submission_data(root, submission_type, room_id)
+            save_submission_data(root, submission_type, room_id, action)
             send_message(
                 submission_message=f"Success: {action} was successful",
                 submission_results=[submission_info_messages],
@@ -291,7 +291,7 @@ def parse_submission_results(submission_results, submission_type, room_id, actio
             return 'Success'
 
 
-def parse_experiments_data(root, submission_id):
+def parse_experiments_data(root, submission_id, action):
     object_types = {
         'EXPERIMENT': 'experiments',
         'RUN': 'runs',
@@ -328,6 +328,13 @@ def parse_experiments_data(root, submission_id):
                 'files': [],
                 'available_in_portal': 'false'
             }
+            current_date = datetime.today().strftime('%Y-%m-%d')
+            if action == 'submission':
+                study_obj.update({"submission_date": current_date})
+
+            if action == 'update':
+                study_obj.update({"update_date": current_date})
+
             # get experiments associated with each study
             experiment_xml = f'{submission_id}_experiment.xml'
             if os.path.exists(experiment_xml):
@@ -386,7 +393,7 @@ def parse_experiments_data(root, submission_id):
     return study_objs
         
         
-def parse_analysis_data(root, submission_id):
+def parse_analysis_data(root, submission_id, action):
     study_objs = []
     if root.get('success') == 'true':
         objects = root.findall('ANALYSIS')
@@ -433,20 +440,28 @@ def parse_analysis_data(root, submission_id):
                     'accession': analysis['accession']
                 })
                 study_objs_dict[analysis['study_id']]['assay_type'].append(analysis['assay_type'])
+
+                current_date = datetime.today().strftime('%Y-%m-%d')
+                if action == 'submission':
+                    study_objs_dict[analysis['study_id']].update({"submission_date": current_date})
+
+                if action == 'update':
+                    study_objs_dict[analysis['study_id']].update({"update_date": current_date})
+
             for study_obj in study_objs_dict.values():
                 study_obj['assay_type'] = ', '.join(set(study_obj['assay_type']))
             study_objs = study_objs_dict.values()
     return study_objs
 
 
-def save_submission_data(root, submission_type, room_id):
+def save_submission_data(root, submission_type, room_id, action):
     if root.get('success') == 'true':
         es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
                 http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
         if submission_type == 'experiments':
-            study_objs = parse_experiments_data(root, room_id)
+            study_objs = parse_experiments_data(root, room_id, action)
         else:
-            study_objs = parse_analysis_data(root, room_id)
+            study_objs = parse_analysis_data(root, room_id, action)
         for study_obj in study_objs:
             es.index(index='submissions', id=study_obj['study_id'], body=study_obj)
 
