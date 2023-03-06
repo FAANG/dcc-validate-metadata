@@ -1,6 +1,7 @@
 import subprocess
 import json
 import re
+import os
 from abc import ABC
 
 from lxml import etree
@@ -210,7 +211,7 @@ def submit_data_to_ena(results, credentials, room_id, submission_type, action="s
             shell=True, capture_output=True)
 
     submission_results = submit_to_ena_process.stdout
-    parsed_results = parse_submission_results(submission_results, room_id, action)
+    parsed_results = parse_submission_results(submission_results, submission_type, room_id, action)
 
     # Adding project to the private data hub
     if parsed_results == 'Success' and credentials['private_submission'] \
@@ -253,10 +254,11 @@ def fetch_project_id(submission_results):
     return root.find('STUDY').find('EXT_ID').attrib['accession']
 
 
-def parse_submission_results(submission_results, room_id, action="submission"):
+def parse_submission_results(submission_results, submission_type, room_id, action="submission"):
     """
     This function parses submission response
     :param submission_results: submission response
+    :param submission_type: submission type
     :param room_id: room id to send messages through django channels
     :param action: indicates whether submission to ENA was an update or a new submission
     :return: error and info messages
@@ -273,8 +275,6 @@ def parse_submission_results(submission_results, room_id, action="submission"):
                 submission_error_messages.append(error.text)
             for info in messages.findall('INFO'):
                 submission_info_messages.append(info.text)
-            # Save submission data to ES
-            save_submission_data(root)
         if len(submission_error_messages) > 0:
             send_message(submission_message=f"Error: {action} failed",
                          submission_results=[submission_info_messages,
@@ -282,6 +282,8 @@ def parse_submission_results(submission_results, room_id, action="submission"):
                          room_id=room_id)
             return 'Error'
         else:
+            # Save submission data to ES
+            save_submission_data(root, submission_type, room_id)
             send_message(
                 submission_message=f"Success: {action} was successful",
                 submission_results=[submission_info_messages],
@@ -289,15 +291,16 @@ def parse_submission_results(submission_results, room_id, action="submission"):
             return 'Success'
 
 
-def save_submission_data(root):
+def parse_experiments_data(root, submission_id):
     object_types = {
-    'EXPERIMENT': 'experiments',
-    'ANALYSIS': 'analyses',
-    'RUN': 'runs',
-    'STUDY': 'studies',
-    'SAMPLE': 'samples'
+        'EXPERIMENT': 'experiments',
+        'RUN': 'runs',
+        'STUDY': 'studies',
+        'PROJECT': 'studies'
     }
+    study_objs = []
     if root.get('success') == 'true':
+        # get alias and accessions
         submission = root.findall('SUBMISSION')[0]
         submission_data = {
             'alias': submission.get('alias') if submission.get('alias') else '',
@@ -312,12 +315,140 @@ def save_submission_data(root):
                     obj_data = {
                         'alias': object.get('alias') if object.get('alias') else '',
                         'accession': object.get('accession') if object.get('accession') else '',
-                        'status': object.get('status') if object.get('status') else '',
                     }
                     submission_data[prop].append(obj_data)
+
+        # iterate through each study
+        for study in submission_data['studies']:
+            study_obj = {
+                'study_id': study['accession'],
+                'study_alias': study['alias'],
+                'experiments': [],
+                'runs': [],
+                'files': [],
+                'available_in_portal': 'false'
+            }
+            # get experiments associated with each study
+            experiment_xml = f'{submission_id}_experiment.xml'
+            if os.path.exists(experiment_xml):
+                experiment_root = etree.parse(experiment_xml).getroot()
+                experiments = experiment_root.findall('EXPERIMENT')
+                exp_alias_list = []
+                assay_types = []
+                for exp in experiments:
+                    exp_study_alias = exp.findall('STUDY_REF')[0].get('refname')
+                    # check that the study reference for the experiment matches the study
+                    if exp_study_alias == study['alias']:
+                        for experiment in submission_data['experiments']:
+                            # get experiment accession from submission data using experiment alias
+                            if experiment['alias'] == exp.get('alias'):
+                                study_obj['experiments'].append({
+                                    'alias': experiment['alias'],
+                                    'accession': experiment['accession']
+                                })
+                                exp_alias_list.append(experiment['alias'])
+
+                        # get assay type
+                        attributes = exp.findall('EXPERIMENT_ATTRIBUTES')
+                        if len(attributes):
+                            attributes = attributes[0].findall('EXPERIMENT_ATTRIBUTE')
+                            for attribute in attributes:
+                                tag = attribute.findall('TAG')[0].text
+                                if tag == 'assay type':
+                                    assay_types.append(attribute.findall('VALUE')[0].text)
+                study_obj['assay_type'] = ', '.join(set(assay_types))
+
+                # get runs and files associated with the study experiments
+                run_xml = f'{submission_id}_run.xml'
+                if os.path.exists(run_xml):
+                    run_root = etree.parse(run_xml).getroot()
+                    runs = run_root.findall('RUN')
+                    for r in runs:
+                        r_exp_alias = r.findall('EXPERIMENT_REF')[0].get('refname')
+                        # get associated runs using experiment_ref
+                        if r_exp_alias in exp_alias_list:
+                            for run in submission_data['runs']:
+                                # get run accession from submission data using run alias
+                                if run['alias'] == r.get('alias'):
+                                    study_obj['runs'].append({
+                                        'alias': run['alias'],
+                                        'accession': run['accession']
+                                    })
+                            # get associated files
+                            run_data = r.findall('DATA_BLOCK')
+                            if len(run_data):
+                                files = run_data[0].findall('FILES')
+                                for file in files[0].findall('FILE'):
+                                    study_obj['files'].append({
+                                        'name': file.get('filename')
+                                    })
+            study_objs.append(study_obj)
+    return study_objs
+        
+        
+def parse_analysis_data(root, submission_id):
+    study_objs = []
+    if root.get('success') == 'true':
+        objects = root.findall('ANALYSIS')
+        if len(objects):
+            analyses_objs = {}
+            for object in objects:
+                # get analyses alias and accession
+                analysis_alias = object.get('alias')
+                analysis_accession = object.get('accession') if object.get('accession') else ''
+                analyses_objs[analysis_alias] = {
+                    'alias': analysis_alias,
+                    'accession': analysis_accession,
+                    'study_id': '',
+                    'assay_type': ''
+                }
+            analysis_xml = f'{submission_id}_analysis.xml'
+            if os.path.exists(analysis_xml):
+                analysis_root = etree.parse(analysis_xml).getroot()
+                analyses = analysis_root.findall('ANALYSIS')
+                for a in analyses:
+                    a_alias = a.get('alias')
+                    # get study_id
+                    analyses_objs[a_alias]['study_id'] = a.findall('STUDY_REF')[0].get('accession')
+                    # get assay_type
+                    attributes = a.findall('ANALYSIS_ATTRIBUTES')
+                    if len(attributes):
+                        attributes = attributes[0].findall('ANALYSIS_ATTRIBUTE')
+                        for attribute in attributes:
+                            tag = attribute.findall('TAG')[0].text
+                            if tag == 'Assay Type':
+                                analyses_objs[a_alias]['assay_type'] = attribute.findall('VALUE')[0].text
+            study_objs_dict = {}
+            for analysis in analyses_objs.values():
+                if analysis['study_id'] not in study_objs_dict:
+                    study_objs_dict[analysis['study_id']] = {
+                        'study_id': analysis['study_id'],
+                        'study_alias': '',
+                        'assay_type': [],
+                        'analyses': [],
+                        'available_in_portal': 'false'
+                    }
+                study_objs_dict[analysis['study_id']]['analyses'].append({
+                    'alias': analysis['alias'],
+                    'accession': analysis['accession']
+                })
+                study_objs_dict[analysis['study_id']]['assay_type'].append(analysis['assay_type'])
+            for study_obj in study_objs_dict.values():
+                study_obj['assay_type'] = ', '.join(set(study_obj['assay_type']))
+            study_objs = study_objs_dict.values()
+    return study_objs
+
+
+def save_submission_data(root, submission_type, room_id):
+    if root.get('success') == 'true':
         es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
-                    http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
-        es.index(index='submissions', id=submission_data['alias'], body=submission_data)
+                http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+        if submission_type == 'experiments':
+            study_objs = parse_experiments_data(root, room_id)
+        else:
+            study_objs = parse_analysis_data(root, room_id)
+        for study_obj in study_objs:
+            es.index(index='submissions', id=study_obj['study_id'], body=study_obj)
 
 
 @app.task(base=LogErrorsTask)
