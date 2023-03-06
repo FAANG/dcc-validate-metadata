@@ -435,18 +435,18 @@ def parse_analysis_data(root, submission_id, action):
                         'analyses': [],
                         'available_in_portal': 'false'
                     }
+                    current_date = datetime.today().strftime('%Y-%m-%d')
+                    if action == 'submission':
+                        study_objs_dict[analysis['study_id']].update({"submission_date": current_date})
+
+                    if action == 'update':
+                        study_objs_dict[analysis['study_id']].update({"update_date": current_date})
+
                 study_objs_dict[analysis['study_id']]['analyses'].append({
                     'alias': analysis['alias'],
                     'accession': analysis['accession']
                 })
                 study_objs_dict[analysis['study_id']]['assay_type'].append(analysis['assay_type'])
-
-                current_date = datetime.today().strftime('%Y-%m-%d')
-                if action == 'submission':
-                    study_objs_dict[analysis['study_id']].update({"submission_date": current_date})
-
-                if action == 'update':
-                    study_objs_dict[analysis['study_id']].update({"update_date": current_date})
 
             for study_obj in study_objs_dict.values():
                 study_obj['assay_type'] = ', '.join(set(study_obj['assay_type']))
