@@ -21,3 +21,4 @@ uvicorn==0.14.0
 websockets==10.3
 graphql-ws==0.4.4
 graphene-django==2.15.0
+deepdiff==6.2.3
