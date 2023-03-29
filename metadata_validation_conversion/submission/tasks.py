@@ -342,6 +342,7 @@ def parse_experiments_data(root, submission_id, action):
                 experiments = experiment_root.findall('EXPERIMENT')
                 exp_alias_list = []
                 assay_types = []
+                secondary_projects = []
                 for exp in experiments:
                     exp_study_alias = exp.findall('STUDY_REF')[0].get('refname')
                     # check that the study reference for the experiment matches the study
@@ -355,7 +356,7 @@ def parse_experiments_data(root, submission_id, action):
                                 })
                                 exp_alias_list.append(experiment['alias'])
 
-                        # get assay type
+                        # get assay type and secondary project
                         attributes = exp.findall('EXPERIMENT_ATTRIBUTES')
                         if len(attributes):
                             attributes = attributes[0].findall('EXPERIMENT_ATTRIBUTE')
@@ -363,7 +364,10 @@ def parse_experiments_data(root, submission_id, action):
                                 tag = attribute.findall('TAG')[0].text
                                 if tag == 'assay type':
                                     assay_types.append(attribute.findall('VALUE')[0].text)
+                                elif tag == 'secondary project':
+                                    secondary_projects.append(attribute.findall('VALUE')[0].text)
                 study_obj['assay_type'] = ', '.join(set(assay_types))
+                study_obj['secondary_project'] = ', '.join(set(secondary_projects))
 
                 # get runs and files associated with the study experiments
                 run_xml = f'{submission_id}_run.xml'
@@ -407,7 +411,8 @@ def parse_analysis_data(root, submission_id, action):
                     'alias': analysis_alias,
                     'accession': analysis_accession,
                     'study_id': '',
-                    'assay_type': ''
+                    'assay_type': '',
+                    'secondary_project': ''
                 }
             analysis_xml = f'{submission_id}_analysis.xml'
             if os.path.exists(analysis_xml):
@@ -417,7 +422,7 @@ def parse_analysis_data(root, submission_id, action):
                     a_alias = a.get('alias')
                     # get study_id
                     analyses_objs[a_alias]['study_id'] = a.findall('STUDY_REF')[0].get('accession')
-                    # get assay_type
+                    # get assay_type and secondary_project
                     attributes = a.findall('ANALYSIS_ATTRIBUTES')
                     if len(attributes):
                         attributes = attributes[0].findall('ANALYSIS_ATTRIBUTE')
@@ -425,6 +430,8 @@ def parse_analysis_data(root, submission_id, action):
                             tag = attribute.findall('TAG')[0].text
                             if tag == 'Assay Type':
                                 analyses_objs[a_alias]['assay_type'] = attribute.findall('VALUE')[0].text
+                            elif tag == 'Secondary Project':
+                                analyses_objs[a_alias]['secondary_project'] = attribute.findall('VALUE')[0].text
             study_objs_dict = {}
             for analysis in analyses_objs.values():
                 if analysis['study_id'] not in study_objs_dict:
@@ -432,6 +439,7 @@ def parse_analysis_data(root, submission_id, action):
                         'study_id': analysis['study_id'],
                         'study_alias': '',
                         'assay_type': [],
+                        'secondary_project': [],
                         'analyses': [],
                         'available_in_portal': 'false'
                     }
@@ -447,9 +455,11 @@ def parse_analysis_data(root, submission_id, action):
                     'accession': analysis['accession']
                 })
                 study_objs_dict[analysis['study_id']]['assay_type'].append(analysis['assay_type'])
+                study_objs_dict[analysis['study_id']]['secondary_project'].append(analysis['secondary_project'])
 
             for study_obj in study_objs_dict.values():
                 study_obj['assay_type'] = ', '.join(set(study_obj['assay_type']))
+                study_obj['secondary_project'] = ', '.join(set(study_obj['secondary_project']))
             study_objs = study_objs_dict.values()
     return study_objs
 
