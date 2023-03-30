@@ -313,9 +313,12 @@ def parse_experiments_data(root, submission_id, action):
                 submission_data[prop] = []
                 for object in objects:
                     obj_data = {
-                        'alias': object.get('alias') if object.get('alias') else '',
-                        'accession': object.get('accession') if object.get('accession') else '',
+                        'alias': object.get('alias') if object.get('alias') else ''
                     }
+                    if prop == 'studies':
+                        obj_data['accession'] = object.findall('EXT_ID')[0].get('accession')
+                    else:
+                        obj_data['accession'] = object.get('accession')
                     submission_data[prop].append(obj_data)
 
         # iterate through each study
