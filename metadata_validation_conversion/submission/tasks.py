@@ -294,7 +294,6 @@ def parse_submission_results(submission_results, submission_type, room_id, actio
 def parse_experiments_data(root, submission_id, action):
     object_types = {
         'EXPERIMENT': 'experiments',
-        'RUN': 'runs',
         'STUDY': 'studies',
         'PROJECT': 'studies'
     }
@@ -327,8 +326,6 @@ def parse_experiments_data(root, submission_id, action):
                 'study_id': study['accession'],
                 'study_alias': study['alias'],
                 'experiments': [],
-                'runs': [],
-                'files': [],
                 'available_in_portal': 'false'
             }
             current_date = datetime.today().strftime('%Y-%m-%d')
@@ -355,7 +352,8 @@ def parse_experiments_data(root, submission_id, action):
                             if experiment['alias'] == exp.get('alias'):
                                 study_obj['experiments'].append({
                                     'alias': experiment['alias'],
-                                    'accession': experiment['accession']
+                                    'accession': experiment['accession'],
+                                    'available_in_portal': 'false'
                                 })
                                 exp_alias_list.append(experiment['alias'])
 
@@ -371,31 +369,6 @@ def parse_experiments_data(root, submission_id, action):
                                     secondary_projects.append(attribute.findall('VALUE')[0].text)
                 study_obj['assay_type'] = ', '.join(set(assay_types))
                 study_obj['secondary_project'] = ', '.join(set(secondary_projects))
-
-                # get runs and files associated with the study experiments
-                run_xml = f'{submission_id}_run.xml'
-                if os.path.exists(run_xml):
-                    run_root = etree.parse(run_xml).getroot()
-                    runs = run_root.findall('RUN')
-                    for r in runs:
-                        r_exp_alias = r.findall('EXPERIMENT_REF')[0].get('refname')
-                        # get associated runs using experiment_ref
-                        if r_exp_alias in exp_alias_list:
-                            for run in submission_data['runs']:
-                                # get run accession from submission data using run alias
-                                if run['alias'] == r.get('alias'):
-                                    study_obj['runs'].append({
-                                        'alias': run['alias'],
-                                        'accession': run['accession']
-                                    })
-                            # get associated files
-                            run_data = r.findall('DATA_BLOCK')
-                            if len(run_data):
-                                files = run_data[0].findall('FILES')
-                                for file in files[0].findall('FILE'):
-                                    study_obj['files'].append({
-                                        'name': file.get('filename')
-                                    })
             study_objs.append(study_obj)
     return study_objs
         
@@ -455,7 +428,8 @@ def parse_analysis_data(root, submission_id, action):
 
                 study_objs_dict[analysis['study_id']]['analyses'].append({
                     'alias': analysis['alias'],
-                    'accession': analysis['accession']
+                    'accession': analysis['accession'],
+                    'available_in_portal': 'false'
                 })
                 study_objs_dict[analysis['study_id']]['assay_type'].append(analysis['assay_type'])
                 study_objs_dict[analysis['study_id']]['secondary_project'].append(analysis['secondary_project'])
