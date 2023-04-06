@@ -494,7 +494,7 @@ def send_user_email(study_id, subscriber_email, deepdiff_obj):
     from django.template.loader import render_to_string
     from django.utils.html import strip_tags
 
-    ena_frontend_host = 'http://localhost:4200/'
+    ena_frontend_host = 'https://dcc-ena-submissions-frontend-4qewew6boq-uc.a.run.app/'
 
     # rename keys of dict_differences dict for readability
     document_differences = []

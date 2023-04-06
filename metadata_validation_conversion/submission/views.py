@@ -135,7 +135,7 @@ def subscribe_studyid(request, study_id, subscriber_email):
             submission_recordset.update({'subscribers': [{'email': subscriber_email}]})
 
         update_payload = {"doc": {"subscribers": submission_recordset['subscribers']}}
-        res = es.update(index="submissions_test", id=study_id, body=update_payload)
+        res = es.update(index="submissions", id=study_id, body=update_payload)
 
         if res['result'] == 'updated':
             send_message(submission_message=f'{subscriber_email} has successfully been registered to receive '
@@ -162,7 +162,7 @@ def subscribe_filtered_terms(request, assay_type, secondary_project, subscriber_
                 submission_recordset.update({'subscribers': [{'email': subscriber_email}]})
 
             update_payload = {"doc": {"subscribers": submission_recordset['subscribers']}}
-            res = es.update(index="submissions_test", id=submission_recordset['study_id'], body=update_payload)
+            res = es.update(index="submissions", id=submission_recordset['study_id'], body=update_payload)
 
             if res['result'] == 'updated':
                 assaytype_subscription_count += 1
