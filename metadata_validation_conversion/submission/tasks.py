@@ -494,6 +494,8 @@ def send_user_email(study_id, subscriber_email, deepdiff_obj):
     from django.template.loader import render_to_string
     from django.utils.html import strip_tags
 
+    ena_frontend_host = 'http://localhost:4200/'
+
     # rename keys of dict_differences dict for readability
     document_differences = []
     for k, v in list(deepdiff_obj.items()):
@@ -517,11 +519,13 @@ def send_user_email(study_id, subscriber_email, deepdiff_obj):
             .capitalize()
         document_differences.append((renamed_key, deepdiff_obj[k]))
 
-    unsub_link = 'https://data.faang.org/submissions/unsubscribe/{}/{}'.format(study_id, subscriber_email)
+    unsub_link = ena_frontend_host + 'submissions/unsubscribe/{}/{}'.format(study_id, subscriber_email)
+    submission_link = ena_frontend_host + 'submissions/' + study_id
     subject = f'Update regarding ENA study {study_id}'
 
     html_message = render_to_string('subscribe_mail_template.html', {'study_id': study_id,
                                                                      'differences': document_differences,
+                                                                     'ena_submission_link': submission_link,
                                                                      'unsub_link': unsub_link})
     plain_message = strip_tags(html_message)
     from_email = 'faang-dcc@ebi.ac.uk'

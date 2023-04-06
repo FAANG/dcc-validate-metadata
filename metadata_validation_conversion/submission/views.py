@@ -115,66 +115,65 @@ def submit_records(request, action, submission_type, task_id, room_id):
 
 
 @csrf_exempt
-def submission_subscribe(request, subscription_id, subscription_type, subscriber_email):
-    if subscription_type == 'assay_type':
-        es_records = fetch_es_data('assay_type', subscription_id)
-        if len(es_records) > 0:
-            assaytype_subscription_count = 0
-            for rec in es_records:
-                submission_recordset = rec['_source']
-                if 'subscribers' in submission_recordset:
-                    existing_emails = [ele['email'] for ele in submission_recordset['subscribers']]
-                    if subscriber_email in existing_emails:
-                        assaytype_subscription_count += 1
-                        continue
+def subscribe_studyid(request, study_id, subscriber_email):
+    es_records = fetch_singleterm_data('study_id', study_id)
+    if len(es_records) > 0:
+        submission_recordset = es_records[0]['_source']
+        if 'subscribers' in submission_recordset:
+            existing_emails = [ele['email'] for ele in submission_recordset['subscribers']]
+            if subscriber_email in existing_emails:
+                send_message(
+                    submission_message=f'{subscriber_email} is already registered to receive updates '
+                                       f'regarding study '
+                                       f'{study_id}.',
+                    subscription_status='warning',
+                    room_id='enaSubmissions')
+                return HttpResponse("Email address already exists in subscribers list")
 
-                    submission_recordset['subscribers'].append({'email': subscriber_email})
-                else:
-                    submission_recordset.update({'subscribers': [{'email': subscriber_email}]})
+            submission_recordset['subscribers'].append({'email': subscriber_email})
+        else:
+            submission_recordset.update({'subscribers': [{'email': subscriber_email}]})
 
-                update_payload = {"doc": {"subscribers": submission_recordset['subscribers']}}
-                res = es.update(index="submissions", id=submission_recordset['study_id'], body=update_payload)
+        update_payload = {"doc": {"subscribers": submission_recordset['subscribers']}}
+        res = es.update(index="submissions_test", id=study_id, body=update_payload)
 
-                if res['result'] == 'updated':
-                    assaytype_subscription_count += 1
+        if res['result'] == 'updated':
+            send_message(submission_message=f'{subscriber_email} has successfully been registered to receive '
+                                            f'updates regarding Study {study_id}',
+                         subscription_status='success',
+                         room_id='enaSubmissions')
+            return HttpResponse(status=200)
+    return HttpResponse(status=404)
 
-            if assaytype_subscription_count > 0:
-                send_message(submission_message=f'{subscriber_email} has successfully been registered to receive '
-                                                f'updates regarding Assay Type {subscription_id}',
-                             subscription_status='success',
-                             room_id='enaSubmissions')
-                return HttpResponse(status=200)
-        return HttpResponse(status=404)
-    elif subscription_type == 'study':
-        es_records = fetch_es_data('study_id', subscription_id)
-        if len(es_records) > 0:
-            submission_recordset = es_records[0]['_source']
+@csrf_exempt
+def subscribe_filtered_terms(request, assay_type, secondary_project, subscriber_email):
+    es_records = fetch_filtered_data(assay_type, secondary_project)
+    if len(es_records) > 0:
+        assaytype_subscription_count = 0
+        for rec in es_records:
+            submission_recordset = rec['_source']
             if 'subscribers' in submission_recordset:
                 existing_emails = [ele['email'] for ele in submission_recordset['subscribers']]
                 if subscriber_email in existing_emails:
-                    send_message(
-                        submission_message=f'{subscriber_email} is already registered to receive updates '
-                                           f'regarding study '
-                                           f'{subscription_id}.',
-                        subscription_status='warning',
-                        room_id='enaSubmissions')
-                    return HttpResponse("Email address already exists in subscribers list")
-
+                    assaytype_subscription_count += 1
+                    continue
                 submission_recordset['subscribers'].append({'email': subscriber_email})
             else:
                 submission_recordset.update({'subscribers': [{'email': subscriber_email}]})
 
             update_payload = {"doc": {"subscribers": submission_recordset['subscribers']}}
-            res = es.update(index="submissions", id=subscription_id, body=update_payload)
+            res = es.update(index="submissions_test", id=submission_recordset['study_id'], body=update_payload)
 
             if res['result'] == 'updated':
-                send_message(submission_message=f'{subscriber_email} has successfully been registered to receive '
-                                                f'updates regarding Study {subscription_id}',
-                             subscription_status='success',
-                             room_id='enaSubmissions')
-                return HttpResponse(status=200)
-        return HttpResponse(status=404)
+                assaytype_subscription_count += 1
 
+        if assaytype_subscription_count > 0:
+            send_message(submission_message=f'{subscriber_email} has successfully been registered to receive '
+                                            f'updates for the Study Ids displayed',
+                         subscription_status='success',
+                         room_id='enaSubmissions')
+            return HttpResponse(status=200)
+    return HttpResponse(status=404)
 
 
 
@@ -206,8 +205,27 @@ def submission_unsubscribe(request, study_id, subscriber_email):
     return HttpResponse(status=404)
 
 
-def fetch_es_data(field_name, search_term):
+def fetch_singleterm_data(field_name, search_term):
     filters = {'query': {'bool': {'filter': [{'terms': {field_name: [f'{search_term}']}}]}}}
+    query = json.dumps(filters)
+    data = es.search(index='submissions', size=50000, from_=0, track_total_hits=True, body=json.loads(query))
+    return data['hits']['hits']
+
+
+def fetch_filtered_data(assay_type, secondary_project):
+    filter_queries = []
+    if assay_type and assay_type is not None and assay_type != 'None':
+        filter_queries.append({"terms": {'assay_type': [assay_type]}})
+    if secondary_project and secondary_project is not None and secondary_project != 'None':
+        filter_queries.append({"terms": {'secondary_project': [secondary_project]}})
+
+    filters = {
+        "query": {
+            "bool": {
+                "filter": filter_queries
+            }
+        }
+    }
     query = json.dumps(filters)
     data = es.search(index='submissions', size=50000, from_=0, track_total_hits=True, body=json.loads(query))
     return data['hits']['hits']
