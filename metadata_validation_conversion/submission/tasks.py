@@ -21,7 +21,10 @@ from .AnnotateTemplate import AnnotateTemplate
 from .helpers import get_credentials
 from celery import Task
 from django.conf import settings
-from deepdiff import DeepDiff, model
+from deepdiff import DeepDiff
+from django.core import mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
                    http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
@@ -33,7 +36,6 @@ class LogErrorsTask(Task, ABC):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         send_message(room_id=kwargs['room_id'], submission_message='Error with the submission process',
                      errors=f'Error: {exc}')
-
 
 
 @app.task(base=LogErrorsTask)
@@ -475,7 +477,7 @@ def save_submission_data(root, submission_type, room_id, action):
                 if deepdiff_obj:
                     subscriber_emails = [ele['email'] for ele in existing_doc['subscribers']]
                     for email in subscriber_emails:
-                        send_user_email(study_obj['study_id'], email, deepdiff_obj)
+                        send_user_email(study_obj['study_id'], email)
 
             es.index(index='submissions', id=study_obj['study_id'], body=study_obj)
 
@@ -489,42 +491,14 @@ def get_doc(study_id):
     return None
 
 
-def send_user_email(study_id, subscriber_email, deepdiff_obj):
-    from django.core import mail
-    from django.template.loader import render_to_string
-    from django.utils.html import strip_tags
-
+def send_user_email(study_id, subscriber_email):
     ena_frontend_host = 'https://dcc-ena-submissions-frontend-4qewew6boq-uc.a.run.app/'
-
-    # rename keys of dict_differences dict for readability
-    document_differences = []
-    for k, v in list(deepdiff_obj.items()):
-        # Updating deepdiff object key names to doc
-        if type(v) is model.PrettyOrderedSet:
-            updated_value = []
-            for val in v:
-                val = val.replace("root", "doc")
-                updated_value.append(val)
-            deepdiff_obj.update({k: ','.join(updated_value)})
-
-        if type(v) is dict:
-            updated_value = {}
-            for key, val in list(v.items()):
-                updated_dict_val_key = key.replace("root", "doc")
-                updated_value[updated_dict_val_key] = v[key]
-            deepdiff_obj.update({k: updated_value})
-
-        renamed_key = ' '.join(word for word in k.split('_') if word not in ['dictionary']) \
-            .replace('item', 'Field') \
-            .capitalize()
-        document_differences.append((renamed_key, deepdiff_obj[k]))
 
     unsub_link = ena_frontend_host + 'submissions/unsubscribe/{}/{}'.format(study_id, subscriber_email)
     submission_link = ena_frontend_host + 'submissions/' + study_id
     subject = f'Update regarding ENA study {study_id}'
 
     html_message = render_to_string('subscribe_mail_template.html', {'study_id': study_id,
-                                                                     'differences': document_differences,
                                                                      'ena_submission_link': submission_link,
                                                                      'unsub_link': unsub_link})
     plain_message = strip_tags(html_message)

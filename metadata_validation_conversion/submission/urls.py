@@ -13,6 +13,8 @@ urlpatterns = [
          views.subscribe_filtered_terms, name='subscribe_filtered_terms'),
     path('submission_unsubscribe/<str:study_id>/<str:subscriber_email>',
          views.submission_unsubscribe, name='submission_unsubscribe'),
+    path('subscription_email/<str:study_id>/<str:subscriber_email>',
+         views.subscription_email, name='subscription_email'),
     path('get_template/<str:task_id>/<str:room_id>/<str:data_type>',
          views.get_template, name='get_template'),
     path('download_template/<str:room_id>', views.download_template,

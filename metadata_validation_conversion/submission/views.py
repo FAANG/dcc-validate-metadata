@@ -12,7 +12,7 @@ from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from .tasks import prepare_samples_data, prepare_analyses_data, \
     prepare_experiments_data, generate_annotated_template, get_domains, \
-    submit_new_domain, submit_to_biosamples, submit_data_to_ena
+    submit_new_domain, submit_to_biosamples, submit_data_to_ena, send_user_email
 
 XLSX_CONTENT_TYPE = 'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
@@ -203,6 +203,11 @@ def submission_unsubscribe(request, study_id, subscriber_email):
                     )
                     return HttpResponse(status=200)
     return HttpResponse(status=404)
+
+
+@csrf_exempt
+def subscription_email(request, study_id, subscriber_email):
+    return send_user_email(study_id, subscriber_email)
 
 
 def fetch_singleterm_data(field_name, search_term):

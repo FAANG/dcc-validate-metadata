@@ -8,73 +8,18 @@
     <style>
         body {
             font-family: sans-serif;
-        }
-        table {
-            border-collapse: collapse;
-            border: 1px solid black;
-            text-align: left;
-            vertical-align: middle;
-        }
-        caption {
-            font-weight: bold;
-            font-size: 16px;
-            text-align: left;
-            color: #333;
-            margin-bottom: 16px;
-        }
-        thead {
-            background-color: #565a62;
-            color: white;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 20px;
-        }
-        thead th:first-child {
-            width: 25%;
-            min-width: 25%;
-            max-width: 25%;
-            word-break: break-all;
-        }
-        tbody tr:nth-child(odd) {
-            background-color: #fff;
-        }
-        tbody tr:nth-child(even) {
-            background-color: #eee;
-        }
-        tbody th {
-            background-color: #d7e1f5;
-            color: #5a5a5a;
-            text-align: left;
+            margin-right: 10px;
+            padding: 10px;
         }
         a {
             color: steelblue;
         }
     </style>
 </head>
-<body style="margin: 0; padding: 0;">
+<body>
 <p>
     Study <a href={{ena_submission_link}}>{{ study_id }}</a> has been updated in FAANG's database.
 </p>
-{#<table>#}
-{#    <thead>#}
-{#    <tr>#}
-{#        <th><!-- Blank --></th>#}
-{#        <th>Updated Values</th>#}
-{#    <tr>#}
-{#    </thead>#}
-{#    <tbody>#}
-{#    {% for k,v in differences %}#}
-{#        <tr>#}
-{#            <th>{{ k }}</th>#}
-{#            <td>{{ v }}</td>#}
-{#        </tr>#}
-{#    {% endfor %}#}
-{#    </tbody>#}
-{#</table>#}
-
 
 <p>
     To unsubscribe from this study, please click here: <a href={{ unsub_link }}>unsubscribe</a>
