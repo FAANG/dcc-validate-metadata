@@ -5,14 +5,19 @@ from celery import chord
 
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-
+from elasticsearch import Elasticsearch, RequestsHttpConnection
+from django.conf import settings
+from django.core.mail import send_mail
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from .tasks import prepare_samples_data, prepare_analyses_data, \
     prepare_experiments_data, generate_annotated_template, get_domains, \
-    submit_new_domain, submit_to_biosamples, submit_data_to_ena
+    submit_new_domain, submit_to_biosamples, submit_data_to_ena, send_user_email
 
 XLSX_CONTENT_TYPE = 'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
+                   http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
 
 
 def get_template(request, task_id, room_id, data_type):
@@ -107,3 +112,125 @@ def submit_records(request, action, submission_type, task_id, room_id):
         res = my_chord.apply_async()
         return HttpResponse(json.dumps({"id": res.id}))
     return HttpResponse("Please use POST method for submission!")
+
+
+@csrf_exempt
+def subscribe_studyid(request, study_id, subscriber_email):
+    es_records = fetch_singleterm_data('study_id', study_id)
+    if len(es_records) > 0:
+        submission_recordset = es_records[0]['_source']
+        if 'subscribers' in submission_recordset:
+            existing_emails = [ele['email'] for ele in submission_recordset['subscribers']]
+            if subscriber_email in existing_emails:
+                send_message(
+                    submission_message=f'{subscriber_email} is already registered to receive updates '
+                                       f'regarding study '
+                                       f'{study_id}.',
+                    subscription_status='warning',
+                    room_id='enaSubmissions')
+                return HttpResponse("Email address already exists in subscribers list")
+
+            submission_recordset['subscribers'].append({'email': subscriber_email})
+        else:
+            submission_recordset.update({'subscribers': [{'email': subscriber_email}]})
+
+        update_payload = {"doc": {"subscribers": submission_recordset['subscribers']}}
+        res = es.update(index="submissions", id=study_id, body=update_payload)
+
+        if res['result'] == 'updated':
+            send_message(submission_message=f'{subscriber_email} has successfully been registered to receive '
+                                            f'updates regarding Study {study_id}',
+                         subscription_status='success',
+                         room_id='enaSubmissions')
+            return HttpResponse(status=200)
+    return HttpResponse(status=404)
+
+@csrf_exempt
+def subscribe_filtered_terms(request, assay_type, secondary_project, subscriber_email):
+    es_records = fetch_filtered_data(assay_type, secondary_project)
+    if len(es_records) > 0:
+        assaytype_subscription_count = 0
+        for rec in es_records:
+            submission_recordset = rec['_source']
+            if 'subscribers' in submission_recordset:
+                existing_emails = [ele['email'] for ele in submission_recordset['subscribers']]
+                if subscriber_email in existing_emails:
+                    assaytype_subscription_count += 1
+                    continue
+                submission_recordset['subscribers'].append({'email': subscriber_email})
+            else:
+                submission_recordset.update({'subscribers': [{'email': subscriber_email}]})
+
+            update_payload = {"doc": {"subscribers": submission_recordset['subscribers']}}
+            res = es.update(index="submissions", id=submission_recordset['study_id'], body=update_payload)
+
+            if res['result'] == 'updated':
+                assaytype_subscription_count += 1
+
+        if assaytype_subscription_count > 0:
+            send_message(submission_message=f'{subscriber_email} has successfully been registered to receive '
+                                            f'updates for the Study Ids displayed',
+                         subscription_status='success',
+                         room_id='enaSubmissions')
+            return HttpResponse(status=200)
+    return HttpResponse(status=404)
+
+
+
+@csrf_exempt
+def submission_unsubscribe(request, study_id, subscriber_email):
+    filters = {'query': {'bool': {'filter': [{'terms': {'study_id': [f'{study_id}']}}]}}}
+    query = json.dumps(filters)
+    data = es.search(index='submissions', size=1, from_=0, track_total_hits=True, body=json.loads(query))
+
+    if len(data['hits']['hits']) > 0 and data['hits']['hits'][0]['_source']:
+        submission_recordset = data['hits']['hits'][0]['_source']
+        if 'subscribers' in submission_recordset:
+            existing_emails = [ele['email'] for ele in submission_recordset['subscribers']]
+            print(existing_emails)
+            if subscriber_email in existing_emails:
+                updated_list = [ele for ele in submission_recordset['subscribers']
+                                if not (ele['email'] == subscriber_email)]
+                update_payload = {"doc": {"subscribers": updated_list}}
+                res = es.update(index="submissions", id=study_id, body=update_payload)
+                if res['result'] == 'updated':
+                    send_mail(
+                        f'You have been unsubscribed from study {study_id}',
+                        f'You will no longer receive updates about submission {study_id}.',
+                        'faang-dcc@ebi.ac.uk',
+                        [subscriber_email],
+                        fail_silently=False,
+                    )
+                    return HttpResponse(status=200)
+    return HttpResponse(status=404)
+
+
+@csrf_exempt
+def subscription_email(request, study_id, subscriber_email):
+    return send_user_email(study_id, subscriber_email)
+
+
+def fetch_singleterm_data(field_name, search_term):
+    filters = {'query': {'bool': {'filter': [{'terms': {field_name: [f'{search_term}']}}]}}}
+    query = json.dumps(filters)
+    data = es.search(index='submissions', size=50000, from_=0, track_total_hits=True, body=json.loads(query))
+    return data['hits']['hits']
+
+
+def fetch_filtered_data(assay_type, secondary_project):
+    filter_queries = []
+    if assay_type and assay_type is not None and assay_type != 'None':
+        filter_queries.append({"terms": {'assay_type': [assay_type]}})
+    if secondary_project and secondary_project is not None and secondary_project != 'None':
+        filter_queries.append({"terms": {'secondary_project': [secondary_project]}})
+
+    filters = {
+        "query": {
+            "bool": {
+                "filter": filter_queries
+            }
+        }
+    }
+    query = json.dumps(filters)
+    data = es.search(index='submissions', size=50000, from_=0, track_total_hits=True, body=json.loads(query))
+    return data['hits']['hits']

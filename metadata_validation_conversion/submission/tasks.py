@@ -6,7 +6,7 @@ from abc import ABC
 from datetime import datetime
 from lxml import etree
 from elasticsearch import Elasticsearch, RequestsHttpConnection
-
+from django.http import HttpResponse
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from metadata_validation_conversion.constants import ENA_TEST_SERVER, \
@@ -21,6 +21,13 @@ from .AnnotateTemplate import AnnotateTemplate
 from .helpers import get_credentials
 from celery import Task
 from django.conf import settings
+from deepdiff import DeepDiff
+from django.core import mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
+es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
+                   http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
 
 
 class LogErrorsTask(Task, ABC):
@@ -29,7 +36,6 @@ class LogErrorsTask(Task, ABC):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         send_message(room_id=kwargs['room_id'], submission_message='Error with the submission process',
                      errors=f'Error: {exc}')
-
 
 
 @app.task(base=LogErrorsTask)
@@ -443,14 +449,52 @@ def parse_analysis_data(root, submission_id, action):
 
 def save_submission_data(root, submission_type, room_id, action):
     if root.get('success') == 'true':
-        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
-                http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
         if submission_type == 'experiments':
             study_objs = parse_experiments_data(root, room_id, action)
         else:
             study_objs = parse_analysis_data(root, room_id, action)
         for study_obj in study_objs:
+            existing_doc = get_doc(study_obj['study_id'])
+            if existing_doc is not None:
+                # retain subscribers_field
+                study_obj['subscribers'] = existing_doc['subscribers']
+
+                # email subscribers
+                deepdiff_obj = DeepDiff(existing_doc, study_obj)
+                if deepdiff_obj:
+                    subscriber_emails = [ele['email'] for ele in existing_doc['subscribers']]
+                    for email in subscriber_emails:
+                        send_user_email(study_obj['study_id'], email)
+
             es.index(index='submissions', id=study_obj['study_id'], body=study_obj)
+
+
+def get_doc(study_id):
+    filters = {'query': {'bool': {'filter': [{'terms': {'study_id': [study_id]}}]}}}
+    query = json.dumps(filters)
+    data = es.search(index='submissions', size=1, from_=0, track_total_hits=True, body=json.loads(query))
+    if len(data['hits']['hits']) > 0 and data['hits']['hits'][0]['_source']:
+        return data['hits']['hits'][0]['_source']
+    return None
+
+
+def send_user_email(study_id, subscriber_email):
+    ena_frontend_host = 'https://dcc-ena-submissions-frontend-4qewew6boq-uc.a.run.app/'
+
+    unsub_link = ena_frontend_host + 'submissions/unsubscribe/{}/{}'.format(study_id, subscriber_email)
+    submission_link = ena_frontend_host + 'submissions/' + study_id
+    subject = f'Update regarding ENA study {study_id}'
+
+    html_message = render_to_string('subscribe_mail_template.html', {'study_id': study_id,
+                                                                     'ena_submission_link': submission_link,
+                                                                     'unsub_link': unsub_link})
+    plain_message = strip_tags(html_message)
+    from_email = 'faang-dcc@ebi.ac.uk'
+    to = subscriber_email
+    mail_sent = mail.send_mail(subject, plain_message, from_email, [to], html_message=html_message, fail_silently=False)
+    if mail_sent == 1:
+        return HttpResponse(status=200)
+    return HttpResponse(status=502)
 
 
 @app.task(base=LogErrorsTask)

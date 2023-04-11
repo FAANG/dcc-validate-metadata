@@ -42,7 +42,7 @@ def send_message(room_id, conversion_status=None, validation_status=None,
                  submission_status=None, errors=None, validation_results=None,
                  conversion_errors=None, table_data=None,
                  annotation_status=None, domains=None,
-                 submission_message=None, submission_results=None,
+                 submission_message=None, subscription_status=None, submission_results=None,
                  bovreg_submission=None):
     """
     This function will send message to channel layer
@@ -57,6 +57,7 @@ def send_message(room_id, conversion_status=None, validation_status=None,
     :param annotation_status: annotation status to send
     :param domains: list of user domains
     :param submission_message: submission message to send
+    :param subscription_status: status of user subscription to ENA submission
     :param submission_results: list of submission results
     :param bovreg_submission: true if secondary_project == BovReg
     """
@@ -65,6 +66,7 @@ def send_message(room_id, conversion_status=None, validation_status=None,
         'validation_status': validation_status,
         'submission_status': submission_status,
         'submission_message': submission_message,
+        'subscription_status': subscription_status,
         'errors': errors,
         'validation_results': validation_results,
         'conversion_errors': conversion_errors,
