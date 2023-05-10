@@ -430,7 +430,7 @@ def associate_specimen(res_dict, roomid):
         es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
         try:
             for id in biosample_ids:
-                es_data = es.update(index='specimen', id=id, doc_type="_doc", body=update_payload)
+                es_data = es.update(index='specimen', id=id, body=update_payload)
             send_message(room_id=roomid,
                          submission_message="Track Hub registered successfully!\n" \
                                             "All relevant specimen records linked to Track Hub")
