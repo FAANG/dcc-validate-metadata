@@ -49,6 +49,8 @@ CHIP_SEQ_DNA_BINDING_PROTEINS_URL = f"{BASE_URL}/module/experiments/" \
                                     f"proteins.metadata_rules.json"
 BS_SEQ_URL = f"{BASE_URL}/type/experiments/" \
              f"faang_experiments_bs-seq.metadata_rules.json"
+EM_SEQ_URL = f"{BASE_URL}/type/experiments/" \
+             f"faang_experiments_em-seq.metadata_rules.json"
 ATAC_SEQ_URL = f"{BASE_URL}/type/experiments/" \
                f"faang_experiments_atac-seq.metadata_rules.json"
 CAGE_SEQ_URL = f"{BASE_URL}/type/experiments/" \
@@ -83,6 +85,7 @@ ALLOWED_SHEET_NAMES = {
     'chip-seq input dna': CHIP_SEQ_URL,
     'chip-seq dna-binding proteins': CHIP_SEQ_URL,
     'bs-seq': BS_SEQ_URL,
+    'em-seq': EM_SEQ_URL,
     'atac-seq': ATAC_SEQ_URL,
     'cage-seq': CAGE_SEQ_URL,
     'faang': FAANG_ANALYSES_URL,
@@ -111,6 +114,7 @@ ALLOWED_EXPERIMENTS_TYPES = {
     'chip-seq_input_dna': CHIP_SEQ_URL,
     'chip-seq_dna-binding_proteins': CHIP_SEQ_URL,
     'bs-seq': BS_SEQ_URL,
+    'em-seq': EM_SEQ_URL,
     'atac-seq': ATAC_SEQ_URL,
     'cage-seq': CAGE_SEQ_URL
 }
