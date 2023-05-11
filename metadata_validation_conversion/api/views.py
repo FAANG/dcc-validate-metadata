@@ -25,7 +25,7 @@ ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
                    'protocol_analysis', 'analysis', 'summary_organism',
                    'summary_specimen', 'summary_dataset', 'summary_file',
                    'ensembl_annotation', 'trackhubs', 'submissions',
-                   'submissions_test']
+                   'submissions_test', 'submission_portal_status']
 
 @swagger_auto_schema(method='get', tags=['Search'],
         operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc",

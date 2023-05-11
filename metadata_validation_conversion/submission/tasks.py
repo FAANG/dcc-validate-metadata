@@ -6,7 +6,7 @@ from abc import ABC
 from datetime import datetime
 from lxml import etree
 from elasticsearch import Elasticsearch, RequestsHttpConnection
-
+from django.http import HttpResponse
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from metadata_validation_conversion.constants import ENA_TEST_SERVER, \
@@ -21,6 +21,13 @@ from .AnnotateTemplate import AnnotateTemplate
 from .helpers import get_credentials
 from celery import Task
 from django.conf import settings
+from deepdiff import DeepDiff
+from django.core import mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
+es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
+                   http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
 
 
 class LogErrorsTask(Task, ABC):
@@ -29,7 +36,6 @@ class LogErrorsTask(Task, ABC):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         send_message(room_id=kwargs['room_id'], submission_message='Error with the submission process',
                      errors=f'Error: {exc}')
-
 
 
 @app.task(base=LogErrorsTask)
@@ -294,7 +300,6 @@ def parse_submission_results(submission_results, submission_type, room_id, actio
 def parse_experiments_data(root, submission_id, action):
     object_types = {
         'EXPERIMENT': 'experiments',
-        'RUN': 'runs',
         'STUDY': 'studies',
         'PROJECT': 'studies'
     }
@@ -313,9 +318,12 @@ def parse_experiments_data(root, submission_id, action):
                 submission_data[prop] = []
                 for object in objects:
                     obj_data = {
-                        'alias': object.get('alias') if object.get('alias') else '',
-                        'accession': object.get('accession') if object.get('accession') else '',
+                        'alias': object.get('alias') if object.get('alias') else ''
                     }
+                    if prop == 'studies':
+                        obj_data['accession'] = object.findall('EXT_ID')[0].get('accession')
+                    else:
+                        obj_data['accession'] = object.get('accession')
                     submission_data[prop].append(obj_data)
 
         # iterate through each study
@@ -324,8 +332,6 @@ def parse_experiments_data(root, submission_id, action):
                 'study_id': study['accession'],
                 'study_alias': study['alias'],
                 'experiments': [],
-                'runs': [],
-                'files': [],
                 'available_in_portal': 'false'
             }
             current_date = datetime.today().strftime('%Y-%m-%d')
@@ -342,6 +348,7 @@ def parse_experiments_data(root, submission_id, action):
                 experiments = experiment_root.findall('EXPERIMENT')
                 exp_alias_list = []
                 assay_types = []
+                secondary_projects = []
                 for exp in experiments:
                     exp_study_alias = exp.findall('STUDY_REF')[0].get('refname')
                     # check that the study reference for the experiment matches the study
@@ -351,11 +358,12 @@ def parse_experiments_data(root, submission_id, action):
                             if experiment['alias'] == exp.get('alias'):
                                 study_obj['experiments'].append({
                                     'alias': experiment['alias'],
-                                    'accession': experiment['accession']
+                                    'accession': experiment['accession'],
+                                    'available_in_portal': 'false'
                                 })
                                 exp_alias_list.append(experiment['alias'])
 
-                        # get assay type
+                        # get assay type and secondary project
                         attributes = exp.findall('EXPERIMENT_ATTRIBUTES')
                         if len(attributes):
                             attributes = attributes[0].findall('EXPERIMENT_ATTRIBUTE')
@@ -363,32 +371,10 @@ def parse_experiments_data(root, submission_id, action):
                                 tag = attribute.findall('TAG')[0].text
                                 if tag == 'assay type':
                                     assay_types.append(attribute.findall('VALUE')[0].text)
+                                elif tag == 'secondary project':
+                                    secondary_projects.append(attribute.findall('VALUE')[0].text)
                 study_obj['assay_type'] = ', '.join(set(assay_types))
-
-                # get runs and files associated with the study experiments
-                run_xml = f'{submission_id}_run.xml'
-                if os.path.exists(run_xml):
-                    run_root = etree.parse(run_xml).getroot()
-                    runs = run_root.findall('RUN')
-                    for r in runs:
-                        r_exp_alias = r.findall('EXPERIMENT_REF')[0].get('refname')
-                        # get associated runs using experiment_ref
-                        if r_exp_alias in exp_alias_list:
-                            for run in submission_data['runs']:
-                                # get run accession from submission data using run alias
-                                if run['alias'] == r.get('alias'):
-                                    study_obj['runs'].append({
-                                        'alias': run['alias'],
-                                        'accession': run['accession']
-                                    })
-                            # get associated files
-                            run_data = r.findall('DATA_BLOCK')
-                            if len(run_data):
-                                files = run_data[0].findall('FILES')
-                                for file in files[0].findall('FILE'):
-                                    study_obj['files'].append({
-                                        'name': file.get('filename')
-                                    })
+                study_obj['secondary_project'] = ', '.join(set(secondary_projects))
             study_objs.append(study_obj)
     return study_objs
         
@@ -407,7 +393,8 @@ def parse_analysis_data(root, submission_id, action):
                     'alias': analysis_alias,
                     'accession': analysis_accession,
                     'study_id': '',
-                    'assay_type': ''
+                    'assay_type': '',
+                    'secondary_project': ''
                 }
             analysis_xml = f'{submission_id}_analysis.xml'
             if os.path.exists(analysis_xml):
@@ -417,7 +404,7 @@ def parse_analysis_data(root, submission_id, action):
                     a_alias = a.get('alias')
                     # get study_id
                     analyses_objs[a_alias]['study_id'] = a.findall('STUDY_REF')[0].get('accession')
-                    # get assay_type
+                    # get assay_type and secondary_project
                     attributes = a.findall('ANALYSIS_ATTRIBUTES')
                     if len(attributes):
                         attributes = attributes[0].findall('ANALYSIS_ATTRIBUTE')
@@ -425,6 +412,8 @@ def parse_analysis_data(root, submission_id, action):
                             tag = attribute.findall('TAG')[0].text
                             if tag == 'Assay Type':
                                 analyses_objs[a_alias]['assay_type'] = attribute.findall('VALUE')[0].text
+                            elif tag == 'Secondary Project':
+                                analyses_objs[a_alias]['secondary_project'] = attribute.findall('VALUE')[0].text
             study_objs_dict = {}
             for analysis in analyses_objs.values():
                 if analysis['study_id'] not in study_objs_dict:
@@ -432,6 +421,7 @@ def parse_analysis_data(root, submission_id, action):
                         'study_id': analysis['study_id'],
                         'study_alias': '',
                         'assay_type': [],
+                        'secondary_project': [],
                         'analyses': [],
                         'available_in_portal': 'false'
                     }
@@ -444,26 +434,67 @@ def parse_analysis_data(root, submission_id, action):
 
                 study_objs_dict[analysis['study_id']]['analyses'].append({
                     'alias': analysis['alias'],
-                    'accession': analysis['accession']
+                    'accession': analysis['accession'],
+                    'available_in_portal': 'false'
                 })
                 study_objs_dict[analysis['study_id']]['assay_type'].append(analysis['assay_type'])
+                study_objs_dict[analysis['study_id']]['secondary_project'].append(analysis['secondary_project'])
 
             for study_obj in study_objs_dict.values():
                 study_obj['assay_type'] = ', '.join(set(study_obj['assay_type']))
+                study_obj['secondary_project'] = ', '.join(set(study_obj['secondary_project']))
             study_objs = study_objs_dict.values()
     return study_objs
 
 
 def save_submission_data(root, submission_type, room_id, action):
     if root.get('success') == 'true':
-        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
-                http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
         if submission_type == 'experiments':
             study_objs = parse_experiments_data(root, room_id, action)
         else:
             study_objs = parse_analysis_data(root, room_id, action)
         for study_obj in study_objs:
+            existing_doc = get_doc(study_obj['study_id'])
+            if existing_doc is not None:
+                # retain subscribers_field
+                study_obj['subscribers'] = existing_doc['subscribers']
+
+                # email subscribers
+                deepdiff_obj = DeepDiff(existing_doc, study_obj)
+                if deepdiff_obj:
+                    subscriber_emails = [ele['email'] for ele in existing_doc['subscribers']]
+                    for email in subscriber_emails:
+                        send_user_email(study_obj['study_id'], email)
+
             es.index(index='submissions', id=study_obj['study_id'], body=study_obj)
+
+
+def get_doc(study_id):
+    filters = {'query': {'bool': {'filter': [{'terms': {'study_id': [study_id]}}]}}}
+    query = json.dumps(filters)
+    data = es.search(index='submissions', size=1, from_=0, track_total_hits=True, body=json.loads(query))
+    if len(data['hits']['hits']) > 0 and data['hits']['hits'][0]['_source']:
+        return data['hits']['hits'][0]['_source']
+    return None
+
+
+def send_user_email(study_id, subscriber_email):
+    ena_frontend_host = 'https://dcc-ena-submissions-frontend-4qewew6boq-uc.a.run.app/'
+
+    unsub_link = ena_frontend_host + 'submissions/unsubscribe/{}/{}'.format(study_id, subscriber_email)
+    submission_link = ena_frontend_host + 'submissions/' + study_id
+    subject = f'Update regarding ENA study {study_id}'
+
+    html_message = render_to_string('subscribe_mail_template.html', {'study_id': study_id,
+                                                                     'ena_submission_link': submission_link,
+                                                                     'unsub_link': unsub_link})
+    plain_message = strip_tags(html_message)
+    from_email = 'faang-dcc@ebi.ac.uk'
+    to = subscriber_email
+    mail_sent = mail.send_mail(subject, plain_message, from_email, [to], html_message=html_message, fail_silently=False)
+    if mail_sent == 1:
+        return HttpResponse(status=200)
+    return HttpResponse(status=502)
 
 
 @app.task(base=LogErrorsTask)

@@ -18,6 +18,7 @@ from decouple import config
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+TEMPLATE_DIR = [os.path.join(BASE_DIR, 'submission', 'templates', 'submission')]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
@@ -80,7 +81,7 @@ ROOT_URLCONF = 'metadata_validation_conversion.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': TEMPLATE_DIR,
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -218,3 +219,9 @@ SLACK_WEBHOOK = os.getenv('SLACK_WEBHOOK')
 SWAGGER_SETTINGS = {
     'TAGS_SORTER': 'alpha'
 }
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USERNAME')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
