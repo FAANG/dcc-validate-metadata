@@ -137,6 +137,14 @@ def validate_ontology(request):
             }]
         }
         es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
+        # update summary stats
+        for project in data['project']:
+            url = f"http://backend-svc:8000/data/summary_ontologies/{project}"
+            res = requests.get(url)
+            project_stats = json.loads(res.content)['_source']
+            project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
+            es.index(index='summary_ontologies', id=project, body=project_stats)
+
     return HttpResponse(status=200)
 
 def hasAttribute(res, att):
@@ -191,13 +199,6 @@ def get_ontology_details(request, id):
     return JsonResponse(response)
 
 @csrf_exempt
-def summary(request):
-    if request.method != 'GET':
-        return HttpResponse("This method is not allowed!\n")
-    records = list(Summary.objects.all().values())
-    return JsonResponse(records, safe=False)
-
-@csrf_exempt
 def ontology_updates(request):
     if request.method != 'POST':
         return HttpResponse("This method is not allowed!\n")
@@ -243,22 +244,3 @@ def ontology_updates(request):
             }
             es.update(index='ontologies', id=existing_ontology['key'], body={"doc": update_payload})
     return HttpResponse(status=201)
-
-@csrf_exempt
-def summary_updates(request):
-    data = json.loads(request.body)
-    for row in data:
-        try:
-            obj = Summary.objects.get(project=row['project'])
-            obj.species = row['species']
-            obj.ontology_type_count = row['ontology_type_count']
-            obj.status_count = row['status_count']
-            obj.save()
-        except (Summary.DoesNotExist, KeyError):
-            obj = Summary.objects.create(
-                project=row['project'], \
-                species=row['species'], \
-                ontology_type_count=row['ontology_type_count'], \
-                status_count=row['status_count'])
-    return HttpResponse(status=201)
-
