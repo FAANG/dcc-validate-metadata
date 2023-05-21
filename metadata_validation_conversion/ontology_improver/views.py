@@ -1,34 +1,16 @@
-from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 import json
 from elasticsearch import Elasticsearch, RequestsHttpConnection
-from ontology_improver.models import Ontologies, Summary, User
+from ontology_improver.models import User
 from django.conf import settings
 from datetime import datetime
 from django.utils import timezone
-from django.forms.models import model_to_dict
 import base64
-
-def parse_zooma_response(response_list):
-    annotations = []
-    for response in response_list:
-        data = {}
-        if 'annotatedProperty' in response:
-            if 'propertyType' in response['annotatedProperty']:
-                data['term_type'] = response['annotatedProperty']['propertyType']
-            if 'propertyValue' in response['annotatedProperty']:
-                data['ontology_label'] = response['annotatedProperty']['propertyValue']
-        if 'semanticTags' in response:
-            data['ontology_id'] = ','.join(list(map(lambda tag: tag.split('/')[-1], response['semanticTags'])))
-        if 'confidence' in response:
-            data['mapping_confidence'] = response['confidence']
-        if 'derivedFrom' in response and 'provenance' in response['derivedFrom']:
-            if 'generator' in response['derivedFrom']['provenance']:
-                data['source'] = response['derivedFrom']['provenance']['generator']
-        annotations.append(data)
-    return annotations
+from celery import chain
+from ontology_improver.utils import *
+from ontology_improver.tasks import update_ontology_summary
 
 @csrf_exempt
 def get_zooma_ontologies(request):
@@ -137,25 +119,17 @@ def validate_ontology(request):
             }]
         }
         es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
-        # update summary stats
-        for project in data['project']:
-            url = f"http://backend-svc:8000/data/summary_ontologies/{project}"
-            res = requests.get(url)
-            project_stats = json.loads(res.content)['_source']
-            project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
-            es.index(index='summary_ontologies', id=project, body=project_stats)
-
+    # update summary stats - increment validated_count
+    for project in data['project']:
+        url = f"http://backend-svc:8000/data/summary_ontologies/{project}"
+        res = requests.get(url)
+        project_stats = json.loads(res.content)['hits']['hits'][0]['_source']
+        project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
+        es.index(index='summary_ontologies', id=project, body=project_stats)
+    task = update_ontology_summary.s().set(queue='submission')
+    task_chain = chain(task)
+    res = task_chain.apply_async()
     return HttpResponse(status=200)
-
-def hasAttribute(res, att):
-    if att in res and res[att] is not None:
-        if type(res[att]) is list:
-            if len(res[att]):
-                return True
-            else:
-                return False    
-        return True
-    return False
 
 @csrf_exempt
 def get_ontology_details(request, id):
@@ -171,7 +145,7 @@ def get_ontology_details(request, id):
     response['faang_data'] = faang_data
     # parse ontology details from EBI OLS
     res = requests.get(
-        "https://www.ebi.ac.uk/ols/api/terms?short_form={}".format(
+        "http://www.ebi.ac.uk/ols/api/terms?short_form={}".format(
             response['faang_data']['id'])).json()
     if '_embedded' in res:
         res = res['_embedded']['terms'][0]
@@ -243,4 +217,8 @@ def ontology_updates(request):
                 'tags': ontology['tags']
             }
             es.update(index='ontologies', id=existing_ontology['key'], body={"doc": update_payload})
+    # update summary statistics
+    task = update_ontology_summary.s().set(queue='submission')
+    task_chain = chain(task)
+    res = task_chain.apply_async()
     return HttpResponse(status=201)
