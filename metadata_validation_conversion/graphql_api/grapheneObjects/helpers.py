@@ -8,8 +8,7 @@ from elasticsearch import Elasticsearch, RequestsHttpConnection
 es = Elasticsearch([settings.NODE],
                    connection_class=RequestsHttpConnection,
                    http_auth=(settings.ES_USER, settings.ES_PASSWORD),
-                   use_ssl=True,
-                   verify_certs=False)
+                   use_ssl=True)
 
 
 def flatten_json(y):

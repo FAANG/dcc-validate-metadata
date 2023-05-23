@@ -352,7 +352,7 @@ def update_es_records(data, roomid):
         trackhub_data['subdirectories'] = sub_dirs_list
         # create ES record
         es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
-            http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+            http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True)
         es.index(index='trackhubs', id=trackhub_data['name'], body=trackhub_data)
         send_message(room_id=roomid,
                         submission_message="Updated track hub records")
@@ -427,7 +427,7 @@ def associate_specimen(res_dict, roomid):
             biosample_ids = biosample_ids + track['Related Specimen ID']
             biosample_ids = list(set(biosample_ids))
         errors = []
-        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+        es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True)
         try:
             for id in biosample_ids:
                 es_data = es.update(index='specimen', id=id, body=update_payload)

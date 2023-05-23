@@ -37,7 +37,7 @@ class BovRegView(APIView):
         es = Elasticsearch([NODE], 
             connection_class=RequestsHttpConnection, 
             http_auth=(ES_USER, ES_PASSWORD), 
-            use_ssl=True, verify_certs=False)
+            use_ssl=True)
         index = f'bovreg_{data_type}'
         if index == 'bovreg_file' or index == 'bovreg_dataset':
             sort = 'private:desc'
@@ -60,7 +60,7 @@ class BovRegDetailsView(APIView):
         es = Elasticsearch([NODE],
             connection_class=RequestsHttpConnection,
             http_auth=(ES_USER, ES_PASSWORD),
-            use_ssl=True, verify_certs=False)
+            use_ssl=True)
         index = f'bovreg_{data_type}'
         data = es.search(index=index, q=f'_id:{item_id}')
         return Response(data)
