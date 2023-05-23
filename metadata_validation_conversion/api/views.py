@@ -24,8 +24,8 @@ ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
                    'protocol_files', 'protocol_samples', 'article',
                    'protocol_analysis', 'analysis', 'summary_organism',
                    'summary_specimen', 'summary_dataset', 'summary_file',
-                   'ensembl_annotation', 'trackhubs', 'submissions',
-                   'submissions_test', 'submission_portal_status']
+                   'ensembl_annotation', 'trackhubs', 'submissions', 
+                   'ontologies', 'summary_ontologies', 'submission_portal_status']
 
 @swagger_auto_schema(method='get', tags=['Search'],
         operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc",
@@ -188,7 +188,7 @@ def index(request, name):
             }
         }
 
-    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
     if request.body:
         data = es.search(index=name, size=size, body=json.loads(
             request.body.decode("utf-8"), track_total_hits=True))
@@ -246,7 +246,7 @@ def update(request, name, id):
         response.status_code = 404
         return response    
 
-    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
     if request.body:
         print(request.body.decode("utf-8"))
         data = es.update(index=name, id=id, doc_type="_doc",
@@ -291,7 +291,7 @@ def detail(request, name, id):
             json.dumps(context), content_type='application/json')
         response.status_code = 404
         return response
-    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
     id = f"\"{id}\""
     results = es.search(index=name, q="_id:{}".format(id))
     if results['hits']['total'] == 0:
@@ -377,7 +377,7 @@ def download(request, name):
         filters = {"query": {"bool": filter_val}}
 
     # Get records from elasticsearch
-    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
     count = 0
     records = []
     while True:

@@ -17,7 +17,7 @@ from .tasks import prepare_samples_data, prepare_analyses_data, \
 XLSX_CONTENT_TYPE = 'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
-                   http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+                   http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
 
 
 def get_template(request, task_id, room_id, data_type):

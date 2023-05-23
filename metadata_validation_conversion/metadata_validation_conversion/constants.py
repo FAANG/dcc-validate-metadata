@@ -383,6 +383,20 @@ SUBMISSION_PROD_SERVER = 'https://www.ebi.ac.uk'
 ENA_TEST_SERVER = 'https://wwwdev.ebi.ac.uk/ena/submit/drop-box/submit/'
 ENA_PROD_SERVER = 'https://www.ebi.ac.uk/ena/submit/drop-box/submit/'
 
+BE_SVC = 'http://backend-svc:8000'
+OLS_API = 'http://www.ebi.ac.uk/ols4/api'
+ZOOMA_SERVICE = ''
+
+PROJECTS = [
+    "AQUA-FAANG",
+    "BovReg",
+    "GENE-SWitCH",
+    "Bovine-FAANG",
+    "EFFICACE",
+    "GEroNIMO",
+    "RUMIGEN",
+    "Equine-FAANG"
+]
 
 ORGANIZATIONS = {
     "ABDN": "University of Aberdeen (Aberdeen, UK)",
