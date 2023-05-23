@@ -47,7 +47,7 @@ def get_species_for_project(project):
 @app.task
 def update_ontology_summary():
     url = f'{BE_SVC}/data/ontologies/_search/?size=10000'
-    ontologies = requests.get().json()['hits']['hits']
+    ontologies = requests.get(url).json()['hits']['hits']
     ontologies = map(lambda ontology : ontology['_source'], ontologies)
     df = pd.DataFrame.from_dict(ontologies)[['projects', 'type', 'term']]
     df['type'] = [', '.join(map(str, l)) for l in df['type']]
