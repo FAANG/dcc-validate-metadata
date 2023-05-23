@@ -86,7 +86,7 @@ def validate_ontology(request):
         return HttpResponse(status=404)
     es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
                        http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
-                        use_ssl=True)
+                        use_ssl=True, verify_certs=True)
     if data['status'] == 'Verified':
         update_payload = {
             'status_activity': status_activity,
@@ -182,7 +182,7 @@ def ontology_updates(request):
     user = data['user']
     es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
                        http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
-                        use_ssl=True)
+                        use_ssl=True, verify_certs=True)
     for ontology in ontologies:
         url = f"http://backend-svc:8000/data/ontologies/{ontology['key']}"
         res = requests.get(url)
