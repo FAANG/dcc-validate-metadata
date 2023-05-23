@@ -11,6 +11,8 @@ import base64
 from celery import chain
 from ontology_improver.utils import *
 from ontology_improver.tasks import update_ontology_summary
+from metadata_validation_conversion.constants import \
+    BE_SVC, OLS_API, ZOOMA_SERVICE
 
 @csrf_exempt
 def get_zooma_ontologies(request):
@@ -19,9 +21,7 @@ def get_zooma_ontologies(request):
     terms = json.loads(request.body)['terms']
     response = {}
     for term in terms:
-        data = requests.get(
-            "http://www.ebi.ac.uk/spot/zooma/v2/api/services/annotate?propertyValue={}&filter=preferred:[FAANG]".format(
-             term)).json()
+        data = requests.get(f"{ZOOMA_SERVICE}/annotate?propertyValue={term}&filter=preferred:[FAANG]").json()
         response[term] = parse_zooma_response(data)
     return JsonResponse(response)
 
@@ -80,7 +80,7 @@ def validate_ontology(request):
         'timestamp': datetime.now(tz=timezone.utc),
         'user': data['user']
     })
-    url = f"http://backend-svc:8000/data/ontologies/{ontology['key']}"
+    url = f"{BE_SVC}/data/ontologies/{ontology['key']}"
     res = requests.get(url)
     if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
         return HttpResponse(status=404)
@@ -121,9 +121,8 @@ def validate_ontology(request):
         es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
     # update summary stats - increment validated_count
     for project in data['project']:
-        url = f"http://backend-svc:8000/data/summary_ontologies/{project}"
-        res = requests.get(url)
-        project_stats = json.loads(res.content)['hits']['hits'][0]['_source']
+        url = f"{BE_SVC}/data/summary_ontologies/{project}"
+        project_stats = requests.get(url).json()['hits']['hits'][0]['_source']
         project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
         es.index(index='summary_ontologies', id=project, body=project_stats)
     task = update_ontology_summary.s().set(queue='submission')
@@ -137,16 +136,14 @@ def get_ontology_details(request, id):
         return HttpResponse("This method is not allowed!\n")
     response = {}
     # get ontology type, status etc from FAANG Ontology Database
-    url = f"http://backend-svc:8000/data/ontologies/{id}"
+    url = f"{BE_SVC}/data/ontologies/{id}"
     res = requests.get(url)
     if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
         return HttpResponse(status=404)
     faang_data = json.loads(res.content)['hits']['hits'][0]['_source']
     response['faang_data'] = faang_data
     # parse ontology details from EBI OLS
-    res = requests.get(
-        "http://www.ebi.ac.uk/ols/api/terms?short_form={}".format(
-            response['faang_data']['id'])).json()
+    res = requests.get(f"{OLS_API}/terms?short_form={response['faang_data']['id']}").json()
     if '_embedded' in res:
         res = res['_embedded']['terms'][0]
         if hasAttribute(res, 'iri'):
@@ -184,7 +181,7 @@ def ontology_updates(request):
                        http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
                         use_ssl=True, verify_certs=True)
     for ontology in ontologies:
-        url = f"http://backend-svc:8000/data/ontologies/{ontology['key']}"
+        url = f"{BE_SVC}/data/ontologies/{ontology['key']}"
         res = requests.get(url)
         # create new ontology if ontology does not exist
         if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:

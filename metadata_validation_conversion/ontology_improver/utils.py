@@ -1,10 +1,7 @@
 def hasAttribute(res, att):
     if att in res and res[att] is not None:
         if type(res[att]) is list:
-            if len(res[att]):
-                return True
-            else:
-                return False    
+            return True if len(res[att]) else False 
         return True
     return False
 
