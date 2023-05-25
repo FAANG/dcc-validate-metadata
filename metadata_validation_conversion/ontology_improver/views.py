@@ -119,15 +119,16 @@ def validate_ontology(request):
             }]
         }
         es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
-    # update summary stats - increment validated_count
-    for project in data['project']:
-        url = f"{BE_SVC}/data/summary_ontologies/{project}"
-        project_stats = requests.get(url).json()['hits']['hits'][0]['_source']
-        project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
-        es.index(index='summary_ontologies', id=project, body=project_stats)
-    task = update_ontology_summary.s().set(queue='submission')
-    task_chain = chain(task)
-    res = task_chain.apply_async()
+    if 'project' in data:
+        # update summary stats - increment validated_count
+        for project in data['project']:
+            url = f"{BE_SVC}/data/summary_ontologies/{project}"
+            project_stats = requests.get(url).json()['hits']['hits'][0]['_source']
+            project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
+            es.index(index='summary_ontologies', id=project, body=project_stats)
+        task = update_ontology_summary.s().set(queue='submission')
+        task_chain = chain(task)
+        res = task_chain.apply_async()
     return HttpResponse(status=200)
 
 @csrf_exempt
