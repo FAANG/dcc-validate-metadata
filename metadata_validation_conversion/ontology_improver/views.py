@@ -119,7 +119,7 @@ def validate_ontology(request):
             }]
         }
         es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
-    if 'project' in data:
+    if 'project' in data and data['project']:
         # update summary stats - increment validated_count
         for project in data['project']:
             url = f"{BE_SVC}/data/summary_ontologies/{project}"
