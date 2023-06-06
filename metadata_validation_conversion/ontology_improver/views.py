@@ -108,6 +108,7 @@ def validate_ontology(request):
             'support': '',
             'projects': data['project'] if data['project'] else [],
             'species': ontology['species'],
+            'synonyms': ontology['synonyms'],
             'tags': ontology['tags'],
             'upvotes_count': 0,
             'downvotes_count': 0,
@@ -194,6 +195,7 @@ def ontology_updates(request):
                 'support': ontology['support'] if ontology['support'] else '',
                 'projects': ontology['projects'] if ontology['projects'] else [],
                 'species': ontology['species'] if ontology['species'] else [],
+                'synonyms': ontology['synonyms'] if ontology['synonyms'] else getSynonyms(ontology['id']),
                 'tags': ontology['tags'] if ontology['tags'] else [],
                 'upvotes_count': 0,
                 'downvotes_count': 0,
@@ -210,6 +212,7 @@ def ontology_updates(request):
             existing_ontology = json.loads(res.content)['hits']['hits'][0]['_source']
             update_payload = {
                 'type': ontology['type'],
+                'synonyms': ontology['synonyms'],
                 'projects': ontology['projects'],
                 'species': ontology['species'],
                 'tags': ontology['tags']
