@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 
 from django.http import JsonResponse, HttpResponse
 from elasticsearch import Elasticsearch
@@ -462,15 +463,17 @@ def download(request, name):
 @api_view(['GET'])
 @renderer_classes([PdfFileRenderer])
 def protocols_fire_api(request, protocol_type, id):
-    url = "https://{}.fire.sdo.ebi.ac.uk/fire/public/faang/ftp/protocols/" \
-          "{}/{}".format(settings.DATACENTER, protocol_type, id)
-    res = requests.get(url)
-    if res.status_code == 200:
-        file = res.content
-        response = HttpResponse(file, content_type='application/pdf')
+    cmd = f"aws --no-sign-request --endpoint-url" \
+            f" http://{settings.DATACENTER}.fire.sdo.ebi.ac.uk" \
+                 f" s3 cp s3://faang-public/ftp/protocols/{protocol_type}/{id} ./"
+    os.system(cmd)
+    file_location = f"./{id}"
+    try:    
+        with open(file_location, 'rb') as f:
+           file_data = f.read()
+        response = HttpResponse(file_data, content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(id)
-        return response
-    else:
+    except IOError:
         return HttpResponse(status=404)
 
 @swagger_auto_schema(method='get', tags=['Summary'],
