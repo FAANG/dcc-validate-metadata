@@ -473,6 +473,7 @@ def protocols_fire_api(request, protocol_type, id):
            file_data = f.read()
         response = HttpResponse(file_data, content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(id)
+        return response
     except IOError:
         return HttpResponse(status=404)
 
