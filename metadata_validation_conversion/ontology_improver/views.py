@@ -2,6 +2,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 import json
+import copy
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from ontology_improver.models import User
 from django.conf import settings
@@ -11,8 +12,7 @@ import base64
 from celery import chain
 from ontology_improver.utils import *
 from ontology_improver.tasks import update_ontology_summary
-from metadata_validation_conversion.constants import \
-    BE_SVC, OLS_API, ZOOMA_SERVICE
+from metadata_validation_conversion.constants import BE_SVC, ZOOMA_SERVICE
 
 @csrf_exempt
 def get_zooma_ontologies(request):
@@ -100,25 +100,17 @@ def validate_ontology(request):
         }
         es.update(index='ontologies', id=ontology['key'], body={"doc": update_payload})
         # create new record with suggested changes
-        new_ontology = {
-            'id': ontology['id'],
-            'term': ontology['term'],
-            'type': ontology['type'],
-            'key': f"{ontology['term']}-{ontology['id']}",
-            'support': '',
-            'projects': data['project'] if data['project'] else [],
-            'species': ontology['species'],
-            'synonyms': ontology['synonyms'],
-            'tags': ontology['tags'],
-            'upvotes_count': 0,
-            'downvotes_count': 0,
-            'status_activity': [{
-                'project': data['project'],
-                'status': 'Awaiting Assessment',
-                'timestamp': datetime.now(tz=timezone.utc),
-                'user': data['user']
-            }]
-        }
+        new_ontology = copy.deepcopy(ontology)
+        new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
+        new_ontology['projects'] = data['project'] if data['project'] else []
+        new_ontology['upvotes_count'] = 0
+        new_ontology['downvotes_count'] = 0
+        new_ontology['status_activity'] = [{
+            'project': data['project'],
+            'status': 'Awaiting Assessment',
+            'timestamp': datetime.now(tz=timezone.utc),
+            'user': data['user']
+        }]
         es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
     if 'project' in data and data['project']:
         # update summary stats - increment validated_count
@@ -131,45 +123,6 @@ def validate_ontology(request):
         task_chain = chain(task)
         res = task_chain.apply_async()
     return HttpResponse(status=200)
-
-@csrf_exempt
-def get_ontology_details(request, id):
-    if request.method != 'GET':
-        return HttpResponse("This method is not allowed!\n")
-    response = {}
-    # get ontology type, status etc from FAANG Ontology Database
-    url = f"{BE_SVC}/data/ontologies/{id}"
-    res = requests.get(url)
-    if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
-        return HttpResponse(status=404)
-    faang_data = json.loads(res.content)['hits']['hits'][0]['_source']
-    response['faang_data'] = faang_data
-    # parse ontology details from EBI OLS
-    res = requests.get(f"{OLS_API}/terms?short_form={response['faang_data']['id']}").json()
-    if '_embedded' in res:
-        res = res['_embedded']['terms'][0]
-        if hasAttribute(res, 'iri'):
-            response['iri'] = res['iri'] # string
-        if hasAttribute(res, 'label'):
-            response['label'] = res['label'] # string
-        if hasAttribute(res, 'description'):
-            response['summary'] = res['description'][0] # string
-        if hasAttribute(res, 'synonyms'):
-            response['synonyms'] = res['synonyms'] # list
-        if 'annotation' in res:
-            if hasAttribute(res['annotation'], 'id'):
-                response['id'] = res['annotation']['id'][0] # string 
-            if hasAttribute(res['annotation'], 'has_alternative_id'):
-                response['alternative_id'] = res['annotation']['has_alternative_id'] # list
-            if 'summary' not in response and hasAttribute(res['annotation'], 'definition'):
-                response['summary'] = res['annotation']['definition'][0] # string
-            if hasAttribute(res['annotation'], 'database_cross_reference'):
-                response['database_cross_reference'] = res['annotation']['database_cross_reference'] # list
-            if hasAttribute(res['annotation'], 'has_related_synonym'):
-                response['related_synonyms'] = res['annotation']['has_related_synonym'] # list
-            if 'synonyms' not in response and hasAttribute(res['annotation'], 'has_exact_synonym'):
-                response['synonyms'] = res['annotation']['has_exact_synonym'] # list
-    return JsonResponse(response)
 
 @csrf_exempt
 def ontology_updates(request):
@@ -187,25 +140,16 @@ def ontology_updates(request):
         res = requests.get(url)
         # create new ontology if ontology does not exist
         if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
-            new_ontology = {
-                'id': ontology['id'],
-                'term': ontology['term'],
-                'type': ontology['type'],
-                'key': f"{ontology['term']}-{ontology['id']}",
-                'support': ontology['support'] if ontology['support'] else '',
-                'projects': ontology['projects'] if ontology['projects'] else [],
-                'species': ontology['species'] if ontology['species'] else [],
-                'synonyms': ontology['synonyms'] if ontology['synonyms'] else getSynonyms(ontology['id']),
-                'tags': ontology['tags'] if ontology['tags'] else [],
-                'upvotes_count': 0,
-                'downvotes_count': 0,
-                'status_activity': [{
-                    'project': ontology['projects'],
-                    'status': 'Awaiting Assessment',
-                    'timestamp': datetime.now(tz=timezone.utc),
-                    'user': user
-                }]
-            }
+            new_ontology = copy.deepcopy(ontology)
+            new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
+            new_ontology['upvotes_count'] = 0
+            new_ontology['downvotes_count'] = 0
+            new_ontology['status_activity'] = [{
+                'project': ontology['projects'],
+                'status': 'Awaiting Assessment',
+                'timestamp': datetime.now(tz=timezone.utc),
+                'user': user
+            }]
             es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
         # edit ontology if it already exists
         else:
@@ -213,6 +157,7 @@ def ontology_updates(request):
             update_payload = {
                 'type': ontology['type'],
                 'synonyms': ontology['synonyms'],
+                'summary': ontology['summary'],
                 'projects': ontology['projects'],
                 'species': ontology['species'],
                 'tags': ontology['tags']

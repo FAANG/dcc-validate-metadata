@@ -7,6 +7,5 @@ urlpatterns = [
     path('register/', views.registration, name='registration'),
     path('get_matches/', views.get_zooma_ontologies, name='get_zooma_ontologies'),
     path('validate/', views.validate_ontology, name='validate_ontology'),
-    path('update_ontologies/', views.ontology_updates, name='ontology_updates'),
-    path('ontology_detail/<str:id>', views.get_ontology_details, name='ontology_detail')
+    path('update_ontologies/', views.ontology_updates, name='ontology_updates')
 ]
