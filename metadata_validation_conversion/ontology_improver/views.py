@@ -1,75 +1,18 @@
-from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 import json
-from ontology_improver.models import Ontologies, Summary, User
+import copy
+from elasticsearch import Elasticsearch, RequestsHttpConnection
+from ontology_improver.models import User
+from django.conf import settings
 from datetime import datetime
 from django.utils import timezone
-from django.forms.models import model_to_dict
 import base64
-
-def parse_zooma_response(response_list):
-    annotations = []
-    for response in response_list:
-        data = {}
-        if 'annotatedProperty' in response:
-            if 'propertyType' in response['annotatedProperty']:
-                data['term_type'] = response['annotatedProperty']['propertyType']
-            if 'propertyValue' in response['annotatedProperty']:
-                data['ontology_label'] = response['annotatedProperty']['propertyValue']
-        if 'semanticTags' in response:
-            data['ontology_id'] = ','.join(list(map(lambda tag: tag.split('/')[-1], response['semanticTags'])))
-        if 'confidence' in response:
-            data['mapping_confidence'] = response['confidence']
-        if 'derivedFrom' in response and 'provenance' in response['derivedFrom']:
-            if 'generator' in response['derivedFrom']['provenance']:
-                data['source'] = response['derivedFrom']['provenance']['generator']
-        annotations.append(data)
-    return annotations
-
-def getColourCode(ontology_support, ontology_status):
-    if ontology_status == 'Verified':
-        if ontology_support == 'https://www.ebi.ac.uk/vg/faang':
-            return 'green'
-        else:
-            return 'yellow'
-    elif ontology_status == 'Awaiting Assessment':
-        return 'blue'
-    elif ontology_status == 'Needs Improvement':
-        return 'yellow'
-    else:
-        return 'red'
-
-@csrf_exempt
-def search_terms(request):
-    '''
-    1. Use POST with 'terms' in body, to search for a specific set of terms, 
-    returns records which are 'found' and terms which are 'not_found'
-    2. Use GET to fetch all records
-    '''
-    if request.method == 'POST':
-        terms = json.loads(request.body)['terms']
-        response = {'found': [], 'not_found': []}
-        for term in terms:
-            matches = list(Ontologies.objects.filter(ontology_term__iexact=term).order_by('-created_date').values())
-            if len(matches):
-                response['found'] += matches
-            else:
-                response['not_found'].append(term)
-        return JsonResponse(response)
-    elif request.method == 'GET':
-        size = int(request.GET.get('size', 0))
-        if size:
-            records = list(Ontologies.objects.all().order_by('-created_date').values()[:size])
-        else:
-            records = list(Ontologies.objects.all().order_by('-created_date').values())
-        response = {
-            'ontologies': records
-        }
-        return JsonResponse(response)
-    else:
-        return HttpResponse("This method is not allowed!\n")
+from celery import chain
+from ontology_improver.utils import *
+from ontology_improver.tasks import update_ontology_summary
+from metadata_validation_conversion.constants import BE_SVC, ZOOMA_SERVICE
 
 @csrf_exempt
 def get_zooma_ontologies(request):
@@ -78,9 +21,7 @@ def get_zooma_ontologies(request):
     terms = json.loads(request.body)['terms']
     response = {}
     for term in terms:
-        data = requests.get(
-            "http://www.ebi.ac.uk/spot/zooma/v2/api/services/annotate?propertyValue={}&filter=preferred:[FAANG]".format(
-             term)).json()
+        data = requests.get(f"{ZOOMA_SERVICE}/annotate?propertyValue={term}&filter=preferred:[FAANG]").json()
         response[term] = parse_zooma_response(data)
     return JsonResponse(response)
 
@@ -127,173 +68,103 @@ def authentication(request):
     return JsonResponse({'token': token})
 
 @csrf_exempt
-def validate_terms(request):
+def validate_ontology(request):
+    if request.method != 'POST':
+        return HttpResponse("This method is not allowed!\n")
+    data = json.loads(request.body)
+    ontology = data['ontology']
+    status_activity = ontology['status_activity']
+    status_activity.append({
+        'project': data['project'],
+        'status': data['status'],
+        'timestamp': datetime.now(tz=timezone.utc),
+        'user': data['user']
+    })
+    url = f"{BE_SVC}/data/ontologies/{ontology['key']}"
+    res = requests.get(url)
+    if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
+        return HttpResponse(status=404)
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
+                       http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
+                        use_ssl=True, verify_certs=True)
+    if data['status'] == 'Verified':
+        update_payload = {
+            'status_activity': status_activity,
+            'upvotes_count': ontology['upvotes_count'] + 1
+        }
+        es.update(index='ontologies', id=ontology['key'], body={"doc": update_payload})
+    else:
+        update_payload = {
+            'status_activity': status_activity,
+            'downvotes_count': ontology['downvotes_count'] + 1
+        }
+        es.update(index='ontologies', id=ontology['key'], body={"doc": update_payload})
+        # create new record with suggested changes
+        new_ontology = copy.deepcopy(ontology)
+        new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
+        new_ontology['projects'] = data['project'] if data['project'] else []
+        new_ontology['upvotes_count'] = 0
+        new_ontology['downvotes_count'] = 0
+        new_ontology['status_activity'] = [{
+            'project': data['project'],
+            'status': 'Awaiting Assessment',
+            'timestamp': datetime.now(tz=timezone.utc),
+            'user': data['user']
+        }]
+        es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
+    if 'project' in data and data['project']:
+        # update summary stats - increment validated_count
+        for project in data['project']:
+            url = f"{BE_SVC}/data/summary_ontologies/{project}"
+            project_stats = requests.get(url).json()['hits']['hits'][0]['_source']
+            project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
+            es.index(index='summary_ontologies', id=project, body=project_stats)
+        task = update_ontology_summary.s().set(queue='submission')
+        task_chain = chain(task)
+        res = task_chain.apply_async()
+    return HttpResponse(status=200)
+
+@csrf_exempt
+def ontology_updates(request):
     if request.method != 'POST':
         return HttpResponse("This method is not allowed!\n")
     data = json.loads(request.body)
     ontologies = data['ontologies']
     # get user info
     user = data['user']
-    user_obj = User.objects.get(username=user)
-    # create/ update ontology records
-    for record in ontologies:
-        try:
-            obj = Ontologies.objects.get(pk=record['id'])
-            obj.ontology_status = record['ontology_status']
-            obj.colour_code = getColourCode(obj.ontology_support, record['ontology_status'])
-            if record['ontology_status'] == 'Verified':
-                obj.verified_count = obj.verified_count + 1
-            if 'ontology_term' in record:
-                obj.ontology_term = record['ontology_term']
-            if 'ontology_type' in record:
-                obj.ontology_type = record['ontology_type']
-            if 'ontology_id' in record:
-                obj.ontology_id = record['ontology_id']
-            if 'project' in record:
-                obj.project = record['project']
-            if 'species' in record:
-                obj.species = record['species']
-            if 'tags' in record:
-                obj.tags = record['tags']
-            obj.save()
-            if record['ontology_status'] == 'Verified':
-                obj.verified_by_users.add(user_obj)
-        except (Ontologies.DoesNotExist, KeyError):
-            obj = Ontologies.objects.create(
-                ontology_term=record['ontology_term'], \
-                ontology_type=record['ontology_type'], \
-                ontology_id=record['ontology_id'], \
-                ontology_support=record['ontology_support'], \
-                ontology_status=record['ontology_status'], \
-                colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
-                created_by_user = user_obj, \
-                created_date = datetime.now(tz=timezone.utc),
-                verified_count = 1 if record['ontology_status'] == 'Verified' else 0)
-            if 'project' in record:
-                obj.project = record['project']
-            if 'species' in record:
-                obj.species = record['species']
-            if 'tags' in record:
-                obj.tags = record['tags']
-            obj.save()
-            if record['ontology_status'] == 'Verified':
-                obj.verified_by_users.add(user_obj)
-
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
+                       http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
+                        use_ssl=True, verify_certs=True)
+    for ontology in ontologies:
+        url = f"{BE_SVC}/data/ontologies/{ontology['key']}"
+        res = requests.get(url)
+        # create new ontology if ontology does not exist
+        if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
+            new_ontology = copy.deepcopy(ontology)
+            new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
+            new_ontology['upvotes_count'] = 0
+            new_ontology['downvotes_count'] = 0
+            new_ontology['status_activity'] = [{
+                'project': ontology['projects'],
+                'status': 'Awaiting Assessment',
+                'timestamp': datetime.now(tz=timezone.utc),
+                'user': user
+            }]
+            es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
+        # edit ontology if it already exists
+        else:
+            existing_ontology = json.loads(res.content)['hits']['hits'][0]['_source']
+            update_payload = {
+                'type': ontology['type'],
+                'synonyms': ontology['synonyms'],
+                'summary': ontology['summary'],
+                'projects': ontology['projects'],
+                'species': ontology['species'],
+                'tags': ontology['tags']
+            }
+            es.update(index='ontologies', id=existing_ontology['key'], body={"doc": update_payload})
+    # update summary statistics
+    task = update_ontology_summary.s().set(queue='submission')
+    task_chain = chain(task)
+    res = task_chain.apply_async()
     return HttpResponse(status=201)
-
-def hasAttribute(res, att):
-    if att in res and res[att] is not None:
-        if type(res[att]) is list:
-            if len(res[att]):
-                return True
-            else:
-                return False    
-        return True
-    return False
-
-@csrf_exempt
-def get_ontology_details(request, id):
-    if request.method != 'GET':
-        return HttpResponse("This method is not allowed!\n")
-    response = {}
-    # get ontology type, status etc from FAANG Ontology Database
-    faang_data = model_to_dict(Ontologies.objects.get(pk=id))
-    del faang_data['verified_by_users']
-    response['faang_data'] = faang_data
-    # parse ontology details from EBI OLS
-    res = requests.get(
-        "http://www.ebi.ac.uk/ols/api/terms?short_form={}".format(
-            response['faang_data']['ontology_id'])).json()
-    if '_embedded' in res:
-        res = res['_embedded']['terms'][0]
-        if hasAttribute(res, 'iri'):
-            response['iri'] = res['iri'] # string
-        if hasAttribute(res, 'label'):
-            response['label'] = res['label'] # string
-        if hasAttribute(res, 'description'):
-            response['summary'] = res['description'][0] # string
-        if hasAttribute(res, 'synonyms'):
-            response['synonyms'] = res['synonyms'] # list
-        if 'annotation' in res:
-            if hasAttribute(res['annotation'], 'id'):
-                response['id'] = res['annotation']['id'][0] # string 
-            if hasAttribute(res['annotation'], 'has_alternative_id'):
-                response['alternative_id'] = res['annotation']['has_alternative_id'] # list
-            if 'summary' not in response and hasAttribute(res['annotation'], 'definition'):
-                response['summary'] = res['annotation']['definition'][0] # string
-            if hasAttribute(res['annotation'], 'database_cross_reference'):
-                response['database_cross_reference'] = res['annotation']['database_cross_reference'] # list
-            if hasAttribute(res['annotation'], 'has_related_synonym'):
-                response['related_synonyms'] = res['annotation']['has_related_synonym'] # list
-            if 'synonyms' not in response and hasAttribute(res['annotation'], 'has_exact_synonym'):
-                response['synonyms'] = res['annotation']['has_exact_synonym'] # list
-                
-    return JsonResponse(response)
-
-@csrf_exempt
-def summary(request):
-    if request.method != 'GET':
-        return HttpResponse("This method is not allowed!\n")
-    records = list(Summary.objects.all().values())
-    return JsonResponse(records, safe=False)
-
-def update_comma_sep_fields(old_val, new_val):
-    if old_val:
-        val = old_val.split(', ') + new_val.split(', ')
-        val = ', '.join(list(set(val)))
-        return val
-    return new_val
-
-@csrf_exempt
-def ontology_updates(request):
-    data = json.loads(request.body)
-    ontologies = data['ontologies']
-    # get user info
-    user = data['user']
-    user_obj = User.objects.get(username=user)
-    for record in ontologies:
-        try:
-            # check if ontology record with same ontology_term already exists
-            # if yes update record, else create new record
-            obj = Ontologies.objects.get(ontology_term=record['ontology_term'])
-            obj.ontology_type = update_comma_sep_fields(obj.ontology_type, record['ontology_type'])
-            obj.ontology_id = update_comma_sep_fields(obj.ontology_id, record['ontology_id'])
-            obj.project = update_comma_sep_fields(obj.project, record['project'])
-            obj.species = update_comma_sep_fields(obj.species, record['species'])
-            obj.save()
-        except (Ontologies.DoesNotExist, KeyError):
-            obj = Ontologies.objects.create(
-                ontology_term=record['ontology_term'], \
-                ontology_type=record['ontology_type'], \
-                ontology_id=record['ontology_id'], \
-                ontology_support=record['ontology_support'], \
-                ontology_status=record['ontology_status'], \
-                colour_code=getColourCode(record['ontology_support'], record['ontology_status']), \
-                created_by_user = user_obj, \
-                created_date = datetime.now(tz=timezone.utc),
-                verified_count = 1 if record['ontology_status'] == 'Verified' else 0)
-            if 'project' in record:
-                obj.project = record['project']
-            if 'species' in record:
-                obj.species = record['species']
-            obj.save()
-    return HttpResponse(status=201)
-
-@csrf_exempt
-def summary_updates(request):
-    data = json.loads(request.body)
-    for row in data:
-        try:
-            obj = Summary.objects.get(project=row['project'])
-            obj.species = row['species']
-            obj.ontology_type_count = row['ontology_type_count']
-            obj.status_count = row['status_count']
-            obj.save()
-        except (Summary.DoesNotExist, KeyError):
-            obj = Summary.objects.create(
-                project=row['project'], \
-                species=row['species'], \
-                ontology_type_count=row['ontology_type_count'], \
-                status_count=row['status_count'])
-    return HttpResponse(status=201)
-

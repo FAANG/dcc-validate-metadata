@@ -27,7 +27,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
 es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
-                   http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=False)
+                   http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
 
 
 class LogErrorsTask(Task, ABC):
