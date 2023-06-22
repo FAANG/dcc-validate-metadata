@@ -231,6 +231,10 @@ class BiosamplesFileConverter:
             sample_attributes['organism'] = [organism_object]
         if self.private_submission:
             sample_attributes['BovReg private submission'] = [{'text': 'TRUE'}]
+
+        # TODO: change this logic to parse this data from organism record once metadata rules are updated
+        samples_attributes['collection date'] = [{'text': 'not collected', 'tag': 'attribute'}]
+        samples_attributes['geographic location (country and/or sea)'] = [{'text': 'not collected', 'tag': 'attribute'}]
         return sample_attributes
 
     def parse_attribute(self, value_to_parse):
