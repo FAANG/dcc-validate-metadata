@@ -255,6 +255,8 @@ class BiosamplesFileConverter:
                         record['teleostei_embryo'].items():
                     sample_attributes[remove_underscores(sc_attribute_name)] = \
                         self.parse_attribute(sc_attribute_value)
+            elif attribute_name == 'geographic location':
+                continue
             else:
                 sample_attributes[remove_underscores(attribute_name)] = \
                     self.parse_attribute(attribute_value)
@@ -274,7 +276,6 @@ class BiosamplesFileConverter:
         if self.private_submission:
             sample_attributes['BovReg private submission'] = [{'text': 'TRUE'}]
 
-        # TODO: change this logic to parse this data from organism record once metadata rules are updated
         sample_attributes['collection date'] = [{'text': collection_date[record_name], 'tag': 'attribute'}]
         sample_attributes['geographic location (country and/or sea)'] = [
             {'text': geographic_location[record_name], 'tag': 'attribute'}]
