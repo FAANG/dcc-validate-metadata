@@ -17,6 +17,7 @@ class BiosamplesFileConverter:
     def start_conversion(self):
         data_to_send = list()
         taxon_ids, taxons = self.get_taxon_information()
+        collection_date, geographic_location = self.get_ena_required_information()
 
         # If private submission move date for two years in the future
         if self.private_submission:
@@ -52,12 +53,56 @@ class BiosamplesFileConverter:
                         "organization": organization_info,
                         "characteristics": self.get_sample_attributes(
                             record, additional_fields, taxon_ids, taxons,
-                            record_name),
+                            record_name, collection_date, geographic_location),
                         "relationships": self.get_sample_relationships(
                             record, record_name)
                     }
                 )
         return data_to_send
+
+    def get_ena_required_information(self):
+        collection_date = dict()
+        geographic_location = dict()
+        missing_ids = dict()
+        for record_type, records in self.json_to_convert.items():
+            if record_type in SAMPLES_ALLOWED_SPECIAL_SHEET_NAMES:
+                continue
+            for record_index, record in enumerate(records):
+                record_name = get_record_name(record, record_index, record_type, self.action)
+                if 'organism' in record:
+                    collection_date[record_name] = record['collection date']['text']
+                    geographic_location[record_name] = record['geographic location (country and/or sea)']['text']
+                elif 'derived_from' in record:
+                    if isinstance(record['derived_from'], dict):
+                        missing_ids[record_name] = record['derived_from']['value']
+                    elif isinstance(record['derived_from'], list):
+                        missing_ids[record_name] = record['derived_from'][0]['value']
+        for id_to_fetch in missing_ids:
+            collection_date[id_to_fetch], geographic_location[id_to_fetch] = self.fetch_ena_required_information(
+                id_to_fetch, collection_date, geographic_location, missing_ids)
+        return collection_date, geographic_location
+
+    def fetch_ena_required_information(self, id_to_fetch, collection_date, geographic_location, missing_ids):
+        if id_to_fetch in collection_date and id_to_fetch in geographic_location:
+            return collection_date[id_to_fetch], geographic_location[id_to_fetch]
+        else:
+            # TODO: return error in taxon is not in biosamples
+            # check that id is Biosample id
+            if 'SAM' in id_to_fetch and '_' not in id_to_fetch:
+                try:
+                    results = requests.get(f"{self.submission_server}/biosamples/samples/{id_to_fetch}").json()
+                    return results['characteristics']['collection date'][0]['text'],\
+                        results['characteristics']['geographic location (country and/or sea)'][0]['text']
+                except ValueError:
+                    pass
+                except KeyError:
+                    results = requests.get(f"https://www.ebi.ac.uk/biosamples/samples/{id_to_fetch}",
+                                           headers=get_header()).json()
+                    return results['characteristics']['collection date'][0]['text'],\
+                        results['characteristics']['geographic location (country and/or sea)'][0]['text']
+            else:
+                return self.fetch_taxon_information(missing_ids[id_to_fetch], collection_date, geographic_location,
+                                                    missing_ids)
 
     def get_taxon_information(self):
         """
@@ -73,16 +118,13 @@ class BiosamplesFileConverter:
             for record_index, record in enumerate(records):
                 record_name = get_record_name(record, record_index, record_type, self.action)
                 if 'organism' in record:
-                    taxon_ids[record_name] = \
-                        record['organism']['term']
+                    taxon_ids[record_name] = record['organism']['term']
                     taxons[record_name] = record['organism']['text']
                 elif 'derived_from' in record:
                     if isinstance(record['derived_from'], dict):
-                        missing_ids[record_name] = \
-                            record['derived_from']['value']
+                        missing_ids[record_name] = record['derived_from']['value']
                     elif isinstance(record['derived_from'], list):
-                        missing_ids[record_name] = \
-                            record['derived_from'][0]['value']
+                        missing_ids[record_name] = record['derived_from'][0]['value']
         for id_to_fetch in missing_ids:
             taxon_ids[id_to_fetch], taxons[id_to_fetch] = \
                 self.fetch_taxon_information(id_to_fetch, taxon_ids,
@@ -181,7 +223,7 @@ class BiosamplesFileConverter:
         return sample_relationships
 
     def get_sample_attributes(self, record, additional_fields, taxon_ids,
-                              taxons, record_name):
+                              taxons, record_name, collection_date, geographic_location):
         """
         This function will return biosample attributes
         :param record: record to parse
@@ -233,8 +275,9 @@ class BiosamplesFileConverter:
             sample_attributes['BovReg private submission'] = [{'text': 'TRUE'}]
 
         # TODO: change this logic to parse this data from organism record once metadata rules are updated
-        sample_attributes['collection date'] = [{'text': 'not collected', 'tag': 'attribute'}]
-        sample_attributes['geographic location (country and/or sea)'] = [{'text': 'not collected', 'tag': 'attribute'}]
+        sample_attributes['collection date'] = [{'text': collection_date, 'tag': 'attribute'}]
+        sample_attributes['geographic location (country and/or sea)'] = [
+            {'text': geographic_location, 'tag': 'attribute'}]
         return sample_attributes
 
     def parse_attribute(self, value_to_parse):
