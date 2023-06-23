@@ -70,8 +70,8 @@ class BiosamplesFileConverter:
             for record_index, record in enumerate(records):
                 record_name = get_record_name(record, record_index, record_type, self.action)
                 if 'organism' in record:
-                    collection_date[record_name] = record['collection date']['text']
-                    geographic_location[record_name] = record['geographic location (country and/or sea)']['text']
+                    collection_date[record_name] = record['collection_date']['value']
+                    geographic_location[record_name] = record['geographic_location']['value']
                 elif 'derived_from' in record:
                     if isinstance(record['derived_from'], dict):
                         missing_ids[record_name] = record['derived_from']['value']
