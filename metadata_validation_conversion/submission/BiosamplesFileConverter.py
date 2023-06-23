@@ -101,8 +101,8 @@ class BiosamplesFileConverter:
                     return results['characteristics']['specimen collection date'][0]['text'],\
                         results['characteristics']['geographic location (country and/or sea)'][0]['text']
             else:
-                return self.fetch_taxon_information(missing_ids[id_to_fetch], collection_date, geographic_location,
-                                                    missing_ids)
+                return self.fetch_ena_required_information(missing_ids[id_to_fetch], collection_date,
+                                                           geographic_location, missing_ids)
 
     def get_taxon_information(self):
         """
