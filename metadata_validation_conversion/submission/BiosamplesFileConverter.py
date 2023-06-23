@@ -69,8 +69,8 @@ class BiosamplesFileConverter:
                 continue
             for record_index, record in enumerate(records):
                 record_name = get_record_name(record, record_index, record_type, self.action)
-                if 'organism' in record:
-                    collection_date[record_name] = record['collection_date']['value']
+                if 'specimen_from_organism' in record:
+                    collection_date[record_name] = record['specimen_collection_date']['value']
                     geographic_location[record_name] = record['geographic_location']['value']
                 elif 'derived_from' in record:
                     if isinstance(record['derived_from'], dict):
@@ -91,14 +91,14 @@ class BiosamplesFileConverter:
             if 'SAM' in id_to_fetch and '_' not in id_to_fetch:
                 try:
                     results = requests.get(f"{self.submission_server}/biosamples/samples/{id_to_fetch}").json()
-                    return results['characteristics']['collection date'][0]['text'],\
+                    return results['characteristics']['specimen collection date'][0]['text'],\
                         results['characteristics']['geographic location (country and/or sea)'][0]['text']
                 except ValueError:
                     pass
                 except KeyError:
                     results = requests.get(f"https://www.ebi.ac.uk/biosamples/samples/{id_to_fetch}",
                                            headers=get_header()).json()
-                    return results['characteristics']['collection date'][0]['text'],\
+                    return results['characteristics']['specimen collection date'][0]['text'],\
                         results['characteristics']['geographic location (country and/or sea)'][0]['text']
             else:
                 return self.fetch_taxon_information(missing_ids[id_to_fetch], collection_date, geographic_location,
@@ -276,9 +276,10 @@ class BiosamplesFileConverter:
         if self.private_submission:
             sample_attributes['BovReg private submission'] = [{'text': 'TRUE'}]
 
-        sample_attributes['collection date'] = [{'text': collection_date[record_name], 'tag': 'attribute'}]
-        sample_attributes['geographic location (country and/or sea)'] = [
-            {'text': geographic_location[record_name], 'tag': 'attribute'}]
+        if record_name in collection_date and record_name in geographic_location:
+            sample_attributes['collection date'] = [{'text': collection_date[record_name], 'tag': 'attribute'}]
+            sample_attributes['geographic location (country and/or sea)'] = [
+                {'text': geographic_location[record_name], 'tag': 'attribute'}]
         return sample_attributes
 
     def parse_attribute(self, value_to_parse):
