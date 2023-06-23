@@ -69,7 +69,7 @@ class BiosamplesFileConverter:
                 continue
             for record_index, record in enumerate(records):
                 record_name = get_record_name(record, record_index, record_type, self.action)
-                if 'specimen_from_organism' in record:
+                if 'specimen_collection_date' in record and 'geographic_location' in record:
                     collection_date[record_name] = record['specimen_collection_date']['value']
                     geographic_location[record_name] = record['geographic_location']['value']
                 elif 'derived_from' in record:
