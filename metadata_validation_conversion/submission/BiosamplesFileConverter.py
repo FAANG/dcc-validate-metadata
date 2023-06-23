@@ -255,7 +255,7 @@ class BiosamplesFileConverter:
                         record['teleostei_embryo'].items():
                     sample_attributes[remove_underscores(sc_attribute_name)] = \
                         self.parse_attribute(sc_attribute_value)
-            elif attribute_name == 'geographic location':
+            elif attribute_name == 'geographic_location':
                 continue
             else:
                 sample_attributes[remove_underscores(attribute_name)] = \
