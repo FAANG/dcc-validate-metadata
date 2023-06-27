@@ -39,13 +39,18 @@ class ExperimentFileConverter(FileConverter):
             etree.SubElement(sample_elt, 'TITLE').text = title
             sample_name_elt = etree.SubElement(sample_elt, 'SAMPLE_NAME')
             etree.SubElement(sample_name_elt, 'TAXON_ID').text = tax_id
-            sample_attributes_elt = etree.SubElement(sample_elt,
-                                                     'SAMPLE_ATTRIBUTES')
-            sample_attribute_elt = etree.SubElement(sample_attributes_elt,
-                                                    'SAMPLE_ATTRIBUTE')
+            sample_attributes_elt = etree.SubElement(sample_elt, 'SAMPLE_ATTRIBUTES')
+            sample_attribute_elt = etree.SubElement(sample_attributes_elt, 'SAMPLE_ATTRIBUTE')
             etree.SubElement(sample_attribute_elt, 'TAG').text = 'same as'
-            etree.SubElement(sample_attribute_elt, 'VALUE').text = \
-                samples_response['accession']
+            etree.SubElement(sample_attribute_elt, 'VALUE').text = samples_response['accession']
+
+            sample_attribute_elt = etree.SubElement(sample_attributes_elt, 'SAMPLE_ATTRIBUTE')
+            etree.SubElement(sample_attribute_elt, 'TAG').text = 'geographic location (country and/or sea)'
+            etree.SubElement(sample_attribute_elt, 'VALUE').text = "not collected"
+
+            sample_attribute_elt = etree.SubElement(sample_attributes_elt, 'SAMPLE_ATTRIBUTE')
+            etree.SubElement(sample_attribute_elt, 'TAG').text = 'collection date'
+            etree.SubElement(sample_attribute_elt, 'VALUE').text = "not collected"
         sample_xml.write(f"{self.room_id}_sample.xml",
                          pretty_print=True, xml_declaration=True,
                          encoding='UTF-8')
