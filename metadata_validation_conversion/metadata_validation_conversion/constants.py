@@ -441,3 +441,9 @@ ORGANIZATIONS = {
     "WU": "Wageningen University (Netherlands)",
     "ZIGR": "Polish Academy of Sciences Institute of Ichthyobiology and Aquaculture in Golysz (Poland)"
 }
+
+PROTOCOL_INDICES = {
+    'samples': 'protocol_samples',
+    'experiments': 'protocol_files',
+    'analyses': 'protocol_analysis'
+}
