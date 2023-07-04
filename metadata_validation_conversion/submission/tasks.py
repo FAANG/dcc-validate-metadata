@@ -456,15 +456,18 @@ def save_submission_data(root, submission_type, room_id, action):
         for study_obj in study_objs:
             existing_doc = get_doc(study_obj['study_id'])
             if existing_doc is not None:
-                # retain subscribers_field
-                study_obj['subscribers'] = existing_doc['subscribers']
+                # retain submission_date field
+                study_obj['submission_date'] = existing_doc['submission_date'] 
+                if 'subscribers' in existing_doc:
+                    # retain subscribers field
+                    study_obj['subscribers'] = existing_doc['subscribers']
 
-                # email subscribers
-                deepdiff_obj = DeepDiff(existing_doc, study_obj)
-                if deepdiff_obj:
-                    subscriber_emails = [ele['email'] for ele in existing_doc['subscribers']]
-                    for email in subscriber_emails:
-                        send_user_email(study_obj['study_id'], email)
+                    # email subscribers
+                    deepdiff_obj = DeepDiff(existing_doc, study_obj)
+                    if deepdiff_obj:
+                        subscriber_emails = [ele['email'] for ele in existing_doc['subscribers']]
+                        for email in subscriber_emails:
+                            send_user_email(study_obj['study_id'], email)
 
             es.index(index='submissions', id=study_obj['study_id'], body=study_obj)
 
