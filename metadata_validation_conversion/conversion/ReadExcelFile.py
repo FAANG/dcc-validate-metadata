@@ -258,6 +258,10 @@ class ReadExcelFile:
         :return: dict with positions of types of field
         """
         field_name = field_name.lower()
+        print(field_name)
+        print(field_types)
+        print(array_fields)
+        print(self.headers)
         if field_name not in self.headers:
             raise ValueError(
                 f"Error: can't find this property '{field_name}' in "

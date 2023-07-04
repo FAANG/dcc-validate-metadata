@@ -96,6 +96,7 @@ ALLOWED_SHEET_NAMES = {
 
 ALLOWED_SAMPLES_TYPES = {
     'organism': ORGANISM_URL,
+    'organoid': ORGANOID_URL,
     'specimen_from_organism': SPECIMEN_FROM_ORGANISM_URL,
     'teleostei_embryo': SPECIMEN_FROM_ORGANISM_URL,
     'teleostei_post-hatching': SPECIMEN_FROM_ORGANISM_URL,
