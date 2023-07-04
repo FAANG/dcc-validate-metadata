@@ -129,6 +129,7 @@ ALLOWED_ANALYSES_TYPES = {
 
 ALLOWED_RELATIONSHIPS = {
     'organism': ['organism'],
+    'organoid': ['specimen_from_organism'],
     'specimen_from_organism': ['organism'],
     'teleostei_embryo': ['organism'],
     'teleostei_post-hatching': ['organism'],
