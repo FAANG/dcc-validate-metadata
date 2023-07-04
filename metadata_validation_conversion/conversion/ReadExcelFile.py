@@ -489,8 +489,6 @@ class ReadExcelFile:
         :param name: name of sheet
         :return: False or error
         """
-        print(sample_data)
-        print(name)
         if self.json_type != 'samples':
             return False
         if 'samples_core' in sample_data and 'material' in \
