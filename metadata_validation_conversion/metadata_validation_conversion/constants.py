@@ -69,6 +69,7 @@ ALLOWED_TEMPLATES = ['samples', 'experiments', 'analyses']
 
 ALLOWED_SHEET_NAMES = {
     'organism': ORGANISM_URL,
+    'organoid': ORGANOID_URL,
     'specimen from organism': SPECIMEN_FROM_ORGANISM_URL,
     "teleostei embryo": SPECIMEN_FROM_ORGANISM_URL,
     "teleostei post-hatching": SPECIMEN_FROM_ORGANISM_URL,
