@@ -258,10 +258,6 @@ class ReadExcelFile:
         :return: dict with positions of types of field
         """
         field_name = field_name.lower()
-        print(field_name)
-        print(field_types)
-        print(array_fields)
-        print(self.headers)
         if field_name not in self.headers:
             raise ValueError(
                 f"Error: can't find this property '{field_name}' in "
@@ -493,6 +489,8 @@ class ReadExcelFile:
         :param name: name of sheet
         :return: False or error
         """
+        print(sample_data)
+        print(name)
         if self.json_type != 'samples':
             return False
         if 'samples_core' in sample_data and 'material' in \
