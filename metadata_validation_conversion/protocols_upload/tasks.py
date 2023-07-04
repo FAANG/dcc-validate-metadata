@@ -1,13 +1,17 @@
 import datetime
 from abc import ABC
-
+from django.conf import settings
+from elasticsearch import Elasticsearch, RequestsHttpConnection
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
-from metadata_validation_conversion.constants import ORGANIZATIONS
+from metadata_validation_conversion.constants import ORGANIZATIONS, PROTOCOL_INDICES
 import requests
 import os
 from celery import Task
-
+    
+es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
+                    http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
+                    use_ssl=True, verify_certs=True)
 
 class LogErrorsTask(Task, ABC):
     abstract = True
@@ -71,3 +75,66 @@ def upload(validation_results, fileserver_path, filename, fileid):
             os.system(cmd)
             return 'Success'
     return 'Error'
+
+@app.task(base=LogErrorsTask)
+def add_to_es(upload_results, protocol_type, protocol_file, fileid):
+    try:
+        if upload_results == 'Success':
+            index = PROTOCOL_INDICES[protocol_type]
+            key = requests.utils.unquote(protocol_file)
+            url = f"https://api.faang.org/files/protocols/{protocol_type}/{protocol_file}"
+            parsed = protocol_file.strip().split("_")
+            # Parsing protocol name
+            if 'SOP' in parsed:
+                protocol_name = requests.utils.unquote(" ".join(parsed[2:-1]))
+            else:
+                protocol_name = requests.utils.unquote(" ".join(parsed[1:-1]))
+            if index == 'protocol_samples' or index == 'protocol_analysis':
+                if not es.exists(index, id=key):
+                    # Parsing university name
+                    if parsed[0] == 'WUR':
+                        university_name = 'WUR'
+                    elif parsed[0] not in ORGANIZATIONS:
+                        university_name = None
+                    else:
+                        university_name = ORGANIZATIONS[parsed[0]]
+                    # Parsing date
+                    date = parsed[-1].split(".pdf")[0][:4]
+                    protocol_data = {
+                        "universityName": university_name,
+                        "protocolDate": date,
+                        "protocolName": protocol_name, 
+                        "key": key,
+                        "url": url
+                    }
+                    if index == 'protocol_samples':
+                        protocol_data["specimens"] = []
+                    elif index == 'protocol_analysis':
+                        protocol_data["analyses"] = []
+                    es.index(index, id=key, body=protocol_data)
+                    send_message(submission_message=f"Please download your file at \n {url}.\n" \
+                                 f"Protocol added to data portal!", room_id=fileid)
+            else:
+                r = requests.get(f"http://backend-svc:8000/data/protocol_files/_search/?search={protocol_file}").json()
+                if (r['hits']['total']['value'] == 0):
+                    protocol_data = {
+                        "experiments": [],
+                        "experimentTarget": "",
+                        "assayType": "",
+                        "name": protocol_name,
+                        "filename": key,
+                        "key": key,
+                        "url": url
+                    }
+                    es.index(index, id=key, body=protocol_data)
+                    send_message(submission_message=f"Please download your file at \n {url}.\n" \
+                                 f"Protocol added to data portal!", room_id=fileid)
+            status = 'Success'
+        else:
+            status = 'Error'
+    except Exception as e:
+        send_message(submission_message=f"Error adding new protocol, "
+                     f"please contact faang-dcc@ebi.ac.uk", room_id=fileid)
+        status = 'Error'
+    finally:
+        return status
