@@ -1,4 +1,4 @@
-celery==5.2.2
+celery==5.3.1
 python-decouple==3.1
 Django==3.2.14
 channels==3.0.3
@@ -16,7 +16,7 @@ psycopg2-binary
 djangorestframework==3.12.2
 djangorestframework-jwt==1.11.0
 drf-yasg==1.20.0
-flower==0.9.5
+flower==2.0.0
 uvicorn==0.14.0
 websockets==10.3
 graphql-ws==0.4.4
