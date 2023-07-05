@@ -158,7 +158,7 @@ class BiosamplesFileConverter:
                 print("Wihint if 'SAM'")
                 try:
                     results = requests.get(
-                        f"{self.submission_server}/biosamples/samples/"
+                        f"{SUBMISSION_PROD_SERVER}/biosamples/samples/"
                         f"{id_to_fetch}").json()
                     print(results)
                     return results['taxId'], results['characteristics'][
