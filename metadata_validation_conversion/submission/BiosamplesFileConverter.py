@@ -126,6 +126,7 @@ class BiosamplesFileConverter:
                     elif isinstance(record['derived_from'], list):
                         missing_ids[record_name] = record['derived_from'][0]['value']
         for id_to_fetch in missing_ids:
+            print(id_to_fetch)
             taxon_ids[id_to_fetch], taxons[id_to_fetch] = \
                 self.fetch_taxon_information(id_to_fetch, taxon_ids,
                                              taxons, missing_ids)
@@ -141,6 +142,10 @@ class BiosamplesFileConverter:
         :param missing_ids: missing taxon ids
         :return:
         """
+        print(id_to_fetch)
+        print(taxon_ids)
+        print(taxons)
+        print(missing_ids)
         if id_to_fetch in taxon_ids and id_to_fetch in taxons:
             return taxon_ids[id_to_fetch], taxons[id_to_fetch]
         else:
