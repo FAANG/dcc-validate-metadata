@@ -126,7 +126,6 @@ class BiosamplesFileConverter:
                     elif isinstance(record['derived_from'], list):
                         missing_ids[record_name] = record['derived_from'][0]['value']
         for id_to_fetch in missing_ids:
-            print(f"Within get_taxon_information: {id_to_fetch}")
             taxon_ids[id_to_fetch], taxons[id_to_fetch] = \
                 self.fetch_taxon_information(id_to_fetch, taxon_ids,
                                              taxons, missing_ids)
@@ -142,25 +141,16 @@ class BiosamplesFileConverter:
         :param missing_ids: missing taxon ids
         :return:
         """
-        print("Within fetch_taxon_information")
-        print(id_to_fetch)
-        print(taxon_ids)
-        print(taxons)
-        print(missing_ids)
         if id_to_fetch in taxon_ids and id_to_fetch in taxons:
-            print("Within if")
             return taxon_ids[id_to_fetch], taxons[id_to_fetch]
         else:
-            print("Within else")
             # TODO: return error in taxon is not in biosamples
             # check that id is Biosample id
             if 'SAM' in id_to_fetch and '_' not in id_to_fetch:
-                print("Wihint if 'SAM'")
                 try:
                     results = requests.get(
                         f"{SUBMISSION_PROD_SERVER}/biosamples/samples/"
                         f"{id_to_fetch}").json()
-                    print(results)
                     return results['taxId'], results['characteristics'][
                         'organism'][0]['text']
                 except ValueError:
