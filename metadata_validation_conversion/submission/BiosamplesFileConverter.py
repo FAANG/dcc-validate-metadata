@@ -83,24 +83,36 @@ class BiosamplesFileConverter:
         return collection_date, geographic_location
 
     def fetch_ena_required_information(self, id_to_fetch, collection_date, geographic_location, missing_ids):
+        print(id_to_fetch)
+        print(collection_date)
+        print(geographic_location)
+        print(missing_ids)
         if id_to_fetch in collection_date and id_to_fetch in geographic_location:
+            print("Within if")
             return collection_date[id_to_fetch], geographic_location[id_to_fetch]
         else:
+            print("within else")
             # TODO: return error in taxon is not in biosamples
             # check that id is Biosample id
             if 'SAM' in id_to_fetch and '_' not in id_to_fetch:
+                print("Within else if")
                 try:
+                    print("within try")
                     results = requests.get(f"{self.submission_server}/biosamples/samples/{id_to_fetch}").json()
+                    print(results)
                     return results['characteristics']['specimen collection date'][0]['text'],\
                         results['characteristics']['geographic location (country and/or sea)'][0]['text']
                 except ValueError:
+                    print("within Value Error")
                     pass
                 except KeyError:
+                    print("within KeyError")
                     results = requests.get(f"https://www.ebi.ac.uk/biosamples/samples/{id_to_fetch}",
                                            headers=get_header()).json()
                     return results['characteristics']['specimen collection date'][0]['text'],\
                         results['characteristics']['geographic location (country and/or sea)'][0]['text']
             else:
+                print("within else")
                 return self.fetch_ena_required_information(missing_ids[id_to_fetch], collection_date,
                                                            geographic_location, missing_ids)
 
