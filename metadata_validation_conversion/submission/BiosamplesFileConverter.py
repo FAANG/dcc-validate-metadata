@@ -100,7 +100,7 @@ class BiosamplesFileConverter:
                     print("within try")
                     results = requests.get(f"https://www.ebi.ac.uk/biosamples/samples/{id_to_fetch}").json()
                     print(results)
-                    return results['characteristics']['specimen collection date'][0]['text'],\
+                    return results['characteristics']['collection date'][0]['text'],\
                         results['characteristics']['geographic location (country and/or sea)'][0]['text']
                 except ValueError:
                     print("within Value Error")
@@ -109,7 +109,7 @@ class BiosamplesFileConverter:
                     print("within KeyError")
                     results = requests.get(f"https://www.ebi.ac.uk/biosamples/samples/{id_to_fetch}",
                                            headers=get_header()).json()
-                    return results['characteristics']['specimen collection date'][0]['text'],\
+                    return results['characteristics']['collection date'][0]['text'],\
                         results['characteristics']['geographic location (country and/or sea)'][0]['text']
             else:
                 print("within else")
