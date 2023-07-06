@@ -98,7 +98,7 @@ class BiosamplesFileConverter:
                 print("Within else if")
                 try:
                     print("within try")
-                    results = requests.get(f"{self.submission_server}/biosamples/samples/{id_to_fetch}").json()
+                    results = requests.get(f"https://www.ebi.ac.uk/biosamples/samples/{id_to_fetch}").json()
                     print(results)
                     return results['characteristics']['specimen collection date'][0]['text'],\
                         results['characteristics']['geographic location (country and/or sea)'][0]['text']
