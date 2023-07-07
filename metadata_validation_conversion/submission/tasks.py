@@ -501,8 +501,8 @@ def send_user_email(study_id, subscriber_email):
 
 
 @app.task(base=LogErrorsTask)
-def generate_annotated_template(json_to_convert, room_id, data_type):
-    annotation_results = AnnotateTemplate(json_to_convert, room_id, data_type)
+def generate_annotated_template(json_to_convert, room_id, data_type, action):
+    annotation_results = AnnotateTemplate(json_to_convert, room_id, data_type, action)
     annotation_results.start_conversion()
     send_message(annotation_status='Download data', room_id=room_id)
     return 'Success'

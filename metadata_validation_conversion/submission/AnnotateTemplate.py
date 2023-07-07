@@ -5,10 +5,11 @@ from .helpers import remove_underscores, convert_to_uppercase
 
 
 class AnnotateTemplate:
-    def __init__(self, json_to_convert, room_id, data_type):
+    def __init__(self, json_to_convert, room_id, data_type, action):
         self.json_to_convert = json_to_convert
         self.room_id = room_id
         self.data_type = data_type
+        self.action = action
 
     def start_conversion(self):
         workbook = xlsxwriter.Workbook(f'/data/{self.room_id}.xlsx')
@@ -50,16 +51,18 @@ class AnnotateTemplate:
                 table_data = list()
                 table_warnings = list()
                 table_errors = list()
-                # Adding sample name as first value
+
+                # If new submission, add sample name as first value
+                # If 'Update', rename to 'biosample_id'
+                col_name = FIELD_NAMES[self.data_type]['record_name']
+                if self.action == 'update':
+                    col_name = 'biosample_id'
+
                 if self.data_type != 'analyses':
                     table_data.append(
-                        self.json_to_convert[sheet_name][row]['custom'][
-                            FIELD_NAMES[self.data_type]['record_name']][
-                            'value'])
+                        self.json_to_convert[sheet_name][row]['custom'][col_name]['value'])
                 else:
-                    table_data.append(self.json_to_convert[sheet_name][row][
-                                          FIELD_NAMES[self.data_type][
-                                              'record_name']]['value'])
+                    table_data.append(self.json_to_convert[sheet_name][row][col_name]['value'])
                 table_warnings.append('valid')
                 table_errors.append('valid')
 
