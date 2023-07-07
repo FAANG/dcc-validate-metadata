@@ -20,12 +20,12 @@ es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
                    http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
 
 
-def get_template(request, task_id, room_id, data_type):
+def get_template(request, task_id, room_id, data_type, action):
     send_message(annotation_status='Annotating template', room_id=room_id)
     validation_results = app.AsyncResult(task_id)
     json_to_convert = validation_results.get()
     convert_template_task = generate_annotated_template.s(
-        json_to_convert, room_id=room_id, data_type=data_type).set(queue='submission')
+        json_to_convert, room_id=room_id, data_type=data_type, action=action).set(queue='submission')
     res = convert_template_task.apply_async()
     return HttpResponse(json.dumps({'id': res.id}))
 
