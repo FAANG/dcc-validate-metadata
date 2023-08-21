@@ -421,6 +421,7 @@ ORGANIZATIONS = {
     "IRTA": "Institute of Agrifood Research and Technology (Spain)",
     "ISU": "Iowa State University (USA)",
     "KU": "Konkuk University (Seoul, Korea)",
+    "LUKE": "Natural Resources Institute Finland (Finland)",
     "NUID": "University College Dublin (Dublin, Ireland)",
     "NMBU": "Norwegian University of Life Sciences (Norway)",
     "QAAFI-UQ": "University of Queensland (Australia)",
