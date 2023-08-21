@@ -78,7 +78,7 @@ def update_ontology_summary():
             'type_counts': convertToListOfDict(row['type']),
             'activity': {
                 'created_edited_count': row['term'], 
-                'validated_count': validated_counts[row['projects']]
+                'validated_count': validated_counts[row['projects']] if row['projects'] in validated_counts else 0
             }
         }
         es.index(index='summary_ontologies', id=updated_project_stats['project'], body=updated_project_stats)
