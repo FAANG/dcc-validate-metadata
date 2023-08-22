@@ -16,7 +16,7 @@ def upload_protocol(request, protocol_type):
         with open(f'/data/{fileid}.pdf', 'wb+') as destination:
             for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
-        validate_task = validate.s(filename, fileid=fileid).set(queue='upload')
+        validate_task = validate.s(filename, fileid=fileid, protocol_type=protocol_type).set(queue='upload')
         upload_task = upload.s(fileserver_path,
                                str(request.FILES[fileid]), fileid=fileid).set(queue='upload')
         es_task = add_to_es.s(protocol_type, str(request.FILES[fileid]), fileid=fileid).set(queue='upload')
