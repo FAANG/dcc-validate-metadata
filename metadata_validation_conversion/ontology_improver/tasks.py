@@ -40,15 +40,15 @@ def get_species_for_project(project):
     })
     url = f'{BE_SVC}/data/organism/_search/?size=10000&filters={project_filter}'
     data = requests.get(url).json()['hits']['hits']
-    species = filter(lambda y: y, set(map(lambda x : x['_source']['organism']['text'], data)))
+    species = filter(lambda y: y, set(map(lambda x: x['_source']['organism']['text'], data)))
     species = ', '.join(species)
     return species
 
 @app.task
 def update_ontology_summary():
     url = f'{BE_SVC}/data/ontologies/_search/?size=10000'
-    ontologies = requests.get(url).json()['hits']['hits']
-    ontologies = map(lambda ontology : ontology['_source'], ontologies)
+    resultset = requests.get(url).json()['hits']['hits']
+    ontologies = map(lambda ontology: ontology['_source'], resultset)
     df = pd.DataFrame.from_dict(ontologies)[['projects', 'type', 'term']]
     df['type'] = [', '.join(map(str, l)) for l in df['type']]
     df = df.explode('projects')
@@ -77,7 +77,7 @@ def update_ontology_summary():
             'species': row['species'],
             'type_counts': convertToListOfDict(row['type']),
             'activity': {
-                'created_edited_count': row['term'], 
+                'created_edited_count': row['term'],
                 'validated_count': validated_counts[row['projects']] if row['projects'] in validated_counts else 0
             }
         }
