@@ -112,13 +112,16 @@ def validate_ontology(request):
             'user': data['user']
         }]
         es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
+
     if 'project' in data and data['project']:
         # update summary stats - increment validated_count
         for project in data['project']:
             url = f"{BE_SVC}/data/summary_ontologies/{project}"
-            project_stats = requests.get(url).json()['hits']['hits'][0]['_source']
-            project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
-            es.index(index='summary_ontologies', id=project, body=project_stats)
+            hits_records = requests.get(url).json()['hits']['hits']
+            if hits_records:
+                project_stats = hits_records[0]['_source']
+                project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
+                es.index(index='summary_ontologies', id=project, body=project_stats)
         task = update_ontology_summary.s().set(queue='submission')
         task_chain = chain(task)
         res = task_chain.apply_async()
@@ -157,7 +160,7 @@ def ontology_updates(request):
             update_payload = {
                 'type': ontology['type'],
                 'synonyms': ontology['synonyms'],
-                'summary': ontology['summary'],
+                'summary': ontology['summary'] if "summary" in ontology else "",
                 'projects': ontology['projects'],
                 'species': ontology['species'],
                 'tags': ontology['tags']
