@@ -139,10 +139,12 @@ def ontology_updates(request):
                        http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
                         use_ssl=True, verify_certs=True)
     for ontology in ontologies:
-        url = f"{BE_SVC}/data/ontologies/{ontology['key']}"
-        res = requests.get(url)
+        # url = f"{BE_SVC}/data/ontologies/{ontology['key']}"
+        # res = requests.get(url)
+        res = es.search(index="ontologies", body={"query": {"match": {"_id": ontology['key']}}})
         # create new ontology if ontology does not exist
-        if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
+        # if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
+        if len(res['hits']['hits']) == 0:
             new_ontology = copy.deepcopy(ontology)
             new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
             new_ontology['upvotes_count'] = 0
@@ -156,7 +158,8 @@ def ontology_updates(request):
             es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
         # edit ontology if it already exists
         else:
-            existing_ontology = json.loads(res.content)['hits']['hits'][0]['_source']
+            # existing_ontology = json.loads(res.content)['hits']['hits'][0]['_source']
+            existing_ontology = res['hits']['hits'][0]['_source']
             update_payload = {
                 'type': ontology['type'],
                 'synonyms': ontology['synonyms'],
@@ -167,7 +170,8 @@ def ontology_updates(request):
             }
             es.update(index='ontologies', id=existing_ontology['key'], body={"doc": update_payload})
     # update summary statistics
-    task = update_ontology_summary.s().set(queue='submission')
-    task_chain = chain(task)
-    res = task_chain.apply_async()
+    # TODO: check this task
+    # task = update_ontology_summary.s().set(queue='submission')
+    # task_chain = chain(task)
+    # res = task_chain.apply_async()
     return HttpResponse(status=201)
