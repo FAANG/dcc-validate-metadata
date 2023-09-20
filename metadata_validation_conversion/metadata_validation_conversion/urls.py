@@ -9,6 +9,7 @@ urlpatterns = [
     path('protocols_upload/', include('protocols_upload.urls')),
     path('private_portal/', include('private_portal.urls')),
     path('ontology_improver/', include('ontology_improver.urls')),
+    path('ontology_improver_workshop/', include('ontology_improver_workshop.urls')),
     path('trackhub/', include('trackhubs.urls')),
     path('nextflow_upload/', include('nextflow_upload.urls')),
     path('validation_submission_api/', include('validation_submission_api.urls')),

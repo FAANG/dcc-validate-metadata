@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'ws',
     'private_portal',
     'ontology_improver',
+    'ontology_improver_workshop',
     'trackhubs',
     'nextflow_upload',
     'validation_submission_api',
@@ -211,8 +212,8 @@ BOVREG_BIOSAMPLES_PASSWORD_TEST = os.getenv('BOVREG_BIOSAMPLES_PASSWORD_TEST')
 BOVREG_BIOSAMPLES_USERNAME_PROD = os.getenv('BOVREG_BIOSAMPLES_USERNAME_PROD')
 BOVREG_BIOSAMPLES_PASSWORD_PROD = os.getenv('BOVREG_BIOSAMPLES_PASSWORD_PROD')
 
-ES_USER = os.getenv('ES_USER')
-ES_PASSWORD = os.getenv('ES_PASSWORD')
+ES_USER = 'elastic' #os.getenv('ES_USER')
+ES_PASSWORD = 'pZpwXPOANZs3tfdfa2d9zjye' #'YS3k9aq9G586r947BmEwPi4A' #os.getenv('ES_PASSWORD')
 
 SLACK_WEBHOOK = os.getenv('SLACK_WEBHOOK')
 
