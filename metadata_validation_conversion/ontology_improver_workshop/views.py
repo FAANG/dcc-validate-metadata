@@ -80,13 +80,14 @@ def validate_ontology(request):
         'timestamp': datetime.now(tz=timezone.utc),
         'user': data['user']
     })
-    url = f"{BE_SVC}/data/ontologies_test/{ontology['key']}"
-    res = requests.get(url)
-    if res.status_code != 200 or len(json.loads(res.content)['hits']['hits']) == 0:
-        return HttpResponse(status=404)
     es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
                        http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
-                        use_ssl=True, verify_certs=True)
+                       use_ssl=True, verify_certs=True)
+    # url = f"{BE_SVC}/data/ontologies_test/{ontology['key']}"
+    # res = requests.get(url)
+    res = es.search(index="ontologies", body={"query": {"match": {"_id": ontology['key']}}})
+    if len(res['hits']['hits']) == 0:
+        return HttpResponse(status=404)
     if data['status'] == 'Verified':
         update_payload = {
             'status_activity': status_activity,
@@ -113,18 +114,18 @@ def validate_ontology(request):
         }]
         es.index(index='ontologies_test', id=new_ontology['key'], body=new_ontology)
 
-    if 'project' in data and data['project']:
-        # update summary stats - increment validated_count
-        for project in data['project']:
-            url = f"{BE_SVC}/data/summary_ontologies_test/{project}"
-            hits_records = requests.get(url).json()['hits']['hits']
-            if hits_records:
-                project_stats = hits_records[0]['_source']
-                project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
-                es.index(index='summary_ontologies_test', id=project, body=project_stats)
-        task = update_ontology_summary.s().set(queue='submission')
-        task_chain = chain(task)
-        res = task_chain.apply_async()
+    # if 'project' in data and data['project']:
+    #     # update summary stats - increment validated_count
+    #     for project in data['project']:
+    #         url = f"{BE_SVC}/data/summary_ontologies_test/{project}"
+    #         hits_records = requests.get(url).json()['hits']['hits']
+    #         if hits_records:
+    #             project_stats = hits_records[0]['_source']
+    #             project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
+    #             es.index(index='summary_ontologies_test', id=project, body=project_stats)
+    #     task = update_ontology_summary.s().set(queue='submission')
+    #     task_chain = chain(task)
+    #     res = task_chain.apply_async()
     return HttpResponse(status=200)
 
 @csrf_exempt
