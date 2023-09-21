@@ -85,7 +85,7 @@ def validate_ontology(request):
                        use_ssl=True, verify_certs=True)
     # url = f"{BE_SVC}/data/ontologies_test/{ontology['key']}"
     # res = requests.get(url)
-    res = es.search(index="ontologies", body={"query": {"match": {"_id": ontology['key']}}})
+    res = es.search(index="ontologies_test", body={"query": {"match": {"_id": ontology['key']}}})
     if len(res['hits']['hits']) == 0:
         return HttpResponse(status=404)
     if data['status'] == 'Verified':
