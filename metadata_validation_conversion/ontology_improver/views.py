@@ -9,10 +9,15 @@ from django.conf import settings
 from datetime import datetime
 from django.utils import timezone
 import base64
+from datetime import datetime
 from celery import chain
 from ontology_improver.utils import *
 from ontology_improver.tasks import update_ontology_summary
 from metadata_validation_conversion.constants import BE_SVC, ZOOMA_SERVICE
+
+es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
+                   http_auth=(settings.ES_USER, settings.ES_PASSWORD),
+                   use_ssl=True, verify_certs=True)
 
 @csrf_exempt
 def get_zooma_ontologies(request):
@@ -80,9 +85,6 @@ def validate_ontology(request):
         'timestamp': datetime.now(tz=timezone.utc),
         'user': data['user']
     })
-    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
-                       http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
-                       use_ssl=True, verify_certs=True)
     # url = f"{BE_SVC}/data/ontologies/{ontology['key']}"
     # res = requests.get(url)
     res = es.search(index="ontologies", body={"query": {"match": {"_id": ontology['key']}}})
@@ -100,6 +102,7 @@ def validate_ontology(request):
             'downvotes_count': ontology['downvotes_count'] + 1
         }
         es.update(index='ontologies', id=ontology['key'], body={"doc": update_payload})
+
         # create new record with suggested changes
         new_ontology = copy.deepcopy(ontology)
         new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
@@ -112,7 +115,14 @@ def validate_ontology(request):
             'timestamp': datetime.now(tz=timezone.utc),
             'user': data['user']
         }]
-        es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
+
+        # check if 'key' already exists as document id in ES index
+        res = es.search(index="ontologies", body={"query": {"match": {"_id": new_ontology['key']}}})
+        if len(res['hits']['hits']) > 0:
+            new_ontology_id = new_ontology['key'] + '_' + datetime.today().strftime('%Y%m%d%H%M%S')
+            es.index(index='ontologies', id=new_ontology_id, body=new_ontology)
+        else:
+            es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
 
     # if 'project' in data and data['project']:
     #     # update summary stats - increment validated_count
@@ -136,9 +146,7 @@ def ontology_updates(request):
     ontologies = data['ontologies']
     # get user info
     user = data['user']
-    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
-                       http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
-                        use_ssl=True, verify_certs=True)
+
     for ontology in ontologies:
         # url = f"{BE_SVC}/data/ontologies/{ontology['key']}"
         # res = requests.get(url)
