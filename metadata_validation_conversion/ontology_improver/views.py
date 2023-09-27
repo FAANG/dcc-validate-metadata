@@ -9,7 +9,6 @@ from django.conf import settings
 from datetime import datetime
 from django.utils import timezone
 import base64
-from datetime import datetime
 from celery import chain
 from ontology_improver.utils import *
 from ontology_improver.tasks import update_ontology_summary
