@@ -85,11 +85,10 @@ def validate_ontology(request):
         'timestamp': datetime.now(tz=timezone.utc),
         'user': data['user']
     })
-    # url = f"{BE_SVC}/data/ontologies/{ontology['key']}"
-    # res = requests.get(url)
     res = es.search(index="ontologies", body={"query": {"match": {"_id": ontology['key']}}})
     if len(res['hits']['hits']) == 0:
         return HttpResponse(status=404)
+
     if data['status'] == 'Verified':
         update_payload = {
             'status_activity': status_activity,
@@ -116,12 +115,9 @@ def validate_ontology(request):
             'user': data['user']
         }]
 
-        # check if 'key' already exists as document id in ES index
+        # create new record only if 'key' doesn't exist as document id in ES index
         res = es.search(index="ontologies", body={"query": {"match": {"_id": new_ontology['key']}}})
-        if len(res['hits']['hits']) > 0:
-            new_ontology_id = new_ontology['key'] + '_' + datetime.today().strftime('%Y%m%d%H%M%S')
-            es.index(index='ontologies', id=new_ontology_id, body=new_ontology)
-        else:
+        if len(res['hits']['hits']) == 0:
             es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
 
     # if 'project' in data and data['project']:
@@ -133,6 +129,7 @@ def validate_ontology(request):
     #             project_stats = hits_records[0]['_source']
     #             project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
     #             es.index(index='summary_ontologies', id=project, body=project_stats)
+    #
     #     task = update_ontology_summary.s().set(queue='submission')
     #     task_chain = chain(task)
     #     res = task_chain.apply_async()
