@@ -14,6 +14,10 @@ from ontology_improver.utils import *
 from ontology_improver.tasks import update_ontology_summary
 from metadata_validation_conversion.constants import BE_SVC, ZOOMA_SERVICE
 
+es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
+                   http_auth=(settings.ES_USER, settings.ES_PASSWORD),
+                   use_ssl=True, verify_certs=True)
+
 @csrf_exempt
 def get_zooma_ontologies(request):
     if request.method != 'POST':
@@ -80,14 +84,10 @@ def validate_ontology(request):
         'timestamp': datetime.now(tz=timezone.utc),
         'user': data['user']
     })
-    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
-                       http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
-                       use_ssl=True, verify_certs=True)
-    # url = f"{BE_SVC}/data/ontologies/{ontology['key']}"
-    # res = requests.get(url)
     res = es.search(index="ontologies", body={"query": {"match": {"_id": ontology['key']}}})
     if len(res['hits']['hits']) == 0:
         return HttpResponse(status=404)
+
     if data['status'] == 'Verified':
         update_payload = {
             'status_activity': status_activity,
@@ -100,6 +100,7 @@ def validate_ontology(request):
             'downvotes_count': ontology['downvotes_count'] + 1
         }
         es.update(index='ontologies', id=ontology['key'], body={"doc": update_payload})
+
         # create new record with suggested changes
         new_ontology = copy.deepcopy(ontology)
         new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
@@ -112,7 +113,11 @@ def validate_ontology(request):
             'timestamp': datetime.now(tz=timezone.utc),
             'user': data['user']
         }]
-        es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
+
+        # create new record only if 'key' doesn't exist as document id in ES index
+        res = es.search(index="ontologies", body={"query": {"match": {"_id": new_ontology['key']}}})
+        if len(res['hits']['hits']) == 0:
+            es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
 
     # if 'project' in data and data['project']:
     #     # update summary stats - increment validated_count
@@ -123,6 +128,7 @@ def validate_ontology(request):
     #             project_stats = hits_records[0]['_source']
     #             project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
     #             es.index(index='summary_ontologies', id=project, body=project_stats)
+    #
     #     task = update_ontology_summary.s().set(queue='submission')
     #     task_chain = chain(task)
     #     res = task_chain.apply_async()
@@ -136,9 +142,7 @@ def ontology_updates(request):
     ontologies = data['ontologies']
     # get user info
     user = data['user']
-    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
-                       http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
-                        use_ssl=True, verify_certs=True)
+
     for ontology in ontologies:
         # url = f"{BE_SVC}/data/ontologies/{ontology['key']}"
         # res = requests.get(url)
