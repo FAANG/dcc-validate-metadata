@@ -13,6 +13,7 @@ from celery import chain
 from ontology_improver_workshop.utils import *
 from ontology_improver_workshop.tasks import update_ontology_summary
 from metadata_validation_conversion.constants import BE_SVC, ZOOMA_SERVICE
+from metadata_validation_conversion.helpers import send_message
 
 es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
                    http_auth=(settings.ES_USER, settings.ES_PASSWORD),
@@ -71,13 +72,39 @@ def authentication(request):
     token = requests.get("https://api.aai.ebi.ac.uk/auth", headers=headers).text
     return JsonResponse({'token': token})
 
+
+def get_user_activity(status_activity, username):
+    pass
+    # sort by timestamp desc and search for username
+    sorted_status_activity = sorted(status_activity, key=lambda x: x['timestamp'], reverse=True)
+    for ele in sorted_status_activity:
+        if ele['user'] == username:
+            return ele
+    return None
+
+
+def format_timestamp(timestamp_str):
+    return timestamp_str.replace('T', ' ').replace('+', ' +').split('.')[0]
+
+
 @csrf_exempt
-def validate_ontology(request):
+def validate_ontology(request, room_id):
     if request.method != 'POST':
         return HttpResponse("This method is not allowed!\n")
     data = json.loads(request.body)
     ontology = data['ontology']
+
+    # check if user's last action is the same as the current one, reject if so
     status_activity = ontology['status_activity']
+    user_last_action = get_user_activity(status_activity, data['user'])
+    if user_last_action is not None:
+        if user_last_action['status'] == data['status']:
+            send_message(room_id=room_id, ontology_update_status=f"You last marked this term as "
+                                                                 f"{user_last_action['status']} on "
+                                                                 f"{format_timestamp(user_last_action['timestamp'])}")
+            return HttpResponse(status=409)
+
+    # proceed if user's last action is different from the current one or user hasn't validated that term yet
     status_activity.append({
         'project': data['project'],
         'status': data['status'],
@@ -119,19 +146,8 @@ def validate_ontology(request):
         if len(res['hits']['hits']) == 0:
             es.index(index='ontologies_test', id=new_ontology['key'], body=new_ontology)
 
-    # if 'project' in data and data['project']:
-    #     # update summary stats - increment validated_count
-    #     for project in data['project']:
-    #         url = f"{BE_SVC}/data/summary_ontologies_test/{project}"
-    #         hits_records = requests.get(url).json()['hits']['hits']
-    #         if hits_records:
-    #             project_stats = hits_records[0]['_source']
-    #             project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
-    #             es.index(index='summary_ontologies_test', id=project, body=project_stats)
-    #     task = update_ontology_summary.s().set(queue='submission')
-    #     task_chain = chain(task)
-    #     res = task_chain.apply_async()
     return HttpResponse(status=200)
+
 
 @csrf_exempt
 def ontology_updates(request):

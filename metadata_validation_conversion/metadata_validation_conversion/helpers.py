@@ -43,7 +43,8 @@ def send_message(room_id, conversion_status=None, validation_status=None,
                  conversion_errors=None, table_data=None,
                  annotation_status=None, domains=None,
                  submission_message=None, subscription_status=None, submission_results=None,
-                 bovreg_submission=None):
+                 bovreg_submission=None,
+                 ontology_update_status=None):
     """
     This function will send message to channel layer
     :param room_id: room id to construct ws url
@@ -60,6 +61,7 @@ def send_message(room_id, conversion_status=None, validation_status=None,
     :param subscription_status: status of user subscription to ENA submission
     :param submission_results: list of submission results
     :param bovreg_submission: true if secondary_project == BovReg
+    :param ontology_update_status: ontology update status to send
     """
     response = {
         'conversion_status': conversion_status,
@@ -74,7 +76,8 @@ def send_message(room_id, conversion_status=None, validation_status=None,
         'annotation_status': annotation_status,
         'domains': domains,
         'submission_results': submission_results,
-        'bovreg_submission': bovreg_submission
+        'bovreg_submission': bovreg_submission,
+        'ontology_update_status': ontology_update_status
     }
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(f"submission_{room_id}", {
