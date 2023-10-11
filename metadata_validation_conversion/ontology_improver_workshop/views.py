@@ -74,13 +74,26 @@ def authentication(request):
 
 
 def get_user_activity(status_activity, username):
-    pass
     # sort by timestamp desc and search for username
     sorted_status_activity = sorted(status_activity, key=lambda x: x['timestamp'], reverse=True)
     for ele in sorted_status_activity:
         if ele['user'] == username:
             return ele
     return None
+
+
+def remove_user_activity(status_activity, username, status):
+    sorted_status_activity = sorted(status_activity, key=lambda x: x['timestamp'], reverse=True)
+    for ele in sorted_status_activity:
+        if ele['user'] == username and ele['status'] == status:
+            filtered_status_activity = list(
+                filter(
+                    lambda obj: not(obj['user'] == username and obj['timestamp'] == ele['timestamp']),
+                    status_activity
+                )
+            )
+            return filtered_status_activity
+    return status_activity
 
 
 def format_timestamp(timestamp_str):
@@ -105,46 +118,55 @@ def validate_ontology(request, room_id):
             return HttpResponse(status=409)
 
     # proceed if user's last action is different from the current one or user hasn't validated that term yet
+    res = es.search(index="ontologies_test", body={"query": {"match": {"_id": ontology['key']}}})
+    if len(res['hits']['hits']) == 0:
+        return HttpResponse(status=404)
+
+    if data['status'].lower() == 'verified':
+        update_payload = {
+            'upvotes_count': ontology['upvotes_count'] + 1
+        }
+        # if user has previously down-voted that term
+        if user_last_action is not None and user_last_action['status'].lower() == 'needs improvement':
+            update_payload.update({'downvotes_count': ontology['downvotes_count'] - 1})
+            status_activity = remove_user_activity(status_activity, data['user'], user_last_action['status'])
+    else:
+        update_payload = {
+            'downvotes_count': ontology['downvotes_count'] + 1
+        }
+        # if user has previously up-voted that term
+        if user_last_action is not None and user_last_action['status'].lower() == 'verified':
+            update_payload.update({'upvotes_count': ontology['upvotes_count'] - 1})
+            status_activity = remove_user_activity(status_activity, data['user'], user_last_action['status'])
+
+    # add latest user action to status activity
     status_activity.append({
         'project': data['project'],
         'status': data['status'],
         'timestamp': datetime.now(tz=timezone.utc),
         'user': data['user']
     })
-    res = es.search(index="ontologies_test", body={"query": {"match": {"_id": ontology['key']}}})
+    update_payload.update({'status_activity': status_activity})
+
+    es.update(index='ontologies_test', id=ontology['key'], body={"doc": update_payload})
+
+    # create new record with suggested changes
+    new_ontology = copy.deepcopy(ontology)
+    new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
+    new_ontology['projects'] = data['project'] if data['project'] else []
+    new_ontology['upvotes_count'] = 0
+    new_ontology['downvotes_count'] = 0
+    new_ontology['status_activity'] = [{
+        'project': data['project'],
+        'status': 'Awaiting Assessment',
+        'timestamp': datetime.now(tz=timezone.utc),
+        'user': data['user']
+    }]
+
+    # create new record only if 'key' doesn't exist as document id in ES index
+    res = es.search(index="ontologies_test", body={"query": {"match": {"_id": new_ontology['key']}}})
     if len(res['hits']['hits']) == 0:
-        return HttpResponse(status=404)
-
-    if data['status'] == 'Verified':
-        update_payload = {
-            'status_activity': status_activity,
-            'upvotes_count': ontology['upvotes_count'] + 1
-        }
-        es.update(index='ontologies_test', id=ontology['key'], body={"doc": update_payload})
-    else:
-        update_payload = {
-            'status_activity': status_activity,
-            'downvotes_count': ontology['downvotes_count'] + 1
-        }
-        es.update(index='ontologies_test', id=ontology['key'], body={"doc": update_payload})
-
-        # create new record with suggested changes
-        new_ontology = copy.deepcopy(ontology)
-        new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
-        new_ontology['projects'] = data['project'] if data['project'] else []
-        new_ontology['upvotes_count'] = 0
-        new_ontology['downvotes_count'] = 0
-        new_ontology['status_activity'] = [{
-            'project': data['project'],
-            'status': 'Awaiting Assessment',
-            'timestamp': datetime.now(tz=timezone.utc),
-            'user': data['user']
-        }]
-
-        # create new record only if 'key' doesn't exist as document id in ES index
-        res = es.search(index="ontologies_test", body={"query": {"match": {"_id": new_ontology['key']}}})
-        if len(res['hits']['hits']) == 0:
-            es.index(index='ontologies_test', id=new_ontology['key'], body=new_ontology)
+        es.index(index='ontologies_test', id=new_ontology['key'], body=new_ontology)
 
     return HttpResponse(status=200)
 
