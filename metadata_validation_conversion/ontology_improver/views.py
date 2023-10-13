@@ -91,7 +91,6 @@ def remove_user_activity(status_activity, username, status):
     return filtered_status_activity
 
 
-
 def format_timestamp(timestamp_str):
     return timestamp_str.replace('T', ' ').replace('+', ' +').split('.')[0]
 
@@ -165,6 +164,7 @@ def validate_ontology(request, room_id):
             es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
 
     return HttpResponse(status=200)
+
 
 @csrf_exempt
 def ontology_updates(request):
