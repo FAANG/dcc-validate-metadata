@@ -9,7 +9,6 @@ from django.conf import settings
 from datetime import datetime
 from django.utils import timezone
 import base64
-from celery import chain
 from ontology_improver_workshop.utils import *
 from ontology_improver_workshop.tasks import update_ontology_summary
 from metadata_validation_conversion.constants import BE_SVC, ZOOMA_SERVICE
@@ -83,17 +82,13 @@ def get_user_activity(status_activity, username):
 
 
 def remove_user_activity(status_activity, username, status):
-    sorted_status_activity = sorted(status_activity, key=lambda x: x['timestamp'], reverse=True)
-    for ele in sorted_status_activity:
-        if ele['user'] == username and ele['status'] == status:
-            filtered_status_activity = list(
-                filter(
-                    lambda obj: not(obj['user'] == username and obj['timestamp'] == ele['timestamp']),
-                    status_activity
-                )
-            )
-            return filtered_status_activity
-    return status_activity
+    filtered_status_activity = list(
+        filter(
+            lambda obj: not (obj['user'] == username and obj['status'] == status),
+            status_activity
+        )
+    )
+    return filtered_status_activity
 
 
 def format_timestamp(timestamp_str):
@@ -144,29 +139,29 @@ def validate_ontology(request, room_id):
         'project': data['project'],
         'status': data['status'],
         'timestamp': datetime.now(tz=timezone.utc),
-        'user': data['user']
+        'user': data['user'],
+        'comments': data['user_comments']
     })
     update_payload.update({'status_activity': status_activity})
-
     es.update(index='ontologies_test', id=ontology['key'], body={"doc": update_payload})
 
-    # create new record with suggested changes
-    new_ontology = copy.deepcopy(ontology)
-    new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
-    new_ontology['projects'] = data['project'] if data['project'] else []
-    new_ontology['upvotes_count'] = 0
-    new_ontology['downvotes_count'] = 0
-    new_ontology['status_activity'] = [{
-        'project': data['project'],
-        'status': 'Awaiting Assessment',
-        'timestamp': datetime.now(tz=timezone.utc),
-        'user': data['user']
-    }]
-
-    # create new record only if 'key' doesn't exist as document id in ES index
-    res = es.search(index="ontologies_test", body={"query": {"match": {"_id": new_ontology['key']}}})
-    if len(res['hits']['hits']) == 0:
-        es.index(index='ontologies_test', id=new_ontology['key'], body=new_ontology)
+    if data['status'].lower() == 'needs improvement':
+        # create new record with suggested changes
+        new_ontology = copy.deepcopy(ontology)
+        new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
+        new_ontology['projects'] = data['project'] if data['project'] else []
+        new_ontology['upvotes_count'] = 0
+        new_ontology['downvotes_count'] = 0
+        new_ontology['status_activity'] = [{
+            'project': data['project'],
+            'status': 'Awaiting Assessment',
+            'timestamp': datetime.now(tz=timezone.utc),
+            'user': data['user']
+        }]
+        # create new record only if 'key' doesn't exist as document id in ES index
+        res = es.search(index="ontologies_test", body={"query": {"match": {"_id": new_ontology['key']}}})
+        if len(res['hits']['hits']) == 0:
+            es.index(index='ontologies_test', id=new_ontology['key'], body=new_ontology)
 
     return HttpResponse(status=200)
 

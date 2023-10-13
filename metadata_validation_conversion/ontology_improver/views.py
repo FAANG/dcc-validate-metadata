@@ -9,10 +9,10 @@ from django.conf import settings
 from datetime import datetime
 from django.utils import timezone
 import base64
-from celery import chain
 from ontology_improver.utils import *
 from ontology_improver.tasks import update_ontology_summary
-from metadata_validation_conversion.constants import BE_SVC, ZOOMA_SERVICE
+from metadata_validation_conversion.constants import ZOOMA_SERVICE
+from metadata_validation_conversion.helpers import send_message
 
 es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
                    http_auth=(settings.ES_USER, settings.ES_PASSWORD),
@@ -41,7 +41,7 @@ def registration(request):
     password = base64.b64decode(request['password'])
     password = password.decode("utf-8")
     post_data = {
-        'username': request['username'], 
+        'username': request['username'],
         'password': password,
         'name': request['first_name'] + ' ' + request['last_name'],
         'email': request['email'],
@@ -71,36 +71,81 @@ def authentication(request):
     token = requests.get("https://api.aai.ebi.ac.uk/auth", headers=headers).text
     return JsonResponse({'token': token})
 
+
+def get_user_activity(status_activity, username):
+    # sort by timestamp desc and search for username
+    sorted_status_activity = sorted(status_activity, key=lambda x: x['timestamp'], reverse=True)
+    for ele in sorted_status_activity:
+        if ele['user'] == username:
+            return ele
+    return None
+
+
+def remove_user_activity(status_activity, username, status):
+    filtered_status_activity = list(
+        filter(
+            lambda obj: not (obj['user'] == username and obj['status'] == status),
+            status_activity
+        )
+    )
+    return filtered_status_activity
+
+
+def format_timestamp(timestamp_str):
+    return timestamp_str.replace('T', ' ').replace('+', ' +').split('.')[0]
+
+
 @csrf_exempt
-def validate_ontology(request):
+def validate_ontology(request, room_id):
     if request.method != 'POST':
         return HttpResponse("This method is not allowed!\n")
     data = json.loads(request.body)
     ontology = data['ontology']
+
+    # check if user's last action is the same as the current one, reject if so
     status_activity = ontology['status_activity']
-    status_activity.append({
-        'project': data['project'],
-        'status': data['status'],
-        'timestamp': datetime.now(tz=timezone.utc),
-        'user': data['user']
-    })
+    user_last_action = get_user_activity(status_activity, data['user'])
+    if user_last_action is not None:
+        if user_last_action['status'] == data['status']:
+            send_message(room_id=room_id, ontology_update_status=f"You last marked this term as "
+                                                                 f"{user_last_action['status']} on "
+                                                                 f"{format_timestamp(user_last_action['timestamp'])}")
+            return HttpResponse(status=409)
+
+    # proceed if user's last action is different from the current one or user hasn't validated that term yet
     res = es.search(index="ontologies", body={"query": {"match": {"_id": ontology['key']}}})
     if len(res['hits']['hits']) == 0:
         return HttpResponse(status=404)
 
-    if data['status'] == 'Verified':
+    if data['status'].lower() == 'verified':
         update_payload = {
-            'status_activity': status_activity,
             'upvotes_count': ontology['upvotes_count'] + 1
         }
-        es.update(index='ontologies', id=ontology['key'], body={"doc": update_payload})
+        # if user has previously down-voted that term
+        if user_last_action is not None and user_last_action['status'].lower() == 'needs improvement':
+            update_payload.update({'downvotes_count': ontology['downvotes_count'] - 1})
+            status_activity = remove_user_activity(status_activity, data['user'], user_last_action['status'])
     else:
         update_payload = {
-            'status_activity': status_activity,
             'downvotes_count': ontology['downvotes_count'] + 1
         }
-        es.update(index='ontologies', id=ontology['key'], body={"doc": update_payload})
+        # if user has previously up-voted that term
+        if user_last_action is not None and user_last_action['status'].lower() == 'verified':
+            update_payload.update({'upvotes_count': ontology['upvotes_count'] - 1})
+            status_activity = remove_user_activity(status_activity, data['user'], user_last_action['status'])
 
+    # add latest user action to status activity
+    status_activity.append({
+        'project': data['project'],
+        'status': data['status'],
+        'timestamp': datetime.now(tz=timezone.utc),
+        'user': data['user'],
+        'comments': data['user_comments']
+    })
+    update_payload.update({'status_activity': status_activity})
+    es.update(index='ontologies', id=ontology['key'], body={"doc": update_payload})
+
+    if data['status'].lower() == 'needs improvement':
         # create new record with suggested changes
         new_ontology = copy.deepcopy(ontology)
         new_ontology['key'] = f"{ontology['term']}-{ontology['id']}"
@@ -113,26 +158,13 @@ def validate_ontology(request):
             'timestamp': datetime.now(tz=timezone.utc),
             'user': data['user']
         }]
-
         # create new record only if 'key' doesn't exist as document id in ES index
         res = es.search(index="ontologies", body={"query": {"match": {"_id": new_ontology['key']}}})
         if len(res['hits']['hits']) == 0:
             es.index(index='ontologies', id=new_ontology['key'], body=new_ontology)
 
-    # if 'project' in data and data['project']:
-    #     # update summary stats - increment validated_count
-    #     for project in data['project']:
-    #         url = f"{BE_SVC}/data/summary_ontologies/{project}"
-    #         hits_records = requests.get(url).json()['hits']['hits']
-    #         if hits_records:
-    #             project_stats = hits_records[0]['_source']
-    #             project_stats['activity']['validated_count'] = project_stats['activity']['validated_count'] + 1
-    #             es.index(index='summary_ontologies', id=project, body=project_stats)
-    #
-    #     task = update_ontology_summary.s().set(queue='submission')
-    #     task_chain = chain(task)
-    #     res = task_chain.apply_async()
     return HttpResponse(status=200)
+
 
 @csrf_exempt
 def ontology_updates(request):
