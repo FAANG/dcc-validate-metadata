@@ -53,6 +53,7 @@ EM_SEQ_URL = f"{BASE_URL}/type/experiments/" \
              f"faang_experiments_em-seq.metadata_rules.json"
 ATAC_SEQ_URL = f"{BASE_URL}/type/experiments/" \
                f"faang_experiments_atac-seq.metadata_rules.json"
+SCATAC_SEQ_URL = f"{BASE_URL}/type/experiments/faang_experiments_scatac-seq.metadata_rules.json"
 CAGE_SEQ_URL = f"{BASE_URL}/type/experiments/" \
                f"faang_experiments_cage-seq.metadata_rules.json"
 FAANG_ANALYSES_URL = f"{BASE_URL}/type/analyses/" \
@@ -88,6 +89,7 @@ ALLOWED_SHEET_NAMES = {
     'bs-seq': BS_SEQ_URL,
     'em-seq': EM_SEQ_URL,
     'atac-seq': ATAC_SEQ_URL,
+    'scatac-seq': SCATAC_SEQ_URL,
     'cage-seq': CAGE_SEQ_URL,
     'faang': FAANG_ANALYSES_URL,
     'ena': ENA_ANALYSES_URL,
@@ -118,6 +120,7 @@ ALLOWED_EXPERIMENTS_TYPES = {
     'bs-seq': BS_SEQ_URL,
     'em-seq': EM_SEQ_URL,
     'atac-seq': ATAC_SEQ_URL,
+    'scatac-seq': SCATAC_SEQ_URL,
     'cage-seq': CAGE_SEQ_URL
 }
 
