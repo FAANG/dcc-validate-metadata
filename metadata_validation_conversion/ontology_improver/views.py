@@ -22,12 +22,15 @@ es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
 def get_zooma_ontologies(request):
     if request.method != 'POST':
         return HttpResponse("This method is not allowed!\n")
+    faang_ontologies = get_ontology_names()
     terms = json.loads(request.body)['terms']
     response = {}
     for term in terms:
-        data = requests.get(f"{ZOOMA_SERVICE}/annotate?propertyValue={term}&filter=preferred:[FAANG]").json()
+        url = f"{ZOOMA_SERVICE}/annotate?propertyValue={term.strip()}&filter=preferred:[FAANG],ontologies:[{faang_ontologies}]"
+        data = requests.get(url).json()
         response[term] = parse_zooma_response(data)
     return JsonResponse(response)
+
 
 @csrf_exempt
 def registration(request):
