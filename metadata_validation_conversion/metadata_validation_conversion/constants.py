@@ -391,7 +391,6 @@ ENA_PROD_SERVER = 'https://www.ebi.ac.uk/ena/submit/drop-box/submit/'
 
 BE_SVC = 'http://backend-svc:8000'
 ZOOMA_SERVICE = 'http://www.ebi.ac.uk/spot/zooma/v2/api/services'
-RULESET_URL = 'https://raw.githubusercontent.com/FAANG/dcc-metadata/master/json_schema'
 
 PROJECTS = [
     "AQUA-FAANG",
