@@ -20,6 +20,9 @@ from api.swagger_custom import HTMLAutoSchema, PlainTextAutoSchema, PdfAutoSchem
 from api.swagger_custom import index_search_request_example, \
     index_search_response_example, index_detail_response_example
 import csv
+import logging
+
+logger = logging.getLogger(__name__)
 
 ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
                    'protocol_files', 'protocol_samples', 'article',
@@ -29,6 +32,19 @@ ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
                    'ontologies', 'summary_ontologies', 'submission_portal_status',
                    'ontologies_test', 'summary_ontologies_test'
                    ]
+
+GLOBAL_ALLOWED_INDICES = ['protocol_files_backup', 'compare-index-protocol_files', 'summary_file',
+                          'bovreg_dataset', 'experiment', 'bovreg_experiment', 'ontologies_test',
+                          'compare-index-protocol_analysis', 'protocol_files_test', 'specimen',
+                          'summary_dataset', 'submission_portal_status', 'compare-index-protocol_samples',
+                          'bovreg_analysis', 'protocol_files', 'protocol_analysis','compare-index-analysis',
+                          'ontologies', 'dataset', 'protocol_analysis_test', 'summary_ontologies_test',
+                          'summary_specimen', 'file', 'compare-index-dataset', 'submissions_test',
+                          'submissions', 'portal_status_test', 'compare-index-organism', 'bovreg_study',
+                          'trackhubs', 'summary_ontologies', 'analysis', 'compare-index-file', 'bovreg_file',
+                          'organism', 'summary_organism', 'article', 'compare-index-article', 'protocol_samples_test',
+                          'bovreg_specimen', 'protocol_samples', 'bovreg_organism', 'faang_subscriptions',
+                          'compare-index-specimen', 'ensembl_annotation']
 
 @swagger_auto_schema(method='get', tags=['Search'],
         operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc",
@@ -92,6 +108,74 @@ ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
             ),
             404: openapi.Response('Not Found')
         })
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+@csrf_exempt
+def globindex(request):
+    if request.method != 'GET':
+        context = {
+            'status': '405', 'reason': 'This method is not allowed!'
+        }
+        response = HttpResponse(
+            json.dumps(context), content_type='application/json')
+        response.status_code = 405
+        return response
+
+    # Parse request parameters
+    sterm = request.GET.get('sterm', '')
+    field = request.GET.get('_source', '')
+    sort = request.GET.get('sort', '')
+    sort_by_count = request.GET.get('sort_by_count', '')
+    search = request.GET.get('search', '')
+    from_ = request.GET.get('from_', 0)
+    body = {}
+
+    # generate query for search
+    if sterm:
+        match = {
+            'multi_match': {
+                'query': sterm,
+                'fields': ['*']
+            }
+        }
+        body['query'] = {
+            'bool': {
+                'must': [match]
+            }
+        }
+
+    # generate query for sort script
+    # sorts by length of field array
+    if sort_by_count:
+        sort_field, order = sort_by_count.split(':')
+        body['sort'] = {
+            "_script": {
+                "type": "number",
+                "script": f"params._source?.{sort_field}?.length ?: 0",
+                "order": f"{order}"
+            }
+        }
+
+    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
+                       http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
+
+    outp_data = dict()
+    for name in GLOBAL_ALLOWED_INDICES:
+        if request.body:
+            data = es.search(
+                index=name, body=json.loads(request.body.decode("utf-8"), track_total_hits=True)
+            )
+        else:
+            data = es.search(
+                index=name, from_=from_, _source=field, sort=sort, body=body, track_total_hits=True
+            )
+        outp_data[name] = data
+
+    return JsonResponse(outp_data)
+
+
 @api_view(['GET','POST'])
 @permission_classes([AllowAny])
 @csrf_exempt
@@ -122,10 +206,10 @@ def index(request, name):
     search = request.GET.get('search', '')
     from_ = request.GET.get('from_', 0)
     # Example: {field1: [val1, val2], field2: [val1, val2], ...}
-    filters = request.GET.get('filters', '{}')    
-    # Example: {aggName1: field1, aggName2: field2, ...}  
-    aggregations = request.GET.get('aggs', '{}')  
-    body = {}  
+    filters = request.GET.get('filters', '{}')
+    # Example: {aggName1: field1, aggName2: field2, ...}
+    aggregations = request.GET.get('aggs', '{}')
+    body = {}
 
     # generate query for filtering
     filter_values = []
@@ -228,8 +312,9 @@ def index(request, name):
 
     es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
     if request.body:
-        data = es.search(index=name, size=size, body=json.loads(
-            request.body.decode("utf-8"), track_total_hits=True))
+        data = es.search(
+            index=name, size=size, body=json.loads(request.body.decode("utf-8"), track_total_hits=True)
+        )
     else:
         if query != '':
             data = es.search(index=name, from_=from_, size=size, _source=field,
