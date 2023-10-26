@@ -145,6 +145,11 @@ class BiosamplesFileConverter:
         :param missing_ids: missing taxon ids
         :return:
         """
+        print("Within fetch_taxon_information")
+        print(id_to_fetch)
+        print(taxon_ids)
+        print(taxons)
+        print(missing_ids)
         if id_to_fetch in taxon_ids and id_to_fetch in taxons:
             return taxon_ids[id_to_fetch], taxons[id_to_fetch]
         else:
