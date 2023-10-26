@@ -130,15 +130,14 @@ class RelationshipsIssues:
         :param validation_document: document to send to front-end
         :return: issues in dict format
         """
-        print("Inside check relationships")
-        print(relationships)
         for k, v in relationships.items():
             name = convert_to_snake_case(v['material'])
             record_to_return = self.find_record(validation_document, name, k, self.action)
             relationship_name = 'child_of' if name == 'organism' else \
                 'derived_from'
             relationship_to_return = record_to_return[relationship_name]
-            if 'relationships' in v:
+            # Don't need to check relationships if 'restricted access' missing term was used
+            if 'relationships' in v and 'restricted access' not in v['relationships']:
                 errors = list()
                 for relation in v['relationships']:
                     if relation not in relationships and relation not in \
