@@ -224,11 +224,9 @@ class BioSamplesSubmission:
                 'accession']
 
         # update relationship part of records
-        print("within submission")
-        print(self.json_to_submit)
-        print(biosamples_ids)
         for item in self.json_to_submit:
-            if 'relationships' in item and len(item['relationships']) > 0:
+            if ('relationships' in item and len(item['relationships']) > 0
+                    and item['relationships'][0]['target'] != 'restricted access'):
                 for relationship in item['relationships']:
                     if relationship['source'] in biosamples_ids:
                         relationship['source'] = biosamples_ids[
