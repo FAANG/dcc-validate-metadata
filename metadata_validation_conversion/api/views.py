@@ -132,10 +132,30 @@ def index(request, name):
     not_filter_values = []
     filters = json.loads(filters)
     for key in filters.keys():
-        if filters[key][0] != 'false':
-            filter_values.append({"terms": {key: filters[key]}})
+        # status_activity filter is a special case because the status property
+        # is found within status_activity arrau of objects
+        if key == 'status_activity':
+            nested_query_body = {
+                "nested": {
+                    "path": "status_activity",
+                    "query": {
+                        "bool": {
+                            "must": [
+                                {
+                                    "match": {
+                                        "status_activity.status": filters[key][0]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }}
+            filter_values.append(nested_query_body)
         else:
-            not_filter_values.append({"match": {key: "true"}})
+            if filters[key][0] != 'false':
+                filter_values.append({"terms": {key: filters[key]}})
+            else:
+                not_filter_values.append({"match": {key: "true"}})
     filter_val = {}
     if filter_values:
         filter_val['must'] = filter_values
@@ -169,12 +189,27 @@ def index(request, name):
     agg_values = {}
     aggregations = json.loads(aggregations)
     for key in aggregations.keys():
-        # size determines number of aggregation buckets returned
-        agg_values[key] = {"terms": {"field": aggregations[key], "size": 25}} 
-        if key == 'paper_published':
-            # aggregations for missing paperPublished field
-            agg_values["paper_published_missing"] = {
-                "missing": {"field": "paperPublished"}}
+        # status_activity aggregation is a special case because the status property is a nested property
+        if key == 'status_activity':
+            agg_values[key] = {
+                "nested": {
+                    "path": "status_activity"
+                },
+                "aggs": {
+                    "status": {
+                        "terms": {
+                            "field": "status_activity.status", 'size': 25
+                        }
+                    }
+                }
+            }
+        else:
+            # size determines number of aggregation buckets returned
+            agg_values[key] = {"terms": {"field": aggregations[key], "size": 25}}
+            if key == 'paper_published':
+                # aggregations for missing paperPublished field
+                agg_values["paper_published_missing"] = {
+                    "missing": {"field": "paperPublished"}}
 
     if agg_values:
         body['aggs'] = agg_values
