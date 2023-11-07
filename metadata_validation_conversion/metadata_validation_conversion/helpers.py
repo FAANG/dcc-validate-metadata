@@ -94,3 +94,14 @@ def send_message_graphql(task_id, graphql_status=None, errors=None):
     async_to_sync(channel_layer.group_send)(f"graphqltaskstatus-{task_id}", {
         "type": "graphql_task_result",
         "response": response})
+
+
+def send_message_gsearch(task_id, gsearch_status=None, errors=None):
+    response = {
+        'gsearch_status': gsearch_status,
+        'errors': errors
+    }
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(f"gsearchtaskstatus-{task_id}", {
+        "type": "gsearch_task_result",
+        "response": response})

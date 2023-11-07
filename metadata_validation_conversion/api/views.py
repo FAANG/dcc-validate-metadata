@@ -7,10 +7,10 @@ from elasticsearch import Elasticsearch
 from elasticsearch import RequestsHttpConnection
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from django.core.cache import cache
 
 from .helpers import generate_df, generate_df_for_breeds
 from .constants import FIELD_NAMES, HUMAN_READABLE_NAMES
+from .tasks import es_search_task
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view, renderer_classes, permission_classes
@@ -158,18 +158,19 @@ def globindex(request):
             }
         }
 
-    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
-                       http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
-
     outp_data = dict()
     for name in GLOBAL_ALLOWED_INDICES:
         if request.body:
-            data = es.search(
-                index=name, body=json.loads(request.body.decode("utf-8"), track_total_hits=True)
-            )
+            data = es_search_task(req_body=request.body, index=name, body=body, track_total_hits=True)
         else:
-            data = es.search(
-                index=name, from_=from_, _source=field, sort=sort, body=body, track_total_hits=True
+            data = es_search_task(
+                req_body=request.body,
+                index=name,
+                from_=from_,
+                _source=field,
+                sort=sort,
+                body=body,
+                track_total_hits=True
             )
         outp_data[name] = data
 
