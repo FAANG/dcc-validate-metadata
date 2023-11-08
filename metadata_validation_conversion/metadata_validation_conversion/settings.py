@@ -171,7 +171,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('redis-svc', 6379)],
+            "hosts": [(os.getenv('REDIS_HOST'), 6379)],
         },
     },
 }
