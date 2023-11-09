@@ -161,16 +161,13 @@ def globindex(request):
     outp_data = dict()
     for name in GLOBAL_ALLOWED_INDICES:
         if request.body:
-            data = es_search_task(req_body=request.body, index=name, body=body, track_total_hits=True)
+            data = es_search_task.apply_async(
+                kwargs={'req_body': request.body, 'index': name, 'body': body, 'track_total_hits': True}
+            )
         else:
-            data = es_search_task(
-                req_body=request.body,
-                index=name,
-                from_=from_,
-                _source=field,
-                sort=sort,
-                body=body,
-                track_total_hits=True
+            data = es_search_task.apply_async(
+                kwargs={'req_body': request.body, 'index': name, 'body': body, 'track_total_hits': True,
+                        'from_': from_, '_source': field, 'sort': sort}
             )
         outp_data[name] = data
 

@@ -1,6 +1,6 @@
 import requests
 from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+from asgiref.sync import async_to_sync, sync_to_async
 from .constants import SAMPLE_CORE_URL, EXPERIMENT_CORE_URL
 
 
@@ -101,7 +101,10 @@ def send_message_gsearch(task_id, gsearch_status=None, errors=None):
         'gsearch_status': gsearch_status,
         'errors': errors
     }
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(f"gsearchtaskstatus-{task_id}", {
+    message = {
         "type": "gsearch_task_result",
-        "response": response})
+        "response": response
+    }
+    group_name = f"gsearchtaskstatus-{task_id}"
+    channel_layer = get_channel_layer()
+    sync_to_async(channel_layer.group_send)(group_name, message)

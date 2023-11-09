@@ -17,19 +17,9 @@ channel_layer = channels.layers.get_channel_layer()
 class CeleryTask(Task, ABC):
     abstract = True
 
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        send_message_gsearch(task_id, status='Error', errors=f'Current error is: {exc}')
-
-    def on_success(self, retval, task_id, args, kwargs):
-        send_message_gsearch(task_id, status='Success')
-
 
 @app.task(bind=True, base=CeleryTask)
 def es_search_task(self, req_body, index, body, track_total_hits, from_=None, _source=None, sort=None):
-    logging.debug(index)
-    logging.debug(body)
-    logging.debug(self.request.id)
-
     es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
                        http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
 

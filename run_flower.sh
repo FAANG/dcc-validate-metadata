@@ -1,1 +1,1 @@
-celery -A metadata_validation_conversion --broker=pyamqp://guest@rabbitmq-svc/ flower
+celery -A metadata_validation_conversion --broker=pyamqp://guest@rabbitmq-svc.default.svc.cluster.local/ flower
