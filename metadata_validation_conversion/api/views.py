@@ -1,6 +1,7 @@
 import requests
 import json
 import os
+from celery import group
 
 from django.http import JsonResponse, HttpResponse
 from elasticsearch import Elasticsearch
@@ -114,6 +115,7 @@ GLOBAL_ALLOWED_INDICES = ['protocol_files_backup', 'compare-index-protocol_files
 @permission_classes([AllowAny])
 @csrf_exempt
 def globindex(request):
+    logger.debug(f"request: {request}")
     if request.method != 'GET':
         context = {
             'status': '405', 'reason': 'This method is not allowed!'
@@ -158,20 +160,20 @@ def globindex(request):
             }
         }
 
-    outp_data = dict()
-    for name in GLOBAL_ALLOWED_INDICES:
-        if request.body:
-            data = es_search_task.apply_async(
-                kwargs={'req_body': request.body, 'index': name, 'body': body, 'track_total_hits': True}
-            )
-        else:
-            data = es_search_task.apply_async(
-                kwargs={'req_body': request.body, 'index': name, 'body': body, 'track_total_hits': True,
-                        'from_': from_, '_source': field, 'sort': sort}
-            )
-        outp_data[name] = data
+    key_args = {'req_body': request.body, 'body': body, 'track_total_hits': True,
+                'from_': from_, '_source': field, 'sort': sort}
 
-    return JsonResponse(outp_data)
+    tasks_group = group(es_search_task.s(name, key_args) for name in GLOBAL_ALLOWED_INDICES)
+    result_group = tasks_group.apply_async()
+    outp_data = result_group.get()
+
+    outp_json_data = dict()
+    for el in outp_data:
+        if el['took'] != 0:
+            if el['hits']['hits']:
+                outp_json_data[el['index']] = el
+
+    return JsonResponse(outp_json_data)
 
 
 @api_view(['GET','POST'])
