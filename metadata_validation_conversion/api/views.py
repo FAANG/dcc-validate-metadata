@@ -19,7 +19,7 @@ from rest_framework.permissions import AllowAny
 from api.swagger_custom import TextFileRenderer, PdfFileRenderer
 from api.swagger_custom import HTMLAutoSchema, PlainTextAutoSchema, PdfAutoSchema
 from api.swagger_custom import index_search_request_example, \
-    index_search_response_example, index_detail_response_example
+    index_search_response_example, index_gsearch_response_example, index_detail_response_example
 import csv
 import logging
 
@@ -34,88 +34,28 @@ ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
                    'ontologies_test', 'summary_ontologies_test'
                    ]
 
-GLOBAL_ALLOWED_INDICES = ['protocol_files_backup', 'compare-index-protocol_files', 'summary_file',
-                          'bovreg_dataset', 'experiment', 'bovreg_experiment', 'ontologies_test',
-                          'compare-index-protocol_analysis', 'protocol_files_test', 'specimen',
-                          'summary_dataset', 'submission_portal_status', 'compare-index-protocol_samples',
-                          'bovreg_analysis', 'protocol_files', 'protocol_analysis','compare-index-analysis',
-                          'ontologies', 'dataset', 'protocol_analysis_test', 'summary_ontologies_test',
-                          'summary_specimen', 'file', 'compare-index-dataset', 'submissions_test',
-                          'submissions', 'portal_status_test', 'compare-index-organism', 'bovreg_study',
-                          'trackhubs', 'summary_ontologies', 'analysis', 'compare-index-file', 'bovreg_file',
-                          'organism', 'summary_organism', 'article', 'compare-index-article', 'protocol_samples_test',
-                          'bovreg_specimen', 'protocol_samples', 'bovreg_organism', 'faang_subscriptions',
-                          'compare-index-specimen', 'ensembl_annotation']
+GLOBAL_ALLOWED_INDICES = ['organism', 'specimen', 'dataset', 'file', 'analysis', 'protocol_files', 'protocol_analysis',
+                          'protocol_samples', 'article']
 
-@swagger_auto_schema(method='get', tags=['Search'],
-        operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc",
+
+@swagger_auto_schema(method='get', tags=['GlobalSearch'],
+        operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc. by the search term",
         manual_parameters=[
-            openapi.Parameter('size', openapi.IN_QUERY, 
-                description="no. of records to fetch", 
-                type=openapi.TYPE_NUMBER, default=10),
-            openapi.Parameter('_source', openapi.IN_QUERY, 
-                description="fields (comma-separated) to fetch", 
-                type=openapi.TYPE_STRING),
-            openapi.Parameter('sort', openapi.IN_QUERY, 
-                description="field to sort on, with :asc or :desc appended \
-                    to specify order, eg - id:asc", 
-                type=openapi.TYPE_STRING),
-            openapi.Parameter('q', openapi.IN_QUERY, 
-                description="advanced queries", 
-                type=openapi.TYPE_STRING),
-            openapi.Parameter('from_', openapi.IN_QUERY, 
-                description="to fetch records starting from specified number", 
-                type=openapi.TYPE_NUMBER, default=0),
-            openapi.Parameter('filters', openapi.IN_QUERY, 
-                description="properties and list of values to filter on, \
-                    in the format {prop1: [val1, val2], prop2: [val1, val2], ...} ", 
-                type=openapi.TYPE_STRING, default='{}'),
-            openapi.Parameter('aggs', openapi.IN_QUERY, 
-                description="aggregation names and properties on which \
-                    to aggregate, in the format - {aggName1: prop1, aggName2: prop2, ...}", 
-                type=openapi.TYPE_STRING, default='{}'),
-            openapi.Parameter('name', openapi.IN_PATH, 
-                description="type of records to fetch",
-                type=openapi.TYPE_STRING,
-                enum=ALLOWED_INDICES)
+            openapi.Parameter('sterm', openapi.IN_QUERY,
+                description="search term to fetch",
+                type=openapi.TYPE_STRING)
         ],
         responses={
-            200: openapi.Response(description='OK', 
-                examples={"application/json": index_search_response_example},
+            200: openapi.Response(description='OK',
+                examples={"application/json": index_gsearch_response_example},
                 schema=openapi.Schema(type=openapi.TYPE_OBJECT)
             ),
             404: openapi.Response('Not Found')
         })
-@swagger_auto_schema(method='post', tags=['Search'],
-        operation_summary="Advanced Search for Organisms, Specimens, Files, Datasets etc",
-        operation_description="Advanced search using elasticsearch queries",
-        manual_parameters=[
-            openapi.Parameter('size', openapi.IN_QUERY, 
-                description="no. of records to fetch", 
-                type=openapi.TYPE_NUMBER, default=10),
-            openapi.Parameter('name', openapi.IN_PATH, 
-                description="type of records to fetch",
-                type=openapi.TYPE_STRING,
-                enum=ALLOWED_INDICES)
-        ],
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT, 
-            example=index_search_request_example
-        ),
-        responses={
-            200: openapi.Response('OK',
-                examples={"application/json": index_search_response_example},
-                schema=openapi.Schema(type=openapi.TYPE_OBJECT)
-            ),
-            404: openapi.Response('Not Found')
-        })
-
-
-@api_view(['GET', 'POST'])
+@api_view(['GET'])
 @permission_classes([AllowAny])
 @csrf_exempt
 def globindex(request):
-    logger.debug(f"request: {request}")
     if request.method != 'GET':
         context = {
             'status': '405', 'reason': 'This method is not allowed!'
@@ -125,16 +65,11 @@ def globindex(request):
         response.status_code = 405
         return response
 
-    # Parse request parameters
+    # parse request parameters
     sterm = request.GET.get('sterm', '')
-    field = request.GET.get('_source', '')
-    sort = request.GET.get('sort', '')
-    sort_by_count = request.GET.get('sort_by_count', '')
-    search = request.GET.get('search', '')
-    from_ = request.GET.get('from_', 0)
     body = {}
 
-    # generate query for search
+    # generate query for the search
     if sterm:
         match = {
             'multi_match': {
@@ -148,35 +83,83 @@ def globindex(request):
             }
         }
 
-    # generate query for sort script
-    # sorts by length of field array
-    if sort_by_count:
-        sort_field, order = sort_by_count.split(':')
-        body['sort'] = {
-            "_script": {
-                "type": "number",
-                "script": f"params._source?.{sort_field}?.length ?: 0",
-                "order": f"{order}"
-            }
-        }
-
-    key_args = {'req_body': request.body, 'body': body, 'track_total_hits': True,
-                'from_': from_, '_source': field, 'sort': sort}
+    key_args = {'req_body': request.body, 'body': body, 'track_total_hits': True}
 
     tasks_group = group(es_search_task.s(name, key_args) for name in GLOBAL_ALLOWED_INDICES)
-    result_group = tasks_group.apply_async()
+    result_group = tasks_group.apply_async(queue='gsearch')
     outp_data = result_group.get()
 
     outp_json_data = dict()
     for el in outp_data:
-        if el['took'] != 0:
-            if el['hits']['hits']:
-                outp_json_data[el['index']] = el
+        if len(el['hits']['hits']) != 0:
+            outp_json_data[el['index']] = el
 
     return JsonResponse(outp_json_data)
 
 
-@api_view(['GET','POST'])
+@swagger_auto_schema(method='get', tags=['Search'],
+        operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc",
+        manual_parameters=[
+            openapi.Parameter('size', openapi.IN_QUERY,
+                description="no. of records to fetch",
+                type=openapi.TYPE_NUMBER, default=10),
+            openapi.Parameter('_source', openapi.IN_QUERY,
+                description="fields (comma-separated) to fetch",
+                type=openapi.TYPE_STRING),
+            openapi.Parameter('sort', openapi.IN_QUERY,
+                description="field to sort on, with :asc or :desc appended \
+                    to specify order, eg - id:asc",
+                type=openapi.TYPE_STRING),
+            openapi.Parameter('q', openapi.IN_QUERY,
+                description="advanced queries",
+                type=openapi.TYPE_STRING),
+            openapi.Parameter('from_', openapi.IN_QUERY,
+                description="to fetch records starting from specified number",
+                type=openapi.TYPE_NUMBER, default=0),
+            openapi.Parameter('filters', openapi.IN_QUERY,
+                description="properties and list of values to filter on, \
+                    in the format {prop1: [val1, val2], prop2: [val1, val2], ...} ",
+                type=openapi.TYPE_STRING, default='{}'),
+            openapi.Parameter('aggs', openapi.IN_QUERY,
+                description="aggregation names and properties on which \
+                    to aggregate, in the format - {aggName1: prop1, aggName2: prop2, ...}",
+                type=openapi.TYPE_STRING, default='{}'),
+            openapi.Parameter('name', openapi.IN_PATH,
+                description="type of records to fetch",
+                type=openapi.TYPE_STRING,
+                enum=ALLOWED_INDICES)
+        ],
+        responses={
+            200: openapi.Response(description='OK',
+                examples={"application/json": index_search_response_example},
+                schema=openapi.Schema(type=openapi.TYPE_OBJECT)
+            ),
+            404: openapi.Response('Not Found')
+        })
+@swagger_auto_schema(method='post', tags=['Search'],
+        operation_summary="Advanced Search for Organisms, Specimens, Files, Datasets etc",
+        operation_description="Advanced search using elasticsearch queries",
+        manual_parameters=[
+            openapi.Parameter('size', openapi.IN_QUERY,
+                description="no. of records to fetch",
+                type=openapi.TYPE_NUMBER, default=10),
+            openapi.Parameter('name', openapi.IN_PATH,
+                description="type of records to fetch",
+                type=openapi.TYPE_STRING,
+                enum=ALLOWED_INDICES)
+        ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            example=index_search_request_example
+        ),
+        responses={
+            200: openapi.Response('OK',
+                examples={"application/json": index_search_response_example},
+                schema=openapi.Schema(type=openapi.TYPE_OBJECT)
+            ),
+            404: openapi.Response('Not Found')
+        })
+@api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 @csrf_exempt
 def index(request, name):

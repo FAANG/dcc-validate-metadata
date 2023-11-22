@@ -1,8 +1,6 @@
 from abc import ABC
 from celery import Task
-import channels.layers
 from metadata_validation_conversion.celery import app
-from metadata_validation_conversion.helpers import send_message_gsearch
 from elasticsearch import Elasticsearch
 from elasticsearch import RequestsHttpConnection
 from django.conf import settings
@@ -10,8 +8,6 @@ import json
 import logging
 
 logger = logging.getLogger(__name__)
-
-channel_layer = channels.layers.get_channel_layer()
 
 
 class CeleryTask(Task, ABC):
@@ -25,8 +21,6 @@ def es_search_task(self, index, key_args):
     es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
                        http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
 
-    send_message_gsearch(self.request.id, gsearch_status='task_received')
-
     if key_args['req_body']:
         data = es.search(
             index=key_args['index'],
@@ -34,11 +28,13 @@ def es_search_task(self, index, key_args):
         )
     else:
         data = es.search(
-            index=key_args['index'], from_=key_args['from_'], _source=key_args['_source'],
-            sort=key_args['sort'], body=key_args['body'], track_total_hits=key_args['track_total_hits']
+            index=key_args['index'], body=key_args['body'], track_total_hits=key_args['track_total_hits']
         )
+    index = index.replace(
+        'protocol_files', 'protocol/experiments'
+    ).replace(
+        'protocol_analysis', 'protocol/analysis'
+    ).replace('protocol_samples', 'protocol/samples')
     data['index'] = index
-
-    send_message_gsearch(self.request.id, gsearch_status='task_finished')
 
     return data
