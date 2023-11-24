@@ -89,12 +89,6 @@ class ElixirValidatorResults:
         :param paths: list of paths of errors
         :param additional_field: could be core field or modular field
         """
-        print("within attach_errors")
-        print(record_to_return)
-        print(errors)
-        print(paths)
-        print(additional_field)
-        print("==============================")
         for i, error in enumerate(errors):
             if '.' in paths[i]:
                 key = paths[i].split(".")[1]
@@ -126,12 +120,6 @@ class ElixirValidatorResults:
         :param additional_field: might be core, etc..
         :return:
         """
-        print("within update_record_to_return")
-        print(record_to_return)
-        print(key)
-        print(error)
-        print(additional_key)
-        print(additional_field)
         if additional_key is not None and additional_field is not None:
             pointer = record_to_return[additional_field][key][additional_key]
         elif additional_key is not None and additional_field is None:
