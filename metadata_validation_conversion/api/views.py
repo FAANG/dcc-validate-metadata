@@ -133,7 +133,7 @@ def index(request, name):
     filters = json.loads(filters)
     for key in filters.keys():
         # status_activity filter is a special case because the status property
-        # is found within status_activity arrau of objects
+        # is found within the status_activity array of objects
         if key == 'status_activity':
             nested_query_body = {
                 "nested": {
