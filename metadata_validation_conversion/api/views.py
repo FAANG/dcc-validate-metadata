@@ -1,17 +1,16 @@
 import requests
 import json
 import os
-from celery import group
 
 from django.http import JsonResponse, HttpResponse
 from elasticsearch import Elasticsearch
 from elasticsearch import RequestsHttpConnection
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.core.cache import cache
 
 from .helpers import generate_df, generate_df_for_breeds
 from .constants import FIELD_NAMES, HUMAN_READABLE_NAMES
-from .tasks import es_search_task
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view, renderer_classes, permission_classes
@@ -19,11 +18,8 @@ from rest_framework.permissions import AllowAny
 from api.swagger_custom import TextFileRenderer, PdfFileRenderer
 from api.swagger_custom import HTMLAutoSchema, PlainTextAutoSchema, PdfAutoSchema
 from api.swagger_custom import index_search_request_example, \
-    index_search_response_example, index_gsearch_response_example, index_detail_response_example
+    index_search_response_example, index_detail_response_example
 import csv
-import logging
-
-logger = logging.getLogger(__name__)
 
 ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
                    'protocol_files', 'protocol_samples', 'article',
@@ -33,69 +29,6 @@ ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
                    'ontologies', 'summary_ontologies', 'submission_portal_status',
                    'ontologies_test', 'summary_ontologies_test'
                    ]
-
-GLOBAL_ALLOWED_INDICES = ['organism', 'specimen', 'dataset', 'file', 'analysis', 'protocol_files', 'protocol_analysis',
-                          'protocol_samples', 'article']
-
-
-@swagger_auto_schema(method='get', tags=['GlobalSearch'],
-        operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc. by the search term",
-        manual_parameters=[
-            openapi.Parameter('sterm', openapi.IN_QUERY,
-                description="search term to fetch",
-                type=openapi.TYPE_STRING)
-        ],
-        responses={
-            200: openapi.Response(description='OK',
-                examples={"application/json": index_gsearch_response_example},
-                schema=openapi.Schema(type=openapi.TYPE_OBJECT)
-            ),
-            404: openapi.Response('Not Found')
-        })
-@api_view(['GET'])
-@permission_classes([AllowAny])
-@csrf_exempt
-def globindex(request):
-    if request.method != 'GET':
-        context = {
-            'status': '405', 'reason': 'This method is not allowed!'
-        }
-        response = HttpResponse(
-            json.dumps(context), content_type='application/json')
-        response.status_code = 405
-        return response
-
-    # parse request parameters
-    sterm = request.GET.get('sterm', '')
-    body = {}
-
-    # generate query for the search
-    if sterm:
-        match = {
-            'multi_match': {
-                'query': sterm,
-                'fields': ['*']
-            }
-        }
-        body['query'] = {
-            'bool': {
-                'must': [match]
-            }
-        }
-
-    key_args = {'req_body': request.body, 'body': body, 'track_total_hits': True}
-
-    tasks_group = group(es_search_task.s(name, key_args) for name in GLOBAL_ALLOWED_INDICES)
-    result_group = tasks_group.apply_async(queue='gsearch')
-    outp_data = result_group.get()
-
-    outp_json_data = dict()
-    for el in outp_data:
-        if len(el['hits']['hits']) != 0:
-            outp_json_data[el['index']] = el
-
-    return JsonResponse(outp_json_data)
-
 
 @swagger_auto_schema(method='get', tags=['Search'],
         operation_summary="Get a list of Organisms, Specimens, Files, Datasets etc",
@@ -159,7 +92,7 @@ def globindex(request):
             ),
             404: openapi.Response('Not Found')
         })
-@api_view(['GET', 'POST'])
+@api_view(['GET','POST'])
 @permission_classes([AllowAny])
 @csrf_exempt
 def index(request, name):
@@ -200,7 +133,7 @@ def index(request, name):
     filters = json.loads(filters)
     for key in filters.keys():
         # status_activity filter is a special case because the status property
-        # is found within the status_activity array of objects
+        # is found within status_activity arrau of objects
         if key == 'status_activity':
             nested_query_body = {
                 "nested": {
@@ -295,9 +228,8 @@ def index(request, name):
 
     es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
     if request.body:
-        data = es.search(
-            index=name, size=size, body=json.loads(request.body.decode("utf-8"), track_total_hits=True)
-        )
+        data = es.search(index=name, size=size, body=json.loads(
+            request.body.decode("utf-8"), track_total_hits=True))
     else:
         if query != '':
             data = es.search(index=name, from_=from_, size=size, _source=field,

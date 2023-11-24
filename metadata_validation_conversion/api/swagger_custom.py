@@ -1,3 +1,4 @@
+
 from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -5,14 +6,12 @@ import os
 from drf_yasg.inspectors import SwaggerAutoSchema
 from rest_framework import renderers
 
-
 # openAPI schema
 class SchemaGenerator(OpenAPISchemaGenerator):
     def get_schema(self, request=None, public=False):
         schema = super(SchemaGenerator, self).get_schema(request, public)
         schema.basePath = os.path.join(schema.basePath, 'data/')
         return schema
-
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -25,90 +24,33 @@ schema_view = get_schema_view(
     generator_class=SchemaGenerator,
 )
 
-
 # response renderers
 class TextFileRenderer(renderers.BaseRenderer):
     media_type = 'text/plain'
     format = 'text'
-
     def render(self, data, media_type=None, renderer_context=None):
         return str(renderers.JSONRenderer().render(data, media_type, renderer_context)).encode(self.charset)
-
 
 class PdfFileRenderer(renderers.BaseRenderer):
     media_type = 'application/pdf'
     format = 'byte'
-
     def render(self, data, media_type=None, renderer_context=None):
         return str(renderers.JSONRenderer().render(data, media_type, renderer_context)).encode(self.charset)
-
 
 # response schemas
 class HTMLAutoSchema(SwaggerAutoSchema):
     def get_produces(self):
         return ["text/html"]
 
-
 class PlainTextAutoSchema(SwaggerAutoSchema):
     def get_produces(self):
         return ["text/plain"]
-
 
 class PdfAutoSchema(SwaggerAutoSchema):
     def get_produces(self):
         return ["application/pdf"]
 
-
 # response examples
-index_gsearch_response_example = {
-    "index_name_1": {
-        "hits": {
-            "hits": [
-                {
-                    "index1": {},
-                    "index2": {}
-                },
-                {
-                    "index1": {},
-                    "index2": {}
-                }
-            ],
-            "max_score": "max_score_value",
-            "total": {
-                "value": "total_value",
-                "relation": "relation_value"
-            },
-            "index": "index_name_1",
-            "timed_out": "timed_out_value",
-            "took": "took_value",
-            "_shards": {}
-        },
-    },
-    "index_name_2": {
-        "hits": {
-            "hits": [
-                {
-                    "index1": {},
-                    "index2": {}
-                },
-                {
-                    "index1": {},
-                    "index2": {}
-                }
-            ],
-            "max_score": "max_score_value",
-            "total": {
-                "value": "total_value",
-                "relation": "relation_value"
-            },
-            "index": "index_name_2",
-            "timed_out": "timed_out_value",
-            "took": "took_value",
-            "_shards": {}
-        },
-    }
-}
-
 index_search_response_example = {
     "took": 2,
     "timed_out": "false",
@@ -153,34 +95,34 @@ index_detail_response_example = {
 
 # request example
 index_search_request_example = {
-    "query": {
-        "bool": {
-            "filter": [{
-                "term": {
-                    "standardMet": "FAANG"
-                }
-            },
-                {
-                    "term": {
-                        "organism.sex.text": "female"
-                    }
-                },
-                {
-                    "term": {
-                        "organism.organism.text": "Equus caballus"
-                    }
-                },
-                {
-                    "term": {
-                        "material.text": "specimen from organism"
-                    }
-                },
-                {
-                    "term": {
-                        "cellType.text": "liver left lateral lobe"
-                    }
-                }
-            ]
-        }
-    }
+	"query": {
+		"bool": {
+			"filter": [{
+					"term": {
+						"standardMet": "FAANG"
+					}
+				},
+				{
+					"term": {
+						"organism.sex.text": "female"
+					}
+				},
+				{
+					"term": {
+						"organism.organism.text": "Equus caballus"
+					}
+				},
+				{
+					"term": {
+						"material.text": "specimen from organism"
+					}
+				},
+				{
+					"term": {
+						"cellType.text": "liver left lateral lobe"
+					}
+				}
+			]
+		}
+	}
 }
