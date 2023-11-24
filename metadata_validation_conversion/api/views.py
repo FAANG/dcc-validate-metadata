@@ -98,7 +98,7 @@ ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
 def index(request, name):
     if request.method != 'GET' and request.method != 'POST':
         context = {
-            'status': '405', 'reason': 'This method is not allowed!'  
+            'status': '405', 'reason': 'This method is not allowed!'
         }
         response = HttpResponse(
             json.dumps(context), content_type='application/json')
@@ -106,7 +106,7 @@ def index(request, name):
         return response
     if name not in ALLOWED_INDICES:
         context = {
-            'status': '404', 'reason': 'This index doesn\'t exist!'  
+            'status': '404', 'reason': 'This index doesn\'t exist!'
         }
         response = HttpResponse(
             json.dumps(context), content_type='application/json')
