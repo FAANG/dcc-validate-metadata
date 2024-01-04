@@ -10,7 +10,6 @@ FILE = 'file'
 PROTOCOL_ANALYSIS = 'protocol_analysis'
 PROTOCOL_FILES = 'protocol_files'
 PROTOCOL_SAMPLES = 'protocol_samples'
-ORGANISM = 'organism'
 
 index_mapping = {
     (ANALYSIS, EXPERIMENT): {
