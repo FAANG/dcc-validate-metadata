@@ -93,6 +93,12 @@ def globindex(request):
     for el in outp_data:
         if len(el['hits']['hits']) != 0:
             outp_json_data[el['index']] = el
+    if ('file' in outp_json_data) and ('dataset' not in outp_json_data):
+        study_accessions = [
+            hit['_source'].get('study', {}).get('accession') for hit in outp_json_data['file']['hits']['hits']
+        ]
+        if len(set(study_accessions)) != 0:
+            outp_json_data['dataset'] = {'hits': {'total': {'value': len(set(study_accessions))}}}
 
     return JsonResponse(outp_json_data)
 
