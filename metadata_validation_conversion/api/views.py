@@ -83,7 +83,7 @@ def globindex(request):
             }
         }
 
-    key_args = {'req_body': request.body, 'body': body, 'track_total_hits': True}
+    key_args = {'body': body, 'track_total_hits': True}
 
     tasks_group = group(es_search_task.s(name, key_args) for name in GLOBAL_ALLOWED_INDICES)
     result_group = tasks_group.apply_async(queue='gsearch')
