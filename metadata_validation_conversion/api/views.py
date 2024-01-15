@@ -83,7 +83,7 @@ def globindex(request):
             }
         }
 
-    key_args = {'req_body': request.body, 'body': body, 'track_total_hits': True}
+    key_args = {'body': body, 'track_total_hits': True}
 
     tasks_group = group(es_search_task.s(name, key_args) for name in GLOBAL_ALLOWED_INDICES)
     result_group = tasks_group.apply_async(queue='gsearch')
@@ -93,6 +93,13 @@ def globindex(request):
     for el in outp_data:
         if len(el['hits']['hits']) != 0:
             outp_json_data[el['index']] = el
+    if ('file' in outp_json_data) and ('dataset' not in outp_json_data):
+        study_accessions = set([
+            hit['_source'].get('study', {}).get('accession') for hit in outp_json_data['file']['hits']['hits']
+        ])
+        if len(study_accessions) != 0:
+            outp_json_data['dataset'] = {'hits': {'total': {'value': len(study_accessions)}}}
+            outp_json_data['dataset']['search_terms'] = list(study_accessions)
 
     return JsonResponse(outp_json_data)
 
