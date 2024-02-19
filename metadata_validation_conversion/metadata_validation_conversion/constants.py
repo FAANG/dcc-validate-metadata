@@ -401,7 +401,7 @@ PROJECTS = [
     "GEroNIMO",
     "RUMIGEN",
     "Equine-FAANG",
-    "HoloRuminent"
+    "Holoruminant"
 ]
 
 ORGANIZATIONS = {
