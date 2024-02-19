@@ -102,8 +102,12 @@ class BiosamplesFileConverter:
                 except KeyError:
                     results = requests.get(f"https://www.ebi.ac.uk/biosamples/samples/{id_to_fetch}",
                                            headers=get_header()).json()
-                    return results['characteristics']['collection date'][0]['text'],\
-                        results['characteristics']['geographic location (country and/or sea)'][0]['text']
+                    if ('collection date' in results['characteristics'] and
+                            'geographic location (country and/or sea)' in results['characteristics']):
+                        return (results['characteristics']['collection date'][0]['text'],
+                                results['characteristics']['geographic location (country and/or sea)'][0]['text'])
+                    else:
+                        return 'not collected', 'not collected'
             else:
                 return self.fetch_ena_required_information(missing_ids[id_to_fetch], collection_date,
                                                            geographic_location, missing_ids)
