@@ -309,6 +309,10 @@ class WarningsAndAdditionalChecks:
         :param ontology_ids: dict with ols records as values and ols ids as keys
         :return: warnings in str format
         """
+        print(field_value)
+        print(ontology_names)
+        print(field_name)
+        print(ontology_ids)
         if 'text' in field_value and 'term' in field_value:
             term_label = list()
             for label in ontology_ids[field_value['term']]:
