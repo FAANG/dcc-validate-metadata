@@ -315,6 +315,7 @@ class WarningsAndAdditionalChecks:
         print(ontology_ids)
         if 'text' in field_value and 'term' in field_value:
             term_label = list()
+            field_value['term'] = field_value['term'].replace(":", "_")
             for label in ontology_ids[field_value['term']]:
                 if ontology_names is not None \
                         and label['ontology_name'].lower() \

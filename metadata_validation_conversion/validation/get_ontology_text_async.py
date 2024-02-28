@@ -38,6 +38,7 @@ def collect_ids(records, core_name=None, module_name=None):
             ids.add(parse_record(value))
         for _, value in record['custom'].items():
             ids.add(parse_record(value))
+    ids = {el.replace(":", "_") if el is not None else el for el in ids}
     results = fetch_text_for_ids(ids)
     return results
 
