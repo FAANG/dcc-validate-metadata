@@ -15,6 +15,7 @@ from metadata_validation_conversion.settings import BOVREG_USERNAME, \
     BOVREG_PASSWORD
 from .BiosamplesFileConverter import BiosamplesFileConverter
 from .BiosamplesSubmission import BioSamplesSubmission
+from .WebinBiosamplesSubmission import WebinBioSamplesSubmission
 from .AnalysesFileConverter import AnalysesFileConverter
 from .ExperimentsFileConverter import ExperimentFileConverter
 from .AnnotateTemplate import AnnotateTemplate
@@ -43,8 +44,7 @@ def get_domains(credentials, room_id):
     send_message(submission_message="Waiting: getting information about "
                                     "existing domains", room_id=room_id)
     username, password = get_credentials(credentials)
-    biosamples_submission = BioSamplesSubmission(username, password, {},
-                                                 credentials['mode'])
+    biosamples_submission = BioSamplesSubmission(username, password, credentials['mode'])
     domains = biosamples_submission.choose_domain()
     if 'Error' in domains:
         send_message(submission_message=domains, room_id=room_id)
@@ -89,13 +89,11 @@ def submit_to_biosamples(results, credentials, room_id, action="submission"):
         submission_message="Waiting: submitting records to BioSamples",
         room_id=room_id)
     username, password = get_credentials(credentials)
-    biosamples_submission = BioSamplesSubmission(username, password, results[0],
-                                                 credentials['mode'],
-                                                 credentials['domain_name'])
+    webin_biosamples_submission = WebinBioSamplesSubmission(username, password, results[0], credentials['mode'])
     if action == 'update':
-        submission_results = biosamples_submission.update_records()
+        submission_results = webin_biosamples_submission.update_records()
     else:
-        submission_results = biosamples_submission.submit_records()
+        submission_results = webin_biosamples_submission.submit_records()
 
     if 'Error' in submission_results:
         send_message(submission_message=submission_results, room_id=room_id)

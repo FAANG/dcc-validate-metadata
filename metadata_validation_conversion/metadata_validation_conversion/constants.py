@@ -386,6 +386,8 @@ SUBMISSION_TEST_SERVER = 'https://wwwdev.ebi.ac.uk'
 AAP_PROD_SERVER = 'https://api.aai.ebi.ac.uk'
 SUBMISSION_PROD_SERVER = 'https://www.ebi.ac.uk'
 
+WEBIN_SERVER = 'https://wwwdev.ebi.ac.uk/ena/submit/webin/auth'
+
 ENA_TEST_SERVER = 'https://wwwdev.ebi.ac.uk/ena/submit/drop-box/submit/'
 ENA_PROD_SERVER = 'https://www.ebi.ac.uk/ena/submit/drop-box/submit/'
 
