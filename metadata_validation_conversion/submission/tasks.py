@@ -14,7 +14,6 @@ from metadata_validation_conversion.constants import ENA_TEST_SERVER, \
 from metadata_validation_conversion.settings import BOVREG_USERNAME, \
     BOVREG_PASSWORD
 from .BiosamplesFileConverter import BiosamplesFileConverter
-from .BiosamplesSubmission import BioSamplesSubmission
 from .WebinBiosamplesSubmission import WebinBioSamplesSubmission
 from .AnalysesFileConverter import AnalysesFileConverter
 from .ExperimentsFileConverter import ExperimentFileConverter
@@ -37,42 +36,6 @@ class LogErrorsTask(Task, ABC):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         send_message(room_id=kwargs['room_id'], submission_message='Error with the submission process',
                      errors=f'Error: {exc}')
-
-
-@app.task(base=LogErrorsTask)
-def get_domains(credentials, room_id):
-    send_message(submission_message="Waiting: getting information about "
-                                    "existing domains", room_id=room_id)
-    username, password = get_credentials(credentials)
-    biosamples_submission = BioSamplesSubmission(username, password, credentials['mode'])
-    domains = biosamples_submission.choose_domain()
-    if 'Error' in domains:
-        send_message(submission_message=domains, room_id=room_id)
-    else:
-        send_message(
-            domains=domains,
-            submission_message='Success: got information about existing '
-                               'domains', room_id=room_id)
-    return 'Success'
-
-
-@app.task(base=LogErrorsTask)
-def submit_new_domain(credentials, room_id):
-    username, password = get_credentials(credentials)
-    biosamples_submission = BioSamplesSubmission(username, password, {},
-                                                 credentials['mode'])
-    create_domain_results = biosamples_submission.create_domain(
-        credentials['domain_name'], credentials['domain_description'])
-    send_message(submission_message=create_domain_results, room_id=room_id)
-    domains = biosamples_submission.choose_domain()
-    if 'Error' in domains:
-        send_message(submission_message=domains, room_id=room_id)
-    else:
-        send_message(
-            domains=domains,
-            submission_message='Success: got information about existing '
-                               'domains', room_id=room_id)
-    return 'Success'
 
 
 @app.task(base=LogErrorsTask)
