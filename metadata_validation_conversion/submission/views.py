@@ -11,8 +11,7 @@ from django.core.mail import send_mail
 from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from .tasks import prepare_samples_data, prepare_analyses_data, \
-    prepare_experiments_data, generate_annotated_template, get_domains, \
-    submit_new_domain, submit_to_biosamples, submit_data_to_ena, send_user_email
+    prepare_experiments_data, generate_annotated_template, submit_to_biosamples, submit_data_to_ena, send_user_email
 
 XLSX_CONTENT_TYPE = 'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
@@ -52,27 +51,6 @@ def download_submission_results(request, submission_type, task_id):
     response = HttpResponse(file_to_send, content_type=content_type)
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
-
-
-@csrf_exempt
-def domain_actions(request, room_id, domain_action):
-    if request.method == 'POST':
-        if domain_action == 'choose_domain':
-            send_message(submission_message='Waiting: authenticating user',
-                         room_id=room_id)
-            choose_domain_task = get_domains.s(
-                json.loads(request.body.decode('utf-8')), room_id=room_id).set(
-                queue='submission')
-            res = choose_domain_task.apply_async()
-        else:
-            send_message(submission_message='Submitting new domain',
-                         room_id=room_id)
-            submit_new_domain_task = submit_new_domain.s(
-                json.loads(request.body.decode('utf-8')), room_id=room_id).set(
-                queue='submission')
-            res = submit_new_domain_task.apply_async()
-        return HttpResponse(json.dumps({"id": res.id}))
-    return HttpResponse("Please use POST method for submission!")
 
 
 @csrf_exempt

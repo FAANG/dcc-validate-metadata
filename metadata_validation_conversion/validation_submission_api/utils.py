@@ -9,7 +9,6 @@ from submission.tasks import generate_annotated_template, \
             prepare_samples_data, prepare_analyses_data, prepare_experiments_data, \
                 submit_to_biosamples, submit_data_to_ena
 from submission.helpers import get_credentials
-from submission.BiosamplesSubmission import BioSamplesSubmission
 from celery import chord
 import os
 
