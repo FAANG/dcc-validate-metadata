@@ -3,6 +3,8 @@ from . import views
 
 app_name = 'submission'
 urlpatterns = [
+    path('samples/<str:room_id>/<str:domain_action>', views.domain_actions,
+         name='domain_actions'),
     path('<str:action>/<str:submission_type>/<str:task_id>/<str:room_id>/submit_records',
          views.submit_records, name='submit_records'),
     path('submission_subscribe_faang/<str:index_name>/<str:index_pk>/<str:subscriber_email>',

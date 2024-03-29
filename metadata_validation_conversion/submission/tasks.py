@@ -15,6 +15,7 @@ from metadata_validation_conversion.settings import BOVREG_USERNAME, \
     BOVREG_PASSWORD
 from .BiosamplesFileConverter import BiosamplesFileConverter
 from .WebinBiosamplesSubmission import WebinBioSamplesSubmission
+from .BiosamplesSubmission import BioSamplesSubmission
 from .AnalysesFileConverter import AnalysesFileConverter
 from .ExperimentsFileConverter import ExperimentFileConverter
 from .AnnotateTemplate import AnnotateTemplate
@@ -39,6 +40,43 @@ class LogErrorsTask(Task, ABC):
 
 
 @app.task(base=LogErrorsTask)
+def get_domains(credentials, room_id):
+    send_message(submission_message="Waiting: getting information about "
+                                    "existing domains", room_id=room_id)
+    username, password = get_credentials(credentials)
+    biosamples_submission = BioSamplesSubmission(username, password, {},
+                                                 credentials['mode'])
+    domains = biosamples_submission.choose_domain()
+    if 'Error' in domains:
+        send_message(submission_message=domains, room_id=room_id)
+    else:
+        send_message(
+            domains=domains,
+            submission_message='Success: got information about existing '
+                               'domains', room_id=room_id)
+    return 'Success'
+
+
+@app.task(base=LogErrorsTask)
+def submit_new_domain(credentials, room_id):
+    username, password = get_credentials(credentials)
+    biosamples_submission = BioSamplesSubmission(username, password, {},
+                                                 credentials['mode'])
+    create_domain_results = biosamples_submission.create_domain(
+        credentials['domain_name'], credentials['domain_description'])
+    send_message(submission_message=create_domain_results, room_id=room_id)
+    domains = biosamples_submission.choose_domain()
+    if 'Error' in domains:
+        send_message(submission_message=domains, room_id=room_id)
+    else:
+        send_message(
+            domains=domains,
+            submission_message='Success: got information about existing '
+                               'domains', room_id=room_id)
+    return 'Success'
+
+
+@app.task(base=LogErrorsTask)
 def prepare_samples_data(json_to_convert, room_id, private=False, action='submission', mode='prod'):
     conversion_results = BiosamplesFileConverter(json_to_convert[0], private, mode, action)
     results = conversion_results.start_conversion()
@@ -52,11 +90,20 @@ def submit_to_biosamples(results, credentials, room_id, action="submission"):
         submission_message="Waiting: submitting records to BioSamples",
         room_id=room_id)
     username, password = get_credentials(credentials)
-    webin_biosamples_submission = WebinBioSamplesSubmission(username, password, results[0], credentials['mode'])
-    if action == 'update':
-        submission_results = webin_biosamples_submission.update_records()
+
+    if username.startswith("Webin"):
+        submission = WebinBioSamplesSubmission(
+            username, password, results[0], credentials['mode']
+        )
     else:
-        submission_results = webin_biosamples_submission.submit_records()
+        submission = BioSamplesSubmission(
+            username, password, results[0], credentials['mode'], credentials['domain_name']
+        )
+
+    if action == 'update':
+        submission_results = submission.update_records()
+    else:
+        submission_results = submission.submit_records()
 
     if 'Error' in submission_results:
         send_message(submission_message=submission_results, room_id=room_id)
