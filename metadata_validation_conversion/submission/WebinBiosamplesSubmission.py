@@ -3,7 +3,7 @@ from datetime import datetime
 import requests
 import json
 
-from metadata_validation_conversion.constants import WEBIN_SERVER, SUBMISSION_TEST_SERVER, SUBMISSION_PROD_SERVER
+from metadata_validation_conversion.constants import WEBIN_TEST_SERVER, WEBIN_PROD_SERVER, SUBMISSION_TEST_SERVER, SUBMISSION_PROD_SERVER
 
 
 class WebinBioSamplesSubmission:
@@ -11,10 +11,11 @@ class WebinBioSamplesSubmission:
         self.username = username
         self.password = password
         self.json_to_submit = json_to_submit
-        self.webin_server = WEBIN_SERVER
         if mode == 'test':
+            self.webin_server = WEBIN_TEST_SERVER
             self.submission_server = SUBMISSION_TEST_SERVER
         elif mode == 'prod':
+            self.webin_server = WEBIN_PROD_SERVER
             self.submission_server = SUBMISSION_PROD_SERVER
 
     def get_token(self):
