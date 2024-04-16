@@ -14,6 +14,7 @@ from metadata_validation_conversion.constants import ENA_TEST_SERVER, \
 from metadata_validation_conversion.settings import BOVREG_USERNAME, \
     BOVREG_PASSWORD
 from .BiosamplesFileConverter import BiosamplesFileConverter
+from .WebinBiosamplesSubmission import WebinBioSamplesSubmission
 from .BiosamplesSubmission import BioSamplesSubmission
 from .AnalysesFileConverter import AnalysesFileConverter
 from .ExperimentsFileConverter import ExperimentFileConverter
@@ -89,13 +90,20 @@ def submit_to_biosamples(results, credentials, room_id, action="submission"):
         submission_message="Waiting: submitting records to BioSamples",
         room_id=room_id)
     username, password = get_credentials(credentials)
-    biosamples_submission = BioSamplesSubmission(username, password, results[0],
-                                                 credentials['mode'],
-                                                 credentials['domain_name'])
-    if action == 'update':
-        submission_results = biosamples_submission.update_records()
+
+    if username.startswith("Webin"):
+        submission = WebinBioSamplesSubmission(
+            username, password, results[0], credentials['mode']
+        )
     else:
-        submission_results = biosamples_submission.submit_records()
+        submission = BioSamplesSubmission(
+            username, password, results[0], credentials['mode'], credentials['domain_name']
+        )
+
+    if action == 'update':
+        submission_results = submission.update_records()
+    else:
+        submission_results = submission.submit_records()
 
     if 'Error' in submission_results:
         send_message(submission_message=submission_results, room_id=room_id)
