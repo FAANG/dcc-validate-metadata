@@ -22,10 +22,15 @@ class LogErrorsTask(Task, ABC):
 
 
 @app.task(base=LogErrorsTask)
-def validate(filename, fileid):
+def validate(filename, fileid, protocol_type):
     send_message(submission_message="Starting to validate file",
                  room_id=fileid)
     errors = list()
+    if protocol_type in ['protocol_samples', 'protocol_analysis', 'protocol_files']:
+        if es.exists(protocol_type, id=fileid):
+            errors.append(f"File {filename[0]} already is in ES")
+    else:
+        errors.append(f"Protocol type for {filename[0]} is not protocol_samples/protocol_analysis/protocol_files")
     if filename[0] not in ORGANIZATIONS:
         errors.append(f"Your organization {filename[0]} was not found")
     if len(filename) < 2 or filename[1] != 'SOP':
