@@ -11,7 +11,7 @@ urlpatterns = [
     path('<str:name>/download/', views.download, name='download'),
     path('fire_api/<str:protocol_type>/<str:id>', views.protocols_fire_api,
          name='protocols_fire_api'),
-    path('summary', views.summary_api, name='summary'),
+    # path('summary', views.summary_api, name='summary'),
     url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
