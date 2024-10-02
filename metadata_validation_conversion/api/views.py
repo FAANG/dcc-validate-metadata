@@ -589,45 +589,45 @@ def protocols_fire_api(request, protocol_type, id):
     except IOError:
         return HttpResponse(status=404)
 
-@swagger_auto_schema(method='get', tags=['Summary'],
-        auto_schema=HTMLAutoSchema,
-        operation_summary="Get summary of all FAANG Data",
-        responses={
-            200: openapi.Response('OK',
-                schema=openapi.Schema(type=openapi.TYPE_STRING))
-        })
-@api_view(['GET'])
-def summary_api(request):
-    final_results = ''
-    for item in FIELD_NAMES.keys():
-        data = requests.get(
-            "https://apifaang.org.uk/summary_{}/summary_{}".format(
-                item, item)).json()
-        data = data['hits']['hits'][0]['_source']
-        results = list()
-        results_faang_only = list()
-        for field_name in FIELD_NAMES[item]:
-            if 'breed' in field_name:
-                tmp, tmp_faang_only = generate_df_for_breeds(
-                    field_name, HUMAN_READABLE_NAMES[field_name], data)
-            else:
-                tmp, tmp_faang_only = generate_df(field_name,
-                                                  HUMAN_READABLE_NAMES[
-                                                      field_name], data)
-            results.append(tmp)
-            results_faang_only.append(tmp_faang_only)
-        final_results += '<h1>{} Summary</h1>'.format(item.capitalize())
-        final_results += '<br>'
-        final_results += '<h3>FAANG only data</h3>'
-        final_results += '<br>'
-        for table in results_faang_only:
-            final_results += table.to_html(index=False)
-            final_results += '<br>'
-        final_results += '<h3>All data</h3>'
-        final_results += '<br>'
-        for table in results:
-            final_results += table.to_html(index=False)
-            final_results += '<br>'
-        final_results += '<br>'
-        final_results += '<hr>'
-    return HttpResponse(final_results)
+# @swagger_auto_schema(method='get', tags=['Summary'],
+#         auto_schema=HTMLAutoSchema,
+#         operation_summary="Get summary of all FAANG Data",
+#         responses={
+#             200: openapi.Response('OK',
+#                 schema=openapi.Schema(type=openapi.TYPE_STRING))
+#         })
+# @api_view(['GET'])
+# def summary_api(request):
+#     final_results = ''
+#     for item in FIELD_NAMES.keys():
+#         data = requests.get(
+#             "https://apifaang.org.uk/summary_{}/summary_{}".format(
+#                 item, item)).json()
+#         data = data['hits']['hits'][0]['_source']
+#         results = list()
+#         results_faang_only = list()
+#         for field_name in FIELD_NAMES[item]:
+#             if 'breed' in field_name:
+#                 tmp, tmp_faang_only = generate_df_for_breeds(
+#                     field_name, HUMAN_READABLE_NAMES[field_name], data)
+#             else:
+#                 tmp, tmp_faang_only = generate_df(field_name,
+#                                                   HUMAN_READABLE_NAMES[
+#                                                       field_name], data)
+#             results.append(tmp)
+#             results_faang_only.append(tmp_faang_only)
+#         final_results += '<h1>{} Summary</h1>'.format(item.capitalize())
+#         final_results += '<br>'
+#         final_results += '<h3>FAANG only data</h3>'
+#         final_results += '<br>'
+#         for table in results_faang_only:
+#             final_results += table.to_html(index=False)
+#             final_results += '<br>'
+#         final_results += '<h3>All data</h3>'
+#         final_results += '<br>'
+#         for table in results:
+#             final_results += table.to_html(index=False)
+#             final_results += '<br>'
+#         final_results += '<br>'
+#         final_results += '<hr>'
+#     return HttpResponse(final_results)
