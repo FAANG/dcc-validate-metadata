@@ -53,9 +53,9 @@ def fetch_text_for_ids(ids):
     # Not all ids can get through OLS because of bandwidth, so do sync calls
     if len(results) < len(ids):
         for my_id in ids:
-            if my_id not in results:
+            if my_id and my_id not in results:
                 results[my_id] = requests.get(
-                    f"http://www.ebi.ac.uk/ols/api/search?q={my_id}"
+                    f"http://www.ebi.ac.uk/ols/api/search?q={my_id.replace(':', '_')}"
                 ).json()['response']['docs']
     return results
 
@@ -82,8 +82,9 @@ async def fetch_term(session, my_id, results_to_return):
     :param my_id: term_id to check
     :param results_to_return: json structure to parse
     """
-    url = f"http://www.ebi.ac.uk/ols/api/search?q={my_id}&rows=100"
-    async with session.get(url) as response:
-        results = await response.json()
-        if results and 'response' in results and 'docs' in results['response']:
-            results_to_return[my_id] = results['response']['docs']
+    if my_id:
+        url = f"http://www.ebi.ac.uk/ols/api/search?q={my_id.replace(':', '_')}&rows=100"
+        async with session.get(url) as response:
+            results = await response.json()
+            if results and 'response' in results and 'docs' in results['response']:
+                results_to_return[my_id] = results['response']['docs']
