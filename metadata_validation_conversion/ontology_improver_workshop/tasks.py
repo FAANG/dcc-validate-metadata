@@ -1,11 +1,8 @@
 import json
-import requests
-# import pandas as pd
-from collections import Counter
 from django.conf import settings
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from metadata_validation_conversion.celery import app
-from metadata_validation_conversion.constants import BE_SVC, PROJECTS
+import itertools
 
 es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
                     http_auth=(settings.ES_USER, settings.ES_PASSWORD), \
