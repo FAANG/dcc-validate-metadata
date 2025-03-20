@@ -472,6 +472,12 @@ def download(request, name):
     request_fields = ','.join(request_fields)
     column_names = json.loads(column_names)
 
+    # Check if we need to compute count for some columns
+    include_experiment_count = "Number of Experiments" in column_names
+    include_specimen_count = "Number of Specimens" in column_names
+    include_file_count = "Number of Files" in column_names
+    include_species_text = "Species" in column_names
+
     # generate query for filtering
     filter_values = []
     not_filter_values = []
@@ -527,12 +533,31 @@ def download(request, name):
             record[col] = ''
             source = row
             for c in cols:
-                if  isinstance(source, dict) and c in source.keys():
+                if isinstance(source, dict) and c in source.keys():
                     record[col] = source[c]
                     source = source[c]
                 else:
                     record[col] = ''
                     break
+
+            # Compute count for experiment, specimen and file and assign correct valie to return to the other cols
+            mapping = {
+                "_source.experiment": include_experiment_count,
+                "_source.specimen": include_specimen_count,
+                "_source.file": include_file_count,
+            }
+            if col in mapping and mapping[col]:
+                record[col] = len(source) if isinstance(source, list) else 0
+
+            if col == "_source.species" and include_species_text:
+                if isinstance(source, list):
+                    record[col] = ", ".join(item['text'] for item in source if 'text' in item)
+                else:
+                    record[col] = 0
+            if col in ["_source.assayType", "_source.archive"]:
+                if isinstance(source, list):
+                    record[col] = ", ".join(source)
+
         writer.writerow(record)
 
     # return formatted data
