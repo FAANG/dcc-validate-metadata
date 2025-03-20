@@ -472,7 +472,7 @@ def download(request, name):
     request_fields = ','.join(request_fields)
     column_names = json.loads(column_names)
 
-    # Check if we need to compute count for some solumns
+    # Check if we need to compute count for some columns
     include_experiment_count = "Number of Experiments" in column_names
     include_specimen_count = "Number of Specimens" in column_names
     include_file_count = "Number of Files" in column_names
