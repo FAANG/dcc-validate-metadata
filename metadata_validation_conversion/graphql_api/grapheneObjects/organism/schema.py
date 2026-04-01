@@ -18,7 +18,7 @@ def fetch_single_organism(args):
     elif args['alternate_id']:
         q = [{"terms": {"alternateId": [args['alternate_id']]}}]
 
-    res = fetch_index_records('organism', filter=q)[0]
+    res = fetch_index_records('2026_03_26_organism', filter=q)[0]
     res['id'] = res['biosampleId']
     return res
 
@@ -87,11 +87,11 @@ class OrganismSchema(ObjectType):
 
     def resolve_all_organisms(root, info, **kwargs):
         filter_query = kwargs['filter'] if 'filter' in kwargs else {}
-        res = fetch_with_join(filter_query, 'organism')
+        res = fetch_with_join(filter_query, '2026_03_26_organism')
         return res
 
     def resolve_all_organisms_as_task(root, info, **kwargs):
-        task = launch_celery_task.apply_async(args=[kwargs, 'organism'], queue='graphql_api')
+        task = launch_celery_task.apply_async(args=[kwargs, '2026_03_26_organism'], queue='graphql_api')
         response = {'id': task.id, 'status': task.status, 'result': task.result}
         return response
 

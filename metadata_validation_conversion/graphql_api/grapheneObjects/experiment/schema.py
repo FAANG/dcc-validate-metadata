@@ -19,7 +19,7 @@ def fetch_single_experiment(args):
     elif args['alternate_id']:
         q = [{"terms": {"alternateId": [args['alternate_id']]}}]
 
-    res = fetch_index_records('experiment', filter=q)[0]
+    res = fetch_index_records('2026_03_26_experiment', filter=q)[0]
     res['id'] = res['accession']
     return res
 
@@ -87,11 +87,11 @@ class ExperimentSchema(ObjectType):
 
     def resolve_all_experiments(root, info, **kwargs):
         filter_query = kwargs['filter'] if 'filter' in kwargs else {}
-        res = fetch_with_join(filter_query, 'experiment')
+        res = fetch_with_join(filter_query, '2026_03_26_experiment')
         return res
 
     def resolve_all_experiments_as_task(root, info, **kwargs):
-        task = launch_celery_task.apply_async(args=[kwargs, 'experiment'], queue='graphql_api')
+        task = launch_celery_task.apply_async(args=[kwargs, '2026_03_26_experiment'], queue='graphql_api')
         response = {'id': task.id, 'status': task.status, 'result': task.result}
         return response
 

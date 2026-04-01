@@ -18,7 +18,7 @@ def fetch_single_specimen(args):
     elif args['alternate_id']:
         q = [{"terms": {"alternateId": [args['alternate_id']]}}]
 
-    res = fetch_index_records('specimen', filter=q)[0]
+    res = fetch_index_records('2026_03_26_specimen', filter=q)[0]
     res['id'] = res['biosampleId']
     return res
 
@@ -80,11 +80,11 @@ class SpecimenSchema(ObjectType):
 
     def resolve_all_specimens(root, info,**kwargs):
         filter_query = kwargs['filter'] if 'filter' in kwargs else {}
-        res = fetch_with_join(filter_query, 'specimen')
+        res = fetch_with_join(filter_query, '2026_03_26_specimen')
         return res
 
     def resolve_all_specimens_as_task(root, info,**kwargs):
-        task = launch_celery_task.apply_async(args=[kwargs, 'specimen'], queue='graphql_api')
+        task = launch_celery_task.apply_async(args=[kwargs, '2026_03_26_specimen'], queue='graphql_api')
         response = {'id':task.id,'status':task.status,'result':task.result}
         return response
 

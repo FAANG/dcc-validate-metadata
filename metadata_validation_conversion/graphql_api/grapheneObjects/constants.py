@@ -1,12 +1,12 @@
 MAX_FILTER_QUERY_DEPTH = 3
 
 ANALYSIS = 'analysis'
-EXPERIMENT = 'experiment'
-SPECIMEN = 'specimen'
-ORGANISM = 'organism'
+EXPERIMENT = '2026_03_26_experiment'
+SPECIMEN = '2026_03_26_specimen'
+ORGANISM = '2026_03_26_organism'
 ARTICLE = 'article'
-DATASET = 'dataset'
-FILE = 'file'
+DATASET = '2026_03_26_dataset'
+FILE = '2026_03_26_file'
 PROTOCOL_ANALYSIS = 'protocol_analysis'
 PROTOCOL_FILES = 'protocol_files'
 PROTOCOL_SAMPLES = 'protocol_samples'

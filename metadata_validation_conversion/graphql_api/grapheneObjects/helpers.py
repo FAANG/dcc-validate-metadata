@@ -157,7 +157,7 @@ def get_joined_data(left_index, right_index, left_index_data, right_index_data):
             for key in mapping_keys_list:
                 if key in right_index_map:
                     # exceptional case in experiment index where field name has space, e.g "ChIP-seq DNA-binding"
-                    if right_index == "experiment":
+                    if right_index == "2026_03_26_experiment":
                         rec_list = right_index_map[key]
                         for dict in rec_list:
                             update_experiment_fieldnames(dict)
@@ -187,7 +187,7 @@ def fetch_with_join(filter, left_index, prev_index_data=None, key_filter_name=No
     es_filter_queries = []
     if 'basic' in filter:
         # exceptional case in experiment index where field name has space, e.g "ChIP-seq DNA-binding"
-        if left_index == "experiment":
+        if left_index == "2026_03_26_experiment":
             update_experiment_es_filter_fieldnames(filter['basic'])
         generate_es_filters(filter['basic'], es_filter_queries)
 

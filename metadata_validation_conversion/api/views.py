@@ -31,11 +31,15 @@ ALLOWED_INDICES = ['file', 'organism', 'specimen', 'dataset', 'experiment',
                    'summary_specimen', 'summary_dataset', 'summary_file',
                    'ensembl_annotation', 'trackhubs', 'submissions', 
                    'ontologies', 'summary_ontologies', 'submission_portal_status',
-                   'ontologies_test', 'summary_ontologies_test'
+                   'ontologies_test', 'summary_ontologies_test',
+                   '2026_03_26_organism', '2026_03_26_specimen',
+                   '2026_03_26_experiment', '2026_03_26_file',
+                   '2026_03_26_dataset'
                    ]
 
-GLOBAL_ALLOWED_INDICES = ['organism', 'specimen', 'dataset', 'file', 'analysis', 'protocol_files', 'protocol_analysis',
-                          'protocol_samples', 'article']
+GLOBAL_ALLOWED_INDICES = ['2026_03_26_organism', '2026_03_26_specimen', '2026_03_26_dataset',
+                          '2026_03_26_file', '2026_03_26_experiment', 'analysis',
+                          'protocol_files', 'protocol_analysis', 'protocol_samples', 'article']
 
 
 @swagger_auto_schema(method='get', tags=['GlobalSearch'],

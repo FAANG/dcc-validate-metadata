@@ -17,7 +17,7 @@ def fetch_single_file(args):
     elif args['alternate_id']:
         q = [{"terms": {"alternateId": [args['alternate_id']]}}]
 
-    res = fetch_index_records('file', filter=q)[0]
+    res = fetch_index_records('2026_03_26_file', filter=q)[0]
 
     res['id'] = res['name'].split('.', 1)[0]
     return res
@@ -77,11 +77,11 @@ class FileSchema(ObjectType):
 
     def resolve_all_files(root, info, **kwargs):
         filter_query = kwargs['filter'] if 'filter' in kwargs else {}
-        res = fetch_with_join(filter_query, 'file')
+        res = fetch_with_join(filter_query, '2026_03_26_file')
         return res
 
     def resolve_all_files_as_task(root, info, **kwargs):
-        task = launch_celery_task.apply_async(args=[kwargs, 'file'], queue='graphql_api')
+        task = launch_celery_task.apply_async(args=[kwargs, '2026_03_26_file'], queue='graphql_api')
         response = {'id': task.id, 'status': task.status, 'result': task.result}
         return response
 
