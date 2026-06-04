@@ -10,10 +10,7 @@ import json
 
 class AnalysesFileConverter(FileConverter):
     def start_conversion(self):
-        if self.private_submission:
-            sample_xml = self.generate_sample_xml()
-        else:
-            sample_xml = None
+        sample_xml = None
         analysis_xml = self.generate_analysis_xml()
         submission_xml = self.generate_submission_xml()
         return analysis_xml, submission_xml, sample_xml
@@ -115,15 +112,9 @@ class AnalysesFileConverter(FileConverter):
             etree.SubElement(analysis_elt, 'STUDY_REF', accession=study)
             if samples is not None:
                 for sample in samples:
-                    if self.private_submission:
-                        sample_ref = self.proxy_samples_mappings[
-                            sample['value']]
-                        etree.SubElement(analysis_elt, 'SAMPLE_REF',
-                                         refname=sample_ref)
-                    else:
-                        sample_ref = sample['value']
-                        etree.SubElement(analysis_elt, 'SAMPLE_REF',
-                                         accession=sample_ref)
+                    sample_ref = sample['value']
+                    etree.SubElement(analysis_elt, 'SAMPLE_REF',
+                                     accession=sample_ref)
             if experiments is not None:
                 for experiment in experiments:
                     exp_ref = experiment['value']

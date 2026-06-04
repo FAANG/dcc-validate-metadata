@@ -1,7 +1,33 @@
+import re
 import requests
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .constants import SAMPLE_CORE_URL, EXPERIMENT_CORE_URL
+
+
+# Conservative allowlist for values that end up in filesystem paths, OS command
+# tokens or Elasticsearch ids. Permits letters, digits, dot, underscore and
+# hyphen only - which is enough for FAANG ids/accessions/hub names while
+# excluding path separators, whitespace and shell metacharacters.
+SAFE_NAME_RE = re.compile(r'[A-Za-z0-9._-]+')
+
+
+def is_safe_name(value):
+    """Return True if value is a string with no path-traversal or injection
+    metacharacters."""
+    return (
+        isinstance(value, str)
+        and bool(SAFE_NAME_RE.fullmatch(value))
+        and '..' not in value
+    )
+
+
+def validate_safe_name(value, field='value'):
+    """Validate that value is safe to use in a path / OS command / ES id.
+    Raises ValueError on anything outside the allowlist."""
+    if not is_safe_name(value):
+        raise ValueError(f"Invalid {field}: {value!r}")
+    return value
 
 
 def get_rules_json(url, json_type, module_url=None):
@@ -42,7 +68,7 @@ def send_message(room_id, conversion_status=None, validation_status=None,
                  submission_status=None, errors=None, validation_results=None,
                  conversion_errors=None, table_data=None,
                  annotation_status=None, domains=None,
-                 submission_message=None, subscription_status=None, submission_results=None,
+                 submission_message=None, submission_results=None,
                  bovreg_submission=None,
                  ontology_update_status=None):
     """
@@ -58,7 +84,6 @@ def send_message(room_id, conversion_status=None, validation_status=None,
     :param annotation_status: annotation status to send
     :param domains: list of user domains
     :param submission_message: submission message to send
-    :param subscription_status: status of user subscription to ENA submission
     :param submission_results: list of submission results
     :param bovreg_submission: true if secondary_project == BovReg
     :param ontology_update_status: ontology update status to send
@@ -68,7 +93,6 @@ def send_message(room_id, conversion_status=None, validation_status=None,
         'validation_status': validation_status,
         'submission_status': submission_status,
         'submission_message': submission_message,
-        'subscription_status': subscription_status,
         'errors': errors,
         'validation_results': validation_results,
         'conversion_errors': conversion_errors,

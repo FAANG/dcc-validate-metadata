@@ -8,6 +8,7 @@ DEBUG = config('DEBUG', default=False)
 
 app_name = 'graphql_api'
 urlpatterns = [
-    path("", csrf_exempt(GraphQLView.as_view(graphiql=True))),
+    # Only expose the GraphiQL IDE when DEBUG is enabled.
+    path("", csrf_exempt(GraphQLView.as_view(graphiql=DEBUG))),
     path("download", views.download, name='download')
 ]

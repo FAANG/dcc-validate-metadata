@@ -3,8 +3,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from metadata_validation_conversion.settings import \
-    BOVREG_BIOSAMPLES_USERNAME_TEST, BOVREG_BIOSAMPLES_PASSWORD_TEST, \
-    BOVREG_BIOSAMPLES_USERNAME_PROD, BOVREG_BIOSAMPLES_PASSWORD_PROD
+    BOVREG_BIOSAMPLES_PASSWORD_PROD
 
 
 def check_field_existence(field_to_check, record_to_check):
@@ -41,21 +40,12 @@ def convert_to_uppercase(value_to_convert):
 
 def get_credentials(credentials):
     """
-    This function will return username and password for private BioSamples
-    submission
+    This function will return username and password from the request
     :param credentials: body of request with credentials data
-    :return: appropriate username and password
+    :return: username and password
     """
-    if credentials['private_submission']:
-        if credentials['mode'] == 'test':
-            username = BOVREG_BIOSAMPLES_USERNAME_TEST
-            password = BOVREG_BIOSAMPLES_PASSWORD_TEST
-        else:
-            username = BOVREG_BIOSAMPLES_USERNAME_PROD
-            password = BOVREG_BIOSAMPLES_PASSWORD_PROD
-    else:
-        username = credentials['username']
-        password = credentials['password']
+    username = credentials['username']
+    password = credentials['password']
     return username, password
 
 
