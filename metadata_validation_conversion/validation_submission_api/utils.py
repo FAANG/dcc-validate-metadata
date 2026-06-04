@@ -95,7 +95,7 @@ def submit_data(conversion_result, data, type):
     else:
         return "Unknown submission type!"
     prepare_task = prepare.s(
-        conversion_result, room_id=room_id, private=data['private_submission']
+        conversion_result, room_id=room_id
     ).set(queue='submission')
     my_chord = chord((prepare_task,), submit_task)
     res = my_chord.apply_async()

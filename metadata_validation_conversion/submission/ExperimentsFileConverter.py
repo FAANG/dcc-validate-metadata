@@ -10,10 +10,7 @@ from .FileConverter import FileConverter
 
 class ExperimentFileConverter(FileConverter):
     def start_conversion(self):
-        if self.private_submission:
-            sample_xml = self.generate_sample_xml()
-        else:
-            sample_xml = None
+        sample_xml = None
         experiment_xml = self.generate_experiment_xml()
         run_xml = self.generate_run_xml()
         study_xml = self.generate_study_xml()
@@ -70,11 +67,7 @@ class ExperimentFileConverter(FileConverter):
             title = check_field_existence('title', record)
             study_ref = record['study_ref']
             design_description = record['design_description']
-            if self.private_submission:
-                sample_descriptor = self.proxy_samples_mappings[
-                    record['sample_descriptor']]
-            else:
-                sample_descriptor = record['sample_descriptor']
+            sample_descriptor = record['sample_descriptor']
             library_name = check_field_existence('library_name', record)
             library_strategy = record['library_strategy']
             library_source = record['library_source']

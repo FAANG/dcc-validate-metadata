@@ -7,6 +7,7 @@ from metadata_validation_conversion.helpers import send_message
 from metadata_validation_conversion.constants import ORGANIZATIONS, PROTOCOL_INDICES
 import requests
 import os
+import subprocess
 from celery import Task
     
 es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, \
@@ -70,9 +71,10 @@ def upload(validation_results, fileserver_path, filename, fileid):
             send_message(submission_message=f'Success! ' \
                  f'Please download your file at \n {download_url}', room_id=fileid)
             # backup to s3
-            cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                  f"{filepath} s3://{fileserver_path}/{filename}"
-            os.system(cmd)
+            subprocess.run(
+                ["aws", "--endpoint-url", "https://uk1s3.embassy.ebi.ac.uk",
+                 "s3", "cp", filepath, f"s3://{fileserver_path}/{filename}"],
+                check=False)
             return 'Success'
     return 'Error'
 

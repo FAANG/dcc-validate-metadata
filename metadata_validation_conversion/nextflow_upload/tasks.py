@@ -4,6 +4,7 @@ from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 import requests
 import os
+import subprocess
 from celery import Task
 
 
@@ -35,7 +36,9 @@ def upload_to_nginx(fileid, dir_name, filename):
     else:
         send_message(submission_message=f'Success! Please download your file at \n {download_url}', room_id=fileid)
         # backup to s3
-        cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-            f"{filepath} s3://nextflow_files/{dir_name}/{filename}"
-        os.system(cmd)
+        subprocess.run(
+            ["aws", "--endpoint-url", "https://uk1s3.embassy.ebi.ac.uk",
+             "s3", "cp", filepath,
+             f"s3://nextflow_files/{dir_name}/{filename}"],
+            check=False)
         return 'Success'

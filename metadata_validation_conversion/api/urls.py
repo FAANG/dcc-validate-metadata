@@ -6,7 +6,6 @@ from api.swagger_custom import schema_view
 urlpatterns = [
     path('<str:name>/_search/', views.index, name='index'),
     path('_gsearch/', views.globindex, name='globindex'),
-    path('<str:name>/<str:id>/update', views.update, name='update'),
     path('<str:name>/<str:id>', views.detail, name='detail'),
     path('<str:name>/download/', views.download, name='download'),
     path('fire_api/<str:protocol_type>/<str:id>', views.protocols_fire_api,

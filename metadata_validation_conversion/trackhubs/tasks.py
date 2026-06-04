@@ -1,7 +1,7 @@
 from abc import ABC
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from metadata_validation_conversion.celery import app
-from metadata_validation_conversion.helpers import send_message
+from metadata_validation_conversion.helpers import send_message, validate_safe_name
 from collections import OrderedDict
 from metadata_validation_conversion.settings import \
     TRACKHUBS_USERNAME, TRACKHUBS_PASSWORD
@@ -10,6 +10,8 @@ import requests
 import xlrd
 import json
 import os
+import shutil
+import subprocess
 from celery import Task
 
 
@@ -113,8 +115,12 @@ def validate(result, webin_credentials, fileid):
                             errors[row_prop] = f'Required field: {row_prop} cannot be empty'
                         # check that "File Path" exists in Webin FTP
                         if row_prop == 'File Path' and row_prop not in errors:
-                            cmd = f"curl -r 0-1 ftp://webin.ebi.ac.uk/{data_dict[key][row_index][row_prop]} --user {webin_credentials['user']}:{webin_credentials['pwd']}"
-                            c = os.system(cmd)
+                            file_path = data_dict[key][row_index][row_prop]
+                            cmd = ["curl", "-r", "0-1",
+                                   f"ftp://webin.ebi.ac.uk/{file_path}",
+                                   "--user",
+                                   f"{webin_credentials['user']}:{webin_credentials['pwd']}"]
+                            c = subprocess.run(cmd, capture_output=True).returncode
                             if c != 0:
                                 error_flag = True
                                 errors[row_prop] = f'File {data_dict[key][row_index][row_prop]} not found'
@@ -158,8 +164,10 @@ def generate_hub_files(result, fileid, modify):
     error_flag = result['error_flag']
     res_dict = result['data']
     if not error_flag:
-        hub = res_dict['Hub Data'][0]['Name']
-        genome = res_dict['Genome Data'][0]['Assembly Name']
+        # hub and genome are used to build filesystem paths and OS commands -
+        # restrict them to a safe character set (CWE-22 / CWE-78).
+        hub = validate_safe_name(res_dict['Hub Data'][0]['Name'], 'Hub Name')
+        genome = validate_safe_name(res_dict['Genome Data'][0]['Assembly Name'], 'Assembly Name')
         # handle updates
         if modify == 'true':
             hub_dir = f"/usr/share/nginx/html/files/trackhubs/{hub}"
@@ -168,8 +176,8 @@ def generate_hub_files(result, fileid, modify):
                 # if an old backup already exists, replace it
                 old_hub_dir = f"/usr/share/nginx/html/files/trackhubs/{hub}_old"
                 if os.path.isdir(old_hub_dir):
-                    os.system(f"rm -rf old_hub_dir")
-                os.system(f"mv {hub_dir} {hub_dir}_old")
+                    shutil.rmtree(old_hub_dir)
+                shutil.move(hub_dir, f"{hub_dir}_old")
                 send_message(room_id=fileid, submission_message="Updating Hub files")
             # if hub dir does not exist in update workflow, display error
             else:
@@ -192,8 +200,8 @@ def generate_hub_files(result, fileid, modify):
             try:
                 file_server = 'https://api.faang.org/files/trackhubs'
                 # create hub directory structure
-                cmd = f"mkdir -p /usr/share/nginx/html/files/trackhubs/{hub}/{genome}"
-                os.system(cmd)
+                os.makedirs(f"/usr/share/nginx/html/files/trackhubs/{hub}/{genome}",
+                            exist_ok=True)
                 file_server_path = "/usr/share/nginx/html/files/trackhubs"
                 # generate hub.txt
                 with open(f'{file_server_path}/{hub}/hub.txt', 'w') as f:
@@ -226,9 +234,11 @@ def generate_hub_files(result, fileid, modify):
                 # backup files to s3
                 files = [f"{genome}/trackDb.txt", "hub.txt", "genomes.txt"]
                 for file in files:
-                    cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                            f"{file_server_path}/{hub}/{file} s3://trackhubs/{hub}/{file}"
-                    os.system(cmd)
+                    subprocess.run(
+                        ["aws", "--endpoint-url", "https://uk1s3.embassy.ebi.ac.uk",
+                         "s3", "cp", f"{file_server_path}/{hub}/{file}",
+                         f"s3://trackhubs/{hub}/{file}"],
+                        check=False)
 
                 send_message(room_id=fileid,
                             submission_message="Track Hub files generated")
@@ -247,22 +257,30 @@ def upload_files(result, webin_credentials, fileid):
     res_dict = result['data']
     if not error_flag:
         send_message(room_id=fileid, submission_message="Setting up Track Hub")
-        hub = res_dict['Hub Data'][0]['Name']
-        genome = res_dict['Genome Data'][0]['Assembly Name']
+        hub = validate_safe_name(res_dict['Hub Data'][0]['Name'], 'Hub Name')
+        genome = validate_safe_name(res_dict['Genome Data'][0]['Assembly Name'], 'Assembly Name')
         try:
             # upload track files to trackhubs local storage
             for track in res_dict['Tracks Data']:
+                subdirectory = validate_safe_name(track['Subdirectory'], 'Subdirectory')
                 file = track['File Path'].split('/')[-1]
                 # create sub-directories
-                os.system(f"mkdir -p /usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{track['Subdirectory']}")
+                os.makedirs(
+                    f"/usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{subdirectory}",
+                    exist_ok=True)
                 # download files from webin FTP area of user
-                filepath = f"/usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{track['Subdirectory']}/{file}"
-                cmd = f"curl -s ftp://webin.ebi.ac.uk/{track['File Path']} --user {webin_credentials['user']}:{webin_credentials['pwd']} -o {filepath}"
-                os.system(cmd)
+                filepath = f"/usr/share/nginx/html/files/trackhubs/{hub}/{genome}/{subdirectory}/{file}"
+                subprocess.run(
+                    ["curl", "-s", f"ftp://webin.ebi.ac.uk/{track['File Path']}",
+                     "--user", f"{webin_credentials['user']}:{webin_credentials['pwd']}",
+                     "-o", filepath],
+                    check=False)
                 # backup files to s3
-                cmd = f"aws --endpoint-url https://uk1s3.embassy.ebi.ac.uk s3 cp " \
-                        f"{filepath} s3://trackhubs/{hub}/{genome}/{track['Subdirectory']}/{file}"
-                os.system(cmd)
+                subprocess.run(
+                    ["aws", "--endpoint-url", "https://uk1s3.embassy.ebi.ac.uk",
+                     "s3", "cp", filepath,
+                     f"s3://trackhubs/{hub}/{genome}/{subdirectory}/{file}"],
+                    check=False)
             send_message(room_id=fileid,
                          submission_message="Track Hub set up, starting hubCheck")
         except:
@@ -283,12 +301,13 @@ def hub_check(result, fileid):
         'errors': []
     }
     if not error_flag:
-        hub = res_dict['Hub Data'][0]['Name']
-        os.system(f"mkdir -p /data/{hub}")
-        cmd = f"./trackhubs/hubCheck -noTracks " \
-              f"http://nginx-svc:80/files/trackhubs/{hub}/hub.txt " \
-              f"> /data/{hub}/hubCheck_results.txt"
-        os.system(cmd)
+        hub = validate_safe_name(res_dict['Hub Data'][0]['Name'], 'Hub Name')
+        os.makedirs(f"/data/{hub}", exist_ok=True)
+        with open(f'/data/{hub}/hubCheck_results.txt', 'w') as out:
+            subprocess.run(
+                ["./trackhubs/hubCheck", "-noTracks",
+                 f"http://nginx-svc:80/files/trackhubs/{hub}/hub.txt"],
+                stdout=out, check=False)
         with open(f'/data/{hub}/hubCheck_results.txt', 'r') as f:
             for line in f:
                 if line.split()[0] != 'Found':

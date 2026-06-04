@@ -1,6 +1,8 @@
 import requests
 import json
 import os
+import re
+import subprocess
 from celery import group
 
 from django.http import JsonResponse, HttpResponse
@@ -295,7 +297,16 @@ def index(request, name):
     # generate query for sort script
     # sorts by length of field array
     if sort_by_count:
-        sort_field, order = sort_by_count.split(':')
+        sort_field, _, order = sort_by_count.partition(':')
+        # sort_field is interpolated into a Painless script, so restrict it to
+        # field-name characters and the order to a known set to prevent script
+        # injection (CWE-94).
+        if not re.fullmatch(r'[A-Za-z0-9_.]+', sort_field) or order not in ('asc', 'desc'):
+            context = {'status': '400', 'reason': 'Invalid sort_by_count parameter'}
+            response = HttpResponse(
+                json.dumps(context), content_type='application/json')
+            response.status_code = 400
+            return response
         body['sort'] = {
             "_script": {
                 "type": "number",
@@ -318,57 +329,6 @@ def index(request, name):
                                 sort=sort, body=body, track_total_hits=True)
 
     return JsonResponse(data)
-
-@swagger_auto_schema(method='put', auto_schema=None, tags=['Update'],
-        operation_summary="Update records",
-        operation_description="Update records by queries",
-        manual_parameters=[
-            openapi.Parameter('name', openapi.IN_PATH, 
-                description="type of records to query",
-                type=openapi.TYPE_STRING,
-                enum=ALLOWED_INDICES),
-            openapi.Parameter('id', openapi.IN_PATH, 
-                description="id of record to update",
-                type=openapi.TYPE_STRING)
-        ],
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT, 
-            example=index_search_request_example
-        ),
-        responses={
-            200: openapi.Response('Updated',
-                examples={"application/json": index_search_response_example},
-                schema=openapi.Schema(type=openapi.TYPE_OBJECT)
-            ),
-            404: openapi.Response('Not Found')
-        })
-@api_view(['PUT'])
-@permission_classes([AllowAny])
-@csrf_exempt
-def update(request, name, id):
-    if request.method != 'PUT':
-        context = {
-            'status': '405', 'reason': 'This method is not allowed!'  
-        }
-        response = HttpResponse(
-            json.dumps(context), content_type='application/json')
-        response.status_code = 405
-        return response
-    if name not in ALLOWED_INDICES:
-        context = {
-            'status': '404', 'reason': 'This index doesn\'t exist!'  
-        }
-        response = HttpResponse(
-            json.dumps(context), content_type='application/json')
-        response.status_code = 404
-        return response    
-
-    es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
-    if request.body:
-        print(request.body.decode("utf-8"))
-        data = es.update(index=name, id=id, doc_type="_doc",
-            body=json.loads(request.body.decode("utf-8")))
-        return JsonResponse(data)
 
 
 @swagger_auto_schema(method='get', tags=['Details'],
@@ -409,14 +369,15 @@ def detail(request, name, id):
         response.status_code = 404
         return response
     es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
-    id = f"\"{id}\""
-    results = es.search(index=name, q="_id:{}".format(id))
+    # Use structured queries with the id passed as a value (not concatenated
+    # into a Lucene query string) to avoid query injection (CWE-943).
+    results = es.search(index=name, body={"query": {"ids": {"values": [id]}}})
     if results['hits']['total'] == 0:
-        results = es.search(index=name, q="alternativeId:{}".format(id),
-                            doc_type="_doc")
+        results = es.search(index=name, doc_type="_doc",
+                            body={"query": {"match_phrase": {"alternativeId": id}}})
     if results['hits']['total'] == 0:
-        results = es.search(index=name, q="biosampleId:{}".format(id),
-                            doc_type="_doc")
+        results = es.search(index=name, doc_type="_doc",
+                            body={"query": {"match_phrase": {"biosampleId": id}}})
     return JsonResponse(results)
 
 
@@ -604,10 +565,18 @@ def download(request, name):
 @api_view(['GET'])
 @renderer_classes([PdfFileRenderer])
 def protocols_fire_api(request, protocol_type, id):
-    cmd = f"aws --no-sign-request --endpoint-url" \
-            f" http://{settings.DATACENTER}.fire.sdo.ebi.ac.uk" \
-                 f" s3 cp s3://faang-public/ftp/protocols/{protocol_type}/{id} ./"
-    os.system(cmd)
+    # protocol_type and id are path parameters that previously flowed into a
+    # shell command - validate them and invoke aws without a shell (CWE-78).
+    if protocol_type not in ['samples', 'experiments', 'analyses', 'analysis', 'assays']:
+        return HttpResponse(status=404)
+    if not re.fullmatch(r'[A-Za-z0-9._-]+', id):
+        return HttpResponse(status=400)
+    endpoint_url = f"http://{settings.DATACENTER}.fire.sdo.ebi.ac.uk"
+    s3_uri = f"s3://faang-public/ftp/protocols/{protocol_type}/{id}"
+    subprocess.run(
+        ["aws", "--no-sign-request", "--endpoint-url", endpoint_url,
+         "s3", "cp", s3_uri, "./"],
+        check=False)
     file_location = f"./{id}"
     try:    
         with open(file_location, 'rb') as f:

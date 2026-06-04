@@ -1,5 +1,6 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
+from metadata_validation_conversion.helpers import is_safe_name
 from .utils import convert_template, validate, domain_tasks, submit_data
 import json
 
@@ -8,6 +9,10 @@ def validation(request, type):
     if request.method == 'POST':
         # Conversion step
         fileid = list(request.FILES.keys())[0]
+        # fileid (multipart field name) is used to build filesystem paths -
+        # reject path-traversal/injection characters (CWE-22).
+        if not is_safe_name(fileid):
+            return HttpResponse("Invalid file identifier", status=400)
         with open(f'/data/{fileid}.xlsx', 'wb+') as destination:
             for chunk in request.FILES[fileid].chunks():
                 destination.write(chunk)
@@ -65,6 +70,12 @@ def domain_actions(request, domain_action):
 @csrf_exempt
 def submission(request, type, fileid):
     if request.method == 'POST':
+        # fileid (path param) is used to build a filesystem path - reject
+        # path-traversal/injection characters (CWE-22).
+        if not is_safe_name(fileid):
+            return HttpResponse(
+                json.dumps({'Error': 'Invalid file identifier'}),
+                content_type='application/json', status=400)
         # Get submision data from request
         data = json.loads(request.body.decode('utf-8'))
         # Read conversion results from saved file

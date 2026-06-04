@@ -8,9 +8,8 @@ from .helpers import get_header
 
 
 class BiosamplesFileConverter:
-    def __init__(self, json_to_convert, private, mode, action):
+    def __init__(self, json_to_convert, mode, action):
         self.json_to_convert = json_to_convert
-        self.private_submission = private
         self.action = action
         self.submission_server = SUBMISSION_TEST_SERVER if mode == 'test' else SUBMISSION_PROD_SERVER
 
@@ -19,12 +18,7 @@ class BiosamplesFileConverter:
         taxon_ids, taxons = self.get_taxon_information()
         collection_date, geographic_location = self.get_ena_required_information()
 
-        # If private submission move date for two years in the future
-        if self.private_submission:
-            two_years = datetime.timedelta(days=365) * 2
-            date = (datetime.datetime.now() + two_years).isoformat()
-        else:
-            date = datetime.datetime.now().isoformat()
+        date = datetime.datetime.now().isoformat()
 
         # Collect additional data, submission information
         additional_fields = dict()
@@ -284,8 +278,6 @@ class BiosamplesFileConverter:
                 'ontologyTerms': [f"http://purl.obolibrary.org/obo/{taxon_id}"]
             }
             sample_attributes['organism'] = [organism_object]
-        if self.private_submission:
-            sample_attributes['BovReg private submission'] = [{'text': 'TRUE'}]
 
         if record_name in collection_date and record_name in geographic_location:
             sample_attributes['collection date'] = [{'text': collection_date[record_name], 'tag': 'attribute'}]

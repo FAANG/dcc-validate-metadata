@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .tasks import read_excel_file, validate, \
     generate_hub_files, upload_files, hub_check, \
         register_trackhub, associate_specimen, update_es_records
+from metadata_validation_conversion.helpers import is_safe_name
 import base64
 
 @csrf_exempt
@@ -37,6 +38,10 @@ def login(request):
 def validation(request):
     if request.method == 'POST':
         fileid = list(request.FILES.keys())[0]
+        # fileid (multipart field name) is used to build a filesystem path -
+        # reject path-traversal/injection characters (CWE-22).
+        if not is_safe_name(fileid):
+            return HttpResponse("Invalid file identifier", status=400)
         webin_credentials = {
             'user': request.POST['user'],
             'pwd': base64.b64decode(request.POST['pwd']).decode("utf-8")

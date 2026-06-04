@@ -62,5 +62,7 @@ class BovRegDetailsView(APIView):
             http_auth=(ES_USER, ES_PASSWORD),
             use_ssl=True, verify_certs=True)
         index = f'bovreg_{data_type}'
-        data = es.search(index=index, q=f'_id:{item_id}')
+        # Pass item_id as a value via a structured query rather than building a
+        # Lucene query string to avoid query injection (CWE-943).
+        data = es.search(index=index, body={"query": {"ids": {"values": [item_id]}}})
         return Response(data)

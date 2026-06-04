@@ -11,8 +11,6 @@ from metadata_validation_conversion.celery import app
 from metadata_validation_conversion.helpers import send_message
 from metadata_validation_conversion.constants import ENA_TEST_SERVER, \
     ENA_PROD_SERVER
-from metadata_validation_conversion.settings import BOVREG_USERNAME, \
-    BOVREG_PASSWORD
 from .BiosamplesFileConverter import BiosamplesFileConverter
 from .WebinBiosamplesSubmission import WebinBioSamplesSubmission
 from .BiosamplesSubmission import BioSamplesSubmission
@@ -23,9 +21,6 @@ from .helpers import get_credentials
 from celery import Task
 from django.conf import settings
 # from deepdiff import DeepDiff
-from django.core import mail
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 
 es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection,
                    http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
@@ -77,8 +72,8 @@ def submit_new_domain(credentials, room_id):
 
 
 @app.task(base=LogErrorsTask)
-def prepare_samples_data(json_to_convert, room_id, private=False, action='submission', mode='prod'):
-    conversion_results = BiosamplesFileConverter(json_to_convert[0], private, mode, action)
+def prepare_samples_data(json_to_convert, room_id, action='submission', mode='prod'):
+    conversion_results = BiosamplesFileConverter(json_to_convert[0], mode, action)
     results = conversion_results.start_conversion()
     send_message(submission_status='Data is ready', room_id=room_id)
     return results
@@ -120,9 +115,9 @@ def submit_to_biosamples(results, credentials, room_id, action="submission"):
 
 
 @app.task(base=LogErrorsTask)
-def prepare_analyses_data(json_to_convert, room_id, private=False, action='submission'):
+def prepare_analyses_data(json_to_convert, room_id, action='submission'):
     conversion_results = AnalysesFileConverter(json_to_convert[0], room_id,
-                                               private, action)
+                                               action)
     xml_files = list()
     analysis_xml, submission_xml, sample_xml = \
         conversion_results.start_conversion()
@@ -137,9 +132,9 @@ def prepare_analyses_data(json_to_convert, room_id, private=False, action='submi
 
 
 @app.task(base=LogErrorsTask)
-def prepare_experiments_data(json_to_convert, room_id, private=False, action='submission'):
+def prepare_experiments_data(json_to_convert, room_id, action='submission'):
     conversion_results = ExperimentFileConverter(json_to_convert[0], room_id,
-                                                 private, action)
+                                                 action)
     xml_files = list()
     experiment_xml, run_xml, study_xml, submission_xml, sample_xml = \
         conversion_results.start_conversion()
@@ -165,107 +160,36 @@ def submit_data_to_ena(results, credentials, room_id, submission_type, action="s
         ENA_PROD_SERVER
     submission_xml = f"{room_id}_submission.xml"
 
-    # Use BOVREG private account or get credentials from request
-    if credentials['private_submission']:
-        username = BOVREG_USERNAME
-        password = BOVREG_PASSWORD
-    else:
-        username = credentials["username"]
-        password = credentials["password"]
-    # public experiments submission
-    if submission_type == 'experiments' and \
-            not credentials['private_submission']:
+    username = credentials["username"]
+    password = credentials["password"]
+    # User-supplied credentials are passed as argv (shell=False) so they
+    # cannot break out into the shell (CWE-78).
+    if submission_type == 'experiments':
         experiment_xml = f"{room_id}_experiment.xml"
         run_xml = f"{room_id}_run.xml"
         study_xml = f"{room_id}_study.xml"
-        password = re.escape(password)
         submit_to_ena_process = subprocess.run(
-            f'curl -u {username}:{password} '
-            f'-F "SUBMISSION=@{submission_xml}" '
-            f'-F "EXPERIMENT=@{experiment_xml}" '
-            f'-F "RUN=@{run_xml}" '
-            f'-F "STUDY=@{study_xml}" '
-            f'"{submission_path}"',
-            shell=True, capture_output=True)
-    # private experiments submission
-    elif submission_type == 'experiments' and credentials['private_submission']:
-        experiment_xml = f"{room_id}_experiment.xml"
-        run_xml = f"{room_id}_run.xml"
-        study_xml = f"{room_id}_study.xml"
-        sample_xml = f"{room_id}_sample.xml"
-        password = re.escape(password)
-        submit_to_ena_process = subprocess.run(
-            f'curl -u {username}:{password} '
-            f'-F "SUBMISSION=@{submission_xml}" '
-            f'-F "EXPERIMENT=@{experiment_xml}" '
-            f'-F "RUN=@{run_xml}" '
-            f'-F "STUDY=@{study_xml}" '
-            f'-F "SAMPLE=@{sample_xml}" '
-            f'"{submission_path}"',
-            shell=True, capture_output=True)
-    elif submission_type == 'analyses' \
-            and not credentials['private_submission']:
+            ["curl", "-u", f"{username}:{password}",
+             "-F", f"SUBMISSION=@{submission_xml}",
+             "-F", f"EXPERIMENT=@{experiment_xml}",
+             "-F", f"RUN=@{run_xml}",
+             "-F", f"STUDY=@{study_xml}",
+             submission_path],
+            capture_output=True)
+    elif submission_type == 'analyses':
         analysis_xml = f"{room_id}_analysis.xml"
         submit_to_ena_process = subprocess.run(
-            f'curl -u {username}:{password} '
-            f'-F "SUBMISSION=@{submission_xml}" '
-            f'-F "ANALYSIS=@{analysis_xml}" '
-            f'"{submission_path}"',
-            shell=True, capture_output=True)
-    elif submission_type == 'analyses' and credentials['private_submission']:
-        # Submit analysis
-        analysis_xml = f"{room_id}_analysis.xml"
-        sample_xml = f"{room_id}_sample.xml"
-        submit_to_ena_process = subprocess.run(
-            f'curl -u {username}:{password} '
-            f'-F "SUBMISSION=@{submission_xml}" '
-            f'-F "ANALYSIS=@{analysis_xml}" '
-            f'-F "SAMPLE=@{sample_xml}" '
-            f'"{submission_path}"',
-            shell=True, capture_output=True)
+            ["curl", "-u", f"{username}:{password}",
+             "-F", f"SUBMISSION=@{submission_xml}",
+             "-F", f"ANALYSIS=@{analysis_xml}",
+             submission_path],
+            capture_output=True)
 
     submission_results = submit_to_ena_process.stdout
-    parsed_results = parse_submission_results(submission_results, submission_type, room_id, action)
-
-    # Adding project to the private data hub
-    if parsed_results == 'Success' and credentials['private_submission'] \
-            and submission_type == 'experiments':
-        project_id = fetch_project_id(submit_to_ena_process.stdout)
-        project_json = {
-            "projectId": project_id,
-            "dcc": "dcc_korman"
-        }
-        with open(f"{room_id}_project.json", 'w') as w:
-            json.dump(project_json, w)
-        link_study_process = subprocess.run(
-            f'curl -X POST --header "Content-Type: application/json" '
-            f'--header "Accept: application/json" '
-            f'-u "{BOVREG_USERNAME}:{BOVREG_PASSWORD}" '
-            f'-d @{room_id}_project.json '
-            f'"https://www.ebi.ac.uk/ena/portal/ams/webin/project/add"',
-            shell=True, capture_output=True)
-        if 'errorMessage' in link_study_process.stdout.decode('utf-8'):
-            error_message = json.loads(
-                link_study_process.stdout.decode('utf-8'))['errorMessage']
-            send_message(
-                submission_message="Error: submission failed",
-                submission_results=[[],
-                                    [error_message]],
-                room_id=room_id)
-            return 'Error'
+    parse_submission_results(submission_results, submission_type, room_id, action)
     # TODO: uncomment after testing
     # subprocess.run(f"rm {room_id}*.xml", shell=True)
     return submission_results.decode('utf-8')
-
-
-def fetch_project_id(submission_results):
-    """
-    This function returns project id from receipt xml
-    :param submission_results: stdout string from subprocess
-    :return: project id in format 'PRJEB20767'
-    """
-    root = etree.fromstring(submission_results)
-    return root.find('STUDY').find('EXT_ID').attrib['accession']
 
 
 def parse_submission_results(submission_results, submission_type, room_id, action="submission"):
@@ -465,18 +389,7 @@ def save_submission_data(root, submission_type, room_id, action):
             existing_doc = get_doc(study_obj['study_id'])
             if existing_doc is not None:
                 # retain submission_date field
-                study_obj['submission_date'] = existing_doc['submission_date'] 
-                if 'subscribers' in existing_doc:
-                    # retain subscribers field
-                    study_obj['subscribers'] = existing_doc['subscribers']
-
-                    # email subscribers - temporarily disable sending emails
-                    # deepdiff_obj = DeepDiff(existing_doc, study_obj)
-                    # if deepdiff_obj:
-                    #     subscriber_emails = [ele['email'] for ele in existing_doc['subscribers']]
-                    #     for email in subscriber_emails:
-                    #         send_user_email(study_obj['study_id'], email)
-
+                study_obj['submission_date'] = existing_doc['submission_date']
             es.index(index='submissions', id=study_obj['study_id'], body=study_obj)
 
 
@@ -487,25 +400,6 @@ def get_doc(study_id):
     if len(data['hits']['hits']) > 0 and data['hits']['hits'][0]['_source']:
         return data['hits']['hits'][0]['_source']
     return None
-
-
-def send_user_email(study_id, subscriber_email):
-    ena_frontend_host = 'https://dcc-ena-submissions-frontend-4qewew6boq-uc.a.run.app/'
-
-    unsub_link = ena_frontend_host + 'submissions/unsubscribe/{}/{}'.format(study_id, subscriber_email)
-    submission_link = ena_frontend_host + 'submissions/' + study_id
-    subject = f'Update regarding ENA study {study_id}'
-
-    html_message = render_to_string('subscribe_mail_template.html', {'study_id': study_id,
-                                                                     'ena_submission_link': submission_link,
-                                                                     'unsub_link': unsub_link})
-    plain_message = strip_tags(html_message)
-    from_email = 'faang-dcc@ebi.ac.uk'
-    to = subscriber_email
-    mail_sent = mail.send_mail(subject, plain_message, from_email, [to], html_message=html_message, fail_silently=False)
-    if mail_sent == 1:
-        return HttpResponse(status=200)
-    return HttpResponse(status=502)
 
 
 @app.task(base=LogErrorsTask)
