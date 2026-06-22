@@ -391,7 +391,7 @@ def register_trackhub(res, roomid):
     genome_id = data['Genome Data'][0]['Assembly Accession']
     hub_url = f"https://api.faang.org/files/trackhubs/{hub_dir}/hub.txt"
     login_payload = {"username": user, "password": pwd}
-    r = requests.post('https://www.trackhubregistry.org/api/login', data=login_payload)
+    r = requests.post('https://www.trackhubregistry.org/api/user/login', data=login_payload)
     if not r.ok:
         error_flag = True
     else:
