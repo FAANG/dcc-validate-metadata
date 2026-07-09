@@ -237,6 +237,18 @@ def index(request, name):
             else:
                 not_filter_values.append({"match": {key: "true"}})
     filter_val = {}
+
+    if name == 'protocol_samples':
+        filter_values.append({
+            "bool": {
+                "should": [
+                    {"wildcard": {"url": "*/protocols/*"}},
+                    {"wildcard": {"url": "https://data.faang.org/api/fire_api/*"}}
+                ],
+                "minimum_should_match": 1
+            }
+        })
+
     if filter_values:
         filter_val['must'] = filter_values
     if not_filter_values:
@@ -318,8 +330,10 @@ def index(request, name):
     es = Elasticsearch([settings.NODE], connection_class=RequestsHttpConnection, http_auth=(settings.ES_USER, settings.ES_PASSWORD), use_ssl=True, verify_certs=True)
     if request.body:
         data = es.search(
-            index=name, size=size, body=json.loads(request.body.decode("utf-8"), track_total_hits=True)
-        )
+            index=name,
+            size=size,
+            body=json.loads(request.body.decode("utf-8")),
+            track_total_hits=True)
     else:
         if query != '':
             data = es.search(index=name, from_=from_, size=size, _source=field,
@@ -453,6 +467,18 @@ def download(request, name):
         else:
             not_filter_values.append({"terms": {key: ["true"]}})
     filter_val = {}
+
+    if name == 'protocol_samples':
+        filter_values.append({
+            "bool": {
+                "should": [
+                    {"wildcard": {"url": "*/protocols/*"}},
+                    {"wildcard": {"url": "https://data.faang.org/api/fire_api/*"}}
+                ],
+                "minimum_should_match": 1
+            }
+        })
+
     if filter_values:
         filter_val['must'] = filter_values
     if not_filter_values:
