@@ -61,7 +61,8 @@ def upload(validation_results, fileserver_path, filename, fileid):
             'name': filename
         }
         res = requests.post(url, files={'file': open(filepath, 'rb')}, data=data)
-        if res.status_code != 200:
+
+        if not 200 <= res.status_code < 300:
             send_message(submission_message="Upload failed, "
                                             "please contact "
                                             "faang-dcc@ebi.ac.uk",
